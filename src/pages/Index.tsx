@@ -478,7 +478,7 @@ const Index = () => {
               <div className="grid lg:grid-cols-2 gap-8 items-center">
                 <div className="text-center">
                   <div className="relative">
-                    <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-48 mx-auto mb-4 shadow-elegant rounded-lg h-[130px] object-cover transform hover:scale-110 hover:-rotate-3 transition-all duration-500 hover:shadow-xl hover:shadow-primary/30" />
+                    <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Cozinha ao Lucro" className="w-48 mx-auto mb-4 shadow-elegant rounded-lg h-[130px] object-cover transform hover:scale-110 hover:-rotate-3 transition-all duration-500 hover:shadow-xl hover:shadow-primary/30" />
                     <img src="/images/ebook_receitas_que_vendem_20251117_062322.png" alt="Ebook Receitas que Vendem" className="w-32 absolute -bottom-4 -right-4 shadow-elegant rounded-lg h-[100px] object-cover transform hover:scale-125 hover:rotate-6 transition-all duration-500 hover:shadow-xl hover:shadow-secondary/30 hover:z-10" />
                   </div>
                 </div>
@@ -491,7 +491,7 @@ const Index = () => {
                       <div className="flex items-center gap-3">
                         <CheckCircle className="w-6 h-6 text-primary flex-shrink-0" />
                         <div>
-                          <span className="font-semibold">Ebook "Da Cozinha ao Lucro"</span>
+                          <span className="font-semibold">Ebook "Cozinha ao Lucro"</span>
                           <div className="text-sm text-muted-foreground">
                             <span className="line-through">de R$ 127,00</span> por <span className="text-primary font-bold text-lg">R$ 67,00</span>
                           </div>
@@ -598,7 +598,7 @@ const Index = () => {
       <footer className="bg-foreground text-background py-8">
         <div className="container-max text-center">
           <p className="text-sm opacity-80">
-            © 2024 Da Cozinha ao Lucro. Todos os direitos reservados.
+            © 2024 Cozinha ao Lucro. Todos os direitos reservados.
           </p>
         </div>
       </footer>
