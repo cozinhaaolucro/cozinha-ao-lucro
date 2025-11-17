@@ -183,7 +183,7 @@ const Index = () => {
               <div className="relative">
                 <a href="https://pay.kiwify.com.br/TV099tr" target="_blank" rel="noopener noreferrer" className="block">
                   <img 
-                    src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" 
+                    src="/images/logo_cozinhaaolucro.png" 
                     alt="Ebook Da Cozinha ao Lucro" 
                     className="w-64 md:w-80 shadow-glow rounded-lg hover:scale-105 transition-all duration-400 h-[336px] object-cover" 
                   />
@@ -264,7 +264,7 @@ const Index = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <a href="https://pay.kiwify.com.br/TV099tr" target="_blank" rel="noopener noreferrer">
-                <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-full max-w-md mx-auto shadow-elegant rounded-lg h-[252px] object-cover cursor-pointer transform hover:scale-105 hover:-rotate-2 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20" />
+                <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-full max-w-md mx-auto shadow-elegant rounded-lg h-[300px] object-cover cursor-pointer transform hover:scale-105 hover:-rotate-2 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20" />
               </a>
             </div>
             
@@ -478,8 +478,8 @@ const Index = () => {
               <div className="grid lg:grid-cols-2 gap-8 items-center">
                 <div className="text-center">
                   <div className="relative">
-                    <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-48 mx-auto mb-4 shadow-elegant rounded-lg h-[108px] object-cover transform hover:scale-110 hover:-rotate-3 transition-all duration-500 hover:shadow-xl hover:shadow-primary/30" />
-                    <img src="/images/ebook_receitas_que_vendem_20251117_062322.png" alt="Ebook Receitas que Vendem" className="w-32 absolute -bottom-4 -right-4 shadow-elegant rounded-lg h-[72px] object-cover transform hover:scale-125 hover:rotate-6 transition-all duration-500 hover:shadow-xl hover:shadow-secondary/30 hover:z-10" />
+                    <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-48 mx-auto mb-4 shadow-elegant rounded-lg h-[130px] object-cover transform hover:scale-110 hover:-rotate-3 transition-all duration-500 hover:shadow-xl hover:shadow-primary/30" />
+                    <img src="/images/ebook_receitas_que_vendem_20251117_062322.png" alt="Ebook Receitas que Vendem" className="w-32 absolute -bottom-4 -right-4 shadow-elegant rounded-lg h-[100px] object-cover transform hover:scale-125 hover:rotate-6 transition-all duration-500 hover:shadow-xl hover:shadow-secondary/30 hover:z-10" />
                   </div>
                 </div>
                 
