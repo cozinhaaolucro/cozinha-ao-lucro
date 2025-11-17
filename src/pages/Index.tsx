@@ -33,14 +33,16 @@ const Index = () => {
             
             <div className="flex flex-col md:flex-row items-center justify-center gap-8 mb-12">
               <div className="relative">
-                <img src="https://static-us-img.skywork.ai/prod/user/head_picture/1990306762284716032_logo com ebook.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="Ebook Da Cozinha ao Lucro" className="w-64 md:w-80 shadow-glow rounded-lg transform hover:scale-105 transition-smooth sk-edit-loading h-[336px] object-cover" />
+                <a href="https://pay.kiwify.com.br/TV099tr" target="_blank" rel="noopener noreferrer">
+                  <img src="https://static-us-img.skywork.ai/prod/user/head_picture/1990306762284716032_logo com ebook.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="Ebook Da Cozinha ao Lucro" className="w-64 md:w-80 shadow-glow rounded-lg transform hover:scale-105 transition-smooth sk-edit-loading h-[336px] object-cover cursor-pointer" />
+                </a>
                 <div className="absolute -top-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full font-bold text-sm animate-pulse">
                   OFERTA ESPECIAL
                 </div>
               </div>
             </div>
             
-            <Button onClick={scrollToOffer} className="cta-button text-xl md:text-2xl py-6 px-12 mb-8" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+            <Button onClick={() => window.open('https://pay.kiwify.com.br/TV099tr', '_blank')} className="cta-button text-xl md:text-2xl py-6 px-12 mb-8" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
               QUERO COMEÇAR A LUCRAR COM MINHA COZINHA
             </Button>
             
@@ -103,7 +105,9 @@ const Index = () => {
           
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <img src="https://static-us-img.skywork.ai/prod/user/head_picture/1990306438077345792_product_cozinha.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="Ebook Da Cozinha ao Lucro" className="w-full max-w-md mx-auto shadow-elegant rounded-lg sk-edit-loading h-[252px] object-cover" />
+              <a href="https://pay.kiwify.com.br/TV099tr" target="_blank" rel="noopener noreferrer">
+                <img src="https://static-us-img.skywork.ai/prod/user/head_picture/1990306438077345792_product_cozinha.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="Ebook Da Cozinha ao Lucro" className="w-full max-w-md mx-auto shadow-elegant rounded-lg sk-edit-loading h-[252px] object-cover cursor-pointer" />
+              </a>
             </div>
             
             <div className="space-y-6">
@@ -257,7 +261,9 @@ const Index = () => {
           
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
-              <img src="https://static-us-img.skywork.ai/prod/user/head_picture/1990306834594516992_product_receitas.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="Ebook Receitas que Vendem" className="w-full max-w-sm mx-auto lg:mx-0 shadow-elegant rounded-lg mb-6 sk-edit-loading h-[216px] object-cover" />
+              <a href="https://pay.kiwify.com.br/TV099tr" target="_blank" rel="noopener noreferrer">
+                <img src="https://static-us-img.skywork.ai/prod/user/head_picture/1990306834594516992_product_receitas.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="Ebook Receitas que Vendem" className="w-full max-w-sm mx-auto lg:mx-0 shadow-elegant rounded-lg mb-6 sk-edit-loading h-[216px] object-cover cursor-pointer" />
+              </a>
             </div>
             
             <div>
@@ -305,7 +311,7 @@ const Index = () => {
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground">
               Tenha Acesso Imediato a Todo Esse Conhecimento e 
-              <span className="text-primary">Comece sua Jornada Rumo ao Lucro Hoje!</span>
+              <span className="text-primary"> Comece sua Jornada Rumo ao Lucro Hoje!</span>
             </h2>
           </div>
           
@@ -368,8 +374,8 @@ const Index = () => {
                       </p>
                     </div>
                     
-                    <Button className="cta-button w-full text-xl py-6 mb-4" onClick={() => window.open('https://checkout.exemplo.com', '_blank')}>
-                      SIM, QUERO GARANTIR MINHA VAGA E COMEÇAR A LUCRAR!
+                    <Button className="cta-button w-full text-xl py-6 mb-4" onClick={() => window.open('https://pay.kiwify.com.br/TV099tr', '_blank')}>
+                      COMEÇAR A LUCRAR!
                     </Button>
                     
                     <div className="text-center text-sm text-muted-foreground">
