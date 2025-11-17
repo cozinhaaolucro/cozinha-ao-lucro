@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,56 +6,212 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { CheckCircle, Star, Shield, Clock, TrendingUp, DollarSign, Users, Award } from 'lucide-react';
 const Index = () => {
   const [isHovered, setIsHovered] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, speed: number}>>([]);
+  const [visibleElements, setVisibleElements] = useState<Set<string>>(new Set());
+  const [hasStarted, setHasStarted] = useState(false);
+
+  // Refs para os elementos que serão animados
+  const heroRef = useRef<HTMLElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
+
+  // Sistema de partículas que segue o mouse
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+      
+      // Cria novas partículas
+      if (Math.random() > 0.8) {
+        const newParticle = {
+          id: Date.now() + Math.random(),
+          x: e.clientX,
+          y: e.clientY,
+          size: Math.random() * 6 + 2,
+          speed: Math.random() * 2 + 1
+        };
+        setParticles(prev => [...prev.slice(-20), newParticle]);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Hook para Intersection Observer
+  const useIntersectionObserver = (elementRef: React.RefObject<Element>, elementId: string) => {
+    useEffect(() => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting && hasStarted) {
+            setVisibleElements(prev => new Set([...prev, elementId]));
+          }
+        },
+        { threshold: 0.3, rootMargin: '-50px' }
+      );
+      
+      if (elementRef.current) {
+        observer.observe(elementRef.current);
+      }
+      
+      return () => observer.disconnect();
+    }, [elementRef, elementId, hasStarted]);
+  };
+
+  // Animação sequencial de entrada
+  useEffect(() => {
+    const sequence = [
+      () => setVisibleElements(prev => new Set([...prev, 'hero-bg'])),
+      () => setVisibleElements(prev => new Set([...prev, 'title'])),
+      () => setVisibleElements(prev => new Set([...prev, 'subtitle'])),
+      () => setVisibleElements(prev => new Set([...prev, 'image'])),
+      () => setVisibleElements(prev => new Set([...prev, 'button'])),
+      () => setVisibleElements(prev => new Set([...prev, 'features']))
+    ];
+
+    let currentStep = 0;
+    const interval = setInterval(() => {
+      if (currentStep < sequence.length) {
+        sequence[currentStep]();
+        currentStep++;
+      } else {
+        clearInterval(interval);
+        setHasStarted(true);
+      }
+    }, 350); // Reduzido de 600ms para 350ms
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Aplicar observers
+  useIntersectionObserver(heroRef, 'hero');
+  useIntersectionObserver(titleRef, 'title-scroll');
+  useIntersectionObserver(subtitleRef, 'subtitle-scroll');
+  useIntersectionObserver(imageRef, 'image-scroll');
+  useIntersectionObserver(buttonRef, 'button-scroll');
+  useIntersectionObserver(featuresRef, 'features-scroll');
+
   const scrollToOffer = () => {
     const offerSection = document.getElementById('oferta-final');
     offerSection?.scrollIntoView({
       behavior: 'smooth'
     });
   };
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Sistema de Partículas */}
+      {particles.map(particle => (
+        <div
+          key={particle.id}
+          className="absolute pointer-events-none animate-ping"
+          style={{
+            left: particle.x,
+            top: particle.y,
+            width: particle.size,
+            height: particle.size,
+            background: `radial-gradient(circle, hsl(var(--primary-glow)) 0%, transparent 70%)`,
+            animationDuration: `${particle.speed}s`
+          }}
+        />
+      ))}
       {/* Seção Herói */}
-      <section className="relative min-h-screen flex items-center justify-center hero-gradient overflow-hidden">
+      <section ref={heroRef} className={`relative min-h-screen flex items-center justify-center hero-gradient overflow-hidden transition-all duration-1000 ${visibleElements.has('hero-bg') ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Formas Morphing */}
+        <div className="absolute inset-0">
+          <svg className="w-full h-full" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="morphGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="hsl(var(--primary) / 0.1)" />
+                <stop offset="50%" stopColor="hsl(var(--secondary) / 0.1)" />
+                <stop offset="100%" stopColor="hsl(var(--primary-glow) / 0.1)" />
+              </linearGradient>
+            </defs>
+            
+            {/* Forma 1 - Círculo que vira quadrado */}
+            <path d="M300,200 Q400,100 500,200 Q600,300 500,400 Q400,500 300,400 Q200,300 300,200" 
+                  fill="url(#morphGradient)" className="animate-morph-1">
+              <animateTransform
+                attributeName="transform"
+                type="rotate"
+                values="0 400 300;360 400 300"
+                dur="20s"
+                repeatCount="indefinite"/>
+            </path>
+            
+            {/* Forma 2 - Triângulo que vira estrela */}
+            <path d="M700,150 L750,250 L650,200 L750,200 L700,300 Z" 
+                  fill="url(#morphGradient)" className="animate-morph-2" opacity="0.6">
+              <animateTransform
+                attributeName="transform"
+                type="scale"
+                values="1 1;1.2 0.8;0.8 1.2;1 1"
+                dur="8s"
+                repeatCount="indefinite"/>
+            </path>
+          </svg>
+        </div>
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10"></div>
         
+        {/* ✨ Elementos decorativos sutis */}
+        <div className="absolute top-20 left-10 w-4 h-4 bg-primary/20 rounded-full animate-pulse" style={{animationDelay: '0s'}}></div>
+        <div className="absolute top-32 right-20 w-6 h-6 bg-secondary/15 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-40 left-16 w-3 h-3 bg-primary/25 rounded-full animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 right-12 w-5 h-5 bg-secondary/20 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        
         <div className="container-max relative z-10 text-center text-white px-4">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+            {/* Título com efeito mais dinâmico */}
+            <h1 ref={titleRef} className={`text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight transition-all duration-700 transform ${visibleElements.has('title') ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
               Transforme seu Talento na Cozinha em um 
-              <span className="text-primary-glow">Negócio Lucrativo</span> 
+              <span className="text-primary-glow animate-pulse-fast">Negócio Lucrativo</span> 
               que Fatura de R$ 5.000 a R$ 15.000 por Mês
             </h1>
             
-            <p className="text-xl md:text-2xl mb-8 text-white/90 max-w-3xl mx-auto leading-relaxed">
+            {/* Subtítulo com entrada mais suave */}
+            <p ref={subtitleRef} className={`text-xl md:text-2xl mb-8 text-white/90 max-w-3xl mx-auto leading-relaxed transition-all duration-600 transform ${visibleElements.has('subtitle') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`} style={{transitionDelay: '0.1s'}}>
               O passo a passo completo para você, que ama cozinhar, criar sua fonte de renda e conquistar a independência financeira, 
               <strong>mesmo que não entenda nada de negócios.</strong>
             </p>
             
-            <div className="flex flex-col md:flex-row items-center justify-center gap-8 mb-12">
+            {/* Imagem com efeito elástico dramático */}
+            {/* Volte para a versão simples e funcional */}
+            <div ref={imageRef} className={`flex flex-col md:flex-row items-center justify-center gap-8 mb-12 transition-all duration-800 transform ${visibleElements.has('image') ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-90 rotate-1'}`} style={{transitionDelay: '0.2s'}}>
               <div className="relative">
-                <a href="https://pay.kiwify.com.br/TV099tr" target="_blank" rel="noopener noreferrer">
-                  <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-64 md:w-80 shadow-glow rounded-lg transform hover:scale-105 transition-smooth h-[336px] object-cover cursor-pointer" />
+                <a href="https://pay.kiwify.com.br/TV099tr" target="_blank" rel="noopener noreferrer" className="block">
+                  <img 
+                    src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" 
+                    alt="Ebook Da Cozinha ao Lucro" 
+                    className="w-64 md:w-80 shadow-glow rounded-lg hover:scale-105 transition-all duration-400 h-[336px] object-cover" 
+                  />
                 </a>
-                <div className="absolute -top-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full font-bold text-sm animate-pulse">
+                <div className="absolute -top-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full font-bold text-sm animate-pulse-fast">
                   OFERTA ESPECIAL
                 </div>
               </div>
             </div>
             
-            <Button onClick={() => window.open('https://pay.kiwify.com.br/TV099tr', '_blank')} className="cta-button text-xl md:text-2xl py-6 px-12 mb-8" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
-              QUERO COMEÇAR A LUCRAR COM MINHA COZINHA
-            </Button>
+            {/* Botão com efeito de slide */}
+            <div ref={buttonRef} className={`transition-all duration-500 transform ${visibleElements.has('button') ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`} style={{transitionDelay: '0.3s'}}>
+              <Button onClick={() => window.open('https://pay.kiwify.com.br/TV099tr', '_blank')} className="cta-button-enhanced text-xl md:text-2xl py-6 px-12 mb-8" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+                QUERO COMEÇAR A LUCRAR COM MINHA COZINHA
+              </Button>
+            </div>
             
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
+            {/* Features com entrada escalonada mais rápida */}
+            <div ref={featuresRef} className={`flex flex-wrap justify-center gap-4 text-sm transition-all duration-400 transform ${visibleElements.has('features') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`} style={{transitionDelay: '0.4s'}}>
+              <div className="flex items-center gap-2 animate-slide-in-left-fast" style={{animationDelay: '0.05s'}}>
                 <Shield className="w-5 h-5 text-primary-glow" />
                 <span>Garantia de 7 dias</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 animate-slide-in-left-fast" style={{animationDelay: '0.1s'}}>
                 <Clock className="w-5 h-5 text-primary-glow" />
                 <span>Acesso imediato</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 animate-slide-in-left-fast" style={{animationDelay: '0.15s'}}>
                 <Award className="w-5 h-5 text-primary-glow" />
                 <span>Método comprovado</span>
               </div>
@@ -64,33 +220,35 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Seção de Dor */}
+      {/* Seção de Dor com animação mais rápida */}
       <section className="section-padding bg-muted/30">
         <div className="container-max">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground animate-fade-in-up-fast">
               Você se sente assim?
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto animate-fade-in-up-fast" style={{animationDelay: '0.1s'}}>
               Se você se identifica com alguma dessas situações, este guia é para você:
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {["Recebe elogios pela sua comida, mas não ganha um real com isso?", "Sente que seu dia passa e você não produziu algo que te traga retorno financeiro?", "Sonha em ter seu próprio dinheiro, mas não sabe por onde começar?", "Ouve frases como 'Você não faz nada o dia todo?' e se sente desvalorizada?", "Tem medo de começar um negócio porque acha 'muito complicado'?", "Quer complementar a renda familiar mas não sabe como monetizar seu talento?"].map((pain, index) => <Card key={index} className="shadow-card hover:shadow-elegant transition-smooth border-l-4 border-l-primary">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-animation-fast">
+            {["Recebe elogios pela sua comida, mas não ganha um real com isso?", "Sente que seu dia passa e você não produziu algo que te traga retorno financeiro?", "Sonha em ter seu próprio dinheiro, mas não sabe por onde começar?", "Ouve frases como 'Você não faz nada o dia todo?' e se sente desvalorizada?", "Tem medo de começar um negócio porque acha 'muito complicado'?", "Quer complementar a renda familiar mas não sabe como monetizar seu talento?"].map((pain, index) => (
+              <Card key={index} className="shadow-card hover:shadow-elegant fast-transition border-l-4 border-l-primary hover:border-l-primary-glow hover:-translate-y-1 hover:scale-[1.02] interactive-element">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-primary rounded-full mt-3 flex-shrink-0"></div>
+                    <div className="w-2 h-2 bg-primary rounded-full mt-3 flex-shrink-0 animate-pulse-fast"></div>
                     <p className="text-foreground font-medium">{pain}</p>
                   </div>
                 </CardContent>
-              </Card>)}
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Seção de Apresentação da Solução */}
-      <section className="section-padding">
+      <section className="section-padding animated-gradient-bg">
         <div className="container-max">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground">
@@ -106,7 +264,7 @@ const Index = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <a href="https://pay.kiwify.com.br/TV099tr" target="_blank" rel="noopener noreferrer">
-                <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-full max-w-md mx-auto shadow-elegant rounded-lg h-[252px] object-cover cursor-pointer" />
+                <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-full max-w-md mx-auto shadow-elegant rounded-lg h-[252px] object-cover cursor-pointer transform hover:scale-105 hover:-rotate-2 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20" />
               </a>
             </div>
             
@@ -144,7 +302,7 @@ const Index = () => {
       </section>
 
       {/* Seção de Benefícios */}
-      <section className="section-padding bg-gradient-to-br from-accent/30 to-secondary-light/20">
+      <section className="section-padding bg-gradient-to-br from-accent/30 to-secondary-light/20 animated-gradient-bg">
         <div className="container-max">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
@@ -178,13 +336,13 @@ const Index = () => {
             icon: Award,
             title: "Independência Financeira",
             desc: "Conquiste sua liberdade financeira trabalhando com o que ama, no conforto da sua casa."
-          }].map((benefit, index) => <Card key={index} className="shadow-card hover:shadow-elegant transition-smooth text-center">
+          }].map((benefit, index) => <Card key={index} className="shadow-card hover:shadow-elegant transition-all duration-300 text-center hover:-translate-y-2 hover:scale-[1.02] group cursor-pointer border-l-4 border-l-primary hover:border-l-primary-glow parallax-element">
                 <CardContent className="p-8">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <benefit.icon className="w-8 h-8 text-primary" />
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors duration-300 group-hover:scale-110 transform">
+                    <benefit.icon className="w-8 h-8 text-primary group-hover:text-primary-glow transition-colors duration-300" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3 text-foreground">{benefit.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{benefit.desc}</p>
+                  <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors duration-300">{benefit.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed group-hover:text-foreground/80 transition-colors duration-300">{benefit.desc}</p>
                 </CardContent>
               </Card>)}
           </div>
@@ -262,7 +420,7 @@ const Index = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
               <a href="https://pay.kiwify.com.br/TV099tr" target="_blank" rel="noopener noreferrer">
-                <img src="/images/ebook_receitas_que_vendem_20251117_062322.png" alt="Ebook Receitas que Vendem" className="w-full max-w-sm mx-auto lg:mx-0 shadow-elegant rounded-lg mb-6 h-[216px] object-cover cursor-pointer" />
+                <img src="/images/ebook_receitas_que_vendem_20251117_062322.png" alt="Ebook Receitas que Vendem" className="w-full max-w-sm mx-auto lg:mx-0 shadow-elegant rounded-lg mb-6 h-[216px] object-cover cursor-pointer transform hover:scale-110 hover:rotate-1 transition-all duration-500 hover:shadow-2xl hover:shadow-secondary/20 group-hover:animate-pulse" />
               </a>
             </div>
             
@@ -320,8 +478,8 @@ const Index = () => {
               <div className="grid lg:grid-cols-2 gap-8 items-center">
                 <div className="text-center">
                   <div className="relative">
-                    <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-48 mx-auto mb-4 shadow-elegant rounded-lg h-[108px] object-cover" />
-                    <img src="/images/ebook_receitas_que_vendem_20251117_062322.png" alt="Ebook Receitas que Vendem" className="w-32 absolute -bottom-4 -right-4 shadow-elegant rounded-lg h-[72px] object-cover" />
+                    <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-48 mx-auto mb-4 shadow-elegant rounded-lg h-[108px] object-cover transform hover:scale-110 hover:-rotate-3 transition-all duration-500 hover:shadow-xl hover:shadow-primary/30" />
+                    <img src="/images/ebook_receitas_que_vendem_20251117_062322.png" alt="Ebook Receitas que Vendem" className="w-32 absolute -bottom-4 -right-4 shadow-elegant rounded-lg h-[72px] object-cover transform hover:scale-125 hover:rotate-6 transition-all duration-500 hover:shadow-xl hover:shadow-secondary/30 hover:z-10" />
                   </div>
                 </div>
                 
@@ -444,6 +602,7 @@ const Index = () => {
           </p>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
 export default Index;
