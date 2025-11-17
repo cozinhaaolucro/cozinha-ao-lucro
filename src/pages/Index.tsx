@@ -18,6 +18,7 @@ const Index = () => {
   const imageRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
+  const pricingRef = useRef<HTMLDivElement>(null);
 
   // Sistema de partículas que segue o mouse
   useEffect(() => {
@@ -69,7 +70,8 @@ const Index = () => {
       () => setVisibleElements(prev => new Set([...prev, 'subtitle'])),
       () => setVisibleElements(prev => new Set([...prev, 'image'])),
       () => setVisibleElements(prev => new Set([...prev, 'button'])),
-      () => setVisibleElements(prev => new Set([...prev, 'features']))
+      () => setVisibleElements(prev => new Set([...prev, 'features'])),
+      () => setVisibleElements(prev => new Set([...prev, 'pricing']))
     ];
 
     let currentStep = 0;
@@ -93,6 +95,7 @@ const Index = () => {
   useIntersectionObserver(imageRef, 'image-scroll');
   useIntersectionObserver(buttonRef, 'button-scroll');
   useIntersectionObserver(featuresRef, 'features-scroll');
+  useIntersectionObserver(pricingRef, 'pricing-scroll');
 
   const scrollToOffer = () => {
     const offerSection = document.getElementById('oferta-final');
@@ -166,15 +169,16 @@ const Index = () => {
           <div className="max-w-4xl mx-auto">
             {/* Título com efeito mais dinâmico */}
             <h1 ref={titleRef} className={`text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight transition-all duration-700 transform ${visibleElements.has('title') ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
-              Transforme seu Talento na Cozinha em um  
-              <span className="text-primary-glow animate-pulse-fast">  Negócio Lucrativo </span>
-                que Fatura de R$ 5.000 a R$ 15.000 por Mês
+              Cozinha ao Lucro
+              <span className="block text-2xl md:text-3xl lg:text-4xl font-normal text-primary-glow mt-2">
+                Guia Digital para Empreendedorismo Culinário Caseiro
+              </span>
             </h1>
             
             {/* Subtítulo com entrada mais suave */}
             <p ref={subtitleRef} className={`text-xl md:text-2xl mb-8 text-white/90 max-w-3xl mx-auto leading-relaxed transition-all duration-600 transform ${visibleElements.has('subtitle') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`} style={{transitionDelay: '0.1s'}}>
-              O passo a passo completo para você, que ama cozinhar, criar sua fonte de renda e conquistar a independência financeira, 
-              <strong>mesmo que não entenda nada de negócios.</strong>
+              Aprenda estratégias práticas para transformar sua habilidade culinária em fonte de renda. 
+              <strong> Ebook digital com métodos comprovados, planilhas de custos e suporte por 30 dias.</strong>
             </p>
             
             {/* Imagem com efeito elástico dramático */}
@@ -233,12 +237,12 @@ const Index = () => {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-animation-fast">
-            {["Recebe elogios pela sua comida, mas não ganha um real com isso?", "Sente que seu dia passa e você não produziu algo que te traga retorno financeiro?", "Sonha em ter seu próprio dinheiro, mas não sabe por onde começar?", "Ouve frases como 'Você não faz nada o dia todo?' e se sente desvalorizada?", "Tem medo de começar um negócio porque acha 'muito complicado'?", "Quer complementar a renda familiar mas não sabe como monetizar seu talento?"].map((pain, index) => (
+            {["Quer transformar sua habilidade culinária em fonte de renda?", "Busca estratégias práticas para empreender com produtos caseiros?", "Procura orientação sobre precificação e vendas de alimentos?", "Deseja aprender sobre legalização de negócio culinário?", "Busca métodos comprovados para empreendedorismo feminino?", "Quer complementar sua renda familiar de forma sustentável?"].map((benefit, index) => (
               <Card key={index} className="shadow-card hover:shadow-elegant fast-transition border-l-4 border-l-primary hover:border-l-primary-glow hover:-translate-y-1 hover:scale-[1.02] interactive-element">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 bg-primary rounded-full mt-3 flex-shrink-0 animate-pulse-fast"></div>
-                    <p className="text-foreground font-medium">{pain}</p>
+                    <p className="text-foreground font-medium">{benefit}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -252,8 +256,10 @@ const Index = () => {
         <div className="container-max">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground">
-              Chegou a Hora de Transformar sua Cozinha em sua 
-              <span className="text-primary"> Maior Fonte de Lucro</span>
+              Conteúdo do Ebook Digital
+              <span className="block text-lg md:text-xl font-normal text-primary mt-2">
+                Estratégias práticas para empreendedorismo culinário
+              </span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
               O ebook "Cozinha ao Lucro" é o mapa definitivo para você que tem talento culinário 
@@ -272,14 +278,14 @@ const Index = () => {
               <h3 className="text-2xl font-bold text-foreground mb-6">O que você vai aprender:</h3>
               
               {[{
-              title: "Descobrindo seu Potencial",
-              desc: "Identifique seus pontos fortes e encontre seu nicho perfeito"
+              title: "Avaliação de Habilidades",
+              desc: "Identifique suas especialidades culinárias e preferências de público"
             }, {
-              title: "Escolhendo seu Nicho Lucrativo",
-              desc: "Descubra quais produtos têm maior demanda e margem de lucro"
+              title: "Análise de Mercado",
+              desc: "Estude demanda local e concorrência para escolher seu nicho"
             }, {
-              title: "Precificação que Gera Lucro",
-              desc: "Aprenda a precificar corretamente para garantir lucro real"
+              title: "Precificação Estratégica",
+              desc: "Aprenda métodos para definir preços que cubram custos e gerem margem justa de lucro."
             }, {
               title: "Marketing Sem Gastar Muito",
               desc: "Estratégias simples para atrair clientes sem investir em anúncios"
@@ -314,8 +320,8 @@ const Index = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[{
             icon: DollarSign,
-            title: "Precificar Corretamente",
-            desc: "Nunca mais pagar para trabalhar. Garanta um lucro justo em cada venda com técnicas de precificação profissionais."
+            title: "Precificação Estratégica",
+            desc: "Aprenda métodos para definir preços que cubram custos e gerem margem justa de lucro."
           }, {
             icon: Users,
             title: "Atrair Primeiros Clientes",
@@ -360,8 +366,8 @@ const Index = () => {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[{
-            name: "Júlia, RJ",
-            result: "A lasanha mudou meu mês. 16 porções = R$ 320. Lucro líquido: R$ 204",
+            name: "Ana, São Paulo",
+            result: "Comecei vendendo docinhos aos finais de semana. Em 3 meses alcancei R$ 800/mês de renda extra.",
             rating: 5
           }, {
             name: "Mariana, SP",
@@ -468,8 +474,10 @@ const Index = () => {
         <div className="container-max">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground">
-              Tenha Acesso Imediato a Todo Esse Conhecimento e 
-              <span className="text-primary"> Comece sua Jornada Rumo ao Lucro Hoje!</span>
+              Adquira seu Acesso Digital Agora
+              <span className="block text-lg md:text-xl font-normal text-primary mt-2">
+                Conteúdo entregue por email + suporte por 30 dias
+              </span>
             </h2>
           </div>
           
@@ -598,7 +606,7 @@ const Index = () => {
       <footer className="bg-foreground text-background py-8">
         <div className="container-max text-center">
           <p className="text-sm opacity-80">
-            © 2024 Cozinha ao Lucro. Todos os direitos reservados.
+            © 2024 Cozinha ao Lucro - Conteúdo educacional para empreendedorismo culinário.
           </p>
         </div>
       </footer>
