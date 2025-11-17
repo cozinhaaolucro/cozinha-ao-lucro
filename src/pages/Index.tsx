@@ -166,9 +166,9 @@ const Index = () => {
           <div className="max-w-4xl mx-auto">
             {/* Título com efeito mais dinâmico */}
             <h1 ref={titleRef} className={`text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight transition-all duration-700 transform ${visibleElements.has('title') ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
-              Transforme seu Talento na Cozinha em um 
-              <span className="text-primary-glow animate-pulse-fast">Negócio Lucrativo</span>
-              que Fatura de R$ 5.000 a R$ 15.000 por Mês
+              Transforme seu Talento na Cozinha em um  
+              <span className="text-primary-glow animate-pulse-fast">  Negócio Lucrativo </span>
+                que Fatura de R$ 5.000 a R$ 15.000 por Mês
             </h1>
             
             {/* Subtítulo com entrada mais suave */}
@@ -253,10 +253,10 @@ const Index = () => {
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground">
               Chegou a Hora de Transformar sua Cozinha em sua 
-              <span className="text-primary">Maior Fonte de Lucro</span>
+              <span className="text-primary"> Maior Fonte de Lucro</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-              O ebook "Da Cozinha ao Lucro" é o mapa definitivo para você que tem talento culinário 
+              O ebook "Cozinha ao Lucro" é o mapa definitivo para você que tem talento culinário 
               transformar sua paixão em um negócio caseiro altamente lucrativo.
             </p>
           </div>
@@ -306,8 +306,8 @@ const Index = () => {
         <div className="container-max">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
-              O que você vai conquistar ao aplicar o método 
-              <span className="text-primary">Da Cozinha ao Lucro:</span>
+              O que você vai conquistar ao aplicar o método  
+              <span className="text-primary"> Cozinha ao Lucro:</span>
             </h2>
           </div>
           
@@ -413,7 +413,7 @@ const Index = () => {
             </Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
               Quer acelerar seus resultados e 
-              <span className="text-primary">lucrar ainda mais rápido?</span>
+              <span className="text-primary"> lucrar ainda mais rápido?</span>
             </h2>
           </div>
           
