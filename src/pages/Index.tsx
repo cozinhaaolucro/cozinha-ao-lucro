@@ -34,7 +34,7 @@ const Index = () => {
             <div className="flex flex-col md:flex-row items-center justify-center gap-8 mb-12">
               <div className="relative">
                 <a href="https://pay.kiwify.com.br/TV099tr" target="_blank" rel="noopener noreferrer">
-                  <img src="https://static-us-img.skywork.ai/prod/user/head_picture/1990306762284716032_logo com ebook.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="Ebook Da Cozinha ao Lucro" className="w-64 md:w-80 shadow-glow rounded-lg transform hover:scale-105 transition-smooth sk-edit-loading h-[336px] object-cover cursor-pointer" />
+                  <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-64 md:w-80 shadow-glow rounded-lg transform hover:scale-105 transition-smooth h-[336px] object-cover cursor-pointer" />
                 </a>
                 <div className="absolute -top-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full font-bold text-sm animate-pulse">
                   OFERTA ESPECIAL
@@ -106,7 +106,7 @@ const Index = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <a href="https://pay.kiwify.com.br/TV099tr" target="_blank" rel="noopener noreferrer">
-                <img src="https://static-us-img.skywork.ai/prod/user/head_picture/1990306438077345792_product_cozinha.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="Ebook Da Cozinha ao Lucro" className="w-full max-w-md mx-auto shadow-elegant rounded-lg sk-edit-loading h-[252px] object-cover cursor-pointer" />
+                <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-full max-w-md mx-auto shadow-elegant rounded-lg h-[252px] object-cover cursor-pointer" />
               </a>
             </div>
             
@@ -262,7 +262,7 @@ const Index = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
               <a href="https://pay.kiwify.com.br/TV099tr" target="_blank" rel="noopener noreferrer">
-                <img src="https://static-us-img.skywork.ai/prod/user/head_picture/1990306834594516992_product_receitas.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="Ebook Receitas que Vendem" className="w-full max-w-sm mx-auto lg:mx-0 shadow-elegant rounded-lg mb-6 sk-edit-loading h-[216px] object-cover cursor-pointer" />
+                <img src="/images/ebook_receitas_que_vendem_20251117_062322.png" alt="Ebook Receitas que Vendem" className="w-full max-w-sm mx-auto lg:mx-0 shadow-elegant rounded-lg mb-6 h-[216px] object-cover cursor-pointer" />
               </a>
             </div>
             
@@ -320,8 +320,8 @@ const Index = () => {
               <div className="grid lg:grid-cols-2 gap-8 items-center">
                 <div className="text-center">
                   <div className="relative">
-                    <img src="https://static-us-img.skywork.ai/prod/user/head_picture/1990306883780866048_product_cozinha.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="Ebook Da Cozinha ao Lucro" className="w-48 mx-auto mb-4 shadow-elegant rounded-lg sk-edit-loading h-[108px] object-cover" />
-                    <img src="https://static-us-img.skywork.ai/prod/user/head_picture/1990306925967429632_product_receitas.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="Ebook Receitas que Vendem" className="w-32 absolute -bottom-4 -right-4 shadow-elegant rounded-lg sk-edit-loading h-[72px] object-cover" />
+                    <img src="/images/ebook_da_cozinha_ao_lucro_20251117_062259.png" alt="Ebook Da Cozinha ao Lucro" className="w-48 mx-auto mb-4 shadow-elegant rounded-lg h-[108px] object-cover" />
+                    <img src="/images/ebook_receitas_que_vendem_20251117_062322.png" alt="Ebook Receitas que Vendem" className="w-32 absolute -bottom-4 -right-4 shadow-elegant rounded-lg h-[72px] object-cover" />
                   </div>
                 </div>
                 
