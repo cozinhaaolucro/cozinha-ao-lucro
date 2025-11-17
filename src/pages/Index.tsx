@@ -167,7 +167,7 @@ const Index = () => {
             {/* Título com efeito mais dinâmico */}
             <h1 ref={titleRef} className={`text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight transition-all duration-700 transform ${visibleElements.has('title') ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}>
               Transforme seu Talento na Cozinha em um 
-              <span className="text-primary-glow animate-pulse-fast">Negócio Lucrativo</span> 
+              <span className="text-primary-glow animate-pulse-fast">Negócio Lucrativo</span>
               que Fatura de R$ 5.000 a R$ 15.000 por Mês
             </h1>
             
