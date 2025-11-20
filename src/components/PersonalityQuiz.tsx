@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ChefHat, Clock, DollarSign } from 'lucide-react';
+import { CheckCircle, ChefHat, Clock, DollarSign, ArrowRight, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 
 const QUESTIONS = [
     {
@@ -78,20 +79,32 @@ const PersonalityQuiz = () => {
         const winner = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
         setResultType(winner as any);
         setShowResult(true);
+
+        // Trigger confetti
+        confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
     };
 
     const ResultIcon = RESULTS[resultType].icon;
 
     return (
-        <Card className="w-full max-w-2xl mx-auto shadow-elegant border-primary/20 overflow-hidden bg-white/80 backdrop-blur-sm">
-            <CardHeader className="text-center pb-2">
-                <CardTitle className="text-xl md:text-2xl font-bold text-foreground flex items-center justify-center gap-2">
-                    <ChefHat className="text-primary" />
+        <Card className="w-full max-w-2xl mx-auto glass-panel border-primary/20 overflow-hidden shadow-2xl relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/5 rounded-full blur-3xl"></div>
+
+            <CardHeader className="text-center pb-2 pt-8 relative z-10">
+                <CardTitle className="text-xl md:text-2xl font-bold text-foreground flex items-center justify-center gap-3">
+                    <div className="bg-primary/10 p-2 rounded-full">
+                        <ChefHat className="text-primary w-6 h-6" />
+                    </div>
                     Descubra seu Perfil Lucrativo
                 </CardTitle>
             </CardHeader>
 
-            <CardContent className="p-6 min-h-[300px] flex flex-col justify-center">
+            <CardContent className="p-6 min-h-[300px] flex flex-col justify-center relative z-10">
                 <AnimatePresence mode="wait">
                     {!showResult ? (
                         <motion.div
@@ -99,31 +112,34 @@ const PersonalityQuiz = () => {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
                             className="space-y-6"
                         >
-                            <h3 className="text-lg md:text-xl font-medium text-center mb-6">
+                            <h3 className="text-lg md:text-xl font-medium text-center mb-6 text-foreground/90">
                                 {QUESTIONS[currentQuestion].question}
                             </h3>
                             <div className="grid gap-3">
                                 {QUESTIONS[currentQuestion].options.map((option, idx) => (
-                                    <Button
+                                    <motion.button
                                         key={idx}
-                                        variant="outline"
-                                        className="w-full py-6 text-left justify-start hover:border-primary hover:bg-primary/5 transition-all text-base"
+                                        whileHover={{ scale: 1.02, backgroundColor: "rgba(var(--primary), 0.05)" }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className="w-full py-4 px-6 text-left flex items-center gap-4 rounded-xl border border-border/50 bg-white/40 hover:border-primary/50 hover:shadow-md transition-all group"
                                         onClick={() => handleAnswer(option.type)}
                                     >
-                                        <div className="w-6 h-6 rounded-full border-2 border-muted-foreground mr-3 flex items-center justify-center group-hover:border-primary">
-                                            <div className="w-3 h-3 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center group-hover:border-primary transition-colors">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                                         </div>
-                                        {option.label}
-                                    </Button>
+                                        <span className="text-foreground font-medium">{option.label}</span>
+                                        <ArrowRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 text-primary transition-opacity transform translate-x-[-10px] group-hover:translate-x-0" />
+                                    </motion.button>
                                 ))}
                             </div>
-                            <div className="flex justify-center gap-1 mt-4">
+                            <div className="flex justify-center gap-2 mt-6">
                                 {QUESTIONS.map((_, idx) => (
                                     <div
                                         key={idx}
-                                        className={`h-1.5 rounded-full transition-all duration-300 ${idx <= currentQuestion ? 'w-8 bg-primary' : 'w-2 bg-muted'}`}
+                                        className={`h-1.5 rounded-full transition-all duration-500 ${idx <= currentQuestion ? 'w-8 bg-primary' : 'w-2 bg-muted/50'}`}
                                     />
                                 ))}
                             </div>
@@ -132,21 +148,29 @@ const PersonalityQuiz = () => {
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", duration: 0.6 }}
                             className="text-center space-y-6"
                         >
-                            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <ResultIcon className="w-10 h-10 text-primary" />
+                            <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner animate-float">
+                                <ResultIcon className="w-12 h-12 text-primary" />
                             </div>
 
-                            <h3 className="text-2xl font-bold text-primary">
-                                {RESULTS[resultType].title}
-                            </h3>
+                            <div>
+                                <h3 className="text-2xl font-bold text-foreground mb-2">
+                                    {RESULTS[resultType].title}
+                                </h3>
+                                <div className="flex justify-center gap-1 mb-4">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star key={star} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                                    ))}
+                                </div>
+                            </div>
 
-                            <p className="text-lg text-muted-foreground">
+                            <p className="text-lg text-muted-foreground leading-relaxed bg-white/50 p-4 rounded-lg border border-white/50">
                                 {RESULTS[resultType].description}
                             </p>
 
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+                            <div className="bg-green-50/80 border border-green-200/50 rounded-xl p-4 mt-4 backdrop-blur-sm">
                                 <p className="font-bold text-green-800 flex items-center justify-center gap-2">
                                     <CheckCircle className="w-5 h-5" />
                                     O Método Cozinha ao Lucro é 100% compatível com você!
@@ -155,9 +179,13 @@ const PersonalityQuiz = () => {
 
                             <Button
                                 onClick={() => window.open('https://pay.kiwify.com.br/TV099tr', '_blank')}
-                                className="w-full bg-primary hover:bg-primary-glow text-white font-bold py-6 text-lg shadow-lg animate-pulse"
+                                className="w-full btn-primary py-6 text-lg shadow-lg hover:shadow-primary/50 group relative overflow-hidden"
                             >
-                                QUERO COMEÇAR AGORA
+                                <span className="relative z-10 flex items-center justify-center gap-2">
+                                    QUERO COMEÇAR AGORA
+                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                </span>
+                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                             </Button>
                         </motion.div>
                     )}

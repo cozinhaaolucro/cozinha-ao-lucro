@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, TrendingUp, Calculator } from 'lucide-react';
+import { DollarSign, TrendingUp, Calculator, Sparkles } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 const PRESETS = [
     { name: 'Brigadeiro Gourmet', cost: 0.80, price: 3.50, sales: 50 },
@@ -24,13 +25,43 @@ const ProfitCalculator = () => {
     const [salePrice, setSalePrice] = useState(3.50);
     const [dailySales, setDailySales] = useState(50);
     const [monthlyProfit, setMonthlyProfit] = useState(0);
+    const [hasCelebrated, setHasCelebrated] = useState(false);
 
     useEffect(() => {
         const profitPerUnit = salePrice - costPerUnit;
         const dailyProfit = profitPerUnit * dailySales;
         // Considerando 24 dias de trabalho
-        setMonthlyProfit(dailyProfit * 24);
-    }, [costPerUnit, salePrice, dailySales]);
+        const total = dailyProfit * 24;
+        setMonthlyProfit(total);
+
+        // Trigger confetti if profit is high and hasn't celebrated yet
+        if (total > 5000 && !hasCelebrated) {
+            triggerConfetti();
+            setHasCelebrated(true);
+        } else if (total < 5000) {
+            setHasCelebrated(false);
+        }
+    }, [costPerUnit, salePrice, dailySales, hasCelebrated]);
+
+    const triggerConfetti = () => {
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        const random = (min: number, max: number) => Math.random() * (max - min) + min;
+
+        const interval: any = setInterval(function () {
+            const timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            const particleCount = 50 * (timeLeft / duration);
+            confetti({ ...defaults, particleCount, origin: { x: random(0.1, 0.3), y: Math.random() - 0.2 } });
+            confetti({ ...defaults, particleCount, origin: { x: random(0.7, 0.9), y: Math.random() - 0.2 } });
+        }, 250);
+    };
 
     const handlePresetChange = (value: string) => {
         setSelectedPreset(value);
@@ -56,18 +87,18 @@ const ProfitCalculator = () => {
     };
 
     return (
-        <Card className="w-full max-w-2xl mx-auto shadow-elegant border-primary/20 overflow-hidden relative">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-secondary"></div>
+        <Card className="w-full max-w-2xl mx-auto glass-panel border-primary/20 overflow-hidden relative shadow-2xl">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-primary-glow to-secondary"></div>
 
-            <CardHeader className="text-center pb-2">
-                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                    <Calculator className="w-6 h-6 text-primary" />
+            <CardHeader className="text-center pb-2 pt-8">
+                <div className="mx-auto w-14 h-14 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full flex items-center justify-center mb-4 shadow-inner border border-primary/10">
+                    <Calculator className="w-7 h-7 text-primary" />
                 </div>
                 <CardTitle className="text-2xl md:text-3xl font-bold text-foreground">
                     Simulador de Lucro Real
                 </CardTitle>
-                <p className="text-muted-foreground">
-                    Veja quanto você pode ganhar vendendo {productName || 'seus produtos'}
+                <p className="text-muted-foreground max-w-md mx-auto">
+                    Veja quanto você pode ganhar vendendo <span className="text-primary font-medium">{productName || 'seus produtos'}</span>
                 </p>
             </CardHeader>
 
@@ -77,9 +108,9 @@ const ProfitCalculator = () => {
                     <div className="space-y-6">
 
                         <div className="space-y-2">
-                            <Label>Escolha uma receita do Ebook:</Label>
+                            <Label className="text-foreground/80">Escolha uma receita do Ebook:</Label>
                             <Select value={selectedPreset} onValueChange={handlePresetChange}>
-                                <SelectTrigger className="border-primary/20">
+                                <SelectTrigger className="border-primary/20 bg-white/50 backdrop-blur-sm focus:ring-primary/20">
                                     <SelectValue placeholder="Selecione uma receita" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -99,7 +130,7 @@ const ProfitCalculator = () => {
                                     id="product"
                                     value={productName}
                                     onChange={(e) => setProductName(e.target.value)}
-                                    className="border-primary/20 focus:border-primary"
+                                    className="border-primary/20 focus:border-primary bg-white/50"
                                 />
                             </div>
                         )}
@@ -118,7 +149,7 @@ const ProfitCalculator = () => {
                                             setCostPerUnit(Number(e.target.value));
                                             setSelectedPreset('Personalizado');
                                         }}
-                                        className="pl-8"
+                                        className="pl-8 border-primary/20 bg-white/50"
                                     />
                                 </div>
                             </div>
@@ -135,7 +166,7 @@ const ProfitCalculator = () => {
                                             setSalePrice(Number(e.target.value));
                                             setSelectedPreset('Personalizado');
                                         }}
-                                        className="pl-8 font-bold text-primary"
+                                        className="pl-8 font-bold text-primary border-primary/20 bg-white/50"
                                     />
                                 </div>
                             </div>
@@ -161,25 +192,37 @@ const ProfitCalculator = () => {
                     </div>
 
                     {/* Resultado Visual */}
-                    <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl p-6 flex flex-col items-center justify-center text-center border border-white/50 shadow-inner relative overflow-hidden">
-                        <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-10"></div>
+                    <div className="bg-gradient-to-br from-primary/10 via-white/50 to-secondary/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center border border-white/60 shadow-lg relative overflow-hidden group">
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors"></div>
 
-                        <TrendingUp className="w-12 h-12 text-primary mb-4 animate-bounce" />
+                        <div className="relative z-10">
+                            <div className="mb-4 relative inline-block">
+                                <TrendingUp className="w-12 h-12 text-primary animate-bounce" />
+                                {monthlyProfit > 5000 && (
+                                    <Sparkles className="w-6 h-6 text-yellow-500 absolute -top-2 -right-2 animate-pulse" />
+                                )}
+                            </div>
 
-                        <h3 className="text-lg font-medium text-muted-foreground mb-2">Seu Potencial de Lucro Mensal</h3>
-                        <div className="text-4xl md:text-5xl font-bold text-foreground mb-2 tracking-tight">
-                            {formatCurrency(monthlyProfit)}
+                            <h3 className="text-lg font-medium text-muted-foreground mb-2">Seu Potencial de Lucro Mensal</h3>
+                            <div className="text-4xl md:text-5xl font-bold text-foreground mb-4 tracking-tight drop-shadow-sm">
+                                {formatCurrency(monthlyProfit)}
+                            </div>
+
+                            <div className="w-full bg-white/60 rounded-full h-3 overflow-hidden mb-4 border border-white/40">
+                                <div
+                                    className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-1000 ease-out relative"
+                                    style={{ width: `${Math.min((monthlyProfit / 8000) * 100, 100)}%` }}
+                                >
+                                    <div className="absolute inset-0 bg-white/30 animate-shimmer"></div>
+                                </div>
+                            </div>
+
+                            <p className={`text-sm font-medium mt-2 transition-colors duration-300 ${monthlyProfit > 3000 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                {monthlyProfit > 5000 ? '🚀 Você vai ganhar mais que muito gerente!' :
+                                    monthlyProfit > 2000 ? '✨ Um ótimo começo para sua independência!' :
+                                        'Comece pequeno e cresça rápido!'}
+                            </p>
                         </div>
-
-                        <div className="mt-4 w-full bg-white/50 rounded-full h-2 overflow-hidden">
-                            <div
-                                className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-1000 ease-out"
-                                style={{ width: `${Math.min((monthlyProfit / 5000) * 100, 100)}%` }}
-                            ></div>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-2">
-                            {monthlyProfit > 3000 ? '🚀 Você vai ganhar mais que muito gerente!' : 'Um ótimo começo para sua independência!'}
-                        </p>
                     </div>
                 </div>
             </CardContent>
