@@ -45,7 +45,7 @@ const QUESTIONS = [
 ];
 
 interface DetailedQuizProps {
-    onComplete: (result: any) => void;
+    onComplete: (result: string[]) => void;
 }
 
 const DetailedQuiz = ({ onComplete }: DetailedQuizProps) => {

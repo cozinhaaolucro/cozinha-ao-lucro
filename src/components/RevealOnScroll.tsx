@@ -36,7 +36,7 @@ export const RevealOnScroll = ({
             opacity: 1,
             y: 0,
             x: 0,
-            transition: { duration: 0.8, delay: delay, ease: [0.25, 0.25, 0.25, 0.75] as any } // Elastic ease
+            transition: { duration: 0.8, delay: delay, ease: [0.25, 0.25, 0.25, 0.75] as [number, number, number, number] } // Elastic ease
         },
     };
 

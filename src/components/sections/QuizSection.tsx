@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const QuizSection = () => {
     const [simpleQuizResult, setSimpleQuizResult] = useState<string | null>(null);
-    const [detailedQuizResult, setDetailedQuizResult] = useState<any | null>(null);
+    const [detailedQuizResult, setDetailedQuizResult] = useState<string[] | null>(null);
 
     const allCompleted = simpleQuizResult && detailedQuizResult;
 

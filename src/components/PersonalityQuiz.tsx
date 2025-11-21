@@ -77,7 +77,7 @@ const PersonalityQuiz = () => {
         }, {} as Record<string, number>);
 
         const winner = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-        setResultType(winner as any);
+        setResultType(winner as 'express' | 'balanced' | 'pro');
         setShowResult(true);
 
         // Trigger confetti
