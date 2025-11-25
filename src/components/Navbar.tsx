@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, UserCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -34,8 +36,8 @@ const Navbar = () => {
     return (
         <nav
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-                    ? 'bg-background/80 backdrop-blur-md shadow-sm py-4'
-                    : 'bg-transparent py-6'
+                ? 'bg-background/80 backdrop-blur-md shadow-sm py-4'
+                : 'bg-transparent py-6'
                 }`}
         >
             <div className="container-max px-4 md:px-8 flex items-center justify-between">
@@ -69,6 +71,14 @@ const Navbar = () => {
                     >
                         COMPRAR AGORA
                     </Button>
+                    <Button
+                        variant="ghost"
+                        onClick={() => navigate('/login')}
+                        className={`font-medium gap-2 ${isScrolled ? 'text-foreground hover:bg-primary/10' : 'text-white hover:bg-white/10 hover:text-white'}`}
+                    >
+                        <UserCircle className="w-5 h-5" />
+                        Entrar
+                    </Button>
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -96,6 +106,14 @@ const Navbar = () => {
                             className="w-full mt-4 bg-primary text-primary-foreground font-bold py-6"
                         >
                             COMPRAR AGORA
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => navigate('/login')}
+                            className="w-full gap-2"
+                        >
+                            <UserCircle className="w-5 h-5" />
+                            Área do Aluno
                         </Button>
                     </div>
                 )}
