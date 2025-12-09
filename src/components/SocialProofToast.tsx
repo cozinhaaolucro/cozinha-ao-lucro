@@ -6,7 +6,8 @@ const NAMES = [
     "Ana P. de São Paulo", "Mariana S. do Rio", "Carla M. de Minas",
     "Júlia R. do Sul", "Fernanda L. da Bahia", "Patrícia O. de Curitiba",
     "Beatriz C. de Brasília", "Larissa M. de Goiânia", "Sofia T. de Recife",
-    "Camila R. de Porto Alegre"
+    "Camila R. de Porto Alegre", "Roberto M. de São Paulo", "Lucas S. de BH",
+    "Juliana A. de Salvador", "Marcos P. de Fortaleza"
 ];
 
 const ACTIONS = [
@@ -27,8 +28,8 @@ const SocialProofToast = () => {
             // Verificar horário (8h às 23h)
             const currentHour = new Date().getHours();
             if (currentHour < 8 || currentHour >= 23) {
-                // Se estiver fora do horário, tenta novamente em 1 minuto
-                timeoutId = setTimeout(scheduleNextNotification, 60000);
+                // Se estiver fora do horário, tenta novamente em 10 minutos
+                timeoutId = setTimeout(scheduleNextNotification, 600000);
                 return;
             }
 
@@ -44,9 +45,9 @@ const SocialProofToast = () => {
                 setNotifications(prev => prev.filter(n => n.id !== newId));
             }, 5000);
 
-            // Lógica de "Escadinha" (Burst)
-            // 30% de chance de lançar outra notificação logo em seguida (2-4 segundos)
-            const isBurst = Math.random() < 0.3;
+            // Lógica de "Escadinha" (Burst) - Reduzida drasticamente
+            // 10% de chance de lançar outra notificação logo em seguida
+            const isBurst = Math.random() < 0.1;
 
             if (isBurst) {
                 setTimeout(() => {
@@ -63,8 +64,8 @@ const SocialProofToast = () => {
                 }, Math.random() * 2000 + 2000); // 2 a 4 segundos depois
             }
 
-            // Próximo agendamento: Mais espaçado (30 a 60 segundos)
-            const nextDelay = Math.random() * 30000 + 30000;
+            // Próximo agendamento: Mais espaçado (2 a 5 minutos)
+            const nextDelay = Math.random() * 180000 + 120000;
             timeoutId = setTimeout(scheduleNextNotification, nextDelay);
         };
 

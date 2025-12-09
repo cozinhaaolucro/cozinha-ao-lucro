@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -11,16 +11,29 @@ import {
     LogOut,
     Menu,
     X,
-    ChefHat
+    ChefHat,
+    Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const DashboardLayout = () => {
-    const { signOut, user } = useAuth();
+    const { signOut, user, loading } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    useEffect(() => {
+        if (!loading && !user) {
+            navigate('/login');
+        }
+    }, [user, loading, navigate]);
+
+    if (loading) {
+        return <div className="flex items-center justify-center h-screen">Carregando...</div>;
+    }
+
+    if (!user) return null;
 
     const handleSignOut = async () => {
         await signOut();
@@ -34,6 +47,7 @@ const DashboardLayout = () => {
         { path: '/app/produtos', label: 'Produtos', icon: ChefHat },
         { path: '/app/agenda', label: 'Agenda', icon: Calendar },
         { path: '/app/aprender', label: 'Aprender', icon: BookOpen },
+        { path: '/app/settings', label: 'Configurações', icon: Settings },
     ];
 
     const isActive = (path: string) => location.pathname === path;
@@ -55,8 +69,8 @@ const DashboardLayout = () => {
                             key={item.path}
                             to={item.path}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive(item.path)
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
                                 }`}
                         >
                             <item.icon className="w-5 h-5" />
@@ -106,8 +120,8 @@ const DashboardLayout = () => {
                                     to={item.path}
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive(item.path)
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
                                         }`}
                                 >
                                     <item.icon className="w-5 h-5" />
@@ -137,8 +151,8 @@ const DashboardLayout = () => {
                         key={item.path}
                         to={item.path}
                         className={`flex flex-col items-center justify-center w-full h-full gap-1 ${isActive(item.path)
-                                ? 'text-primary'
-                                : 'text-muted-foreground hover:text-foreground'
+                            ? 'text-primary'
+                            : 'text-muted-foreground hover:text-foreground'
                             }`}
                     >
                         <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'fill-current' : ''}`} />

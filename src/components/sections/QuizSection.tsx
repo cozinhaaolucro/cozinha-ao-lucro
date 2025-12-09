@@ -24,7 +24,7 @@ const QuizSection = () => {
                             DESCUBRA SEU POTENCIAL
                         </Badge>
                         <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
-                            Este método é para você?
+                            Esta plataforma é para você?
                         </h2>
                         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                             Faça os testes abaixo para receber um diagnóstico completo do seu perfil e potencial de lucro.
@@ -56,13 +56,13 @@ const QuizSection = () => {
                                     <Sparkles className="w-6 h-6 text-yellow-600 animate-pulse" />
                                 </div>
                                 <p className="text-lg text-muted-foreground mb-6">
-                                    Você tem o <strong>Perfil {simpleQuizResult === 'pro' ? 'Visionário' : simpleQuizResult === 'balanced' ? 'Empreendedor' : 'Iniciante'}</strong> com um plano claro para atingir sua meta. O método Cozinha ao Lucro foi desenhado exatamente para pessoas como você.
+                                    Você tem o <strong>Perfil {simpleQuizResult === 'pro' ? 'Visionário' : simpleQuizResult === 'balanced' ? 'Empreendedor' : 'Iniciante'}</strong> com um plano claro para atingir sua meta. A plataforma Cozinha ao Lucro foi desenhada exatamente para pessoas como você.
                                 </p>
                                 <Button
-                                    onClick={() => window.open('https://pay.kiwify.com.br/TV099tr', '_blank')}
+                                    onClick={() => window.location.href = '/auth'}
                                     className="btn-primary px-8 py-6 text-lg shadow-xl hover:scale-105 transition-transform"
                                 >
-                                    ACESSAR MEU PLANO AGORA
+                                    CRIAR MINHA CONTA GRÁTIS
                                     <ArrowRight className="ml-2 w-5 h-5" />
                                 </Button>
                             </div>

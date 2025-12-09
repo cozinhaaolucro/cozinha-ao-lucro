@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,8 @@ const Register = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const plan = searchParams.get('plan');
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,10 +40,15 @@ const Register = () => {
             if (data.user) {
                 // Optional: Create profile record here if needed, 
                 // though Supabase triggers are better for this.
-                navigate('/app/dashboard');
+                if (plan) {
+                    navigate(`/checkout?plan=${plan}`);
+                } else {
+                    navigate('/app/dashboard');
+                }
             }
-        } catch (err: any) {
-            setError(err.message || 'Erro ao criar conta');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Erro ao criar conta';
+            setError(message);
         } finally {
             setLoading(false);
         }
@@ -55,6 +62,16 @@ const Register = () => {
                     <CardDescription>
                         Crie sua conta e profissionalize sua cozinha
                     </CardDescription>
+
+                    {plan && (
+                        <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/10">
+                            <p className="text-sm text-muted-foreground mb-1">Você selecionou:</p>
+                            <p className="font-bold text-foreground">
+                                {plan === 'annual' ? 'Plano Anual (R$ 399,00)' : 'Plano Mensal (R$ 39,90)'}
+                            </p>
+                            <p className="text-xs text-green-600 mt-1">Primeiro mês grátis incluído</p>
+                        </div>
+                    )}
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleRegister} className="space-y-4">
@@ -105,7 +122,7 @@ const Register = () => {
                 <CardFooter className="flex flex-col space-y-2 text-center">
                     <div className="text-sm text-muted-foreground">
                         Já tem uma conta?{' '}
-                        <Link to="/login" className="text-primary hover:underline font-medium">
+                        <Link to={`/login${window.location.search}`} className="text-primary hover:underline font-medium">
                             Fazer Login
                         </Link>
                     </div>

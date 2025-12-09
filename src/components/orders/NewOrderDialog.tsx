@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, X } from 'lucide-react';
 import { getCustomers, getProducts, createOrder } from '@/lib/database';
-import type { Customer, Product } from '@/types/database';
+import type { Customer, Product, OrderStatus } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 
 type NewOrderDialogProps = {
@@ -24,7 +24,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
         delivery_date: '',
         delivery_time: '',
         notes: '',
-        status: 'pending' as const,
+        status: 'pending' as OrderStatus,
     });
     const [items, setItems] = useState<Array<{ product_id: string; quantity: number }>>([]);
     const { toast } = useToast();
@@ -41,7 +41,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
             getProducts(),
         ]);
         if (customersRes.data) setCustomers(customersRes.data);
-        if (productsRes.data) setProducts(productsRes.data as any);
+        if (productsRes.data) setProducts(productsRes.data);
     };
 
     const addItem = () => {
@@ -96,7 +96,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                 notes: formData.notes || null,
                 status: formData.status,
                 total_value: calculateTotal(),
-                order_number: null,
+                order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
             },
             orderItems
         );
@@ -106,7 +106,12 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
             onSuccess();
             resetForm();
         } else {
-            toast({ title: 'Erro ao criar pedido', variant: 'destructive' });
+            console.error('Erro detalhado ao criar pedido:', error);
+            toast({
+                title: 'Erro ao criar pedido',
+                description: error.message || 'Verifique o console para mais detalhes.',
+                variant: 'destructive'
+            });
         }
     };
 
@@ -141,7 +146,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
 
                         <div>
                             <Label htmlFor="status">Status</Label>
-                            <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+                            <Select value={formData.status} onValueChange={(value: string) => setFormData({ ...formData, status: value as OrderStatus })}>
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>

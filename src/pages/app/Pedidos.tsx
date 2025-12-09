@@ -11,6 +11,9 @@ import NewOrderDialog from '@/components/orders/NewOrderDialog';
 import EditOrderDialog from '@/components/orders/EditOrderDialog';
 import { useToast } from '@/hooks/use-toast';
 import { parseLocalDate, formatLocalDate } from '@/lib/dateUtils';
+import ClientProfileDrawer from '@/components/crm/ClientProfileDrawer';
+import SendMessageDialog from '@/components/crm/SendMessageDialog';
+import { Customer, OrderStatus } from '@/types/database';
 
 const STATUS_COLUMNS = {
     pending: { label: 'A Fazer', color: 'bg-yellow-50 border-yellow-200' },
@@ -25,6 +28,13 @@ const Pedidos = () => {
     const [editingOrder, setEditingOrder] = useState<OrderWithDetails | null>(null);
     const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
     const [draggedOrder, setDraggedOrder] = useState<string | null>(null);
+
+    // CRM States
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [messageOrder, setMessageOrder] = useState<OrderWithDetails | null>(null);
+    const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
+
     const { toast } = useToast();
 
     const loadOrders = async () => {
@@ -43,9 +53,16 @@ const Pedidos = () => {
         return formatLocalDate(date);
     };
 
-    const handleWhatsApp = (phone: string, customerName: string) => {
-        const message = `Olá ${customerName}! Seu pedido está pronto! 🎉`;
-        window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
+    const handleWhatsApp = (order: OrderWithDetails) => {
+        setMessageOrder(order);
+        setIsMessageDialogOpen(true);
+    };
+
+    const handleCustomerClick = (customer: Customer | null) => {
+        if (customer) {
+            setSelectedCustomer(customer);
+            setIsDrawerOpen(true);
+        }
     };
 
     const filteredOrders = orders.filter((order) => {
@@ -87,7 +104,7 @@ const Pedidos = () => {
         // Update locally first
         setOrders(prevOrders =>
             prevOrders.map(order =>
-                order.id === draggedOrder ? { ...order, status: newStatus as any } : order
+                order.id === draggedOrder ? { ...order, status: newStatus as OrderStatus } : order
             )
         );
 
@@ -190,7 +207,12 @@ const Pedidos = () => {
                                         >
                                             <CardHeader className="pb-3">
                                                 <CardTitle className="text-sm flex items-center justify-between">
-                                                    <span>{order.customer?.name || 'Cliente não informado'}</span>
+                                                    <span
+                                                        className="hover:underline cursor-pointer text-primary"
+                                                        onClick={() => handleCustomerClick(order.customer)}
+                                                    >
+                                                        {order.customer?.name || 'Cliente não informado'}
+                                                    </span>
                                                     <div className="flex gap-1">
                                                         <Button
                                                             variant="ghost"
@@ -207,10 +229,10 @@ const Pedidos = () => {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-6 w-6"
+                                                                className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    handleWhatsApp(order.customer!.phone!, order.customer!.name);
+                                                                    handleWhatsApp(order);
                                                                 }}
                                                             >
                                                                 <Phone className="w-3 h-3" />
@@ -258,6 +280,19 @@ const Pedidos = () => {
                     loadOrders();
                     setEditingOrder(null);
                 }}
+            />
+
+            <ClientProfileDrawer
+                customer={selectedCustomer}
+                open={isDrawerOpen}
+                onOpenChange={setIsDrawerOpen}
+                onUpdate={loadOrders}
+            />
+
+            <SendMessageDialog
+                order={messageOrder}
+                open={isMessageDialogOpen}
+                onOpenChange={setIsMessageDialogOpen}
             />
         </div>
     );

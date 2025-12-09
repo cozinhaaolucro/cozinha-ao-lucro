@@ -45,7 +45,7 @@ const EditProductDialog = ({ product, open, onOpenChange, onSuccess }: EditProdu
                     name: product.name,
                     description: product.description || '',
                     selling_price: product.selling_price || 0,
-                    selling_unit: (product as any).selling_unit || 'unidade',
+                    selling_unit: (product as ProductWithIngredients & { selling_unit?: string }).selling_unit || 'unidade',
                 });
                 setSelectedIngredients(
                     product.product_ingredients?.map(pi => ({
@@ -146,6 +146,24 @@ const EditProductDialog = ({ product, open, onOpenChange, onSuccess }: EditProdu
         toast({ title: 'Produto atualizado com sucesso!' });
         onSuccess();
         onOpenChange(false);
+    };
+
+    const handleDelete = async () => {
+        if (!product) return;
+        if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+
+        const { error } = await supabase
+            .from('products')
+            .delete()
+            .eq('id', product.id);
+
+        if (error) {
+            toast({ title: 'Erro ao excluir produto', description: error.message, variant: 'destructive' });
+        } else {
+            toast({ title: 'Produto excluído com sucesso' });
+            onSuccess();
+            onOpenChange(false);
+        }
     };
 
     if (!product) return null;
@@ -296,6 +314,7 @@ const EditProductDialog = ({ product, open, onOpenChange, onSuccess }: EditProdu
 
                     <div className="flex gap-2">
                         <Button type="submit" className="flex-1">Salvar Alterações</Button>
+                        <Button type="button" variant="destructive" onClick={handleDelete}>Excluir</Button>
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
                     </div>
                 </form>

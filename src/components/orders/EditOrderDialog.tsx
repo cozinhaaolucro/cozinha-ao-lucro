@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, X, Trash2 } from 'lucide-react';
 import { getCustomers, getProducts } from '@/lib/database';
 import { supabase } from '@/lib/supabase';
-import type { Customer, Product, OrderWithDetails } from '@/types/database';
+import type { Customer, Product, OrderWithDetails, OrderStatus } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 
 type EditOrderDialogProps = {
@@ -27,7 +27,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
         delivery_date: '',
         delivery_time: '',
         notes: '',
-        status: 'pending' as const,
+        status: 'pending' as OrderStatus,
     });
     const [items, setItems] = useState<Array<{ id?: string; product_id: string; product_name: string; quantity: number; unit_price: number }>>([]);
     const { toast } = useToast();
@@ -41,7 +41,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                     delivery_date: order.delivery_date || '',
                     delivery_time: order.delivery_time || '',
                     notes: order.notes || '',
-                    status: order.status as any,
+                    status: order.status,
                 });
                 setItems(order.items?.map(item => ({
                     id: item.id,
@@ -60,7 +60,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
             getProducts(),
         ]);
         if (customersRes.data) setCustomers(customersRes.data);
-        if (productsRes.data) setProducts(productsRes.data as any);
+        if (productsRes.data) setProducts(productsRes.data);
     };
 
     const addItem = () => {
@@ -170,6 +170,24 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
         }
     };
 
+    const handleDelete = async () => {
+        if (!order) return;
+        if (!confirm('Tem certeza que deseja EXCLUIR este pedido permanentemente?')) return;
+
+        const { error } = await supabase
+            .from('orders')
+            .delete()
+            .eq('id', order.id);
+
+        if (error) {
+            toast({ title: 'Erro ao excluir pedido', description: error.message, variant: 'destructive' });
+        } else {
+            toast({ title: 'Pedido excluído com sucesso' });
+            onSuccess();
+            onOpenChange(false);
+        }
+    };
+
     if (!order) return null;
 
     return (
@@ -202,7 +220,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
 
                         <div>
                             <Label htmlFor="status">Status</Label>
-                            <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+                            <Select value={formData.status} onValueChange={(value: string) => setFormData({ ...formData, status: value as OrderStatus })}>
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
@@ -312,11 +330,16 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                                 <Trash2 className="w-4 h-4" />
                                 Cancelar Pedido
                             </Button>
+
                         )}
+                        <Button type="button" variant="destructive" onClick={handleDelete} className="gap-2">
+                            <Trash2 className="w-4 h-4" />
+                            Excluir
+                        </Button>
                     </div>
                 </form>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 };
 

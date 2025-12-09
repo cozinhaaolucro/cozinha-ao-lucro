@@ -63,6 +63,24 @@ const EditCustomerDialog = ({ customer, open, onOpenChange, onSuccess }: EditCus
         }
     };
 
+    const handleDelete = async () => {
+        if (!customer) return;
+        if (!confirm('Tem certeza que deseja excluir este cliente?')) return;
+
+        const { error } = await supabase
+            .from('customers')
+            .delete()
+            .eq('id', customer.id);
+
+        if (error) {
+            toast({ title: 'Erro ao excluir cliente', description: error.message, variant: 'destructive' });
+        } else {
+            toast({ title: 'Cliente excluído com sucesso' });
+            onSuccess();
+            onOpenChange(false);
+        }
+    };
+
     if (!customer) return null;
 
     return (
@@ -116,6 +134,7 @@ const EditCustomerDialog = ({ customer, open, onOpenChange, onSuccess }: EditCus
 
                     <div className="flex gap-2">
                         <Button type="submit" className="flex-1">Salvar</Button>
+                        <Button type="button" variant="destructive" onClick={handleDelete}>Excluir</Button>
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                             Cancelar
                         </Button>

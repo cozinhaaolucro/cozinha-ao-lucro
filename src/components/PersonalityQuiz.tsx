@@ -178,7 +178,7 @@ const PersonalityQuiz = () => {
                             </div>
 
                             <Button
-                                onClick={() => window.open('https://pay.kiwify.com.br/TV099tr', '_blank')}
+                                onClick={() => document.getElementById('precos')?.scrollIntoView({ behavior: 'smooth' })}
                                 className="w-full btn-primary py-6 text-lg shadow-lg hover:shadow-primary/50 group relative overflow-hidden"
                             >
                                 <span className="relative z-10 flex items-center justify-center gap-2">

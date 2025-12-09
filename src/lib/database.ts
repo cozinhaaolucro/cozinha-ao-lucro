@@ -8,7 +8,9 @@ import type {
     Order,
     OrderItem,
     OrderWithDetails,
-    ProductWithCost
+    ProductWithCost,
+    MessageTemplate,
+    InteractionLog
 } from '@/types/database';
 
 // Profiles
@@ -40,12 +42,22 @@ export const getIngredients = async () => {
 };
 
 export const createIngredient = async (ingredient: Omit<Ingredient, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    console.log('Creating ingredient:', ingredient);
     const user = (await supabase.auth.getUser()).data.user;
+    if (!user) {
+        console.error('User not authenticated');
+        return { data: null, error: new Error('Usuário não autenticado') };
+    }
+
     const { data, error } = await supabase
         .from('ingredients')
-        .insert({ ...ingredient, user_id: user?.id })
+        .insert({ ...ingredient, user_id: user.id })
         .select()
         .single();
+
+    if (error) console.error('Error creating ingredient:', error);
+    else console.log('Ingredient created:', data);
+
     return { data, error };
 };
 
@@ -88,14 +100,19 @@ export const createProduct = async (
     ingredients: Array<{ ingredient_id: string; quantity: number }>
 ) => {
     const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: null, error: new Error('Usuário não autenticado') };
 
     const { data: productData, error: productError } = await supabase
         .from('products')
-        .insert({ ...product, user_id: user?.id })
+        .insert({ ...product, user_id: user.id })
         .select()
         .single();
 
-    if (productError || !productData) return { data: null, error: productError };
+    if (productError || !productData) {
+        console.error('Error creating product:', productError);
+        return { data: null, error: productError };
+    }
+    console.log('Product created:', productData);
 
     if (ingredients.length > 0) {
         const { error: ingredientsError } = await supabase
@@ -125,9 +142,11 @@ export const getCustomers = async () => {
 
 export const createCustomer = async (customer: Omit<Customer, 'id' | 'user_id' | 'total_orders' | 'total_spent' | 'created_at' | 'updated_at'>) => {
     const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: null, error: new Error('Usuário não autenticado') };
+
     const { data, error } = await supabase
         .from('customers')
-        .insert({ ...customer, user_id: user?.id })
+        .insert({ ...customer, user_id: user.id })
         .select()
         .single();
     return { data, error };
@@ -159,15 +178,21 @@ export const createOrder = async (
     order: Omit<Order, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
     items: Array<Omit<OrderItem, 'id' | 'order_id'>>
 ) => {
+    console.log('Creating order:', order, 'Items:', items);
     const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: null, error: new Error('Usuário não autenticado') };
 
     const { data: orderData, error: orderError } = await supabase
         .from('orders')
-        .insert({ ...order, user_id: user?.id })
+        .insert({ ...order, user_id: user.id })
         .select()
         .single();
 
-    if (orderError || !orderData) return { data: null, error: orderError };
+    if (orderError || !orderData) {
+        console.error('Error creating order:', orderError);
+        return { data: null, error: orderError };
+    }
+    console.log('Order created:', orderData);
 
     const { error: itemsError } = await supabase
         .from('order_items')
@@ -190,5 +215,92 @@ export const updateOrderStatus = async (id: string, status: string) => {
         .eq('id', id)
         .select()
         .single();
+    return { data, error };
+};
+
+export const deleteOrder = async (id: string) => {
+    const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', id);
+    return { error };
+};
+
+export const updateCustomer = async (id: string, updates: Partial<Customer>) => {
+    const { data, error } = await supabase
+        .from('customers')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+    return { data, error };
+};
+
+export const deleteCustomer = async (id: string) => {
+    const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', id);
+    return { error };
+};
+
+// Message Templates
+export const getMessageTemplates = async () => {
+    const { data, error } = await supabase
+        .from('message_templates')
+        .select('*')
+        .order('title');
+    return { data, error };
+};
+
+export const createMessageTemplate = async (template: Omit<MessageTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    const { data, error } = await supabase
+        .from('message_templates')
+        .insert({ ...template, user_id: user?.id })
+        .select()
+        .single();
+    return { data, error };
+};
+
+export const updateMessageTemplate = async (id: string, updates: Partial<MessageTemplate>) => {
+    const { data, error } = await supabase
+        .from('message_templates')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+    return { data, error };
+};
+
+export const deleteMessageTemplate = async (id: string) => {
+    const { error } = await supabase
+        .from('message_templates')
+        .delete()
+        .eq('id', id);
+    return { error };
+};
+
+// Interaction Logs
+export const createInteractionLog = async (log: Omit<InteractionLog, 'id' | 'user_id' | 'sent_at'>) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    const { data, error } = await supabase
+        .from('interaction_logs')
+        .insert({ ...log, user_id: user?.id })
+        .select()
+        .single();
+    return { data, error };
+};
+
+export const getInteractionLogs = async (customerId?: string, orderId?: string) => {
+    let query = supabase
+        .from('interaction_logs')
+        .select('*')
+        .order('sent_at', { ascending: false });
+
+    if (customerId) query = query.eq('customer_id', customerId);
+    if (orderId) query = query.eq('order_id', orderId);
+
+    const { data, error } = await query;
     return { data, error };
 };

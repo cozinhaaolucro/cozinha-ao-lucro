@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,8 +17,19 @@ import {
     AlertCircle,
     BarChart3,
 } from 'lucide-react';
+import {
+    BarChart,
+    Bar,
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer
+} from 'recharts';
 import { getOrders, getCustomers, getProducts, getIngredients } from '@/lib/database';
-import type { OrderWithDetails, Customer, Product, Ingredient } from '@/types/database';
+import type { OrderWithDetails, Customer, Product, Ingredient, ProductWithIngredients, ProductIngredientWithDetails } from '@/types/database';
 
 interface StockDemandAnalysis {
     ingredient: Ingredient;
@@ -28,9 +40,10 @@ interface StockDemandAnalysis {
 }
 
 const Dashboard = () => {
+    const navigate = useNavigate();
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
-    const [products, setProducts] = useState<Product[]>([]);
+    const [products, setProducts] = useState<ProductWithIngredients[]>([]);
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [period, setPeriod] = useState('30');
 
@@ -47,7 +60,7 @@ const Dashboard = () => {
         ]);
         if (ordersRes.data) setOrders(ordersRes.data);
         if (customersRes.data) setCustomers(customersRes.data);
-        if (productsRes.data) setProducts(productsRes.data as any);
+        if (productsRes.data) setProducts(productsRes.data as ProductWithIngredients[]);
         if (ingredientsRes.data) setIngredients(ingredientsRes.data);
     };
 
@@ -64,13 +77,11 @@ const Dashboard = () => {
     };
 
     // Calculate product cost based on its recipe
-    const getProductCost = (product: Product): number => {
-        const p = product as any;
-        if (!p.recipe) return 0;
-        return p.recipe.reduce((total: number, r: any) => {
-            const ing = ingredients.find(i => i.id === r.ingredient_id);
-            if (!ing) return total;
-            return total + (ing.cost_per_unit ?? 0) * r.quantity;
+    const getProductCost = (product: ProductWithIngredients): number => {
+        if (!product.product_ingredients) return 0;
+        return product.product_ingredients.reduce((total: number, r: ProductIngredientWithDetails) => {
+            if (!r.ingredient) return total;
+            return total + (r.ingredient.cost_per_unit ?? 0) * r.quantity;
         }, 0);
     };
 
@@ -91,16 +102,17 @@ const Dashboard = () => {
         const demandMap = new Map<string, number>();
         pending.forEach(order => {
             order.items?.forEach(item => {
-                const prod = products.find(p => p.id === item.product_id) as any;
-                if (!prod?.recipe) return;
-                prod.recipe.forEach((r: any) => {
+                const prod = products.find(p => p.id === item.product_id);
+                if (!prod?.product_ingredients) return;
+                prod.product_ingredients.forEach((r: ProductIngredientWithDetails) => {
+                    if (!r.ingredient) return;
                     const needed = r.quantity * item.quantity;
-                    demandMap.set(r.ingredient_id, (demandMap.get(r.ingredient_id) || 0) + needed);
+                    demandMap.set(r.ingredient.id, (demandMap.get(r.ingredient.id) || 0) + needed);
                 });
             });
         });
         return ingredients.map(ing => {
-            const stock = (ing as any).stock_quantity ?? 0;
+            const stock = ing.stock_quantity ?? 0;
             const demand = demandMap.get(ing.id) ?? 0;
             const balance = stock - demand;
             let status: 'sufficient' | 'low' | 'critical' = 'sufficient';
@@ -154,8 +166,9 @@ const Dashboard = () => {
         .slice(0, 5);
 
     // Last 14 days data for chart
+    // Last 14 days data for chart
     const getLast14Days = () => {
-        const days: { date: string; revenue: number; profit: number }[] = [];
+        const days: { date: string; revenue: number; profit: number; ordersCount: number; averageTicket: number }[] = [];
         for (let i = 13; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);
@@ -166,12 +179,18 @@ const Dashboard = () => {
             });
             const rev = dayOrders.reduce((s, o) => s + o.total_value, 0);
             const cost = dayOrders.reduce((s, o) => s + getOrderCost(o), 0);
-            days.push({ date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }), revenue: rev, profit: rev - cost });
+            const count = dayOrders.length;
+            days.push({
+                date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                revenue: rev,
+                profit: rev - cost,
+                ordersCount: count,
+                averageTicket: count > 0 ? rev / count : 0
+            });
         }
         return days;
     };
     const dailyData = getLast14Days();
-    const maxRevenue = Math.max(...dailyData.map(d => d.revenue), 1);
 
     return (
         <div className="space-y-6">
@@ -266,43 +285,78 @@ const Dashboard = () => {
             )}
 
             {/* Compact chart */}
-            <Card>
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                        <BarChart3 className="w-4 h-4" />
-                        Evolução - Últimos 14 dias
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="h-40 flex items-end gap-1">
-                        {dailyData.map((day, idx) => {
-                            const hRev = (day.revenue / maxRevenue) * 100;
-                            const hProf = day.profit > 0 ? (day.profit / maxRevenue) * 100 : 0;
-                            return (
-                                <div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                                    <div className="flex-1 flex flex-col justify-end w-full">
-                                        <div
-                                            className="w-full bg-green-500 rounded-t transition-all hover:bg-green-600 relative group"
-                                            style={{ height: `${hRev}%`, minHeight: day.revenue > 0 ? '2px' : '0' }}
-                                        >
-                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                                                R$ {day.revenue.toFixed(0)}<br />Lucro: R$ {day.profit.toFixed(0)}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <span className="text-[9px] text-muted-foreground">{day.date.split('/')[0]}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <div className="flex items-center justify-center gap-4 mt-4 text-xs">
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 bg-green-500 rounded" />
-                            <span>Receita diária</span>
+            {/* Charts Grid */}
+            <div className="grid gap-4 md:grid-cols-3">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-sm font-medium">Pedidos no Período</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[200px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={dailyData}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <XAxis dataKey="date" fontSize={10} tickLine={false} axisLine={false} />
+                                    <YAxis fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                                        itemStyle={{ color: '#000' }}
+                                        cursor={{ fill: '#f1f5f9' }}
+                                    />
+                                    <Bar dataKey="ordersCount" name="Pedidos" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-sm font-medium">Receita no Período</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[200px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={dailyData}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <XAxis dataKey="date" fontSize={10} tickLine={false} axisLine={false} />
+                                    <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value}`} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                                        itemStyle={{ color: '#000' }}
+                                        cursor={{ fill: '#f1f5f9' }}
+                                        formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Receita']}
+                                    />
+                                    <Bar dataKey="revenue" name="Receita" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[200px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={dailyData}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <XAxis dataKey="date" fontSize={10} tickLine={false} axisLine={false} />
+                                    <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value}`} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                                        itemStyle={{ color: '#000' }}
+                                        formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Ticket Médio']}
+                                    />
+                                    <Line type="monotone" dataKey="averageTicket" name="Ticket Médio" stroke="#8b5cf6" strokeWidth={2} dot={false} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
 
             {/* Stock vs demand and top products */}
             <div className="grid gap-4 md:grid-cols-2">
@@ -343,7 +397,7 @@ const Dashboard = () => {
                                                         ''
                                             }
                                         >
-                                            {item.balance >= 0 ? '+' : ''}{item.balance.toFixed(1)} {item.ingredient.unit}
+                                            {item.balance > 0 ? '+' : ''}{item.balance.toFixed(1)} {item.ingredient.unit}
                                         </Badge>
                                     </div>
                                 ))
@@ -375,7 +429,9 @@ const Dashboard = () => {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-sm font-bold text-green-600">+R$ {p.profit.toFixed(2)}</div>
+                                            <div className={`text-sm font-bold ${p.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                {p.profit > 0 ? '+' : ''}R$ {p.profit.toFixed(2)}
+                                            </div>
                                             <div className="text-xs text-muted-foreground">R$ {p.revenue.toFixed(2)}</div>
                                         </div>
                                     </div>
@@ -398,7 +454,11 @@ const Dashboard = () => {
                         <p className="text-xs text-muted-foreground">Valor médio por pedido</p>
                     </CardContent>
                 </Card>
-                <Card>
+
+                <Card
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => navigate('/app/pedidos')}
+                >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Pedidos Ativos</CardTitle>
                         <Package className="h-4 w-4 text-muted-foreground" />
@@ -408,7 +468,10 @@ const Dashboard = () => {
                         <p className="text-xs text-muted-foreground">Em produção/pendentes</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => navigate('/app/clientes')}
+                >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Clientes</CardTitle>
                         <Users className="h-4 w-4 text-muted-foreground" />
@@ -419,7 +482,7 @@ const Dashboard = () => {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </div >
     );
 };
 

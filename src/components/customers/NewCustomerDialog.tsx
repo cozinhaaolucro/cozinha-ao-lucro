@@ -38,7 +38,7 @@ const NewCustomerDialog = ({ open, onOpenChange, onSuccess }: NewCustomerDialogP
             onSuccess();
             resetForm();
         } else {
-            toast({ title: 'Erro ao criar cliente', variant: 'destructive' });
+            toast({ title: 'Erro ao criar cliente', description: error.message, variant: 'destructive' });
         }
     };
 

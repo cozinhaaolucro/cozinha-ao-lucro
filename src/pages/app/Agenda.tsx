@@ -3,10 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ChevronLeft, ChevronRight, Clock, MapPin, X, Calendar as CalendarIcon } from 'lucide-react';
-import { getOrders } from '@/lib/database';
+import { ChevronLeft, ChevronRight, Clock, MapPin, X, Calendar as CalendarIcon, Trash2, MessageCircle } from 'lucide-react';
+import { getOrders, deleteOrder } from '@/lib/database';
 import type { OrderWithDetails } from '@/types/database';
 import { parseLocalDate, formatLocalDate } from '@/lib/dateUtils';
+import EditOrderDialog from '@/components/orders/EditOrderDialog';
+import { generateWhatsAppLink, getDefaultTemplateForStatus, parseMessageTemplate } from '@/lib/crm';
+import { toast } from '@/components/ui/use-toast';
 
 const Agenda = () => {
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
@@ -15,12 +18,48 @@ const Agenda = () => {
     const [rangeEnd, setRangeEnd] = useState<Date | null>(null);
     const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
     const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
+    const [editingOrder, setEditingOrder] = useState<OrderWithDetails | null>(null);
 
     const loadOrders = async () => {
         const { data, error } = await getOrders();
         if (!error && data) {
             setOrders(data.filter(o => o.status !== 'cancelled'));
         }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (confirm('Tem certeza que deseja excluir este pedido?')) {
+            const { error } = await deleteOrder(id);
+            if (error) {
+                toast({
+                    title: "Erro ao excluir",
+                    description: "Não foi possível excluir o pedido.",
+                    variant: "destructive"
+                });
+            } else {
+                toast({
+                    title: "Pedido excluído",
+                    description: "O pedido foi removido com sucesso."
+                });
+                loadOrders();
+            }
+        }
+    };
+
+    const handleWhatsApp = (order: OrderWithDetails) => {
+        if (!order.customer?.phone) {
+            toast({
+                title: "Sem telefone",
+                description: "O cliente não possui telefone cadastrado.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        const template = getDefaultTemplateForStatus(order.status);
+        const message = parseMessageTemplate(template, order, order.customer);
+        const link = generateWhatsAppLink(order.customer.phone, message);
+        window.open(link, '_blank');
     };
 
     useEffect(() => {
@@ -328,11 +367,12 @@ const Agenda = () => {
                             displayOrders.map(order => (
                                 <Card
                                     key={order.id}
-                                    className={`border-l-4 hover:shadow-md transition-shadow ${order.status === 'pending' ? 'border-l-yellow-500 bg-yellow-50' :
-                                            order.status === 'preparing' ? 'border-l-blue-500 bg-blue-50' :
-                                                order.status === 'ready' ? 'border-l-green-500 bg-green-50' :
-                                                    'border-l-gray-400 bg-gray-50'
+                                    className={`border-l-4 hover:shadow-md transition-shadow cursor-pointer relative group ${order.status === 'pending' ? 'border-l-yellow-500 bg-yellow-50' :
+                                        order.status === 'preparing' ? 'border-l-blue-500 bg-blue-50' :
+                                            order.status === 'ready' ? 'border-l-green-500 bg-green-50' :
+                                                'border-l-gray-400 bg-gray-50'
                                         }`}
+                                    onClick={() => setEditingOrder(order)}
                                 >
                                     <CardContent className="p-3">
                                         <div className="flex items-start justify-between mb-2">
@@ -375,6 +415,31 @@ const Agenda = () => {
                                                 ))}
                                             </div>
                                         )}
+
+                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-white/80 rounded-md p-1 shadow-sm">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleWhatsApp(order);
+                                                }}
+                                            >
+                                                <MessageCircle className="w-4 h-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(order.id);
+                                                }}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             ))
@@ -423,7 +488,14 @@ const Agenda = () => {
                     <div className="text-xs">Atrasados</div>
                 </Button>
             </div>
-        </div>
+
+            <EditOrderDialog
+                open={!!editingOrder}
+                onOpenChange={(open) => !open && setEditingOrder(null)}
+                order={editingOrder}
+                onSuccess={loadOrders}
+            />
+        </div >
     );
 };
 

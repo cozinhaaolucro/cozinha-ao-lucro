@@ -21,7 +21,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     const loadProducts = async () => {
         const { data, error } = await getProducts();
         if (!error && data) {
-            setProducts(data as any);
+            setProducts(data as ProductWithIngredients[]);
         }
     };
 

@@ -8,6 +8,8 @@ const isSupabaseConfigured = supabaseUrl && supabaseAnonKey;
 
 if (!isSupabaseConfigured) {
   console.warn('Supabase environment variables missing. Auth features will be disabled.');
+} else if (!supabaseUrl.startsWith('http')) {
+  console.warn('Supabase URL must start with http:// or https://');
 }
 
 // Create a mock client if keys are missing to prevent app crash
@@ -22,7 +24,7 @@ const mockSupabase = {
   from: () => ({
     select: () => Promise.resolve({ data: [], error: null }),
   })
-} as any;
+} as unknown as ReturnType<typeof createClient>;
 
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)

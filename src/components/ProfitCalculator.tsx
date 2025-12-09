@@ -90,32 +90,32 @@ const ProfitCalculator = () => {
         <Card className="w-full max-w-2xl mx-auto glass-panel border-primary/20 overflow-hidden relative shadow-2xl">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-primary-glow to-secondary"></div>
 
-            <CardHeader className="text-center pb-2 pt-8">
-                <div className="mx-auto w-14 h-14 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full flex items-center justify-center mb-4 shadow-inner border border-primary/10">
-                    <Calculator className="w-7 h-7 text-primary" />
+            <CardHeader className="text-center pb-0 pt-4">
+                <div className="mx-auto w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full flex items-center justify-center mb-2 shadow-inner border border-primary/10">
+                    <Calculator className="w-5 h-5 text-primary" />
                 </div>
-                <CardTitle className="text-2xl md:text-3xl font-bold text-foreground">
+                <CardTitle className="text-xl md:text-2xl font-bold text-foreground">
                     Simulador de Lucro Real
                 </CardTitle>
-                <p className="text-muted-foreground max-w-md mx-auto">
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
                     Veja quanto você pode ganhar vendendo <span className="text-primary font-medium">{productName || 'seus produtos'}</span>
                 </p>
             </CardHeader>
 
-            <CardContent className="p-6 md:p-8 space-y-8">
-                <div className="grid md:grid-cols-2 gap-8">
+            <CardContent className="p-3 md:p-4 space-y-3">
+                <div className="flex flex-col gap-3">
                     {/* Inputs */}
-                    <div className="space-y-6">
+                    <div className="space-y-3">
 
-                        <div className="space-y-2">
-                            <Label className="text-foreground/80">Escolha uma receita do Ebook:</Label>
+                        <div className="space-y-1">
+                            <Label className="text-foreground/80 text-xs">Escolha uma receita do Ebook:</Label>
                             <Select value={selectedPreset} onValueChange={handlePresetChange}>
-                                <SelectTrigger className="border-primary/20 bg-white/50 backdrop-blur-sm focus:ring-primary/20">
+                                <SelectTrigger className="h-9 text-sm border-primary/20 bg-white/50 backdrop-blur-sm focus:ring-primary/20">
                                     <SelectValue placeholder="Selecione uma receita" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {PRESETS.map(preset => (
-                                        <SelectItem key={preset.name} value={preset.name}>
+                                        <SelectItem key={preset.name} value={preset.name} className="text-sm">
                                             {preset.name}
                                         </SelectItem>
                                     ))}
@@ -124,22 +124,22 @@ const ProfitCalculator = () => {
                         </div>
 
                         {selectedPreset === 'Personalizado' && (
-                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                                <Label htmlFor="product">Nome do Produto</Label>
+                            <div className="space-y-1 animate-in fade-in slide-in-from-top-2">
+                                <Label htmlFor="product" className="text-xs">Nome do Produto</Label>
                                 <Input
                                     id="product"
                                     value={productName}
                                     onChange={(e) => setProductName(e.target.value)}
-                                    className="border-primary/20 focus:border-primary bg-white/50"
+                                    className="h-9 text-sm border-primary/20 focus:border-primary bg-white/50"
                                 />
                             </div>
                         )}
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="cost">Custo (R$)</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <Label htmlFor="cost" className="text-xs">Custo (R$)</Label>
                                 <div className="relative">
-                                    <DollarSign className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <DollarSign className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                                     <Input
                                         id="cost"
                                         type="number"
@@ -149,14 +149,14 @@ const ProfitCalculator = () => {
                                             setCostPerUnit(Number(e.target.value));
                                             setSelectedPreset('Personalizado');
                                         }}
-                                        className="pl-8 border-primary/20 bg-white/50"
+                                        className="h-9 pl-7 text-sm border-primary/20 bg-white/50"
                                     />
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="price">Venda (R$)</Label>
+                            <div className="space-y-1">
+                                <Label htmlFor="price" className="text-xs">Venda (R$)</Label>
                                 <div className="relative">
-                                    <DollarSign className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <DollarSign className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                                     <Input
                                         id="price"
                                         type="number"
@@ -166,15 +166,15 @@ const ProfitCalculator = () => {
                                             setSalePrice(Number(e.target.value));
                                             setSelectedPreset('Personalizado');
                                         }}
-                                        className="pl-8 font-bold text-primary border-primary/20 bg-white/50"
+                                        className="h-9 pl-7 text-sm font-bold text-primary border-primary/20 bg-white/50"
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-2">
                             <div className="flex justify-between">
-                                <Label>Vendas por dia: <span className="text-primary font-bold text-lg">{dailySales}</span></Label>
+                                <Label className="text-xs">Vendas por dia: <span className="text-primary font-bold text-base">{dailySales}</span></Label>
                             </div>
                             <Slider
                                 value={[dailySales]}
@@ -183,46 +183,48 @@ const ProfitCalculator = () => {
                                 }}
                                 max={200}
                                 step={1}
-                                className="py-4"
+                                className="py-2"
                             />
-                            <p className="text-xs text-muted-foreground text-center">
+                            <p className="text-[10px] text-muted-foreground text-center">
                                 *Calculado sobre 24 dias de trabalho/mês
                             </p>
                         </div>
                     </div>
 
-                    {/* Resultado Visual */}
-                    <div className="bg-gradient-to-br from-primary/10 via-white/50 to-secondary/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center border border-white/60 shadow-lg relative overflow-hidden group">
-                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors"></div>
+                </div>
 
-                        <div className="relative z-10">
-                            <div className="mb-4 relative inline-block">
-                                <TrendingUp className="w-12 h-12 text-primary animate-bounce" />
-                                {monthlyProfit > 5000 && (
-                                    <Sparkles className="w-6 h-6 text-yellow-500 absolute -top-2 -right-2 animate-pulse" />
-                                )}
-                            </div>
+                {/* Resultado Visual */}
+                <div className="w-full bg-gradient-to-br from-primary/10 via-white/50 to-secondary/10 rounded-xl p-3 flex flex-col items-center justify-center text-center border border-white/60 shadow-lg relative overflow-hidden group min-h-[140px]">
+                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors"></div>
 
-                            <h3 className="text-lg font-medium text-muted-foreground mb-2">Seu Potencial de Lucro Mensal</h3>
-                            <div className="text-4xl md:text-5xl font-bold text-foreground mb-4 tracking-tight drop-shadow-sm">
-                                {formatCurrency(monthlyProfit)}
-                            </div>
-
-                            <div className="w-full bg-white/60 rounded-full h-3 overflow-hidden mb-4 border border-white/40">
-                                <div
-                                    className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-1000 ease-out relative"
-                                    style={{ width: `${Math.min((monthlyProfit / 8000) * 100, 100)}%` }}
-                                >
-                                    <div className="absolute inset-0 bg-white/30 animate-shimmer"></div>
-                                </div>
-                            </div>
-
-                            <p className={`text-sm font-medium mt-2 transition-colors duration-300 ${monthlyProfit > 3000 ? 'text-green-600' : 'text-muted-foreground'}`}>
-                                {monthlyProfit > 5000 ? '🚀 Você vai ganhar mais que muito gerente!' :
-                                    monthlyProfit > 2000 ? '✨ Um ótimo começo para sua independência!' :
-                                        'Comece pequeno e cresça rápido!'}
-                            </p>
+                    <div className="relative z-10 w-full max-w-lg mx-auto">
+                        <div className="mb-2 relative inline-block">
+                            <TrendingUp className="w-10 h-10 text-primary animate-bounce" />
+                            {monthlyProfit > 5000 && (
+                                <Sparkles className="w-6 h-6 text-yellow-500 absolute -top-1 -right-1 animate-pulse" />
+                            )}
                         </div>
+
+                        <h3 className="text-sm font-medium text-muted-foreground mb-1">Seu Potencial de Lucro Mensal</h3>
+                        <div className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight drop-shadow-sm truncate w-full px-2">
+                            {formatCurrency(monthlyProfit)}
+                        </div>
+
+                        <div className="w-full bg-white/60 rounded-full h-3 overflow-hidden mb-3 border border-white/40">
+                            <div
+                                className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-1000 ease-out relative"
+                                style={{ width: `${Math.min((monthlyProfit / 8000) * 100, 100)}%` }}
+                            >
+                                <div className="absolute inset-0 bg-white/30 animate-shimmer"></div>
+                            </div>
+                        </div>
+
+                        <p className={`text-sm font-medium mt-1 transition-colors duration-300 ${monthlyProfit > 3000 ? 'text-green-600' : monthlyProfit < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                            {monthlyProfit > 5000 ? '🚀 Você vai ganhar mais que muito gerente!' :
+                                monthlyProfit > 2000 ? '✨ Um ótimo começo para sua independência!' :
+                                    monthlyProfit < 0 ? '⚠️ Atenção: Custo maior que a venda!' :
+                                        'Comece pequeno e cresça rápido!'}
+                        </p>
                     </div>
                 </div>
             </CardContent>

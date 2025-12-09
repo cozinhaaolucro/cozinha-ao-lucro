@@ -35,82 +35,94 @@ const Navbar = () => {
 
     return (
         <nav
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-                ? 'bg-background/80 backdrop-blur-md shadow-sm py-4'
-                : 'bg-transparent py-6'
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${isScrolled
+                ? 'bg-background/80 backdrop-blur-md border-border/40 shadow-sm py-3'
+                : 'bg-transparent border-transparent py-5'
                 }`}
         >
             <div className="container-max px-4 md:px-8 flex items-center justify-between">
                 {/* Logo */}
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-                    <img
-                        src="/images/logo_cozinhaaolucro.png"
-                        alt="Logo"
-                        className="w-10 h-10 rounded-full object-cover border-2 border-primary"
-                    />
-                    <span className={`font-bold text-xl font-playfair ${isScrolled ? 'text-foreground' : 'text-white drop-shadow-md'}`}>
-                        Cozinha ao Lucro
-                    </span>
+                <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:bg-primary/40 transition-all duration-500"></div>
+                        <img
+                            src="/images/logo_cozinhaaolucro.png"
+                            alt="Logo"
+                            className="relative w-12 h-12 rounded-xl object-cover border border-white/10 shadow-lg"
+                        />
+                    </div>
                 </div>
 
                 {/* Desktop Menu */}
                 <div className="hidden md:flex items-center gap-8">
-                    {['Benefícios', 'Depoimentos', 'FAQ'].map((item) => (
-                        <button
-                            key={item}
-                            onClick={() => scrollToSection(item.toLowerCase())}
-                            className={`text-sm font-medium transition-colors hover:text-primary ${isScrolled ? 'text-foreground/80' : 'text-white/90 hover:text-white'
-                                }`}
+                    <div className="flex items-center gap-6 bg-background/5 backdrop-blur-sm px-6 py-2 rounded-full border border-white/5">
+                        {[
+                            { label: 'Preços', id: 'precos' },
+                            { label: 'Benefícios', id: 'beneficios' },
+                            { label: 'FAQ', id: 'faq' }
+                        ].map((item) => (
+                            <button
+                                key={item.label}
+                                onClick={() => scrollToSection(item.id)}
+                                className={`text-sm font-medium transition-all hover:text-primary ${isScrolled ? 'text-foreground/80' : 'text-white/90 hover:text-white'
+                                    }`}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <Button
+                            variant="ghost"
+                            onClick={() => navigate('/login')}
+                            className={`font-medium gap-2 hover:bg-white/10 ${isScrolled ? 'text-foreground' : 'text-white'}`}
                         >
-                            {item}
-                        </button>
-                    ))}
-                    <Button
-                        onClick={() => window.open('https://pay.kiwify.com.br/TV099tr', '_blank')}
-                        className="bg-primary hover:bg-primary-glow text-primary-foreground font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
-                    >
-                        COMPRAR AGORA
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        onClick={() => navigate('/login')}
-                        className={`font-medium gap-2 ${isScrolled ? 'text-foreground hover:bg-primary/10' : 'text-white hover:bg-white/10 hover:text-white'}`}
-                    >
-                        <UserCircle className="w-5 h-5" />
-                        Entrar
-                    </Button>
+                            Entrar
+                        </Button>
+                        <Button
+                            onClick={() => document.getElementById('precos')?.scrollIntoView({ behavior: 'smooth' })}
+                            className="bg-gradient-to-r from-primary to-orange-600 hover:from-primary/90 hover:to-orange-600/90 text-white font-bold shadow-lg hover:shadow-primary/25 transition-all transform hover:-translate-y-0.5 px-6 rounded-full"
+                        >
+                            Começar Agora
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Mobile Menu Button */}
                 <button
-                    className="md:hidden text-primary"
+                    className={`md:hidden p-2 ${isScrolled ? 'text-foreground' : 'text-white'}`}
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 >
-                    {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} className={isScrolled ? 'text-foreground' : 'text-white'} />}
+                    {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
 
                 {/* Mobile Menu Overlay */}
                 {isMobileMenuOpen && (
-                    <div className="absolute top-full left-0 right-0 bg-background/95 backdrop-blur-xl border-b border-border p-6 md:hidden flex flex-col gap-4 shadow-xl animate-in slide-in-from-top-5">
-                        {['Benefícios', 'Depoimentos', 'FAQ'].map((item) => (
+                    <div className="absolute top-full left-0 right-0 bg-background/95 backdrop-blur-2xl border-b border-border p-6 md:hidden flex flex-col gap-4 shadow-2xl animate-in slide-in-from-top-5">
+                        {[
+                            { label: 'Preços', id: 'precos' },
+                            { label: 'Benefícios', id: 'beneficios' },
+                            { label: 'FAQ', id: 'faq' }
+                        ].map((item) => (
                             <button
-                                key={item}
-                                onClick={() => scrollToSection(item.toLowerCase())}
-                                className="text-lg font-medium text-foreground/80 hover:text-primary text-left py-2 border-b border-border/50"
+                                key={item.label}
+                                onClick={() => scrollToSection(item.id)}
+                                className="text-lg font-medium text-foreground/80 hover:text-primary text-left py-3 border-b border-border/50"
                             >
-                                {item}
+                                {item.label}
                             </button>
                         ))}
                         <Button
-                            onClick={() => window.open('https://pay.kiwify.com.br/TV099tr', '_blank')}
-                            className="w-full mt-4 bg-primary text-primary-foreground font-bold py-6"
+                            onClick={() => document.getElementById('precos')?.scrollIntoView({ behavior: 'smooth' })}
+                            className="w-full mt-4 bg-gradient-to-r from-primary to-orange-600 text-white font-bold py-6 rounded-xl shadow-lg"
                         >
-                            COMPRAR AGORA
+                            QUERO COMEÇAR
                         </Button>
                         <Button
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => navigate('/login')}
-                            className="w-full gap-2"
+                            className="w-full gap-2 py-6"
                         >
                             <UserCircle className="w-5 h-5" />
                             Área do Aluno

@@ -10,6 +10,8 @@ import { getIngredients, createIngredient, updateIngredient, deleteIngredient } 
 import type { Ingredient } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 
+import { presetIngredients } from '@/data/presetIngredients';
+
 const IngredientList = () => {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -32,6 +34,18 @@ const IngredientList = () => {
     useEffect(() => {
         loadIngredients();
     }, []);
+
+    const handlePresetSelect = (presetName: string) => {
+        const preset = presetIngredients.find(p => p.name === presetName);
+        if (preset) {
+            setFormData({
+                ...formData,
+                name: preset.name,
+                unit: preset.unit as Ingredient['unit'],
+                cost_per_unit: Number((preset.price * 1.15).toFixed(2)),
+            });
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -87,9 +101,9 @@ const IngredientList = () => {
         setEditingIngredient(ingredient);
         setFormData({
             name: ingredient.name,
-            unit: ingredient.unit as any,
+            unit: ingredient.unit,
             cost_per_unit: ingredient.cost_per_unit,
-            stock_quantity: (ingredient as any).stock_quantity || 0,
+            stock_quantity: ingredient.stock_quantity || 0,
         });
         setIsDialogOpen(true);
     };
@@ -110,6 +124,23 @@ const IngredientList = () => {
                             <DialogTitle>{editingIngredient ? 'Editar' : 'Novo'} Ingrediente</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4">
+                            {!editingIngredient && (
+                                <div>
+                                    <Label>Preencher com modelo</Label>
+                                    <Select onValueChange={handlePresetSelect}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecione um ingrediente padrão..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {presetIngredients.map((preset) => (
+                                                <SelectItem key={preset.name} value={preset.name}>
+                                                    {preset.name} - R$ {(preset.price * 1.15).toFixed(2)}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
                             <div>
                                 <Label htmlFor="name">Nome</Label>
                                 <Input
@@ -125,7 +156,7 @@ const IngredientList = () => {
                                     <Label htmlFor="unit">Unidade</Label>
                                     <Select
                                         value={formData.unit}
-                                        onValueChange={(value) => setFormData({ ...formData, unit: value as any })}
+                                        onValueChange={(value) => setFormData({ ...formData, unit: value as Ingredient['unit'] })}
                                     >
                                         <SelectTrigger>
                                             <SelectValue />
@@ -170,6 +201,15 @@ const IngredientList = () => {
                                 <Button type="submit" className="flex-1">
                                     {editingIngredient ? 'Atualizar' : 'Criar'}
                                 </Button>
+                                {editingIngredient && (
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        onClick={() => handleDelete(editingIngredient.id)}
+                                    >
+                                        Excluir
+                                    </Button>
+                                )}
                                 <Button type="button" variant="outline" onClick={resetForm}>
                                     Cancelar
                                 </Button>
@@ -196,8 +236,8 @@ const IngredientList = () => {
                                         R$ {ingredient.cost_per_unit.toFixed(2)} por {ingredient.unit}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                        Estoque: {((ingredient as any).stock_quantity || 0).toFixed(2)} {ingredient.unit}
-                                        {(ingredient as any).stock_quantity <= 2 && (
+                                        Estoque: {(ingredient.stock_quantity || 0).toFixed(2)} {ingredient.unit}
+                                        {ingredient.stock_quantity <= 2 && (
                                             <span className="text-yellow-600 ml-2">⚠️ Estoque baixo</span>
                                         )}
                                     </p>
