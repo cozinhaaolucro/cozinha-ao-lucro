@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,12 +12,13 @@ import { Loader2 } from 'lucide-react';
 const Register = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const plan = searchParams.get('plan');
+
+
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,6 +32,7 @@ const Register = () => {
                 options: {
                     data: {
                         full_name: name,
+                        phone: phone,
                     },
                 },
             });
@@ -38,13 +40,7 @@ const Register = () => {
             if (error) throw error;
 
             if (data.user) {
-                // Optional: Create profile record here if needed, 
-                // though Supabase triggers are better for this.
-                if (plan) {
-                    navigate(`/checkout?plan=${plan}`);
-                } else {
-                    navigate('/app/dashboard');
-                }
+                navigate('/app/dashboard');
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Erro ao criar conta';
@@ -62,16 +58,7 @@ const Register = () => {
                     <CardDescription>
                         Crie sua conta e profissionalize sua cozinha
                     </CardDescription>
-
-                    {plan && (
-                        <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/10">
-                            <p className="text-sm text-muted-foreground mb-1">Você selecionou:</p>
-                            <p className="font-bold text-foreground">
-                                {plan === 'annual' ? 'Plano Anual (R$ 399,00)' : 'Plano Mensal (R$ 39,90)'}
-                            </p>
-                            <p className="text-xs text-green-600 mt-1">Primeiro mês grátis incluído</p>
-                        </div>
-                    )}
+                    <p className="text-xs text-green-600 mt-2">🎉 Primeiro mês grátis!</p>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleRegister} className="space-y-4">
@@ -80,8 +67,9 @@ const Register = () => {
                                 <AlertDescription>{error}</AlertDescription>
                             </Alert>
                         )}
+
                         <div className="space-y-2">
-                            <Label htmlFor="name">Nome Completo</Label>
+                            <Label htmlFor="name">Nome Completo *</Label>
                             <Input
                                 id="name"
                                 type="text"
@@ -92,7 +80,18 @@ const Register = () => {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="phone">Telefone (WhatsApp) *</Label>
+                            <Input
+                                id="phone"
+                                type="tel"
+                                placeholder="(11) 98765-4321"
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email *</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -103,7 +102,7 @@ const Register = () => {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Senha</Label>
+                            <Label htmlFor="password">Senha *</Label>
                             <Input
                                 id="password"
                                 type="password"
@@ -122,7 +121,7 @@ const Register = () => {
                 <CardFooter className="flex flex-col space-y-2 text-center">
                     <div className="text-sm text-muted-foreground">
                         Já tem uma conta?{' '}
-                        <Link to={`/login${window.location.search}`} className="text-primary hover:underline font-medium">
+                        <Link to="/login" className="text-primary hover:underline font-medium">
                             Fazer Login
                         </Link>
                     </div>
@@ -133,3 +132,4 @@ const Register = () => {
 };
 
 export default Register;
+

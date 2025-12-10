@@ -375,70 +375,76 @@ const Agenda = () => {
                                     onClick={() => setEditingOrder(order)}
                                 >
                                     <CardContent className="p-3">
-                                        <div className="flex items-start justify-between mb-2">
-                                            <div className="flex-1">
-                                                <h4 className="font-semibold text-sm">{order.customer?.name || 'Sem cliente'}</h4>
-                                                <Badge variant="outline" className="text-xs mt-1">
-                                                    {getStatusLabel(order.status)}
-                                                </Badge>
+                                        <div className="flex items-start gap-2">
+                                            {/* Action icons on the left */}
+                                            <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-100"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleWhatsApp(order);
+                                                    }}
+                                                >
+                                                    <MessageCircle className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-100"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete(order.id);
+                                                    }}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="font-bold text-sm">R$ {order.total_value.toFixed(2)}</div>
-                                            </div>
-                                        </div>
 
-                                        <div className="space-y-1 text-xs text-muted-foreground">
-                                            {order.delivery_date && (
-                                                <div className="flex items-center gap-1">
-                                                    <Clock className="w-3 h-3" />
-                                                    <span>
-                                                        {formatLocalDate(order.delivery_date)}
-                                                        {order.delivery_time && ` • ${order.delivery_time}`}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {order.customer?.address && (
-                                                <div className="flex items-center gap-1">
-                                                    <MapPin className="w-3 h-3" />
-                                                    <span className="line-clamp-1">{order.customer.address}</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {order.items && order.items.length > 0 && (
-                                            <div className="mt-2 pt-2 border-t text-xs space-y-0.5">
-                                                {order.items.map((item, idx) => (
-                                                    <div key={idx} className="flex items-center justify-between">
-                                                        <span className="text-muted-foreground">{item.product_name}</span>
-                                                        <span className="font-medium">x{item.quantity}</span>
+                                            {/* Main content */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="font-semibold text-sm truncate">{order.customer?.name || 'Sem cliente'}</h4>
+                                                        <Badge variant="outline" className="text-xs mt-1">
+                                                            {getStatusLabel(order.status)}
+                                                        </Badge>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                                    <div className="text-right flex-shrink-0 ml-2">
+                                                        <div className="font-bold text-sm">R$ {order.total_value.toFixed(2)}</div>
+                                                    </div>
+                                                </div>
 
-                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-white/80 rounded-md p-1 shadow-sm">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleWhatsApp(order);
-                                                }}
-                                            >
-                                                <MessageCircle className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDelete(order.id);
-                                                }}
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
+                                                <div className="space-y-1 text-xs text-muted-foreground">
+                                                    {order.delivery_date && (
+                                                        <div className="flex items-center gap-1">
+                                                            <Clock className="w-3 h-3" />
+                                                            <span>
+                                                                {formatLocalDate(order.delivery_date)}
+                                                                {order.delivery_time && ` • ${order.delivery_time}`}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {order.customer?.address && (
+                                                        <div className="flex items-center gap-1">
+                                                            <MapPin className="w-3 h-3" />
+                                                            <span className="line-clamp-1">{order.customer.address}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {order.items && order.items.length > 0 && (
+                                                    <div className="mt-2 pt-2 border-t text-xs space-y-0.5">
+                                                        {order.items.map((item, idx) => (
+                                                            <div key={idx} className="flex items-center justify-between">
+                                                                <span className="text-muted-foreground">{item.product_name}</span>
+                                                                <span className="font-medium">x{item.quantity}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </CardContent>
                                 </Card>

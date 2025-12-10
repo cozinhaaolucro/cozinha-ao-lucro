@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FadeIn } from '@/components/ui/fade-in';
 import {
     TrendingUp,
     DollarSign,
@@ -15,16 +18,12 @@ import {
     CheckCircle,
     XCircle,
     AlertCircle,
-    BarChart3,
 } from 'lucide-react';
 import {
-    BarChart,
-    Bar,
-    LineChart,
-    Line,
+    AreaChart,
+    Area,
     XAxis,
     YAxis,
-    CartesianGrid,
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
@@ -46,33 +45,56 @@ const Dashboard = () => {
     const [products, setProducts] = useState<ProductWithIngredients[]>([]);
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [period, setPeriod] = useState('30');
+    const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
+    const [isLoading, setIsLoading] = useState(true);
+    const [dataLoaded, setDataLoaded] = useState(false);
 
     useEffect(() => {
-        loadData();
-    }, []);
+        // Only load data once when component mounts
+        if (!dataLoaded) {
+            loadData();
+        }
+    }, [dataLoaded]);
 
     const loadData = async () => {
-        const [ordersRes, customersRes, productsRes, ingredientsRes] = await Promise.all([
-            getOrders(),
-            getCustomers(),
-            getProducts(),
-            getIngredients(),
-        ]);
-        if (ordersRes.data) setOrders(ordersRes.data);
-        if (customersRes.data) setCustomers(customersRes.data);
-        if (productsRes.data) setProducts(productsRes.data as ProductWithIngredients[]);
-        if (ingredientsRes.data) setIngredients(ingredientsRes.data);
+        setIsLoading(true);
+        try {
+            const [ordersRes, customersRes, productsRes, ingredientsRes] = await Promise.all([
+                getOrders(),
+                getCustomers(),
+                getProducts(),
+                getIngredients(),
+            ]);
+            if (ordersRes.data) setOrders(ordersRes.data);
+            if (customersRes.data) setCustomers(customersRes.data);
+            if (productsRes.data) setProducts(productsRes.data as ProductWithIngredients[]);
+            if (ingredientsRes.data) setIngredients(ingredientsRes.data);
+            setDataLoaded(true);
+        } finally {
+            // Small delay to ensure smooth transition
+            setTimeout(() => setIsLoading(false), 100);
+        }
     };
 
-    // Helper: filter orders by selected period (days)
+    // Helper: filter orders by selected period or date range
     const getFilteredOrders = () => {
-        const daysAgo = parseInt(period);
-        const start = new Date();
-        start.setDate(start.getDate() - daysAgo);
+        let start: Date;
+        let end: Date = new Date();
+
+        if (dateFilter.start && dateFilter.end) {
+            start = new Date(dateFilter.start);
+            end = new Date(dateFilter.end);
+            end.setHours(23, 59, 59, 999);
+        } else {
+            const daysAgo = parseInt(period);
+            start = new Date();
+            start.setDate(start.getDate() - daysAgo);
+        }
+
         return orders.filter(o => {
             if (!o.created_at) return false;
             const d = new Date(o.created_at);
-            return d >= start && o.status !== 'cancelled';
+            return d >= start && d <= end && o.status !== 'cancelled';
         });
     };
 
@@ -165,13 +187,20 @@ const Dashboard = () => {
         .sort((a, b) => b.profit - a.profit)
         .slice(0, 5);
 
-    // Last 14 days data for chart
-    // Last 14 days data for chart
-    const getLast14Days = () => {
+    // Last N days data for chart
+    const getChartData = () => {
         const days: { date: string; revenue: number; profit: number; ordersCount: number; averageTicket: number }[] = [];
-        for (let i = 13; i >= 0; i--) {
+        const numDays = dateFilter.start && dateFilter.end ?
+            Math.ceil((new Date(dateFilter.end).getTime() - new Date(dateFilter.start).getTime()) / (1000 * 60 * 60 * 24)) + 1 :
+            Math.min(parseInt(period), 14);
+
+        for (let i = numDays - 1; i >= 0; i--) {
             const d = new Date();
-            d.setDate(d.getDate() - i);
+            if (dateFilter.start && dateFilter.end) {
+                d.setTime(new Date(dateFilter.start).getTime() + (numDays - 1 - i) * 24 * 60 * 60 * 1000);
+            } else {
+                d.setDate(d.getDate() - i);
+            }
             const dayOrders = filteredOrders.filter(o => {
                 if (!o.created_at) return false;
                 const od = new Date(o.created_at);
@@ -181,7 +210,7 @@ const Dashboard = () => {
             const cost = dayOrders.reduce((s, o) => s + getOrderCost(o), 0);
             const count = dayOrders.length;
             days.push({
-                date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', ''),
                 revenue: rev,
                 profit: rev - cost,
                 ordersCount: count,
@@ -190,299 +219,365 @@ const Dashboard = () => {
         }
         return days;
     };
-    const dailyData = getLast14Days();
+    const dailyData = getChartData();
+
+    // Custom tooltip component
+    const CustomTooltip = ({ active, payload, label, type }: any) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className="bg-card border rounded-lg shadow-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                    {type === 'orders' && (
+                        <p className="font-bold text-lg">{payload[0].value} pedidos</p>
+                    )}
+                    {type === 'revenue' && (
+                        <p className="font-bold text-lg text-green-600">R$ {payload[0].value.toFixed(2)}</p>
+                    )}
+                </div>
+            );
+        }
+        return null;
+    };
+
+    const clearDateFilter = () => {
+        setDateFilter({ start: '', end: '' });
+    };
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Visão Geral</h1>
                     <p className="text-muted-foreground">Análise completa do seu negócio</p>
                 </div>
-                <Select value={period} onValueChange={setPeriod}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="7">Últimos 7 dias</SelectItem>
-                        <SelectItem value="30">Últimos 30 dias</SelectItem>
-                        <SelectItem value="90">Últimos 90 dias</SelectItem>
-                    </SelectContent>
-                </Select>
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <Input
+                            type="date"
+                            value={dateFilter.start}
+                            onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
+                            className="w-36 h-9"
+                        />
+                        <span className="text-sm text-muted-foreground">até</span>
+                        <Input
+                            type="date"
+                            value={dateFilter.end}
+                            onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
+                            className="w-36 h-9"
+                        />
+                    </div>
+                    {(dateFilter.start || dateFilter.end) ? (
+                        <Button variant="ghost" size="sm" onClick={clearDateFilter}>Limpar</Button>
+                    ) : (
+                        <Select value={period} onValueChange={setPeriod}>
+                            <SelectTrigger className="w-[140px] h-9">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="7">7 dias</SelectItem>
+                                <SelectItem value="30">30 dias</SelectItem>
+                                <SelectItem value="90">90 dias</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    )}
+                </div>
             </div>
 
             {/* Financial cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-600">R$ {totalRevenue.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">{filteredOrders.length} pedidos</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
-                        <TrendingDown className="h-4 w-4 text-red-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-red-600">R$ {totalCost.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">Ingredientes e produção</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Lucro Líquido</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-blue-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>R$ {totalProfit.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">Receita - Custos</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Margem de Lucro</CardTitle>
-                        <Percent className="h-4 w-4 text-purple-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className={`text-2xl font-bold ${profitMargin >= 0 ? 'text-purple-600' : 'text-red-600'}`}>{profitMargin.toFixed(1)}%</div>
-                        <p className="text-xs text-muted-foreground">Lucro sobre receita</p>
-                    </CardContent>
-                </Card>
-            </div>
+            <FadeIn delay={50}>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Card className="border-l-4 border-l-green-500">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
+                            <DollarSign className="h-4 w-4 text-green-600" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-green-600">R$ {totalRevenue.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">{filteredOrders.length} pedidos</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="border-l-4 border-l-red-500">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
+                            <TrendingDown className="h-4 w-4 text-red-600" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-red-600">R$ {totalCost.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">Ingredientes e produção</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="border-l-4 border-l-blue-500">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Lucro Líquido</CardTitle>
+                            <TrendingUp className="h-4 w-4 text-blue-600" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>R$ {totalProfit.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">Receita - Custos</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="border-l-4 border-l-purple-500">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Margem de Lucro</CardTitle>
+                            <Percent className="h-4 w-4 text-purple-600" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className={`text-2xl font-bold ${profitMargin >= 0 ? 'text-purple-600' : 'text-red-600'}`}>{profitMargin.toFixed(1)}%</div>
+                            <p className="text-xs text-muted-foreground">Lucro sobre receita</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </FadeIn>
 
             {/* Critical stock alerts */}
             {criticalStock.length > 0 && (
-                <Card className="border-red-200 bg-red-50">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-red-800">
-                            <AlertTriangle className="w-5 h-5" />
-                            🚨 Estoque Insuficiente para Demanda Atual
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-2">
-                            {criticalStock.map(item => (
-                                <div key={item.ingredient.id} className="flex items-center justify-between text-sm bg-white p-2 rounded">
-                                    <div className="flex items-center gap-2">
-                                        <XCircle className="w-4 h-4 text-red-600" />
-                                        <span className="font-medium">{item.ingredient.name}</span>
+                <FadeIn delay={100}>
+                    <Card className="border-red-200 bg-red-50">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-red-800">
+                                <AlertTriangle className="w-5 h-5" />
+                                🚨 Estoque Insuficiente para Demanda Atual
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2">
+                                {criticalStock.map(item => (
+                                    <div key={item.ingredient.id} className="flex items-center justify-between text-sm bg-white p-2 rounded">
+                                        <div className="flex items-center gap-2">
+                                            <XCircle className="w-4 h-4 text-red-600" />
+                                            <span className="font-medium">{item.ingredient.name}</span>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-xs text-muted-foreground">Estoque: {item.stock.toFixed(2)} {item.ingredient.unit}</span>
+                                            <span className="text-xs text-muted-foreground">Demanda: {item.demand.toFixed(2)} {item.ingredient.unit}</span>
+                                            <Badge variant="destructive">Faltam {Math.abs(item.balance).toFixed(2)} {item.ingredient.unit}</Badge>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-xs text-muted-foreground">Estoque: {item.stock.toFixed(2)} {item.ingredient.unit}</span>
-                                        <span className="text-xs text-muted-foreground">Demanda: {item.demand.toFixed(2)} {item.ingredient.unit}</span>
-                                        <Badge variant="destructive">Faltam {Math.abs(item.balance).toFixed(2)} {item.ingredient.unit}</Badge>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </FadeIn>
             )}
 
-            {/* Compact chart */}
-            {/* Charts Grid */}
-            <div className="grid gap-4 md:grid-cols-3">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-sm font-medium">Pedidos no Período</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="h-[200px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={dailyData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="date" fontSize={10} tickLine={false} axisLine={false} />
-                                    <YAxis fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                                        itemStyle={{ color: '#000' }}
-                                        cursor={{ fill: '#f1f5f9' }}
-                                    />
-                                    <Bar dataKey="ordersCount" name="Pedidos" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
+            {/* Clean Charts Grid */}
+            <FadeIn delay={150}>
+                <div className="grid gap-4 md:grid-cols-2">
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium flex items-center justify-between">
+                                <span>Pedidos</span>
+                                <span className="text-2xl font-bold text-blue-600">{filteredOrders.length}</span>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-[160px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={dailyData}>
+                                        <defs>
+                                            <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <XAxis
+                                            dataKey="date"
+                                            fontSize={10}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tick={{ fill: '#94a3b8' }}
+                                        />
+                                        <YAxis hide />
+                                        <Tooltip content={<CustomTooltip type="orders" />} />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="ordersCount"
+                                            stroke="#3b82f6"
+                                            strokeWidth={2}
+                                            fill="url(#colorOrders)"
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium flex items-center justify-between">
+                                <span>Receita</span>
+                                <span className="text-2xl font-bold text-green-600">R$ {totalRevenue.toFixed(0)}</span>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-[160px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={dailyData}>
+                                        <defs>
+                                            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <XAxis
+                                            dataKey="date"
+                                            fontSize={10}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tick={{ fill: '#94a3b8' }}
+                                        />
+                                        <YAxis hide />
+                                        <Tooltip content={<CustomTooltip type="revenue" />} />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="revenue"
+                                            stroke="#22c55e"
+                                            strokeWidth={2}
+                                            fill="url(#colorRevenue)"
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Ticket médio - subtle indicator */}
+                <Card className="bg-gradient-to-r from-purple-50 to-background border-purple-100">
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                    <ShoppingCart className="w-5 h-5 text-purple-600" />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Ticket Médio</p>
+                                    <p className="text-xl font-bold text-purple-600">R$ {averageOrderValue.toFixed(2)}</p>
+                                </div>
+                            </div>
+                            <div className="text-right text-xs text-muted-foreground">
+                                <p>Valor médio por pedido</p>
+                                <p>no período selecionado</p>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-sm font-medium">Receita no Período</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="h-[200px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={dailyData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="date" fontSize={10} tickLine={false} axisLine={false} />
-                                    <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value}`} />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                                        itemStyle={{ color: '#000' }}
-                                        cursor={{ fill: '#f1f5f9' }}
-                                        formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Receita']}
-                                    />
-                                    <Bar dataKey="revenue" name="Receita" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="h-[200px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={dailyData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="date" fontSize={10} tickLine={false} axisLine={false} />
-                                    <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value}`} />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                                        itemStyle={{ color: '#000' }}
-                                        formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Ticket Médio']}
-                                    />
-                                    <Line type="monotone" dataKey="averageTicket" name="Ticket Médio" stroke="#8b5cf6" strokeWidth={2} dot={false} />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Stock vs demand and top products */}
-            <div className="grid gap-4 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Package className="w-5 h-5" />
-                            Estoque vs Demanda
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3 max-h-[280px] overflow-y-auto">
-                            {stockAnalysis.length === 0 ? (
-                                <p className="text-sm text-muted-foreground text-center py-8">Nenhum ingrediente em uso</p>
-                            ) : (
-                                stockAnalysis.map(item => (
-                                    <div key={item.ingredient.id} className="flex items-center justify-between border-b pb-2">
-                                        <div className="flex items-center gap-2 flex-1">
-                                            {item.status === 'sufficient' && <CheckCircle className="w-4 h-4 text-green-600" />}
-                                            {item.status === 'low' && <AlertCircle className="w-4 h-4 text-yellow-600" />}
-                                            {item.status === 'critical' && <XCircle className="w-4 h-4 text-red-600" />}
-                                            <div className="flex-1">
-                                                <p className="font-medium text-sm">{item.ingredient.name}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {item.stock.toFixed(2)} / {item.demand.toFixed(2)} {item.ingredient.unit}
-                                                </p>
+                {/* Stock vs demand and top products */}
+                <div className="grid gap-4 md:grid-cols-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Package className="w-5 h-5" />
+                                Estoque vs Demanda
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-3 max-h-[280px] overflow-y-auto">
+                                {stockAnalysis.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-8">Nenhum ingrediente em uso</p>
+                                ) : (
+                                    stockAnalysis.map(item => (
+                                        <div key={item.ingredient.id} className="flex items-center justify-between border-b pb-2">
+                                            <div className="flex items-center gap-2 flex-1">
+                                                {item.status === 'sufficient' && <CheckCircle className="w-4 h-4 text-green-600" />}
+                                                {item.status === 'low' && <AlertCircle className="w-4 h-4 text-yellow-600" />}
+                                                {item.status === 'critical' && <XCircle className="w-4 h-4 text-red-600" />}
+                                                <div className="flex-1">
+                                                    <p className="font-medium text-sm">{item.ingredient.name}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {item.stock.toFixed(2)} / {item.demand.toFixed(2)} {item.ingredient.unit}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <Badge
+                                                variant={
+                                                    item.status === 'sufficient' ? 'default' :
+                                                        item.status === 'low' ? 'secondary' :
+                                                            'destructive'
+                                                }
+                                                className={
+                                                    item.status === 'sufficient' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
+                                                        item.status === 'low' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
+                                                            ''
+                                                }
+                                            >
+                                                {item.balance > 0 ? '+' : ''}{item.balance.toFixed(1)} {item.ingredient.unit}
+                                            </Badge>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5" />
+                                Produtos Mais Lucrativos
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-3 max-h-[280px] overflow-y-auto">
+                                {topProfitableProducts.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-8">Nenhuma venda no período</p>
+                                ) : (
+                                    topProfitableProducts.map((p, idx) => (
+                                        <div key={idx} className="flex items-center justify-between border-b pb-2">
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="outline" className="font-bold">{idx + 1}º</Badge>
+                                                <div>
+                                                    <p className="font-medium text-sm">{p.name}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {p.quantity} un • Margem {p.margin.toFixed(1)}%
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className={`text-sm font-bold ${p.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                    {p.profit > 0 ? '+' : ''}R$ {p.profit.toFixed(2)}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">R$ {p.revenue.toFixed(2)}</div>
                                             </div>
                                         </div>
-                                        <Badge
-                                            variant={
-                                                item.status === 'sufficient' ? 'default' :
-                                                    item.status === 'low' ? 'secondary' :
-                                                        'destructive'
-                                            }
-                                            className={
-                                                item.status === 'sufficient' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
-                                                    item.status === 'low' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
-                                                        ''
-                                            }
-                                        >
-                                            {item.balance > 0 ? '+' : ''}{item.balance.toFixed(1)} {item.ingredient.unit}
-                                        </Badge>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <TrendingUp className="w-5 h-5" />
-                            Produtos Mais Lucrativos
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3 max-h-[280px] overflow-y-auto">
-                            {topProfitableProducts.length === 0 ? (
-                                <p className="text-sm text-muted-foreground text-center py-8">Nenhuma venda no período</p>
-                            ) : (
-                                topProfitableProducts.map((p, idx) => (
-                                    <div key={idx} className="flex items-center justify-between border-b pb-2">
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className="font-bold">{idx + 1}º</Badge>
-                                            <div>
-                                                <p className="font-medium text-sm">{p.name}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {p.quantity} un • Margem {p.margin.toFixed(1)}%
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className={`text-sm font-bold ${p.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                {p.profit > 0 ? '+' : ''}R$ {p.profit.toFixed(2)}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground">R$ {p.revenue.toFixed(2)}</div>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+                                    ))
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
-            {/* Additional metrics */}
-            <div className="grid gap-4 md:grid-cols-3">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
-                        <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">R$ {averageOrderValue.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">Valor médio por pedido</p>
-                    </CardContent>
-                </Card>
-
-                <Card
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => navigate('/app/pedidos')}
-                >
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pedidos Ativos</CardTitle>
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{pendingOrdersCount}</div>
-                        <p className="text-xs text-muted-foreground">Em produção/pendentes</p>
-                    </CardContent>
-                </Card>
-                <Card
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => navigate('/app/clientes')}
-                >
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Clientes</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{customers.length}</div>
-                        <p className="text-xs text-muted-foreground">Total cadastrados</p>
-                    </CardContent>
-                </Card>
-            </div>
-        </div >
+                {/* Additional metrics */}
+                <div className="grid gap-4 md:grid-cols-2">
+                    <Card
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => navigate('/app/pedidos')}
+                    >
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Pedidos Ativos</CardTitle>
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{pendingOrdersCount}</div>
+                            <p className="text-xs text-muted-foreground">Em produção/pendentes</p>
+                        </CardContent>
+                    </Card>
+                    <Card
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => navigate('/app/clientes')}
+                    >
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Clientes</CardTitle>
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{customers.length}</div>
+                            <p className="text-xs text-muted-foreground">Total cadastrados</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </FadeIn>
+        </div>
     );
 };
 

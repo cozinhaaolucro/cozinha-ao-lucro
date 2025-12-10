@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, X } from 'lucide-react';
-import { getCustomers, getProducts, createOrder } from '@/lib/database';
+import { Plus, X, UserPlus } from 'lucide-react';
+import { getCustomers, getProducts, createOrder, createCustomer } from '@/lib/database';
 import type { Customer, Product, OrderStatus } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 
@@ -27,6 +27,14 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
         status: 'pending' as OrderStatus,
     });
     const [items, setItems] = useState<Array<{ product_id: string; quantity: number }>>([]);
+    const [showNewCustomer, setShowNewCustomer] = useState(false);
+    const [newCustomerData, setNewCustomerData] = useState({
+        name: '',
+        phone: '',
+        address: '',
+        notes: '',
+    });
+    const [creatingCustomer, setCreatingCustomer] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -42,6 +50,33 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
         ]);
         if (customersRes.data) setCustomers(customersRes.data);
         if (productsRes.data) setProducts(productsRes.data);
+    };
+
+    const handleCreateCustomer = async () => {
+        if (!newCustomerData.name.trim()) {
+            toast({ title: 'Digite o nome do cliente', variant: 'destructive' });
+            return;
+        }
+
+        setCreatingCustomer(true);
+        const { data, error } = await createCustomer({
+            name: newCustomerData.name,
+            phone: newCustomerData.phone || null,
+            address: newCustomerData.address || null,
+            notes: newCustomerData.notes || null,
+            last_order_date: null,
+        });
+
+        if (!error && data) {
+            toast({ title: 'Cliente criado com sucesso!' });
+            setCustomers([...customers, data]);
+            setFormData({ ...formData, customer_id: data.id });
+            setShowNewCustomer(false);
+            setNewCustomerData({ name: '', phone: '', address: '', notes: '' });
+        } else {
+            toast({ title: 'Erro ao criar cliente', description: error?.message, variant: 'destructive' });
+        }
+        setCreatingCustomer(false);
     };
 
     const addItem = () => {
@@ -118,6 +153,8 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
     const resetForm = () => {
         setFormData({ customer_id: '', delivery_date: '', delivery_time: '', notes: '', status: 'pending' });
         setItems([]);
+        setShowNewCustomer(false);
+        setNewCustomerData({ name: '', phone: '', address: '', notes: '' });
         onOpenChange(false);
     };
 
@@ -130,18 +167,70 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
+                        <div className="space-y-2">
                             <Label htmlFor="customer">Cliente (opcional)</Label>
-                            <Select value={formData.customer_id} onValueChange={(value) => setFormData({ ...formData, customer_id: value })}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Selecione o cliente" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {customers.map((c) => (
-                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            {!showNewCustomer ? (
+                                <div className="flex gap-2">
+                                    <Select value={formData.customer_id} onValueChange={(value) => setFormData({ ...formData, customer_id: value })}>
+                                        <SelectTrigger className="flex-1">
+                                            <SelectValue placeholder="Selecione o cliente" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {customers.map((c) => (
+                                                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setShowNewCustomer(true)}
+                                        title="Criar novo cliente"
+                                    >
+                                        <UserPlus className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium">Novo Cliente</span>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6"
+                                            onClick={() => setShowNewCustomer(false)}
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                    <Input
+                                        placeholder="Nome do cliente *"
+                                        value={newCustomerData.name}
+                                        onChange={(e) => setNewCustomerData({ ...newCustomerData, name: e.target.value })}
+                                    />
+                                    <Input
+                                        placeholder="Telefone (WhatsApp)"
+                                        value={newCustomerData.phone}
+                                        onChange={(e) => setNewCustomerData({ ...newCustomerData, phone: e.target.value })}
+                                    />
+                                    <Input
+                                        placeholder="Endereço"
+                                        value={newCustomerData.address}
+                                        onChange={(e) => setNewCustomerData({ ...newCustomerData, address: e.target.value })}
+                                    />
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={handleCreateCustomer}
+                                        disabled={creatingCustomer}
+                                        className="w-full"
+                                    >
+                                        {creatingCustomer ? 'Criando...' : 'Criar e Selecionar'}
+                                    </Button>
+                                </div>
+                            )}
                         </div>
 
                         <div>
@@ -264,3 +353,4 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
 };
 
 export default NewOrderDialog;
+

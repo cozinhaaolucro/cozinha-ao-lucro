@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,37 +12,118 @@ import { Separator } from '@/components/ui/separator';
 import {
     User,
     CreditCard,
-    Bell,
-    Shield,
     CheckCircle,
     Zap,
     LogOut,
     Mail,
-    Lock
+    Lock,
+    Camera,
+    Phone,
+    Calendar,
+    AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Settings = () => {
     const { user, signOut } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleSaveProfile = (e: React.FormEvent) => {
+    // Get user data
+    const fullName = user?.user_metadata?.full_name || '';
+    const phone = user?.user_metadata?.phone || '';
+    const avatarUrl = user?.user_metadata?.avatar_url;
+
+    // Subscription data (could be fetched from profiles table)
+    const subscriptionStartDate = user?.created_at ? new Date(user.created_at) : new Date();
+    const trialEndDate = new Date(subscriptionStartDate);
+    trialEndDate.setMonth(trialEndDate.getMonth() + 1);
+
+    const nextBillingDate = new Date(trialEndDate);
+    const today = new Date();
+    const isTrialPeriod = today < trialEndDate;
+    const daysUntilBilling = Math.ceil((nextBillingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const isDueToday = daysUntilBilling <= 0;
+
+    const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            setLoading(false);
+
+        const formData = new FormData(e.target as HTMLFormElement);
+        const name = formData.get('name') as string;
+        const phoneValue = formData.get('phone') as string;
+
+        try {
+            await supabase.auth.updateUser({
+                data: {
+                    full_name: name,
+                    phone: phoneValue
+                }
+            });
             toast.success('Perfil atualizado com sucesso!');
-        }, 1000);
+        } catch (error) {
+            toast.error('Erro ao atualizar perfil');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handlePasswordChange = (e: React.FormEvent) => {
+    const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
+
+        const formData = new FormData(e.target as HTMLFormElement);
+        const newPassword = formData.get('new-password') as string;
+
+        try {
+            const { error } = await supabase.auth.updateUser({ password: newPassword });
+            if (error) throw error;
             toast.success('Senha alterada com sucesso!');
-        }, 1000);
+            (e.target as HTMLFormElement).reset();
+        } catch (error) {
+            toast.error('Erro ao alterar senha');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+
+        setUploading(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${user.id}.${fileExt}`;
+            const filePath = `avatars/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+            await supabase.auth.updateUser({
+                data: { avatar_url: data.publicUrl + '?t=' + Date.now() }
+            });
+
+            toast.success('Foto atualizada com sucesso!');
+            window.location.reload();
+        } catch (error) {
+            console.error('Error uploading photo:', error);
+            toast.error('Erro ao atualizar foto');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handlePayment = () => {
+        // TODO: Replace with actual Stripe payment link
+        toast.info('Redirecionando para pagamento...');
+        // window.open('STRIPE_PAYMENT_LINK', '_blank');
     };
 
     return (
@@ -73,19 +155,70 @@ const Settings = () => {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <form onSubmit={handleSaveProfile} className="space-y-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Nome Completo</Label>
+                            <form onSubmit={handleSaveProfile} className="space-y-6">
+                                {/* Profile Photo */}
+                                <div className="flex items-center gap-6">
                                     <div className="relative">
-                                        <Input id="name" defaultValue="Maria da Silva" className="pl-10" />
-                                        <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <div className="w-20 h-20 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
+                                            {avatarUrl ? (
+                                                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <User className="w-8 h-8 text-primary" />
+                                            )}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors"
+                                            disabled={uploading}
+                                        >
+                                            <Camera className="w-4 h-4" />
+                                        </button>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handlePhotoUpload}
+                                        />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium">{fullName || 'Seu Nome'}</p>
+                                        <p className="text-sm text-muted-foreground">{user?.email}</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="text-sm text-primary hover:underline mt-1"
+                                            disabled={uploading}
+                                        >
+                                            {uploading ? 'Enviando...' : 'Alterar foto'}
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <div className="relative">
-                                        <Input id="email" defaultValue={user?.email || ''} disabled className="pl-10 bg-muted" />
-                                        <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+
+                                <Separator />
+
+                                <div className="grid gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="name">Nome Completo</Label>
+                                        <div className="relative">
+                                            <Input id="name" name="name" defaultValue={fullName} className="pl-10" />
+                                            <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="phone">Telefone</Label>
+                                        <div className="relative">
+                                            <Input id="phone" name="phone" defaultValue={phone} className="pl-10" placeholder="(11) 98765-4321" />
+                                            <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="email">Email</Label>
+                                        <div className="relative">
+                                            <Input id="email" defaultValue={user?.email || ''} disabled className="pl-10 bg-muted" />
+                                            <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between rounded-lg border p-4">
@@ -114,16 +247,9 @@ const Settings = () => {
                         <CardContent>
                             <form onSubmit={handlePasswordChange} className="space-y-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="current-password">Senha Atual</Label>
-                                    <div className="relative">
-                                        <Input id="current-password" type="password" className="pl-10" />
-                                        <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    </div>
-                                </div>
-                                <div className="grid gap-2">
                                     <Label htmlFor="new-password">Nova Senha</Label>
                                     <div className="relative">
-                                        <Input id="new-password" type="password" className="pl-10" />
+                                        <Input id="new-password" name="new-password" type="password" className="pl-10" minLength={6} required />
                                         <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                     </div>
                                 </div>
@@ -146,10 +272,15 @@ const Settings = () => {
                                 <div>
                                     <CardTitle className="text-2xl text-primary flex items-center gap-2">
                                         Plano Pro
-                                        <Badge className="bg-primary/20 text-primary hover:bg-primary/30 border-0">ATIVO</Badge>
+                                        <Badge className={isTrialPeriod ? "bg-blue-500/20 text-blue-700 hover:bg-blue-500/30 border-0" : "bg-primary/20 text-primary hover:bg-primary/30 border-0"}>
+                                            {isTrialPeriod ? 'PERÍODO GRATUITO' : 'ATIVO'}
+                                        </Badge>
                                     </CardTitle>
                                     <CardDescription className="mt-2">
-                                        Você tem acesso a todos os recursos premium.
+                                        {isTrialPeriod
+                                            ? `Você está no período gratuito. Aproveite todos os recursos!`
+                                            : 'Você tem acesso a todos os recursos premium.'
+                                        }
                                     </CardDescription>
                                 </div>
                             </div>
@@ -161,12 +292,17 @@ const Settings = () => {
                                     <p className="text-2xl font-bold">R$ 39,90<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
                                 </div>
                                 <div className="p-4 bg-muted/50 rounded-lg border">
-                                    <p className="text-sm text-muted-foreground mb-1">Próxima Cobrança</p>
-                                    <p className="text-2xl font-bold">07/01/2026</p>
+                                    <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                                        <Calendar className="w-3 h-3" />
+                                        {isTrialPeriod ? 'Fim do Período Grátis' : 'Próxima Cobrança'}
+                                    </p>
+                                    <p className="text-2xl font-bold">{nextBillingDate.toLocaleDateString('pt-BR')}</p>
                                 </div>
                                 <div className="p-4 bg-muted/50 rounded-lg border">
                                     <p className="text-sm text-muted-foreground mb-1">Status</p>
-                                    <p className="text-2xl font-bold text-green-600">Em dia</p>
+                                    <p className={`text-2xl font-bold ${isDueToday ? 'text-orange-600' : 'text-green-600'}`}>
+                                        {isDueToday ? 'Pagamento Pendente' : isTrialPeriod ? `${daysUntilBilling} dias restantes` : 'Em dia'}
+                                    </p>
                                 </div>
                             </div>
 
@@ -196,12 +332,22 @@ const Settings = () => {
                         </CardContent>
                         <CardFooter className="flex flex-col sm:flex-row gap-4 justify-between bg-muted/20 p-6">
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <CreditCard className="w-4 h-4" />
-                                Visa terminado em 4242
+                                {isDueToday ? (
+                                    <>
+                                        <AlertCircle className="w-4 h-4 text-orange-500" />
+                                        Pagamento necessário para continuar
+                                    </>
+                                ) : (
+                                    <>
+                                        <CreditCard className="w-4 h-4" />
+                                        Primeiro mês gratuito
+                                    </>
+                                )}
                             </div>
                             <div className="flex gap-2">
-                                <Button variant="outline">Gerenciar Pagamento</Button>
-                                <Button variant="destructive">Cancelar Assinatura</Button>
+                                <Button onClick={handlePayment} variant={isDueToday ? "default" : "outline"}>
+                                    {isDueToday ? 'Efetuar Pagamento' : 'Antecipar Pagamento'}
+                                </Button>
                             </div>
                         </CardFooter>
                     </Card>
@@ -213,26 +359,21 @@ const Settings = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {[
-                                    { date: "07/12/2025", amount: "R$ 39,90", status: "Pago" },
-                                    { date: "07/11/2025", amount: "R$ 0,00", status: "Período Gratuito" },
-                                ].map((invoice, i) => (
-                                    <div key={i} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                                                <CheckCircle className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <p className="font-medium">{invoice.date}</p>
-                                                <p className="text-sm text-muted-foreground">{invoice.status}</p>
-                                            </div>
+                                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                            <Zap className="w-5 h-5" />
                                         </div>
-                                        <div className="text-right">
-                                            <p className="font-bold">{invoice.amount}</p>
-                                            <Button variant="link" className="h-auto p-0 text-xs">Download PDF</Button>
+                                        <div>
+                                            <p className="font-medium">{subscriptionStartDate.toLocaleDateString('pt-BR')}</p>
+                                            <p className="text-sm text-muted-foreground">Início do Período Gratuito</p>
                                         </div>
                                     </div>
-                                ))}
+                                    <div className="text-right">
+                                        <p className="font-bold">R$ 0,00</p>
+                                        <Badge variant="secondary" className="text-xs">Cortesia</Badge>
+                                    </div>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -243,3 +384,4 @@ const Settings = () => {
 };
 
 export default Settings;
+

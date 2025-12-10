@@ -1,52 +1,77 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import Checkout from "./pages/Checkout";
-import DashboardLayout from "./layouts/DashboardLayout";
-import Dashboard from "./pages/app/Dashboard";
-import Pedidos from "./pages/app/Pedidos";
-import Clientes from "./pages/app/Clientes";
-import Produtos from "./pages/app/Produtos";
-import Agenda from "./pages/app/Agenda";
-import Aprender from "./pages/app/Aprender";
-import Settings from "./pages/app/Settings";
 import { AuthProvider } from "./contexts/AuthContext";
 
-const queryClient = new QueryClient();
+// Eager load critical pages
+import Index from "./pages/Index";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import DashboardLayout from "./layouts/DashboardLayout";
+
+// Lazy load app pages for better performance
+const Dashboard = lazy(() => import("./pages/app/Dashboard"));
+const Pedidos = lazy(() => import("./pages/app/Pedidos"));
+const Clientes = lazy(() => import("./pages/app/Clientes"));
+const Produtos = lazy(() => import("./pages/app/Produtos"));
+const Agenda = lazy(() => import("./pages/app/Agenda"));
+const Aprender = lazy(() => import("./pages/app/Aprender"));
+const Settings = lazy(() => import("./pages/app/Settings"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <span className="text-sm text-muted-foreground">Carregando...</span>
+    </div>
+  </div>
+);
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes (formerly cacheTime)
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+    <TooltipProvider delayDuration={300}>
       <Toaster />
       <Sonner />
       <AuthProvider>
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/checkout" element={<Checkout />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/checkout" element={<Checkout />} />
 
-            <Route path="/app" element={<DashboardLayout />}>
-              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="/app" element={<DashboardLayout />}>
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="pedidos" element={<Pedidos />} />
+                <Route path="clientes" element={<Clientes />} />
+                <Route path="produtos" element={<Produtos />} />
+                <Route path="agenda" element={<Agenda />} />
+                <Route path="aprender" element={<Aprender />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="perfil" element={<Navigate to="settings" replace />} />
+              </Route>
 
-              <Route path="pedidos" element={<Pedidos />} />
-              <Route path="clientes" element={<Clientes />} />
-              <Route path="produtos" element={<Produtos />} />
-              <Route path="agenda" element={<Agenda />} />
-              <Route path="aprender" element={<Aprender />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="perfil" element={<Navigate to="settings" replace />} />
-            </Route>
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
@@ -54,3 +79,4 @@ const App = () => (
 );
 
 export default App;
+

@@ -7,62 +7,63 @@
 
 @layer base {
   :root {
-    /* Base Colors - Warm & Premium */
-    --background: 45 20% 98%;
-    /* Warm off-white */
-    --foreground: 45 10% 10%;
-    /* Deep warm black */
+    /* Base Colors - Warm & Premium (Slightly Darker) */
+    --background: 40 18% 96%;
+    /* Warmer, slightly darker off-white */
+    --foreground: 40 10% 8%;
+    /* Deeper warm black */
 
     --card: 0 0% 100%;
-    --card-foreground: 45 10% 10%;
+    --card-foreground: 40 10% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 45 10% 10%;
+    --popover-foreground: 40 10% 8%;
 
-    /* Primary - Golden Yellow (Premium & Energetic) */
-    --primary: 45 85% 50%;
-    /* Rich Gold */
+    /* Primary - Deeper Golden (More Sophisticated) */
+    --primary: 38 80% 42%;
+    /* Darker, richer gold */
     --primary-foreground: 0 0% 100%;
     /* White text for contrast */
-    --primary-glow: 45 90% 60%;
+    --primary-glow: 40 85% 55%;
     /* Lighter gold for glow */
 
     /* Secondary - Olive Green (Organic & Growth) */
-    --secondary: 80 35% 35%;
-    /* Deep Olive */
+    --secondary: 75 32% 32%;
+    /* Slightly deeper olive */
     --secondary-foreground: 0 0% 100%;
     /* White text */
-    --secondary-light: 80 25% 90%;
+    --secondary-light: 75 22% 88%;
     /* Light olive tint */
 
-    /* Muted - Warm Greys */
-    --muted: 45 15% 96%;
-    --muted-foreground: 45 10% 40%;
+    /* Muted - Warmer Greys */
+    --muted: 40 12% 94%;
+    --muted-foreground: 40 8% 38%;
 
-    /* Accent - Champagne/Cream */
-    --accent: 45 40% 92%;
-    --accent-foreground: 45 10% 15%;
+    /* Accent - Warm Cream */
+    --accent: 40 35% 90%;
+    --accent-foreground: 40 10% 12%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 45 20% 88%;
-    --input: 45 20% 92%;
-    --ring: 45 85% 50%;
-    /* Gold ring */
+    --border: 40 15% 85%;
+    --input: 40 18% 90%;
+    --ring: 38 80% 42%;
+    /* Matches primary */
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(45, 85%, 50%), hsl(45, 90%, 60%));
-    --gradient-hero: linear-gradient(135deg, hsl(45, 20%, 98%), hsl(45, 40%, 95%));
-    --gradient-gold: linear-gradient(135deg, #D4AF37, #F2D06B, #D4AF37);
+    --gradient-primary: linear-gradient(135deg, hsl(38, 80%, 42%), hsl(40, 85%, 55%));
+    --gradient-hero: linear-gradient(135deg, hsl(40, 18%, 96%), hsl(40, 30%, 92%));
+    --gradient-gold: linear-gradient(135deg, #B8860B, #DAA520, #B8860B);
 
-    /* Shadows - Gold tinted */
-    --shadow-elegant: 0 10px 30px -10px rgba(212, 175, 55, 0.25);
-    --shadow-glow: 0 0 25px rgba(212, 175, 55, 0.5);
-    --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
-    --shadow-floating: 0 20px 40px -10px rgba(0, 0, 0, 0.12);
+    /* Shadows - Enhanced depth */
+    --shadow-elegant: 0 8px 24px -8px rgba(184, 134, 11, 0.2);
+    --shadow-glow: 0 0 20px rgba(184, 134, 11, 0.4);
+    --shadow-card: 0 2px 12px -2px rgba(0, 0, 0, 0.08);
+    --shadow-floating: 0 16px 32px -8px rgba(0, 0, 0, 0.15);
+    --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -185,10 +186,76 @@
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
 
 .animate-shimmer {
   animation: shimmer 3s linear infinite;
+}
+
+.animate-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+/* Smooth scrolling for the entire app */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus states for accessibility */
+*:focus-visible {
+  @apply outline-2 outline-offset-2 outline-primary;
+}
+
+/* Optimize card hover transitions */
+.card-hover {
+  @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+}
+
+/* Subtle pulse animation for loading states */
+@keyframes subtle-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-subtle-pulse {
+  animation: subtle-pulse 2s ease-in-out infinite;
+}
+
+/* Reusable fade-in animation for staggered content */
+.animate-fade-in {
+  animation-name: fade-in;
+  animation-timing-function: ease-out;
 }
