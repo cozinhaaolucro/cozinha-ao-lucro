@@ -213,6 +213,43 @@ const DashboardLayout = () => {
 
             {/* Main Content with smooth transition */}
             <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 animate-in fade-in-0 duration-300">
+                {(() => {
+                    const created = user?.created_at ? new Date(user.created_at) : new Date();
+                    const now = new Date();
+                    const trialDays = 7;
+                    const msPerDay = 1000 * 60 * 60 * 24;
+                    const diffTime = Math.abs(now.getTime() - created.getTime());
+                    const diffDays = Math.ceil(diffTime / msPerDay);
+                    const daysRemaining = trialDays - diffDays;
+                    const showBanner = daysRemaining <= 3; // Show if 3, 2, 1, 0, or negative (expired)
+
+                    if (showBanner) {
+                        return (
+                            <div className="mb-6 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in slide-in-from-top-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-orange-200 flex items-center justify-center flex-shrink-0">
+                                        <Loader2 className="w-5 h-5 text-orange-700 animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-orange-900">
+                                            {daysRemaining <= 0 ? 'Seu período gratuito acabou!' : `Seu período gratuito acaba em ${daysRemaining} dias!`}
+                                        </h3>
+                                        <p className="text-sm text-orange-800">
+                                            {daysRemaining <= 0 ? 'Para continuar acessando seus dados e recursos, ative sua assinatura.' : 'Garanta o acesso contínuo às suas ferramentas de gestão.'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button
+                                    onClick={() => window.open('https://payment-link-v3.pagar.me/pl_vmw84g7LrdeA8LWc07Ik0ANJ3nM12Pxk', '_blank')}
+                                    className="bg-orange-600 hover:bg-orange-700 text-white border-0 shadow-lg shadow-orange-600/20 whitespace-nowrap"
+                                >
+                                    Assinar Agora
+                                </Button>
+                            </div>
+                        );
+                    }
+                    return null;
+                })()}
                 <Outlet />
             </main>
 

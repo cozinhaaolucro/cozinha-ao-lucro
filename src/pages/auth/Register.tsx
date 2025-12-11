@@ -58,7 +58,7 @@ const Register = () => {
                     <CardDescription>
                         Crie sua conta e profissionalize sua cozinha
                     </CardDescription>
-                    <p className="text-xs text-green-600 mt-2">🎉 Primeiro mês grátis!</p>
+                    <p className="text-xs text-green-600 mt-2">🎉 7 Dias Grátis!</p>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleRegister} className="space-y-4">

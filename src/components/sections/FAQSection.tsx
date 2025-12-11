@@ -17,7 +17,7 @@ const FAQSection = () => {
             answer: "O ebook inclui um módulo completo sobre vendas e marketing simples, além de scripts prontos que você pode usar. Você aprenderá técnicas fáceis para atrair e conquistar clientes."
         }, {
             question: "A compra é segura?",
-            answer: "Sim! Utilizamos plataformas de pagamento seguras e criptografadas. Além disso, oferecemos o primeiro mês grátis para você testar. Se não ficar satisfeita, cancelamos sua assinatura sem custos."
+            answer: "Sim! Utilizamos plataformas de pagamento seguras e criptografadas. Além disso, oferecemos os primeiros 7 dias grátis para você testar. Se não ficar satisfeita, cancelamos sua assinatura sem custos."
         }, {
             question: "Quanto tempo leva para ver resultados?",
             answer: "Muitas alunas começam a ter suas primeiras vendas já na primeira semana após aplicar as estratégias do ebook. Os resultados dependem da sua dedicação e aplicação do método."

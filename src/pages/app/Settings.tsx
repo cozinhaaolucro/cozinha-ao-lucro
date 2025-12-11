@@ -38,7 +38,7 @@ const Settings = () => {
     // Subscription data (could be fetched from profiles table)
     const subscriptionStartDate = user?.created_at ? new Date(user.created_at) : new Date();
     const trialEndDate = new Date(subscriptionStartDate);
-    trialEndDate.setMonth(trialEndDate.getMonth() + 1);
+    trialEndDate.setDate(trialEndDate.getDate() + 7);
 
     const nextBillingDate = new Date(trialEndDate);
     const today = new Date();
@@ -345,7 +345,11 @@ const Settings = () => {
                                 )}
                             </div>
                             <div className="flex gap-2">
-                                <Button onClick={handlePayment} variant={isDueToday ? "default" : "outline"}>
+                                <Button
+                                    onClick={() => window.open('https://payment-link-v3.pagar.me/pl_vmw84g7LrdeA8LWc07Ik0ANJ3nM12Pxk', '_blank')}
+                                    variant={isDueToday ? "default" : "outline"}
+                                    className={isDueToday ? "bg-primary hover:bg-primary/90" : ""}
+                                >
                                     {isDueToday ? 'Efetuar Pagamento' : 'Antecipar Pagamento'}
                                 </Button>
                             </div>

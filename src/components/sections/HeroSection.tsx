@@ -52,7 +52,7 @@ const HeroSection = () => {
                                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </Button>
                             <p className="text-sm text-muted-foreground">
-                                ⚡ Primeiro mês grátis para testar
+                                ⚡ 7 Dias Grátis para testar
                             </p>
                         </div>
 

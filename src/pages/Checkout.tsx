@@ -108,7 +108,7 @@ const Checkout = () => {
                         <div className="flex items-center gap-4 text-xs text-muted-foreground justify-center lg:justify-start opacity-70">
                             <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Dados Criptografados</span>
                             <span>•</span>
-                            <span>Primeiro Mês Grátis</span>
+                            <span>7 Dias Grátis</span>
                             <span>•</span>
                             <span>Cancelamento Fácil</span>
                         </div>

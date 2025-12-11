@@ -39,7 +39,7 @@ const PricingSection = () => {
                                     <span className="text-muted-foreground">/mês</span>
                                 </div>
                                 <p className="text-sm text-green-600 font-medium mt-2 bg-green-50 inline-block px-3 py-1 rounded-full border border-green-100">
-                                    Primeiro Mês Grátis
+                                    7 Dias Grátis
                                 </p>
                             </CardHeader>
 

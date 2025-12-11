@@ -110,7 +110,7 @@ const UpsellSection = () => {
                                     <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
                                 </Button>
                                 <p className="text-center text-sm text-muted-foreground mt-4">
-                                    Acesso imediato • Primeiro mês grátis • Cancelamento fácil
+                                    Acesso imediato • 7 dias grátis • Cancelamento fácil
                                 </p>
                             </div>
                         </div>
