@@ -5,8 +5,8 @@ const Footer = () => {
         <footer className="bg-foreground text-background py-12 border-t border-white/10">
             <div className="container-max text-center">
                 <div className="flex items-center justify-center gap-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-glow rounded-full flex items-center justify-center shadow-glow">
-                        <span className="text-primary-foreground font-bold text-lg">CL</span>
+                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-glow overflow-hidden border-2 border-primary/20">
+                        <img src="/images/logo_chef.png" alt="Cozinha ao Lucro" className="w-full h-full object-cover" />
                     </div>
                 </div>
                 <p className="text-white/70 text-sm mb-8 max-w-md mx-auto leading-relaxed">

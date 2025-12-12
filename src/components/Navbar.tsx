@@ -44,11 +44,11 @@ const Navbar = () => {
                 {/* Logo */}
                 <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                     <div className="relative">
-                        <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:bg-primary/40 transition-all duration-500"></div>
+                        <div className="absolute inset-2 shadow-[0_0_30px_hsl(var(--primary)/0.6)] bg-transparent rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                         <img
-                            src="/images/logo_cozinhaaolucro.png"
+                            src="/images/logo_circle.png"
                             alt="Logo"
-                            className="relative w-12 h-12 rounded-xl object-cover border border-white/10 shadow-lg"
+                            className="relative h-20 w-auto object-contain"
                         />
                     </div>
                 </div>

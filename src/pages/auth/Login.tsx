@@ -42,7 +42,9 @@ const Login = () => {
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
             <Card className="w-full max-w-md border-primary/20 shadow-xl">
                 <CardHeader className="space-y-1 text-center">
-                    <CardTitle className="text-2xl font-bold text-primary">Cozinha ao Lucro</CardTitle>
+                    <div className="flex justify-center mb-4">
+                        <img src="/images/logo_circle.png" alt="Logo" className="h-16 w-auto" />
+                    </div>
                     <CardDescription>
                         Entre para gerenciar seu negócio
                     </CardDescription>

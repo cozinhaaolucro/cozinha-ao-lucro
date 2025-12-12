@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -117,8 +118,8 @@ const Clientes = () => {
 
     return (
         <div className="space-y-6 relative">
-            {selectedClients.length > 0 && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background px-6 py-3 rounded-full shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-10 fade-in">
+            {selectedClients.length > 0 && createPortal(
+                <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-foreground text-background px-6 py-3 rounded-full shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-10 fade-in w-[90%] md:w-auto justify-center">
                     <span className="font-medium text-sm">{selectedClients.length} selecionados</span>
                     <div className="h-4 w-px bg-background/20" />
                     <Button
@@ -147,7 +148,8 @@ const Clientes = () => {
                     >
                         <X className="w-4 h-4" />
                     </Button>
-                </div>
+                </div>,
+                document.body
             )}
 
             <div className="flex items-center justify-between">

@@ -62,7 +62,7 @@ const PricingSection = () => {
                                 </ul>
 
                                 <Button
-                                    onClick={() => navigate('/register?plan=monthly')}
+                                    onClick={() => window.open('https://payment-link-v3.pagar.me/pl_vmw84g7LrdeA8LWc07Ik0ANJ3nM12Pxk', '_blank')}
                                     className="btn-primary w-full text-lg py-6 mb-4 shadow-lg group"
                                 >
                                     COMEÇAR AGORA

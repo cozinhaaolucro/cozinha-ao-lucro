@@ -21,7 +21,7 @@ const Agenda = lazy(() => import("./pages/app/Agenda"));
 const Aprender = lazy(() => import("./pages/app/Aprender"));
 const Settings = lazy(() => import("./pages/app/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const Checkout = lazy(() => import("./pages/Checkout"));
+
 
 // Loading fallback component
 const PageLoader = () => (
@@ -56,7 +56,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/checkout" element={<Checkout />} />
+
 
               <Route path="/app" element={<DashboardLayout />}>
                 <Route path="dashboard" element={<Dashboard />} />
