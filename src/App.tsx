@@ -55,14 +55,16 @@ const App = () => (
           <BrowserRouter>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+                import {Capacitor} from "@capacitor/core";
 
-                {/* Redirect mobile/PWA directly to login */}
-                {window.matchMedia('(display-mode: standalone)').matches || window.innerWidth < 768 ? (
+                // ... inside Routes ...
+
+                {/* Redirect Native App directly to login */}
+                {Capacitor.isNativePlatform() ? (
                   <Route path="/" element={<Navigate to="/login" replace />} />
-                ) : null}
+                ) : (
+                  <Route path="/" element={<Index />} />
+                )}
 
 
                 <Route path="/app" element={<DashboardLayout />}>
