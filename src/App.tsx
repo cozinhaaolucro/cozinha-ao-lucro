@@ -78,6 +78,9 @@ const App = () => (
                   <Route path="perfil" element={<Navigate to="settings" replace />} />
                 </Route>
 
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
