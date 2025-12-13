@@ -69,7 +69,7 @@ serve(async (req) => {
                     type: 'individual',
                 },
                 items: [{
-                    amount: 2990,  // R$ 29,90 em centavos
+                    amount: 3990,  // R$ 39,90 em centavos
                     description: 'Plano Pro - Cozinha ao Lucro (Mensal)',
                     quantity: 1,
                     code: 'plano_pro_mensal',
@@ -95,7 +95,7 @@ serve(async (req) => {
                         credit_card: {
                             capture: true,
                             statement_descriptor: 'COZINHA LUCRO',
-                            installments: [{ number: 1, total: 2990 }],
+                            installments: [{ number: 1, total: 3990 }],
                         },
                     }
                 }],
