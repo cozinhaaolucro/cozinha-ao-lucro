@@ -1,61 +1,67 @@
-
-// Follow this guide to deploy: https://supabase.com/docs/guides/functions/deploy
-// Deno runtime
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
-
-console.log("Pagar.me Webhook Function Up!")
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 serve(async (req) => {
     try {
-        const supabase = createClient(
-            // Supabase API URL - Env var
-            Deno.env.get('SUPABASE_URL') ?? '',
-            // Supabase API SERVICE ROLE KEY - Env var
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-        )
-
-        const payload = await req.json()
-        console.log("Webhook received:", payload)
-
-        // Pagar.me payload structure varies, assuming simplified model here:
-        // payload.data.status, payload.data.metadata.order_id
-
-        // Example Pagar.me structure check (adjust based on actual Pagar.me version used)
-        const status = payload?.data?.status;
-        const orderId = payload?.data?.metadata?.order_id; // Need to ensure we send this metadata when creating transaction
-
-        if (orderId && status) {
-            let appStatus = 'pending';
-            if (status === 'paid') appStatus = 'preparing';
-            // Logic: if paid, move to preparing? Or keep pending but mark paid? 
-            // User requested "account status reflects payment status".
-            // Maybe we just update a 'payment_status' column? Or 'status' if 'paid' -> 'preparing'?
-
-            // Let's assume we update the order status to 'pending' (confirmed) or 'preparing'
-
-            const { error } = await supabase
-                .from('orders')
-                .update({ status: 'preparing', payment_status: 'paid' }) // ensuring we have payment_status column or reusing status
-                .eq('id', orderId)
-
-            if (error) throw error
-
-            return new Response(JSON.stringify({ message: "Order updated" }), {
-                headers: { "Content-Type": "application/json" },
-                status: 200,
-            })
+        // 1. Validar método
+        if (req.method !== 'POST') {
+            return new Response('Method not allowed', { status: 405 })
         }
 
-        return new Response(JSON.stringify({ message: "Ignored" }), {
-            headers: { "Content-Type": "application/json" },
+        // 2. Ler corpo da requisição
+        const payload = await req.json()
+        console.log('Webhook recebido:', JSON.stringify(payload))
+
+        // 3. Verificar tipo do evento
+        // Pagar.me envia 'order.paid' ou 'invoice.paid' ou 'charge.paid'
+        const eventType = payload.type
+        // Aceita múltiplos eventos de pagamento bem sucedido
+        if (eventType !== 'order.paid' && eventType !== 'charge.paid' && eventType !== 'invoice.paid') {
+            return new Response('Event ignored', { status: 200 })
+        }
+
+        // 4. Extrair dados do cliente
+        // O Customer Code no Pagar.me deve ser o UUID do usuário no Supabase
+        const customerCode = payload.data.customer.code
+
+        if (!customerCode) {
+            console.error('Customer code not found in payload')
+            return new Response('Customer code missing', { status: 400 })
+        }
+
+        // 5. Atualizar Supabase
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+        const supabase = createClient(supabaseUrl, supabaseKey)
+
+        // Adiciona 30 dias de assinatura
+        const subscriptionEnd = new Date()
+        subscriptionEnd.setDate(subscriptionEnd.getDate() + 30)
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                subscription_status: 'active',
+                subscription_plan: 'pro',
+                subscription_end: subscriptionEnd.toISOString()
+            })
+            .eq('id', customerCode)
+
+        if (error) {
+            console.error('Error updating profile:', error)
+            return new Response('Database error', { status: 500 })
+        }
+
+        return new Response(JSON.stringify({ message: "Subscription activated" }), {
             status: 200,
+            headers: { "Content-Type": "application/json" }
         })
+
     } catch (error) {
+        console.error(error)
         return new Response(JSON.stringify({ error: error.message }), {
-            headers: { "Content-Type": "application/json" },
-            status: 400,
+            status: 500,
+            headers: { "Content-Type": "application/json" }
         })
     }
 })

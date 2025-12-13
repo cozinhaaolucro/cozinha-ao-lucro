@@ -32,9 +32,10 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { SubscriptionBlocker } from '@/components/subscription/SubscriptionBlocker';
 
 const DashboardLayout = () => {
-    const { signOut, user, loading } = useAuth();
+    const { signOut, user, profile, loading } = useAuth();
     const { unreadCount, markAllAsRead, notifications } = useNotifications();
     const location = useLocation();
     const navigate = useNavigate();
@@ -285,7 +286,18 @@ const DashboardLayout = () => {
                     const diffTime = Math.abs(now.getTime() - created.getTime());
                     const diffDays = Math.ceil(diffTime / msPerDay);
                     const daysRemaining = trialDays - diffDays;
-                    const showBanner = daysRemaining <= 3;
+
+                    // Subscription Check Logic
+                    const isTrialExpired = daysRemaining <= 0;
+                    const hasActiveSubscription = profile?.subscription_status === 'active';
+
+                    // BLOCKER: Show blocker if trial expired and no active subscription
+                    if (isTrialExpired && !hasActiveSubscription) {
+                        return <SubscriptionBlocker />;
+                    }
+
+                    // BANNER: Show banner if trial is ending soon (last 3 days) AND no active subscription
+                    const showBanner = daysRemaining <= 3 && !hasActiveSubscription;
 
                     if (showBanner) {
                         return (
@@ -296,10 +308,10 @@ const DashboardLayout = () => {
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-orange-900">
-                                            {daysRemaining <= 0 ? 'Seu período gratuito acabou!' : `Seu período gratuito acaba em ${daysRemaining} dias!`}
+                                            {isTrialExpired ? 'Seu período gratuito acabou!' : `Seu período gratuito acaba em ${daysRemaining} dias!`}
                                         </h3>
                                         <p className="text-sm text-orange-800">
-                                            {daysRemaining <= 0 ? 'Para continuar acessando seus dados e recursos, ative sua assinatura.' : 'Garanta o acesso contínuo às suas ferramentas de gestão.'}
+                                            {isTrialExpired ? 'Para continuar acessando seus dados e recursos, ative sua assinatura.' : 'Garanta o acesso contínuo às suas ferramentas de gestão.'}
                                         </p>
                                     </div>
                                 </div>
@@ -314,7 +326,28 @@ const DashboardLayout = () => {
                     }
                     return null;
                 })()}
-                <Outlet />
+                {/* Only render Outlet if NOT blocked (logic handled above returns early for blocker) 
+                    Wait, returning above only returns from the IIFE, not the component. 
+                    We need to conditionally render Outlet or Blocker.
+                */}
+                {(() => {
+                    const created = user?.created_at ? new Date(user.created_at) : new Date();
+                    const now = new Date();
+                    const trialDays = 7;
+                    const msPerDay = 1000 * 60 * 60 * 24;
+                    const diffTime = Math.abs(now.getTime() - created.getTime());
+                    const diffDays = Math.ceil(diffTime / msPerDay);
+                    const daysRemaining = trialDays - diffDays;
+                    const isTrialExpired = daysRemaining <= 0;
+                    const hasActiveSubscription = profile?.subscription_status === 'active';
+
+                    if (isTrialExpired && !hasActiveSubscription) {
+                        // Already rendered blocker above? No, the IIFE above just returned JSX to be rendered inside Main.
+                        // But we want to REPLACE Outlet with Blocker.
+                        return null;
+                    }
+                    return <Outlet />;
+                })()}
             </main>
 
             {/* Mobile Bottom Nav */}

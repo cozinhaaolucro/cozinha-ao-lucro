@@ -6,6 +6,7 @@ import { Session, User } from '@supabase/supabase-js';
 type AuthContextType = {
     session: Session | null;
     user: User | null;
+    profile: any | null;
     loading: boolean;
     signOut: () => Promise<void>;
 };
@@ -13,6 +14,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>({
     session: null,
     user: null,
+    profile: null,
     loading: true,
     signOut: async () => { },
 });
@@ -20,13 +22,37 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
+    const [profile, setProfile] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const fetchProfile = async (userId: string | undefined) => {
+        if (!userId) {
+            setProfile(null);
+            return;
+        }
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+
+            if (error) {
+                console.error('Error fetching profile:', error);
+            } else {
+                setProfile(data);
+            }
+        } catch (err) {
+            console.error('Unexpected error fetching profile:', err);
+        }
+    };
 
     useEffect(() => {
         // Get initial session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
+            fetchProfile(session?.user?.id);
             setLoading(false);
         });
 
@@ -36,6 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
+            fetchProfile(session?.user?.id);
             setLoading(false);
         });
 
@@ -47,7 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ session, user, loading, signOut }}>
+        <AuthContext.Provider value={{ session, user, profile, loading, signOut }}>
             {children}
         </AuthContext.Provider>
     );
