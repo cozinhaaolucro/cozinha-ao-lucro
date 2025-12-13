@@ -1,10 +1,23 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lock, CreditCard } from 'lucide-react';
+import { Lock, CreditCard, Loader2 } from 'lucide-react';
+import { iniciarPagamento } from '@/lib/pagamento';
+import { toast } from 'sonner';
 
 export const SubscriptionBlocker = () => {
-    const handleSubscribe = () => {
-        window.open('https://payment-link-v3.pagar.me/pl_vmw84g7LrdeA8LWc07Ik0ANJ3nM12Pxk', '_blank');
+    const [loading, setLoading] = useState(false);
+
+    const handleSubscribe = async () => {
+        setLoading(true);
+        try {
+            await iniciarPagamento();
+        } catch (error) {
+            console.error('Erro ao processar pagamento:', error);
+            toast.error('Erro ao iniciar pagamento. Tente novamente.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -38,9 +51,19 @@ export const SubscriptionBlocker = () => {
                         size="lg"
                         className="w-full gap-2 text-lg font-semibold shadow-lg hover:shadow-primary/25 transition-all"
                         onClick={handleSubscribe}
+                        disabled={loading}
                     >
-                        <CreditCard className="w-5 h-5" />
-                        Assinar Agora
+                        {loading ? (
+                            <>
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                Processando...
+                            </>
+                        ) : (
+                            <>
+                                <CreditCard className="w-5 h-5" />
+                                Assinar Agora
+                            </>
+                        )}
                     </Button>
                     <p className="text-xs text-center text-muted-foreground">
                         Pagamento seguro via Pagar.me. Cancele quando quiser.
