@@ -82,6 +82,21 @@ serve(async (req) => {
                         customer_editable: false,
                         accepted_payment_methods: ['credit_card', 'pix', 'boleto'],
                         success_url: `${Deno.env.get('APP_URL') || 'http://localhost:8080'}/app/dashboard?payment=success`,
+                        // Configuração obrigatória para PIX
+                        pix: {
+                            expires_in: 3600,  // 1 hora
+                        },
+                        // Configuração obrigatória para Boleto
+                        boleto: {
+                            due_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],  // 3 dias
+                            instructions: 'Pagar até a data de vencimento',
+                        },
+                        // Configuração para cartão de crédito
+                        credit_card: {
+                            capture: true,
+                            statement_descriptor: 'COZINHA LUCRO',
+                            installments: [{ number: 1, total: 2990 }],
+                        },
                     }
                 }],
             }),
