@@ -78,8 +78,8 @@ serve(async (req) => {
                     payment_method: 'checkout',
                     checkout: {
                         expires_in: 3600,  // 1 hora para pagar
-                        billing_address_editable: false,
-                        customer_editable: false,
+                        billing_address_editable: true,  // Permitir edição de endereço (necessário para boleto)
+                        customer_editable: true,  // Permitir edição de dados do cliente (necessário para CPF)
                         accepted_payment_methods: ['credit_card', 'pix', 'boleto'],
                         success_url: `${Deno.env.get('APP_URL') || 'http://localhost:8080'}/app/dashboard?payment=success`,
                         // Configuração obrigatória para PIX
