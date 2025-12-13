@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus, TrendingUp, Pencil } from 'lucide-react';
+import { Plus, TrendingUp, Pencil, Download } from 'lucide-react';
 import { getProducts } from '@/lib/database';
+import { exportToExcel } from '@/lib/excel';
 import type { Product, Ingredient } from '@/types/database';
 import EditProductDialog from './EditProductDialog';
 
@@ -40,14 +41,35 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
         return ((price - cost) / price) * 100;
     };
 
+    const handleExport = () => {
+        const dataToExport = products.map(p => {
+            const totalCost = calculateTotalCost(p);
+            const profit = (p.selling_price || 0) - totalCost;
+            return {
+                Nome: p.name,
+                Descrição: p.description || '',
+                'Preço Venda': p.selling_price ? Number(p.selling_price.toFixed(2)) : 0,
+                'Custo Total': Number(totalCost.toFixed(2)),
+                'Lucro Estimado': Number(profit.toFixed(2)),
+                'Ingredientes': p.product_ingredients.map(pi => `${pi.ingredient.name} (${pi.quantity}${pi.ingredient.unit})`).join(', ')
+            };
+        });
+        exportToExcel(dataToExport, 'produtos_cozinha_ao_lucro');
+    };
+
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Produtos</h3>
-                <Button className="gap-2" onClick={onNewProduct}>
-                    <Plus className="w-4 h-4" />
-                    Novo Produto
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" size="icon" onClick={handleExport} title="Exportar Excel">
+                        <Download className="w-4 h-4" />
+                    </Button>
+                    <Button className="gap-2" onClick={onNewProduct}>
+                        <Plus className="w-4 h-4" />
+                        Novo Produto
+                    </Button>
+                </div>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">

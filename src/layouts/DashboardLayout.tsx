@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef, memo } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -13,15 +13,29 @@ import {
     Menu,
     Settings,
     Camera,
-    Loader2
+    Loader2,
+    Bell,
+    X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
+import { useNotifications } from '@/contexts/NotificationContext';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
 const DashboardLayout = () => {
     const { signOut, user, loading } = useAuth();
+    const { unreadCount, markAllAsRead, notifications } = useNotifications();
     const location = useLocation();
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -125,6 +139,50 @@ const DashboardLayout = () => {
         );
     };
 
+    const NotificationBell = () => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+                    {unreadCount > 0 && (
+                        <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        </span>
+                    )}
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel className="flex items-center justify-between">
+                    <span>Notificações</span>
+                    {unreadCount > 0 && (
+                        <Button variant="ghost" size="sm" onClick={() => markAllAsRead()} className="h-auto px-2 py-0.5 text-xs text-muted-foreground hover:text-primary">
+                            Marcar lidas
+                        </Button>
+                    )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <ScrollArea className="h-[300px]">
+                    {notifications.length === 0 ? (
+                        <div className="p-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
+                            <Bell className="w-8 h-8 opacity-20" />
+                            <p>Nenhuma notificação nova</p>
+                        </div>
+                    ) : (
+                        notifications.map((notif) => (
+                            <DropdownMenuItem key={notif.id} className="cursor-pointer flex flex-col items-start gap-1 p-3 focus:bg-muted/50">
+                                <span className={`font-medium text-sm ${!notif.read ? 'text-primary' : ''}`}>{notif.title}</span>
+                                <span className="text-xs text-muted-foreground line-clamp-2">{notif.message}</span>
+                                <span className="text-[10px] text-muted-foreground/60 w-full text-right mt-1">
+                                    {new Date(notif.created_at).toLocaleDateString()}
+                                </span>
+                            </DropdownMenuItem>
+                        ))
+                    )}
+                </ScrollArea>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+
     return (
         <div className="min-h-screen bg-background flex flex-col md:flex-row">
             {/* Desktop Sidebar */}
@@ -171,48 +229,54 @@ const DashboardLayout = () => {
                     <span className="font-bold text-lg">{firstName}</span>
                 </div>
 
-                <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                    <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                            <Menu className="w-6 h-6" />
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="p-0 w-72">
-                        <div className="p-6 border-b flex items-center gap-3">
-                            <UserAvatar size="md" />
-                            <div className="flex-1 min-w-0">
-                                <span className="font-bold text-lg truncate block">{firstName}</span>
-                                <span className="text-xs text-muted-foreground">Plano Pro</span>
+                <div className="flex items-center gap-2">
+                    <NotificationBell />
+                    <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <Menu className="w-6 h-6" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="p-0 w-72">
+                            <div className="p-6 border-b flex items-center gap-3">
+                                <UserAvatar size="md" />
+                                <div className="flex-1 min-w-0">
+                                    <span className="font-bold text-lg truncate block">{firstName}</span>
+                                    <span className="text-xs text-muted-foreground">Plano Pro</span>
+                                </div>
                             </div>
-                        </div>
-                        <nav className="flex-1 p-4 space-y-2">
-                            {navItems.map((item) => (
-                                <Link
-                                    key={item.path}
-                                    to={item.path}
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path)
-                                        ? 'bg-primary text-primary-foreground shadow-md'
-                                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                                        }`}
-                                >
-                                    <item.icon className="w-5 h-5" />
-                                    <span className="font-medium">{item.label}</span>
-                                </Link>
-                            ))}
-                            <div className="pt-4 mt-4 border-t">
-                                <Button variant="ghost" className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={handleSignOut}>
-                                    <LogOut className="w-4 h-4" />
-                                    Sair
-                                </Button>
-                            </div>
-                        </nav>
-                    </SheetContent>
-                </Sheet>
+                            <nav className="flex-1 p-4 space-y-2">
+                                {navItems.map((item) => (
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path)
+                                            ? 'bg-primary text-primary-foreground shadow-md'
+                                            : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                                            }`}
+                                    >
+                                        <item.icon className="w-5 h-5" />
+                                        <span className="font-medium">{item.label}</span>
+                                    </Link>
+                                ))}
+                                <div className="pt-4 mt-4 border-t">
+                                    <Button variant="ghost" className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={handleSignOut}>
+                                        <LogOut className="w-4 h-4" />
+                                        Sair
+                                    </Button>
+                                </div>
+                            </nav>
+                        </SheetContent>
+                    </Sheet>
+                </div>
             </header>
 
-            {/* Main Content with smooth transition */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 animate-in fade-in-0 duration-300">
+            {/* Main Content */}
+            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 animate-in fade-in-0 duration-300 relative">
+                <div className="hidden md:flex absolute top-6 right-8 z-10">
+                    <NotificationBell />
+                </div>
                 {(() => {
                     const created = user?.created_at ? new Date(user.created_at) : new Date();
                     const now = new Date();
@@ -221,7 +285,7 @@ const DashboardLayout = () => {
                     const diffTime = Math.abs(now.getTime() - created.getTime());
                     const diffDays = Math.ceil(diffTime / msPerDay);
                     const daysRemaining = trialDays - diffDays;
-                    const showBanner = daysRemaining <= 3; // Show if 3, 2, 1, 0, or negative (expired)
+                    const showBanner = daysRemaining <= 3;
 
                     if (showBanner) {
                         return (
@@ -308,4 +372,3 @@ const DashboardLayout = () => {
 };
 
 export default DashboardLayout;
-

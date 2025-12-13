@@ -16,6 +16,7 @@ type NewCustomerDialogProps = {
 const NewCustomerDialog = ({ open, onOpenChange, onSuccess }: NewCustomerDialogProps) => {
     const [formData, setFormData] = useState({
         name: '',
+        email: '',
         phone: '',
         address: '',
         notes: '',
@@ -27,6 +28,7 @@ const NewCustomerDialog = ({ open, onOpenChange, onSuccess }: NewCustomerDialogP
 
         const { error } = await createCustomer({
             name: formData.name,
+            email: formData.email || null,
             phone: formData.phone || null,
             address: formData.address || null,
             notes: formData.notes || null,
@@ -43,7 +45,7 @@ const NewCustomerDialog = ({ open, onOpenChange, onSuccess }: NewCustomerDialogP
     };
 
     const resetForm = () => {
-        setFormData({ name: '', phone: '', address: '', notes: '' });
+        setFormData({ name: '', email: '', phone: '', address: '', notes: '' });
         onOpenChange(false);
     };
 
@@ -63,6 +65,17 @@ const NewCustomerDialog = ({ open, onOpenChange, onSuccess }: NewCustomerDialogP
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             placeholder="Ex: Maria Silva"
                             required
+                        />
+                    </div>
+
+                    <div>
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            placeholder="cliente@email.com"
                         />
                     </div>
 

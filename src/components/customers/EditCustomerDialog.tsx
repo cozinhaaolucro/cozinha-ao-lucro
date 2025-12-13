@@ -18,6 +18,7 @@ type EditCustomerDialogProps = {
 const EditCustomerDialog = ({ customer, open, onOpenChange, onSuccess }: EditCustomerDialogProps) => {
     const [formData, setFormData] = useState({
         name: '',
+        email: '',
         phone: '',
         address: '',
         notes: '',
@@ -28,6 +29,7 @@ const EditCustomerDialog = ({ customer, open, onOpenChange, onSuccess }: EditCus
         if (customer) {
             setFormData({
                 name: customer.name,
+                email: customer.email || '',
                 phone: customer.phone || '',
                 address: customer.address || '',
                 notes: customer.notes || '',
@@ -43,6 +45,7 @@ const EditCustomerDialog = ({ customer, open, onOpenChange, onSuccess }: EditCus
             .from('customers')
             .update({
                 name: formData.name,
+                email: formData.email || null,
                 phone: formData.phone || null,
                 address: formData.address || null,
                 notes: formData.notes || null,
@@ -98,6 +101,17 @@ const EditCustomerDialog = ({ customer, open, onOpenChange, onSuccess }: EditCus
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             required
+                        />
+                    </div>
+
+                    <div>
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            placeholder="cliente@email.com"
                         />
                     </div>
 

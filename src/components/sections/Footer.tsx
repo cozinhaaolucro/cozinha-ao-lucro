@@ -47,9 +47,7 @@ const Footer = () => {
                     <a href="#" className="hover:text-primary transition-colors duration-300">Política de Privacidade</a>
                     <a href="#" className="hover:text-primary transition-colors duration-300">Contato</a>
                 </div>
-                <p className="text-xs text-white/30">
-                    © 2024 Cozinha ao Lucro. Todos os direitos reservados.
-                </p>
+                © 2025 Cozinha ao Lucro. Todos os direitos reservados.
             </div>
         </footer>
     );

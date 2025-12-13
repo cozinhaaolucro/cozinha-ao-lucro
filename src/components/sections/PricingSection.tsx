@@ -78,7 +78,7 @@ const PricingSection = () => {
                                     <div className="pt-4 border-t border-border/50">
                                         <p className="text-sm font-medium text-foreground">Quer economizar?</p>
                                         <p className="text-sm text-muted-foreground">
-                                            Plano Anual por <span className="font-bold text-primary">R$ 399,00</span> (2 meses grátis)
+                                            Aproveite o preço promocional de lançamento!
                                         </p>
                                     </div>
                                 </div>

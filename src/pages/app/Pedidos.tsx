@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Phone, Filter, Pencil } from 'lucide-react';
-import { getOrders } from '@/lib/database';
+import { Plus, Phone, Filter, Pencil, Download } from 'lucide-react';
+import { getOrders, deductStockFromOrder } from '@/lib/database';
+import { exportToExcel } from '@/lib/excel';
 import { supabase } from '@/lib/supabase';
 import type { OrderWithDetails } from '@/types/database';
 import NewOrderDialog from '@/components/orders/NewOrderDialog';
@@ -119,9 +120,32 @@ const Pedidos = () => {
             loadOrders();
         } else {
             toast({ title: 'Status atualizado!' });
+
+            // Deduct stock if moving to preparing
+            if (newStatus === 'preparing') {
+                deductStockFromOrder(draggedOrder).then(({ error: stockError }) => {
+                    if (stockError) {
+                        toast({ title: 'Erro ao dar baixa no estoque', variant: 'destructive' });
+                    } else {
+                        toast({ title: 'Estoque atualizado com sucesso!' });
+                    }
+                });
+            }
         }
 
         setDraggedOrder(null);
+    };
+
+    const handleExport = () => {
+        const dataToExport = filteredOrders.map(o => ({
+            Status: STATUS_COLUMNS[o.status]?.label || o.status,
+            Cliente: o.customer?.name || 'Não informado',
+            'Data Entrega': o.delivery_date ? new Date(o.delivery_date).toLocaleDateString('pt-BR') : '-',
+            Items: o.items?.map(i => `${i.product_name} (${i.quantity})`).join(', ') || '',
+            'Valor Total': Number(o.total_value.toFixed(2)),
+            CriadoEm: new Date(o.created_at).toLocaleDateString('pt-BR')
+        }));
+        exportToExcel(dataToExport, 'pedidos_cozinha_ao_lucro');
     };
 
     return (
@@ -131,10 +155,15 @@ const Pedidos = () => {
                     <h1 className="text-3xl font-bold tracking-tight">Pedidos</h1>
                     <p className="text-muted-foreground">Gerencie seus pedidos em um quadro Kanban</p>
                 </div>
-                <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
-                    <Plus className="w-4 h-4" />
-                    Novo Pedido
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" size="icon" onClick={handleExport} title="Exportar Excel">
+                        <Download className="w-4 h-4" />
+                    </Button>
+                    <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
+                        <Plus className="w-4 h-4" />
+                        Novo Pedido
+                    </Button>
+                </div>
             </div>
 
             {/* Date Filters */}

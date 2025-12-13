@@ -29,7 +29,7 @@ import { Plus, X, Calculator, ChevronDown, Check } from 'lucide-react';
 import { getIngredients, createProduct, createIngredient } from '@/lib/database';
 import type { Ingredient } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
-import { presetIngredients } from '@/data/presetIngredients';
+import { PRESET_PRODUCTS, PRESET_INGREDIENTS } from '@/data/presets';
 import { cn } from '@/lib/utils';
 
 type ProductBuilderProps = {
@@ -41,10 +41,35 @@ type ProductBuilderProps = {
 type SelectedIngredient = {
     ingredient_id?: string;
     name: string;
-    unit: string;
-    cost: number;
-    quantity: number;
+    unit: string; // Base unit (kg, l, un)
+    cost: number; // Cost per base unit
+    quantity: number; // Quantity in base unit
+    display_unit: string; // Unit shown to user (g, ml, kg, etc.)
+    display_quantity: number; // Quantity shown to user
     is_virtual?: boolean;
+};
+
+// Helper to determine available units based on base unit
+const getUnitOptions = (baseUnit: string) => {
+    const normalized = baseUnit.toLowerCase();
+    if (['kg', 'quilo', 'kilograma'].includes(normalized)) return ['kg', 'g'];
+    if (['l', 'litro'].includes(normalized)) return ['l', 'ml'];
+    return [baseUnit]; // 'un', 'dz' etc have no sub-units typically used this way yet
+};
+
+// Helper to convert between units
+const convertQuantity = (qty: number, fromUnit: string, toUnit: string): number => {
+    if (fromUnit === toUnit) return qty;
+
+    // kg <-> g
+    if (fromUnit === 'kg' && toUnit === 'g') return qty * 1000;
+    if (fromUnit === 'g' && toUnit === 'kg') return qty / 1000;
+
+    // l <-> ml
+    if (fromUnit === 'l' && toUnit === 'ml') return qty * 1000;
+    if (fromUnit === 'ml' && toUnit === 'l') return qty / 1000;
+
+    return qty;
 };
 
 const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) => {
@@ -80,6 +105,8 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                 unit: ingredient.unit,
                 cost: ingredient.cost_per_unit,
                 quantity: 1,
+                display_unit: ingredient.unit,
+                display_quantity: 1,
                 is_virtual: false
             }
         ]);
@@ -87,10 +114,16 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
     };
 
     const addPresetIngredient = (presetName: string) => {
-        const preset = presetIngredients.find(p => p.name === presetName);
+        const preset = PRESET_INGREDIENTS.find(p => p.name === presetName);
         if (!preset) return;
 
-        // Check if already exists in DB to avoid virtual if possible
+        // Auto-select best display unit (e.g. use 'g' if base is 'kg')
+        const baseUnit = preset.unit.toLowerCase();
+        let initialDisplayUnit = baseUnit;
+        if (baseUnit === 'kg') initialDisplayUnit = 'g';
+        if (baseUnit === 'l' || baseUnit === 'litro') initialDisplayUnit = 'ml';
+
+        // Check if already exists in DB
         const existing = ingredients.find(i => i.name.toLowerCase() === preset.name.toLowerCase());
 
         if (existing) {
@@ -101,7 +134,9 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                     name: existing.name,
                     unit: existing.unit,
                     cost: existing.cost_per_unit,
-                    quantity: 1,
+                    quantity: existing.unit === 'kg' ? 0.001 : 1, // Default 1g or 1un
+                    display_unit: existing.unit === 'kg' ? 'g' : existing.unit,
+                    display_quantity: 1,
                     is_virtual: false
                 }
             ]);
@@ -113,8 +148,10 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                 {
                     name: preset.name,
                     unit: preset.unit,
-                    cost: Number((preset.price * 1.15).toFixed(2)),
-                    quantity: 1,
+                    cost: Number((preset.cost_per_unit * 1.15).toFixed(2)),
+                    quantity: preset.unit === 'kg' ? 0.001 : 1,
+                    display_unit: initialDisplayUnit,
+                    display_quantity: 1,
                     is_virtual: true
                 }
             ]);
@@ -125,9 +162,34 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
         setSelectedIngredients(selectedIngredients.filter((_, i) => i !== index));
     };
 
-    const updateIngredientQuantity = (index: number, quantity: number) => {
+    const updateIngredientDisplayQuantity = (index: number, newDisplayQty: number) => {
         const updated = [...selectedIngredients];
-        updated[index] = { ...updated[index], quantity };
+        const item = updated[index];
+
+        // Calculate base quantity
+        const baseQty = convertQuantity(newDisplayQty, item.display_unit, item.unit);
+
+        updated[index] = {
+            ...item,
+            display_quantity: newDisplayQty,
+            quantity: baseQty
+        };
+        setSelectedIngredients(updated);
+    };
+
+    const updateIngredientDisplayUnit = (index: number, newUnit: string) => {
+        const updated = [...selectedIngredients];
+        const item = updated[index];
+
+        // When changing unit, we want to KEEP the physical quantity, but change the displayed number
+        // e.g. 0.05kg (50g) -> switch to 'g' -> should display 50
+        const newDisplayQty = convertQuantity(item.quantity, item.unit, newUnit);
+
+        updated[index] = {
+            ...item,
+            display_unit: newUnit,
+            display_quantity: parseFloat(newDisplayQty.toFixed(4)) // Avoid rough floating point math
+        };
         setSelectedIngredients(updated);
     };
 
@@ -142,7 +204,11 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
             name: ingredient.name,
             unit: ingredient.unit,
             cost: ingredient.cost_per_unit,
-            is_virtual: false
+            is_virtual: false,
+            // Reset to defaults for the new ingredient type
+            display_unit: ingredient.unit,
+            display_quantity: 1,
+            quantity: 1
         };
         setSelectedIngredients(updated);
     };
@@ -231,6 +297,81 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
     const margin = calculateMargin();
     const suggestedPrice = getSuggestedPrice();
 
+    const loadProductPreset = (productName: string) => {
+        const preset = PRESET_PRODUCTS.find(p => p.name === productName);
+        if (!preset) return;
+
+        // 1. Set basic info
+        setFormData({
+            name: preset.name,
+            description: preset.description,
+            selling_price: preset.selling_price
+        });
+
+        // 2. Map ingredients
+        const newSelectedIngredients: SelectedIngredient[] = [];
+
+        preset.ingredients.forEach(pi => {
+            // Try to find in DB first
+            const existingDb = ingredients.find(i => i.name.toLowerCase() === pi.name.toLowerCase());
+
+            if (existingDb) {
+                // Smart Unit Logic for EXISTING DB ingredients
+                const isKg = existingDb.unit === 'kg' || existingDb.unit === 'kilograma';
+                const isL = existingDb.unit === 'l' || existingDb.unit === 'litro';
+
+                const useSubUnit = (isKg || isL) && pi.quantity < 1;
+                let displayUnit = existingDb.unit;
+                if (useSubUnit) {
+                    displayUnit = isKg ? 'g' : 'ml';
+                }
+
+                const displayQty = convertQuantity(pi.quantity, existingDb.unit, displayUnit);
+
+                newSelectedIngredients.push({
+                    ingredient_id: existingDb.id,
+                    name: existingDb.name,
+                    unit: existingDb.unit,
+                    cost: existingDb.cost_per_unit,
+                    quantity: pi.quantity,
+                    display_unit: displayUnit,
+                    display_quantity: parseFloat(displayQty.toFixed(3)),
+                    is_virtual: false
+                });
+            } else {
+                // Find in PRESET_INGREDIENTS to get cost/unit
+                const presetIng = PRESET_INGREDIENTS.find(i => i.name.toLowerCase() === pi.name.toLowerCase());
+
+                if (presetIng) {
+                    // Smart Unit Logic for VIRTUAL ingredients
+                    const isKg = presetIng.unit === 'kg';
+                    const isL = presetIng.unit === 'l' || presetIng.unit === 'litro';
+
+                    const useSubUnit = (isKg || isL) && pi.quantity < 1;
+                    let displayUnit = presetIng.unit;
+                    if (useSubUnit) {
+                        displayUnit = isKg ? 'g' : 'ml';
+                    }
+
+                    const displayQty = convertQuantity(pi.quantity, presetIng.unit, displayUnit);
+
+                    newSelectedIngredients.push({
+                        name: presetIng.name,
+                        unit: presetIng.unit,
+                        cost: Number((presetIng.cost_per_unit * 1.15).toFixed(2)),
+                        quantity: pi.quantity,
+                        display_unit: displayUnit,
+                        display_quantity: parseFloat(displayQty.toFixed(3)),
+                        is_virtual: true
+                    });
+                }
+            }
+        });
+
+        setSelectedIngredients(newSelectedIngredients);
+        toast({ title: 'Modelo carregado!', description: 'Receita preenchida com sucesso.' });
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -262,6 +403,30 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                         </div>
                     </div>
 
+                    {/* Presets Button */}
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button type="button" variant="secondary" className="gap-2 w-full sm:w-auto">
+                                    <Calculator className="w-4 h-4" />
+                                    Carregar Modelo de Produto
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-[300px]">
+                                {PRESET_PRODUCTS.map((preset) => (
+                                    <DropdownMenuItem
+                                        key={preset.name}
+                                        onClick={() => loadProductPreset(preset.name)}
+                                        className="flex flex-col items-start py-2"
+                                    >
+                                        <span className="font-medium">{preset.name}</span>
+                                        <span className="text-xs text-muted-foreground line-clamp-1">{preset.description}</span>
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
                     {/* Recipe (Ingredients) */}
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -274,7 +439,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-56 max-h-60 overflow-y-auto">
-                                        {presetIngredients.map((preset) => (
+                                        {PRESET_INGREDIENTS.map((preset) => (
                                             <DropdownMenuItem
                                                 key={preset.name}
                                                 onClick={() => addPresetIngredient(preset.name)}
@@ -337,42 +502,71 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                             <div className="space-y-2">
                                 {selectedIngredients.map((si, index) => (
                                     <div key={index} className="flex items-center gap-2">
-                                        {si.is_virtual ? (
-                                            <div className="flex-1 px-3 py-2 text-sm border rounded-md bg-muted/50 flex justify-between items-center">
-                                                <span>{si.name} <span className="text-xs text-muted-foreground">(Novo)</span></span>
-                                                <span className="text-xs text-muted-foreground">R$ {si.cost.toFixed(2)}/{si.unit}</span>
-                                            </div>
-                                        ) : (
-                                            <Select
-                                                value={si.ingredient_id}
-                                                onValueChange={(value) => updateIngredientSelection(index, value)}
-                                            >
-                                                <SelectTrigger className="flex-1">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {ingredients.map((ing) => (
-                                                        <SelectItem key={ing.id} value={ing.id}>
-                                                            {ing.name} (R$ {ing.cost_per_unit.toFixed(2)}/{ing.unit})
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        )}
+                                        <div className="flex-1 min-w-[180px]">
+                                            {si.is_virtual ? (
+                                                <div className="px-3 py-2 text-sm border rounded-md bg-muted/50 flex justify-between items-center h-10">
+                                                    <span>{si.name} <span className="text-xs text-muted-foreground">(Novo)</span></span>
+                                                    <span className="text-xs text-muted-foreground">R$ {si.cost.toFixed(2)}/{si.unit}</span>
+                                                </div>
+                                            ) : (
+                                                <Select
+                                                    value={si.ingredient_id}
+                                                    onValueChange={(value) => updateIngredientSelection(index, value)}
+                                                >
+                                                    <SelectTrigger className="h-10">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {ingredients.map((ing) => (
+                                                            <SelectItem key={ing.id} value={ing.id}>
+                                                                {ing.name} (R$ {ing.cost_per_unit.toFixed(2)}/{ing.unit})
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        </div>
 
-                                        <Input
-                                            type="number"
-                                            step="0.001"
-                                            value={si.quantity}
-                                            onChange={(e) => updateIngredientQuantity(index, parseFloat(e.target.value) || 0)}
-                                            className="w-24"
-                                            placeholder="Qtd"
-                                        />
-                                        <span className="text-sm text-muted-foreground w-12">{si.unit}</span>
+                                        <div className="flex items-center gap-2 w-[180px]">
+                                            <Input
+                                                type="number"
+                                                step="0.001"
+                                                value={si.display_quantity}
+                                                onChange={(e) => updateIngredientDisplayQuantity(index, parseFloat(e.target.value) || 0)}
+                                                className="w-20 text-right h-10"
+                                                placeholder="Qtd"
+                                            />
+
+                                            {getUnitOptions(si.unit).length > 1 ? (
+                                                <Select
+                                                    value={si.display_unit}
+                                                    onValueChange={(val) => updateIngredientDisplayUnit(index, val)}
+                                                >
+                                                    <SelectTrigger className="w-20 h-10 px-2">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {getUnitOptions(si.unit).map(u => (
+                                                            <SelectItem key={u} value={u}>{u}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            ) : (
+                                                <div className="w-20 px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md h-10 flex items-center justify-center border">
+                                                    {si.display_unit}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="text-xs text-muted-foreground w-16 text-right">
+                                            R$ {(si.cost * si.quantity).toFixed(2)}
+                                        </div>
+
                                         <Button
                                             type="button"
                                             variant="ghost"
                                             size="icon"
+                                            className="h-10 w-10 text-destructive hover:text-destructive hover:bg-destructive/10"
                                             onClick={() => removeIngredient(index)}
                                         >
                                             <X className="w-4 h-4" />

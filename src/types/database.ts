@@ -70,6 +70,7 @@ export type Customer = {
     birth_date?: string | null;
     internal_notes?: string | null;
     ltv_value?: number;
+    email?: string | null;
 };
 
 export type MessageTemplate = {

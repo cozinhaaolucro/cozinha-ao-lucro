@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getIngredients, createIngredient, updateIngredient, deleteIngredient } from '@/lib/database';
+import { exportToExcel, importFromExcel } from '@/lib/excel';
 import type { Ingredient } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 
@@ -108,115 +109,182 @@ const IngredientList = () => {
         setIsDialogOpen(true);
     };
 
+    const handleExport = () => {
+        const dataToExport = ingredients.map(i => ({
+            Nome: i.name,
+            Unidade: i.unit,
+            'Custo/Unidade': Number(i.cost_per_unit.toFixed(2)),
+            Estoque: Number((i.stock_quantity || 0).toFixed(2))
+        }));
+        exportToExcel(dataToExport, 'ingredientes_cozinha_ao_lucro');
+    };
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            const data: any[] = await importFromExcel(file);
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const row of data) {
+                const name = row['Nome'] || row['name'] || row['Name'];
+                if (!name) continue;
+
+                // Simple handling of unit/cost - defaulting if missing/invalid
+                const unit = (['kg', 'litro', 'unidade', 'grama', 'ml'].includes(row['Unidade']?.toLowerCase()) ? row['Unidade'].toLowerCase() : 'unidade') as Ingredient['unit'];
+
+                const { error } = await createIngredient({
+                    name: name,
+                    unit: unit,
+                    cost_per_unit: Number(row['Custo/Unidade'] || row['cost_per_unit'] || 0),
+                    stock_quantity: Number(row['Estoque'] || row['stock_quantity'] || 0)
+                });
+
+                if (error) errorCount++;
+                else successCount++;
+            }
+
+            toast({
+                title: 'Importação concluída',
+                description: `${successCount} ingredientes importados. ${errorCount > 0 ? `${errorCount} falhas.` : ''}`
+            });
+            loadIngredients();
+        } catch (error) {
+            console.error(error);
+            toast({ title: 'Erro na importação', description: 'Verifique o formato do arquivo.', variant: 'destructive' });
+        }
+
+        e.target.value = '';
+    };
+
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Ingredientes</h3>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="gap-2">
-                            <Plus className="w-4 h-4" />
-                            Novo Ingrediente
+                <div className="flex gap-2">
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            onChange={handleImport}
+                            title="Importar Excel"
+                        />
+                        <Button variant="outline" size="icon" title="Importar Excel">
+                            <Upload className="w-4 h-4" />
                         </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>{editingIngredient ? 'Editar' : 'Novo'} Ingrediente</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            {!editingIngredient && (
+                    </div>
+                    <Button variant="outline" size="icon" onClick={handleExport} title="Exportar Excel">
+                        <Download className="w-4 h-4" />
+                    </Button>
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="gap-2">
+                                <Plus className="w-4 h-4" />
+                                Novo Ingrediente
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>{editingIngredient ? 'Editar' : 'Novo'} Ingrediente</DialogTitle>
+                            </DialogHeader>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                {!editingIngredient && (
+                                    <div>
+                                        <Label>Preencher com modelo</Label>
+                                        <Select onValueChange={handlePresetSelect}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecione um ingrediente padrão..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {presetIngredients.map((preset) => (
+                                                    <SelectItem key={preset.name} value={preset.name}>
+                                                        {preset.name} - R$ {(preset.price * 1.15).toFixed(2)}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
                                 <div>
-                                    <Label>Preencher com modelo</Label>
-                                    <Select onValueChange={handlePresetSelect}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Selecione um ingrediente padrão..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {presetIngredients.map((preset) => (
-                                                <SelectItem key={preset.name} value={preset.name}>
-                                                    {preset.name} - R$ {(preset.price * 1.15).toFixed(2)}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            )}
-                            <div>
-                                <Label htmlFor="name">Nome</Label>
-                                <Input
-                                    id="name"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder="Ex: Leite Condensado"
-                                    required
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="unit">Unidade</Label>
-                                    <Select
-                                        value={formData.unit}
-                                        onValueChange={(value) => setFormData({ ...formData, unit: value as Ingredient['unit'] })}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="kg">Kg</SelectItem>
-                                            <SelectItem value="litro">Litro</SelectItem>
-                                            <SelectItem value="grama">Grama</SelectItem>
-                                            <SelectItem value="ml">ML</SelectItem>
-                                            <SelectItem value="unidade">Unidade</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label htmlFor="cost">Custo por Unidade (R$)</Label>
+                                    <Label htmlFor="name">Nome</Label>
                                     <Input
-                                        id="cost"
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.cost_per_unit}
-                                        onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) })}
+                                        id="name"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        placeholder="Ex: Leite Condensado"
                                         required
                                     />
                                 </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="stock">Quantidade em Estoque</Label>
-                                <Input
-                                    id="stock"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={formData.stock_quantity}
-                                    onChange={(e) => setFormData({ ...formData, stock_quantity: parseFloat(e.target.value) || 0 })}
-                                    placeholder="Ex: 5.5"
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Quantidade disponível na mesma unidade ({formData.unit})
-                                </p>
-                            </div>
-                            <div className="flex gap-2">
-                                <Button type="submit" className="flex-1">
-                                    {editingIngredient ? 'Atualizar' : 'Criar'}
-                                </Button>
-                                {editingIngredient && (
-                                    <Button
-                                        type="button"
-                                        variant="destructive"
-                                        onClick={() => handleDelete(editingIngredient.id)}
-                                    >
-                                        Excluir
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="unit">Unidade</Label>
+                                        <Select
+                                            value={formData.unit}
+                                            onValueChange={(value) => setFormData({ ...formData, unit: value as Ingredient['unit'] })}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="kg">Kg</SelectItem>
+                                                <SelectItem value="litro">Litro</SelectItem>
+                                                <SelectItem value="grama">Grama</SelectItem>
+                                                <SelectItem value="ml">ML</SelectItem>
+                                                <SelectItem value="unidade">Unidade</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="cost">Custo por Unidade (R$)</Label>
+                                        <Input
+                                            id="cost"
+                                            type="number"
+                                            step="0.01"
+                                            value={formData.cost_per_unit}
+                                            onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) })}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="stock">Quantidade em Estoque</Label>
+                                    <Input
+                                        id="stock"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={formData.stock_quantity}
+                                        onChange={(e) => setFormData({ ...formData, stock_quantity: parseFloat(e.target.value) || 0 })}
+                                        placeholder="Ex: 5.5"
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        Quantidade disponível na mesma unidade ({formData.unit})
+                                    </p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button type="submit" className="flex-1">
+                                        {editingIngredient ? 'Atualizar' : 'Criar'}
                                     </Button>
-                                )}
-                                <Button type="button" variant="outline" onClick={resetForm}>
-                                    Cancelar
-                                </Button>
-                            </div>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+                                    {editingIngredient && (
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            onClick={() => handleDelete(editingIngredient.id)}
+                                        >
+                                            Excluir
+                                        </Button>
+                                    )}
+                                    <Button type="button" variant="outline" onClick={resetForm}>
+                                        Cancelar
+                                    </Button>
+                                </div>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </div>
 
             <div className="grid gap-3">

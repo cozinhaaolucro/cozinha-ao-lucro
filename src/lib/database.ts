@@ -244,6 +244,61 @@ export const deleteCustomer = async (id: string) => {
     return { error };
 };
 
+// Stock Management
+export const deductStockFromOrder = async (orderId: string) => {
+    console.log('Deducting stock for order:', orderId);
+
+    // 1. Get Order Items with product ingredients
+    const { data: orderitems, error: orderError } = await supabase
+        .from('order_items')
+        .select(`
+            quantity,
+            product:products (
+                id,
+                product_ingredients (
+                    quantity,
+                    ingredient_id
+                )
+            )
+        `)
+        .eq('order_id', orderId);
+
+    if (orderError || !orderitems) {
+        console.error('Error fetching order items for stock deduction:', orderError);
+        return { error: orderError };
+    }
+
+    // 2. Calculate total ingredient usage
+    const ingredientUsage = new Map<string, number>();
+
+    orderitems.forEach((item: any) => {
+        if (item.product && item.product.product_ingredients) {
+            item.product.product_ingredients.forEach((pi: any) => {
+                const current = ingredientUsage.get(pi.ingredient_id) || 0;
+                ingredientUsage.set(pi.ingredient_id, current + (pi.quantity * item.quantity));
+            });
+        }
+    });
+
+    // 3. Update stock for each ingredient
+    const updates = Array.from(ingredientUsage.entries()).map(async ([ingredientId, quantityUsed]) => {
+        const { data: ingredient } = await supabase.from('ingredients').select('stock_quantity').eq('id', ingredientId).single();
+
+        if (ingredient) {
+            const newStock = Math.max(0, ingredient.stock_quantity - quantityUsed);
+            return supabase
+                .from('ingredients')
+                .update({ stock_quantity: newStock })
+                .eq('id', ingredientId);
+        }
+        return Promise.resolve({ error: null });
+    });
+
+    await Promise.all(updates);
+
+    return { error: null };
+};
+
 // Message Templates
 export const getMessageTemplates = async () => {
     const { data, error } = await supabase

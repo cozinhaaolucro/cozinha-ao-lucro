@@ -45,10 +45,10 @@ const HeroSection = () => {
 
                         <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-8">
                             <Button
-                                onClick={() => document.getElementById('precos')?.scrollIntoView({ behavior: 'smooth' })}
+                                onClick={() => window.location.href = '/register'}
                                 className="btn-primary text-lg px-8 py-6 h-auto w-full sm:w-auto group shadow-xl hover:shadow-primary/20"
                             >
-                                COMEÇAR TESTE GRÁTIS
+                                COMEÇAR AGORA
                                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </Button>
                             <p className="text-sm text-muted-foreground">

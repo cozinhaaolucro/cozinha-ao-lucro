@@ -38,6 +38,8 @@ interface StockDemandAnalysis {
     status: 'sufficient' | 'low' | 'critical';
 }
 
+import { seedAccount } from '@/lib/seeding';
+
 const Dashboard = () => {
     const navigate = useNavigate();
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
@@ -50,9 +52,16 @@ const Dashboard = () => {
     const [dataLoaded, setDataLoaded] = useState(false);
 
     useEffect(() => {
+        const checkSeeding = async () => {
+            const shouldSeed = localStorage.getItem('should_seed_account');
+            if (shouldSeed === 'true') {
+                localStorage.removeItem('should_seed_account');
+                await seedAccount();
+            }
+        };
         // Only load data once when component mounts
         if (!dataLoaded) {
-            loadData();
+            checkSeeding().then(() => loadData());
         }
     }, [dataLoaded]);
 
@@ -222,6 +231,7 @@ const Dashboard = () => {
     const dailyData = getChartData();
 
     // Custom tooltip component
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const CustomTooltip = ({ active, payload, label, type }: any) => {
         if (active && payload && payload.length) {
             return (

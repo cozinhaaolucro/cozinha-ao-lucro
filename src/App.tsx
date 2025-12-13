@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
 
 // Eager load critical pages
 import Index from "./pages/Index";
@@ -50,29 +51,36 @@ const App = () => (
       <Toaster />
       <Sonner />
       <AuthProvider>
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+        <NotificationProvider>
+          <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+
+                {/* Redirect mobile/PWA directly to login */}
+                {window.matchMedia('(display-mode: standalone)').matches || window.innerWidth < 768 ? (
+                  <Route path="/" element={<Navigate to="/login" replace />} />
+                ) : null}
 
 
-              <Route path="/app" element={<DashboardLayout />}>
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="pedidos" element={<Pedidos />} />
-                <Route path="clientes" element={<Clientes />} />
-                <Route path="produtos" element={<Produtos />} />
-                <Route path="agenda" element={<Agenda />} />
-                <Route path="aprender" element={<Aprender />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="perfil" element={<Navigate to="settings" replace />} />
-              </Route>
+                <Route path="/app" element={<DashboardLayout />}>
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="pedidos" element={<Pedidos />} />
+                  <Route path="clientes" element={<Clientes />} />
+                  <Route path="produtos" element={<Produtos />} />
+                  <Route path="agenda" element={<Agenda />} />
+                  <Route path="aprender" element={<Aprender />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="perfil" element={<Navigate to="settings" replace />} />
+                </Route>
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </NotificationProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

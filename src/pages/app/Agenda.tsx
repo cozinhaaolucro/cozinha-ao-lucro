@@ -3,13 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ChevronLeft, ChevronRight, Clock, MapPin, X, Calendar as CalendarIcon, Trash2, MessageCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, MapPin, X, Calendar as CalendarIcon, Trash2, MessageCircle, RefreshCw } from 'lucide-react';
 import { getOrders, deleteOrder } from '@/lib/database';
 import type { OrderWithDetails } from '@/types/database';
 import { parseLocalDate, formatLocalDate } from '@/lib/dateUtils';
 import EditOrderDialog from '@/components/orders/EditOrderDialog';
 import { generateWhatsAppLink, getDefaultTemplateForStatus, parseMessageTemplate } from '@/lib/crm';
 import { toast } from '@/components/ui/use-toast';
+
+import { createCalendarEvent } from '@/lib/googleCalendar';
 
 const Agenda = () => {
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
@@ -19,6 +21,47 @@ const Agenda = () => {
     const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
     const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
     const [editingOrder, setEditingOrder] = useState<OrderWithDetails | null>(null);
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const handleSyncToCalendar = async () => {
+        setIsSyncing(true);
+        try {
+            const pendingOrders = orders.filter(o => o.status !== 'cancelled' && o.delivery_date);
+            let syncedCount = 0;
+
+            for (const order of pendingOrders) {
+                if (!order.delivery_date) continue;
+
+                const startDateTime = new Date(order.delivery_date);
+                if (order.delivery_time) {
+                    const [hours, minutes] = order.delivery_time.split(':');
+                    startDateTime.setHours(parseInt(hours), parseInt(minutes));
+                } else {
+                    startDateTime.setHours(9, 0); // Default to 9 AM
+                }
+
+                const endDateTime = new Date(startDateTime);
+                endDateTime.setHours(startDateTime.getHours() + 1); // 1 hour duration default
+
+                const event = {
+                    summary: `Entrega: ${order.customer?.name || 'Cliente'}`,
+                    description: `Pedido #${order.id.slice(0, 6)}\nTotal: R$ ${order.total_value.toFixed(2)}\nItens: ${order.items?.map(i => `${i.product_name} x${i.quantity}`).join(', ')}`,
+                    start: { dateTime: startDateTime.toISOString() },
+                    end: { dateTime: endDateTime.toISOString() }
+                };
+
+                await createCalendarEvent(event);
+                syncedCount++;
+            }
+
+            toast({ title: 'Sincronização concluída', description: `${syncedCount} pedidos enviados para o Google Agenda.` });
+        } catch (error) {
+            console.error(error);
+            toast({ title: 'Erro na sincronização', description: 'Verifique se você fez login com Google.', variant: 'destructive' });
+        } finally {
+            setIsSyncing(false);
+        }
+    };
 
     const loadOrders = async () => {
         const { data, error } = await getOrders();
@@ -238,6 +281,10 @@ const Agenda = () => {
                     </p>
                 </div>
                 <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={handleSyncToCalendar} disabled={isSyncing} className="gap-2 h-9 border-blue-200 text-blue-700 hover:bg-blue-50">
+                        {isSyncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CalendarIcon className="w-4 h-4" />}
+                        Sincronizar Google
+                    </Button>
                     <div className="flex items-center gap-2">
                         <Input
                             type="date"
