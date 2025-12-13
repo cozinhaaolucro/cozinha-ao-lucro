@@ -293,6 +293,12 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
         onOpenChange(false);
     };
 
+    const clearForm = () => {
+        setFormData({ name: '', description: '', selling_price: 0 });
+        setSelectedIngredients([]);
+        toast({ title: 'Formulário limpo!' });
+    };
+
     const totalCost = calculateTotalCost();
     const margin = calculateMargin();
     const suggestedPrice = getSuggestedPrice();
@@ -413,6 +419,12 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-[300px]">
+                                <DropdownMenuItem
+                                    onClick={clearForm}
+                                    className="flex items-center gap-2 py-2 text-destructive focus:text-destructive"
+                                >
+                                    <span className="font-medium">Limpar Tudo</span>
+                                </DropdownMenuItem>
                                 {PRESET_PRODUCTS.map((preset) => (
                                     <DropdownMenuItem
                                         key={preset.name}
@@ -610,7 +622,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        onClick={() => setFormData({ ...formData, selling_price: suggestedPrice })}
+                                        onClick={() => setFormData({ ...formData, selling_price: parseFloat(suggestedPrice.toFixed(2)) })}
                                     >
                                         Usar Sugerido
                                     </Button>
