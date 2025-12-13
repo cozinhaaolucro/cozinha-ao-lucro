@@ -316,7 +316,14 @@ const DashboardLayout = () => {
                                     </div>
                                 </div>
                                 <Button
-                                    onClick={() => window.open('https://payment-link-v3.pagar.me/pl_vmw84g7LrdeA8LWc07Ik0ANJ3nM12Pxk', '_blank')}
+                                    onClick={async () => {
+                                        try {
+                                            const { iniciarPagamento } = await import('@/lib/pagamento');
+                                            await iniciarPagamento();
+                                        } catch (error) {
+                                            console.error('Erro ao iniciar pagamento:', error);
+                                        }
+                                    }}
                                     className="bg-orange-600 hover:bg-orange-700 text-white border-0 shadow-lg shadow-orange-600/20 whitespace-nowrap"
                                 >
                                     Assinar Agora

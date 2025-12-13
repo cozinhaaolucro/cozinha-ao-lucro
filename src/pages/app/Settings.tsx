@@ -346,7 +346,15 @@ const Settings = () => {
                             </div>
                             <div className="flex gap-2">
                                 <Button
-                                    onClick={() => window.open('https://payment-link-v3.pagar.me/pl_vmw84g7LrdeA8LWc07Ik0ANJ3nM12Pxk', '_blank')}
+                                    onClick={async () => {
+                                        try {
+                                            const { iniciarPagamento } = await import('@/lib/pagamento');
+                                            await iniciarPagamento();
+                                        } catch (error) {
+                                            console.error('Erro ao iniciar pagamento:', error);
+                                            toast.error('Erro ao processar pagamento');
+                                        }
+                                    }}
                                     variant={isDueToday ? "default" : "outline"}
                                     className={isDueToday ? "bg-primary hover:bg-primary/90" : ""}
                                 >
