@@ -48,12 +48,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     useEffect(() => {
+        // Safety timeout to prevent infinite loading (e.g. network hang)
+        const safetyTimer = setTimeout(() => {
+            setLoading((current) => {
+                if (current) {
+                    console.warn('Auth loading safety timeout triggered');
+                    return false;
+                }
+                return current;
+            });
+        }, 5000); // 5 seconds max loading time
+
         // Get initial session
         supabase.auth.getSession().then(async ({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
             await fetchProfile(session?.user?.id);
             setLoading(false);
+            clearTimeout(safetyTimer);
+        }).catch(() => {
+            setLoading(false);
+            clearTimeout(safetyTimer);
         });
 
         // Listen for changes
@@ -66,10 +81,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setLoading(false);
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            subscription.unsubscribe();
+            clearTimeout(safetyTimer);
+        };
     }, []);
 
     const signOut = async () => {
+        // Optimistically clear state immediately
+        setSession(null);
+        setUser(null);
+        setProfile(null);
         await supabase.auth.signOut();
     };
 
