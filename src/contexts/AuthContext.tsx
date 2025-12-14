@@ -48,28 +48,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     useEffect(() => {
-        // Safety timeout to prevent infinite loading
-        const timer = setTimeout(() => {
-            setLoading((currentLoading) => {
-                if (currentLoading) {
-                    console.warn('Auth loading timed out, forcing render');
-                    return false;
-                }
-                return currentLoading;
-            });
-        }, 5000);
-
         // Get initial session
         supabase.auth.getSession().then(async ({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
             await fetchProfile(session?.user?.id);
             setLoading(false);
-            clearTimeout(timer);
-        }).catch(err => {
-            console.error("Auth initialization error:", err);
-            setLoading(false);
-            clearTimeout(timer);
         });
 
         // Listen for changes

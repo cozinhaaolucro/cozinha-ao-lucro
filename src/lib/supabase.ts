@@ -1,6 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { Preferences } from '@capacitor/preferences';
-import { Capacitor } from '@capacitor/core';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -12,20 +10,6 @@ if (!isSupabaseConfigured) {
 } else if (!supabaseUrl.startsWith('http')) {
   console.warn('Supabase URL must start with http:// or https://');
 }
-
-// Custom storage adapter for Capacitor
-const CapacitorStorage = {
-  getItem: async (key: string): Promise<string | null> => {
-    const { value } = await Preferences.get({ key });
-    return value;
-  },
-  setItem: async (key: string, value: string): Promise<void> => {
-    await Preferences.set({ key, value });
-  },
-  removeItem: async (key: string): Promise<void> => {
-    await Preferences.remove({ key });
-  },
-};
 
 // Create a mock client if keys are missing to prevent app crash
 const mockSupabase = {
@@ -42,12 +26,5 @@ const mockSupabase = {
 } as unknown as ReturnType<typeof createClient>;
 
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      storage: Capacitor.isNativePlatform() ? CapacitorStorage : window.localStorage,
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-    },
-  })
+  ? createClient(supabaseUrl, supabaseAnonKey)
   : mockSupabase;
