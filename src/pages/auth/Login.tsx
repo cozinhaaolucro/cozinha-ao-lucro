@@ -10,12 +10,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 
-// Production URL for OAuth redirect (mobile needs this since window.location.origin is invalid)
+// Production URL for OAuth redirect (used as fallback)
 const PRODUCTION_URL = 'https://cozinha-ao-lucro.vercel.app';
+
+// Deep link scheme for returning to native app
+const DEEP_LINK_SCHEME = 'cozinhaaolucro';
 
 const getRedirectUrl = () => {
     if (Capacitor.isNativePlatform()) {
-        return `${PRODUCTION_URL}/app/dashboard`;
+        // Use deep link to return directly to the app
+        return `${DEEP_LINK_SCHEME}://app/dashboard`;
     }
     return `${window.location.origin}/app/dashboard`;
 };
