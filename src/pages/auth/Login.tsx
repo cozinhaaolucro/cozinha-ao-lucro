@@ -8,6 +8,17 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+
+// Production URL for OAuth redirect (mobile needs this since window.location.origin is invalid)
+const PRODUCTION_URL = 'https://cozinha-ao-lucro.vercel.app';
+
+const getRedirectUrl = () => {
+    if (Capacitor.isNativePlatform()) {
+        return `${PRODUCTION_URL}/app/dashboard`;
+    }
+    return `${window.location.origin}/app/dashboard`;
+};
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -72,7 +83,7 @@ const Login = () => {
                                 options: {
                                     scopes: 'https://www.googleapis.com/auth/calendar',
                                     queryParams: { access_type: 'offline', prompt: 'consent' },
-                                    redirectTo: `${window.location.origin}/app/dashboard`
+                                    redirectTo: getRedirectUrl()
                                 }
                             });
                         }} className="w-full gap-2">
