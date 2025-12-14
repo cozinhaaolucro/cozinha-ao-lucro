@@ -14,6 +14,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 import DashboardLayout from "./layouts/DashboardLayout";
 
 // Lazy load app pages for better performance
@@ -49,35 +50,6 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  useEffect(() => {
-    // Escutar deep links (login com Google no mobile)
-    CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
-      console.log('App opened with URL:', url);
-      // Supabase geralmente retorna tokens no hash da URL (#access_token=...)
-      if (url.includes('access_token')) {
-        try {
-          // Extrair parâmetros do hash
-          const hashIndex = url.indexOf('#');
-          if (hashIndex !== -1) {
-            const params = new URLSearchParams(url.substring(hashIndex + 1));
-            const access_token = params.get('access_token');
-            const refresh_token = params.get('refresh_token');
-
-            if (access_token && refresh_token) {
-              const { error } = await supabase.auth.setSession({
-                access_token,
-                refresh_token,
-              });
-              if (error) console.error('Erro ao restaurar sessão:', error);
-            }
-          }
-        } catch (e) {
-          console.error('Erro ao processar deep link:', e);
-        }
-      }
-    });
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={300}>
@@ -112,6 +84,7 @@ const App = () => {
 
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
 
                   <Route path="*" element={<NotFound />} />
                 </Routes>
