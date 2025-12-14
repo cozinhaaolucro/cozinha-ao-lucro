@@ -1,10 +1,12 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
+import { App as CapacitorApp } from '@capacitor/app';
+import { supabase } from './lib/supabase';
 import { AuthProvider } from "./contexts/AuthContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 
@@ -46,50 +48,81 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider delayDuration={300}>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        <NotificationProvider>
-          <BrowserRouter>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
+const App = () => {
+  useEffect(() => {
+    // Escutar deep links (login com Google no mobile)
+    CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+      console.log('App opened with URL:', url);
+      // Supabase geralmente retorna tokens no hash da URL (#access_token=...)
+      if (url.includes('access_token')) {
+        try {
+          // Extrair parâmetros do hash
+          const hashIndex = url.indexOf('#');
+          if (hashIndex !== -1) {
+            const params = new URLSearchParams(url.substring(hashIndex + 1));
+            const access_token = params.get('access_token');
+            const refresh_token = params.get('refresh_token');
+
+            if (access_token && refresh_token) {
+              const { error } = await supabase.auth.setSession({
+                access_token,
+                refresh_token,
+              });
+              if (error) console.error('Erro ao restaurar sessão:', error);
+            }
+          }
+        } catch (e) {
+          console.error('Erro ao processar deep link:', e);
+        }
+      }
+    });
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider delayDuration={300}>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+          <NotificationProvider>
+            <BrowserRouter>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
 
                 // ... inside Routes ...
 
-                {/* Redirect Native App directly to login */}
-                {Capacitor.isNativePlatform() ? (
-                  <Route path="/" element={<Navigate to="/login" replace />} />
-                ) : (
-                  <Route path="/" element={<Index />} />
-                )}
+                  {/* Redirect Native App directly to login */}
+                  {Capacitor.isNativePlatform() ? (
+                    <Route path="/" element={<Navigate to="/login" replace />} />
+                  ) : (
+                    <Route path="/" element={<Index />} />
+                  )}
 
 
-                <Route path="/app" element={<DashboardLayout />}>
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="pedidos" element={<Pedidos />} />
-                  <Route path="clientes" element={<Clientes />} />
-                  <Route path="produtos" element={<Produtos />} />
-                  <Route path="agenda" element={<Agenda />} />
-                  <Route path="aprender" element={<Aprender />} />
-                  <Route path="settings" element={<Settings />} />
-                  <Route path="perfil" element={<Navigate to="settings" replace />} />
-                </Route>
+                  <Route path="/app" element={<DashboardLayout />}>
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="pedidos" element={<Pedidos />} />
+                    <Route path="clientes" element={<Clientes />} />
+                    <Route path="produtos" element={<Produtos />} />
+                    <Route path="agenda" element={<Agenda />} />
+                    <Route path="aprender" element={<Aprender />} />
+                    <Route path="settings" element={<Settings />} />
+                    <Route path="perfil" element={<Navigate to="settings" replace />} />
+                  </Route>
 
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
 
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </NotificationProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </NotificationProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
 
