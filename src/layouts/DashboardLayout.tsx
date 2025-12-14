@@ -62,7 +62,16 @@ const DashboardLayout = () => {
         );
     }
 
-    if (!user) return null;
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-background">
+                <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Redirecionando para login...</span>
+                </div>
+            </div>
+        );
+    }
 
     const handleSignOut = async () => {
         await signOut();
