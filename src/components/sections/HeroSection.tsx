@@ -3,7 +3,10 @@ import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, Star } from 'lucide-react';
 import ProfitCalculator from '@/components/ProfitCalculator';
 
+import { useNavigate } from 'react-router-dom';
+
 const HeroSection = () => {
+    const navigate = useNavigate();
     return (
         <section className="relative min-h-screen flex items-start justify-center overflow-hidden pt-32 md:pt-40 pb-16">
             {/* Background Elements */}

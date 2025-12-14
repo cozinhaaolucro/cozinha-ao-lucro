@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X, UserCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
+    const { user } = useAuth();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
@@ -75,10 +77,10 @@ const Navbar = () => {
                     <div className="flex items-center gap-4">
                         <Button
                             variant="ghost"
-                            onClick={() => navigate('/login')}
+                            onClick={() => navigate(user ? '/app/dashboard' : '/login')}
                             className={`font-medium gap-2 hover:bg-white/10 ${isScrolled ? 'text-foreground' : 'text-white'}`}
                         >
-                            Entrar
+                            {user ? 'Dashboard' : 'Entrar'}
                         </Button>
                         <Button
                             onClick={() => document.getElementById('precos')?.scrollIntoView({ behavior: 'smooth' })}
@@ -121,11 +123,11 @@ const Navbar = () => {
                         </Button>
                         <Button
                             variant="ghost"
-                            onClick={() => navigate('/login')}
+                            onClick={() => navigate(user ? '/app/dashboard' : '/login')}
                             className="w-full gap-2 py-6"
                         >
                             <UserCircle className="w-5 h-5" />
-                            Área do Aluno
+                            {user ? 'Dashboard' : 'Área do Aluno'}
                         </Button>
                     </div>
                 )}
