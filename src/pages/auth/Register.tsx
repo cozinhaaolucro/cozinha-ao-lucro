@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +35,13 @@ const Register = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const { user } = useAuth();
+
+    useEffect(() => {
+        if (user) {
+            navigate('/app/dashboard');
+        }
+    }, [user, navigate]);
 
     const handleGoogleLogin = async () => {
         try {
@@ -81,12 +89,11 @@ const Register = () => {
                 if (usePresets) {
                     await seedAccount();
                 }
-                navigate('/app/dashboard');
+                // navigate handled by useEffect
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Erro ao criar conta';
             setError(message);
-        } finally {
             setLoading(false);
         }
     };

@@ -1,7 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,6 +32,14 @@ const Login = () => {
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
+    const { user } = useAuth(); // Get user from context
+
+    useEffect(() => {
+        if (user) {
+            navigate('/app/dashboard');
+        }
+    }, [user, navigate]);
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -43,13 +52,11 @@ const Login = () => {
             });
 
             if (error) throw error;
-
-            navigate('/app/dashboard');
+            // Navigation handled by useEffect when user state updates
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Erro ao fazer login';
             setError(message);
-        } finally {
-            setLoading(false);
+            setLoading(false); // Only stop loading on error, otherwise wait for redirect
         }
     };
 
