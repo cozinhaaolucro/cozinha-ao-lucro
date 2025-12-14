@@ -1,177 +1,110 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { X, ChevronRight, Check } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Step {
-    target: string;
+    targetId: string;
     title: string;
-    content: string;
-    position?: 'right' | 'left' | 'top' | 'bottom';
+    description: string;
+    position: 'bottom' | 'right' | 'left' | 'top';
 }
 
 const steps: Step[] = [
     {
-        target: 'centered',
-        title: 'Bem-vindo ao Cozinha ao Lucro!',
-        content: 'Este é o seu novo painel de controle. Vamos fazer um tour rápido para você começar a lucrar mais.'
-    },
-    {
-        target: 'nav-dashboard',
-        title: 'Visão Geral',
-        content: 'Aqui você acompanha o desempenho do seu negócio, custos e lucros em tempo real.',
+        targetId: 'nav-dashboard',
+        title: 'Seu Painel de Controle',
+        description: 'Aqui você tem uma visão geral do lucro, receita e pedidos do dia.',
         position: 'right'
     },
     {
-        target: 'nav-pedidos',
-        title: 'Gestão de Pedidos',
-        content: 'Organize suas encomendas, datas de entrega e status de produção.',
+        targetId: 'nav-pedidos',
+        title: 'Gerencie Pedidos',
+        description: 'Adicione novos pedidos, calcule custos automaticamente e mude o status para "Entregue".',
         position: 'right'
     },
     {
-        target: 'nav-produtos',
-        title: 'Produtos & Fichas Técnicas',
-        content: 'Cadastre seus insumos e deixe o sistema calcular o preço ideal de venda automaticamente.',
+        targetId: 'nav-produtos',
+        title: 'Seus Produtos',
+        description: 'Cadastre suas receitas e ingredientes. O sistema calcula o preço ideal de venda para você!',
         position: 'right'
     },
     {
-        target: 'nav-clientes',
-        title: 'Seus Clientes',
-        content: 'Mantenha um histórico detalhado de compras e conheça seus melhores clientes.',
+        targetId: 'nav-compras',
+        title: 'Lista de Compras Inteligente',
+        description: 'Gere listas de compras baseadas nos pedidos da semana, descontando o que já tem no estoque.',
         position: 'right'
     }
 ];
 
 export const TourGuide = () => {
-    const [currentStep, setCurrentStep] = useState(0);
+    const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
-    const [coords, setCoords] = useState<{ top: number, left: number, width: number, height: number } | null>(null);
+    const { user } = useAuth();
+    const STORAGE_KEY = `has_seen_tour_${user?.id}_v1`;
 
     useEffect(() => {
-        const hasSeenTour = localStorage.getItem('has_seen_tour_v1');
-        if (!hasSeenTour) {
-            // Small delay to ensure layout
-            setTimeout(() => setIsVisible(true), 1000);
+        const hasSeen = localStorage.getItem(STORAGE_KEY);
+        if (!hasSeen) {
+            // Delay slightly to ensure layout is mounted
+            setTimeout(() => setIsVisible(true), 1500);
         }
-    }, []);
-
-    useEffect(() => {
-        if (!isVisible) return;
-
-        const updatePosition = () => {
-            const step = steps[currentStep];
-            if (step.target === 'centered') {
-                setCoords(null);
-                return;
-            }
-
-            const element = document.getElementById(step.target);
-            if (element) {
-                const rect = element.getBoundingClientRect();
-                setCoords({
-                    top: rect.top,
-                    left: rect.left,
-                    width: rect.width,
-                    height: rect.height
-                });
-            }
-        };
-
-        updatePosition();
-        window.addEventListener('resize', updatePosition);
-        return () => window.removeEventListener('resize', updatePosition);
-    }, [currentStep, isVisible]);
+    }, [user]);
 
     const handleNext = () => {
-        if (currentStep < steps.length - 1) {
-            setCurrentStep(currentStep + 1);
+        if (currentStepIndex < steps.length - 1) {
+            setCurrentStepIndex(prev => prev + 1);
         } else {
             handleClose();
         }
     };
 
-    const handleBack = () => {
-        if (currentStep > 0) {
-            setCurrentStep(currentStep - 1);
-        }
-    };
-
     const handleClose = () => {
         setIsVisible(false);
-        localStorage.setItem('has_seen_tour_v1', 'true');
+        localStorage.setItem(STORAGE_KEY, 'true');
     };
 
     if (!isVisible) return null;
 
-    const step = steps[currentStep];
+    const currentStep = steps[currentStepIndex];
+
+    // Calculate position (simple version - ideally use Popper.js or Floating UI)
+    // For now, we will use a fixed overlay centered or cornered if simple logic fails,
+    // but let's try to highlight the element.
+    // Actually, a simple fixed card is safer than complex coordinate math without a library.
+    // Let's use a fixed modal-like card but pointing to the general area if possible,
+    // or just a nice bottom-right floating card.
+
+    // Better: Highlight the sidebar elements if possible by ID, but that requires DOM manipulation.
+    // Strategy: Simple Fixed Card for Reliability.
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col">
-            {/* Mask Layer */}
-            {coords ? (
-                // Spotlight mask using SVG or clip-path is hard, simpler approach:
-                // Use 4 divs to dim everything around target
-                <>
-                    <div className="absolute top-0 left-0 right-0 bg-black/60 transition-all duration-300" style={{ height: coords.top }} />
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 transition-all duration-300" style={{ top: coords.top + coords.height }} />
-                    <div className="absolute left-0 bg-black/60 transition-all duration-300" style={{ top: coords.top, height: coords.height, width: coords.left }} />
-                    <div className="absolute right-0 bg-black/60 transition-all duration-300" style={{ top: coords.top, height: coords.height, left: coords.left + coords.width }} />
-                </>
-            ) : (
-                <div className="absolute inset-0 bg-black/60" />
-            )}
-
-            {/* Content Card */}
-            <div
-                className="absolute transition-all duration-500 z-[101]"
-                style={
-                    coords
-                        ? {
-                            top: coords.top,
-                            left: coords.left + coords.width + 16,
-                            // Ensure it fits screen right
-                            // Simple logic for sidebar (always right)
-                        }
-                        : {
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)'
-                        }
-                }
-            >
-                <Card className="w-[350px] shadow-2xl border-primary animate-in fade-in zoom-in-95 duration-300">
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg">{step.title}</CardTitle>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleClose}>
-                                <X className="w-4 h-4" />
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">{step.content}</p>
-                    </CardContent>
-                    <CardFooter className="flex justify-between pt-2">
-                        <div className="flex gap-1">
-                            {steps.map((_, i) => (
-                                <div
-                                    key={i}
-                                    className={`w-2 h-2 rounded-full transition-colors ${i === currentStep ? 'bg-primary' : 'bg-muted'}`}
-                                />
-                            ))}
-                        </div>
-                        <div className="flex gap-2">
-                            <Button variant="ghost" size="sm" onClick={handleBack} disabled={currentStep === 0}>
-                                <ChevronLeft className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" onClick={handleNext}>
-                                {currentStep === steps.length - 1 ? 'Começar' : 'Próximo'}
-                                {currentStep < steps.length - 1 && <ChevronRight className="w-4 h-4 ml-1" />}
-                            </Button>
-                        </div>
-                    </CardFooter>
-                </Card>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
+            <div className="absolute inset-0" onClick={handleClose} />
+            <Card className="w-[400px] relative z-60 animate-in zoom-in-95 duration-200">
+                <Button variant="ghost" size="icon" className="absolute right-2 top-2" onClick={handleClose}>
+                    <X className="w-4 h-4" />
+                </Button>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <span className="bg-primary text-primary-foreground text-xs w-6 h-6 rounded-full flex items-center justify-center">
+                            {currentStepIndex + 1}
+                        </span>
+                        {currentStep.title}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">{currentStep.description}</p>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                    <Button variant="ghost" onClick={handleClose}>Pular Tour</Button>
+                    <Button onClick={handleNext} className="gap-2">
+                        {currentStepIndex === steps.length - 1 ? 'Concluir' : 'Próximo'}
+                        {currentStepIndex === steps.length - 1 ? <Check className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    </Button>
+                </CardFooter>
+            </Card>
         </div>
     );
 };

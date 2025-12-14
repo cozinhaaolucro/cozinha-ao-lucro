@@ -47,10 +47,13 @@ export async function criarCheckout(): Promise<CheckoutResponse> {
  * Lida com erros e exibe mensagens apropriadas.
  */
 export async function iniciarPagamento(): Promise<void> {
-} catch (error) {
-    console.error('Erro ao iniciar pagamento:', error);
-    throw error;
-}
+    try {
+        const { checkout_url } = await criarCheckout();
+        window.open(checkout_url, '_blank');
+    } catch (error) {
+        console.error('Erro ao iniciar pagamento:', error);
+        throw error;
+    }
 }
 
 export interface Invoice {

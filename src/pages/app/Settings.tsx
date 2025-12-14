@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -13,21 +13,17 @@ import {
     User,
     CreditCard,
     CheckCircle,
-    Zap,
-    LogOut,
     Mail,
     Lock,
     Camera,
     Phone,
-    Calendar,
-    Store,
-    AlertCircle
+    Store
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { SubscriptionManager } from '@/components/subscription/SubscriptionManager';
 
 const Settings = () => {
-    const { user, signOut } = useAuth();
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -36,17 +32,6 @@ const Settings = () => {
     const fullName = user?.user_metadata?.full_name || '';
     const phone = user?.user_metadata?.phone || '';
     const avatarUrl = user?.user_metadata?.avatar_url;
-
-    // Subscription data (could be fetched from profiles table)
-    const subscriptionStartDate = user?.created_at ? new Date(user.created_at) : new Date();
-    const trialEndDate = new Date(subscriptionStartDate);
-    trialEndDate.setDate(trialEndDate.getDate() + 7);
-
-    const nextBillingDate = new Date(trialEndDate);
-    const today = new Date();
-    const isTrialPeriod = today < trialEndDate;
-    const daysUntilBilling = Math.ceil((nextBillingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    const isDueToday = daysUntilBilling <= 0;
 
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -122,21 +107,15 @@ const Settings = () => {
         }
     };
 
-    const handlePayment = () => {
-        // TODO: Replace with actual Stripe payment link
-        toast.info('Redirecionando para pagamento...');
-        // window.open('STRIPE_PAYMENT_LINK', '_blank');
-    };
-
     return (
         <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
-                <p className="text-muted-foreground">Gerencie sua conta e assinatura.</p>
+                <p className="text-muted-foreground">Gerencie sua conta, assinatura e cardápio.</p>
             </div>
 
             <Tabs defaultValue="general" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+                <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
                     <TabsTrigger value="general" className="gap-2">
                         <User className="w-4 h-4" />
                         Geral
@@ -272,7 +251,7 @@ const Settings = () => {
                     <SubscriptionManager />
                 </TabsContent>
 
-                {/* Digital Menu Tab */}
+                {/* Digital Menu Tab (Placeholder for now, re-implemented next) */}
                 <TabsContent value="menu" className="space-y-6">
                     <Card>
                         <CardHeader>
@@ -300,7 +279,7 @@ const Settings = () => {
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="border rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-4">
                                     <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center">
-                                        {/* Placeholder for QR Code */}
+                                        {/* Placeholder for QR Code - using external API for simplicity in restoration */}
                                         <img
                                             src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/menu/${user?.id}`)}`}
                                             alt="QR Code"
@@ -324,10 +303,6 @@ const Settings = () => {
                                         <li>3. Ao finalizar, o pedido chega pronto no seu WhatsApp.</li>
                                         <li>4. Você combina o pagamento e entrega diretamente.</li>
                                     </ul>
-                                    <div className="bg-orange-50 text-orange-800 p-4 rounded-lg text-sm">
-                                        <p className="font-semibold mb-1">Dica:</p>
-                                        Adicione o link na bio do seu Instagram para vender mais!
-                                    </div>
                                 </div>
                             </div>
                         </CardContent>
@@ -339,4 +314,3 @@ const Settings = () => {
 };
 
 export default Settings;
-

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getOrders, getProducts, getIngredients } from '@/lib/database';
 import type { OrderWithDetails, ProductWithIngredients, Ingredient } from '@/types/database';
-import { ShoppingCart, Calendar, Check, AlertTriangle, Download } from 'lucide-react';
+import { ShoppingCart, Calendar, Check, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface ShoppingItem {
@@ -31,14 +31,12 @@ const ShoppingList = () => {
     const [products, setProducts] = useState<ProductWithIngredients[]>([]);
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [items, setItems] = useState<ShoppingItem[]>([]);
-    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         loadData();
     }, []);
 
     const loadData = async () => {
-        setLoading(true);
         const [ord, prod, ing] = await Promise.all([
             getOrders(),
             getProducts(),
@@ -47,7 +45,6 @@ const ShoppingList = () => {
         if (ord.data) setOrders(ord.data);
         if (prod.data) setProducts(prod.data as ProductWithIngredients[]);
         if (ing.data) setIngredients(ing.data);
-        setLoading(false);
     };
 
     useEffect(() => {
@@ -61,16 +58,10 @@ const ShoppingList = () => {
         const end = new Date(endDate);
         end.setHours(23, 59, 59);
 
-        // 1. Filter Orders in range (pending/preparing)
-        // We only care about orders that haven't been made yet regarding "Demand", 
-        // OR we can strictly follow date range regardless of status?
-        // Usually Shopping List is for "Upcoming Production". So 'pending'.
-        // If status is 'delivered', materials are already used (fetched from stock or assumed used).
-        // Let's stick to Pending + Preparing in the date range.
+        // 1. Filter Pending/Preparing Orders in range
         const relevantOrders = orders.filter(o => {
             if (!o.delivery_date) return false;
-            const d = new Date(o.delivery_date); // Adjust for string/date
-            // Fix: delivery_date is YYYY-MM-DD string often
+            // Fix: delivery_date is YYYY-MM-DD string
             const dDate = new Date(o.delivery_date + 'T12:00:00');
             return dDate >= start && dDate <= end && (o.status === 'pending' || o.status === 'preparing');
         });

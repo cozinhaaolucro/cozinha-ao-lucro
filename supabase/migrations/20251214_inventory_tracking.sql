@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS public.stock_movements (
 ALTER TABLE public.stock_movements ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "Users can manage own stock movements" ON public.stock_movements;
 CREATE POLICY "Users can manage own stock movements" ON public.stock_movements
     FOR ALL USING (auth.uid() = user_id);
 
@@ -68,30 +69,3 @@ CREATE TRIGGER on_order_preparing_deduct_stock
     AFTER UPDATE OF status ON public.orders
     FOR EACH ROW
     EXECUTE FUNCTION public.handle_order_stock_deduction();
-
--- 4. Manual Adjustment Helper Function (Optional, can just insert directly from client)
--- But ensuring consistency:
-CREATE OR REPLACE FUNCTION public.adjust_stock(
-    p_ingredient_id UUID,
-    p_quantity NUMERIC, -- Positive to add, Negative to remove (delta)
-    p_reason TEXT,
-    p_type TEXT
-) RETURNS VOID AS $$
-BEGIN
-    -- Log based on sign
-    INSERT INTO public.stock_movements (user_id, ingredient_id, type, quantity, reason)
-    VALUES (
-        auth.uid(), 
-        p_ingredient_id, 
-        p_type, 
-        ABS(p_quantity), 
-        p_reason
-    );
-
-    -- Update Actual Stock
-    UPDATE public.ingredients
-    SET stock_quantity = stock_quantity + p_quantity,
-        updated_at = NOW()
-    WHERE id = p_ingredient_id AND user_id = auth.uid();
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;

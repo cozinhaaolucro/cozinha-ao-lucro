@@ -2,12 +2,18 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingBag, Minus, Plus, MessageCircle, MapPin, Store } from 'lucide-react';
 import type { Product, Profile } from '@/types/database';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+
+interface ExtendedProfile extends Profile {
+    logo_url?: string;
+    banner_url?: string;
+    color_theme?: string;
+}
 
 interface CartItem {
     product: Product;
@@ -16,7 +22,7 @@ interface CartItem {
 
 const PublicMenu = () => {
     const { userId } = useParams<{ userId: string }>();
-    const [profile, setProfile] = useState<Profile | null>(null);
+    const [profile, setProfile] = useState<ExtendedProfile | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
     const [cart, setCart] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -112,10 +118,7 @@ const PublicMenu = () => {
         message += `\n\n(Enviado via Menu Digital cozinhalucro.com)`;
 
         const encodedMessage = encodeURIComponent(message);
-
-        // Remove non-digits from phone
         const cleanPhone = profile.phone.replace(/\D/g, '');
-        // Assume BR if not specified (add 55 if length is 10 or 11)
         const finalPhone = cleanPhone.length <= 11 ? `55${cleanPhone}` : cleanPhone;
 
         const url = `https://wa.me/${finalPhone}?text=${encodedMessage}`;

@@ -40,6 +40,7 @@ interface StockDemandAnalysis {
 
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import { CostBreakdownChart } from '@/components/dashboard/CostBreakdownChart';
+
 import { seedAccount } from '@/lib/seeding';
 
 const Dashboard = () => {
@@ -376,160 +377,162 @@ const Dashboard = () => {
             <FadeIn delay={150}>
                 <div className="space-y-6">
                     {/* Main Charts */}
-                    <div className="grid gap-4 md:grid-cols-3">
-                        <RevenueChart data={dailyData} />
-                        <CostBreakdownChart data={
-                            filteredOrders.flatMap(o => o.items || []).reduce((acc, item) => {
-                                const prod = products.find(p => p.id === item.product_id);
-                                if (!prod?.product_ingredients) return acc;
+                    <div className="space-y-6">
+                        {/* Main Charts */}
+                        <div className="grid gap-4 md:grid-cols-3">
+                            <RevenueChart data={dailyData} />
+                            <CostBreakdownChart data={
+                                filteredOrders.flatMap(o => o.items || []).reduce((acc, item) => {
+                                    const prod = products.find(p => p.id === item.product_id);
+                                    if (!prod?.product_ingredients) return acc;
 
-                                prod.product_ingredients.forEach(pi => {
-                                    if (!pi.ingredient) return;
-                                    const cost = (pi.ingredient.cost_per_unit || 0) * pi.quantity * item.quantity;
-                                    const existing = acc.find(x => x.name === pi.ingredient!.name);
-                                    if (existing) existing.value += cost;
-                                    else acc.push({ name: pi.ingredient.name, value: cost });
-                                });
-                                return acc;
-                            }, [] as { name: string; value: number }[])
-                        } />
-                    </div>
+                                    prod.product_ingredients.forEach(pi => {
+                                        if (!pi.ingredient) return;
+                                        const cost = (pi.ingredient.cost_per_unit || 0) * pi.quantity * item.quantity;
+                                        const existing = acc.find(x => x.name === pi.ingredient!.name);
+                                        if (existing) existing.value += cost;
+                                        else acc.push({ name: pi.ingredient.name, value: cost });
+                                    });
+                                    return acc;
+                                }, [] as { name: string; value: number }[])
+                            } />
+                        </div>
 
-                    {/* Ticket médio - subtle indicator */}
-                    <Card className="bg-gradient-to-r from-purple-50 to-background border-purple-100">
-                        <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                                        <ShoppingCart className="w-5 h-5 text-purple-600" />
+                        {/* Ticket médio - subtle indicator */}
+                        <Card className="bg-gradient-to-r from-purple-50 to-background border-purple-100">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                            <ShoppingCart className="w-5 h-5 text-purple-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Ticket Médio</p>
+                                            <p className="text-xl font-bold text-purple-600">R$ {averageOrderValue.toFixed(2)}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Ticket Médio</p>
-                                        <p className="text-xl font-bold text-purple-600">R$ {averageOrderValue.toFixed(2)}</p>
+                                    <div className="text-right text-xs text-muted-foreground">
+                                        <p>Valor médio por pedido</p>
+                                        <p>no período selecionado</p>
                                     </div>
                                 </div>
-                                <div className="text-right text-xs text-muted-foreground">
-                                    <p>Valor médio por pedido</p>
-                                    <p>no período selecionado</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
 
-                    {/* Stock vs demand and top products */}
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Package className="w-5 h-5" />
-                                    Estoque vs Demanda
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-3 max-h-[280px] overflow-y-auto">
-                                    {stockAnalysis.length === 0 ? (
-                                        <p className="text-sm text-muted-foreground text-center py-8">Nenhum ingrediente em uso</p>
-                                    ) : (
-                                        stockAnalysis.map(item => (
-                                            <div key={item.ingredient.id} className="flex items-center justify-between border-b pb-2">
-                                                <div className="flex items-center gap-2 flex-1">
-                                                    {item.status === 'sufficient' && <CheckCircle className="w-4 h-4 text-green-600" />}
-                                                    {item.status === 'low' && <AlertCircle className="w-4 h-4 text-yellow-600" />}
-                                                    {item.status === 'critical' && <XCircle className="w-4 h-4 text-red-600" />}
-                                                    <div className="flex-1">
-                                                        <p className="font-medium text-sm">{item.ingredient.name}</p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {item.stock.toFixed(2)} / {item.demand.toFixed(2)} {item.ingredient.unit}
-                                                        </p>
+                        {/* Stock vs demand and top products */}
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Package className="w-5 h-5" />
+                                        Estoque vs Demanda
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-3 max-h-[280px] overflow-y-auto">
+                                        {stockAnalysis.length === 0 ? (
+                                            <p className="text-sm text-muted-foreground text-center py-8">Nenhum ingrediente em uso</p>
+                                        ) : (
+                                            stockAnalysis.map(item => (
+                                                <div key={item.ingredient.id} className="flex items-center justify-between border-b pb-2">
+                                                    <div className="flex items-center gap-2 flex-1">
+                                                        {item.status === 'sufficient' && <CheckCircle className="w-4 h-4 text-green-600" />}
+                                                        {item.status === 'low' && <AlertCircle className="w-4 h-4 text-yellow-600" />}
+                                                        {item.status === 'critical' && <XCircle className="w-4 h-4 text-red-600" />}
+                                                        <div className="flex-1">
+                                                            <p className="font-medium text-sm">{item.ingredient.name}</p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                {item.stock.toFixed(2)} / {item.demand.toFixed(2)} {item.ingredient.unit}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <Badge
+                                                        variant={
+                                                            item.status === 'sufficient' ? 'default' :
+                                                                item.status === 'low' ? 'secondary' :
+                                                                    'destructive'
+                                                        }
+                                                        className={
+                                                            item.status === 'sufficient' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
+                                                                item.status === 'low' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
+                                                                    ''
+                                                        }
+                                                    >
+                                                        {item.balance > 0 ? '+' : ''}{item.balance.toFixed(1)} {item.ingredient.unit}
+                                                    </Badge>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <TrendingUp className="w-5 h-5" />
+                                        Produtos Mais Lucrativos
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-3 max-h-[280px] overflow-y-auto">
+                                        {topProfitableProducts.length === 0 ? (
+                                            <p className="text-sm text-muted-foreground text-center py-8">Nenhuma venda no período</p>
+                                        ) : (
+                                            topProfitableProducts.map((p, idx) => (
+                                                <div key={idx} className="flex items-center justify-between border-b pb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant="outline" className="font-bold">{idx + 1}º</Badge>
+                                                        <div>
+                                                            <p className="font-medium text-sm">{p.name}</p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                {p.quantity} un • Margem {p.margin.toFixed(1)}%
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className={`text-sm font-bold ${p.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                            {p.profit > 0 ? '+' : ''}R$ {p.profit.toFixed(2)}
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground">R$ {p.revenue.toFixed(2)}</div>
                                                     </div>
                                                 </div>
-                                                <Badge
-                                                    variant={
-                                                        item.status === 'sufficient' ? 'default' :
-                                                            item.status === 'low' ? 'secondary' :
-                                                                'destructive'
-                                                    }
-                                                    className={
-                                                        item.status === 'sufficient' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
-                                                            item.status === 'low' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
-                                                                ''
-                                                    }
-                                                >
-                                                    {item.balance > 0 ? '+' : ''}{item.balance.toFixed(1)} {item.ingredient.unit}
-                                                </Badge>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <TrendingUp className="w-5 h-5" />
-                                    Produtos Mais Lucrativos
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-3 max-h-[280px] overflow-y-auto">
-                                    {topProfitableProducts.length === 0 ? (
-                                        <p className="text-sm text-muted-foreground text-center py-8">Nenhuma venda no período</p>
-                                    ) : (
-                                        topProfitableProducts.map((p, idx) => (
-                                            <div key={idx} className="flex items-center justify-between border-b pb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Badge variant="outline" className="font-bold">{idx + 1}º</Badge>
-                                                    <div>
-                                                        <p className="font-medium text-sm">{p.name}</p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {p.quantity} un • Margem {p.margin.toFixed(1)}%
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className={`text-sm font-bold ${p.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                        {p.profit > 0 ? '+' : ''}R$ {p.profit.toFixed(2)}
-                                                    </div>
-                                                    <div className="text-xs text-muted-foreground">R$ {p.revenue.toFixed(2)}</div>
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
 
-                    {/* Additional metrics */}
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <Card
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => navigate('/app/pedidos')}
-                        >
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Pedidos Ativos</CardTitle>
-                                <Package className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{pendingOrdersCount}</div>
-                                <p className="text-xs text-muted-foreground">Em produção/pendentes</p>
-                            </CardContent>
-                        </Card>
-                        <Card
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => navigate('/app/clientes')}
-                        >
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Clientes</CardTitle>
-                                <Users className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{customers.length}</div>
-                                <p className="text-xs text-muted-foreground">Total cadastrados</p>
-                            </CardContent>
-                        </Card>
+                        {/* Additional metrics */}
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <Card
+                                className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                onClick={() => navigate('/app/pedidos')}
+                            >
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Pedidos Ativos</CardTitle>
+                                    <Package className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{pendingOrdersCount}</div>
+                                    <p className="text-xs text-muted-foreground">Em produção/pendentes</p>
+                                </CardContent>
+                            </Card>
+                            <Card
+                                className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                onClick={() => navigate('/app/clientes')}
+                            >
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Clientes</CardTitle>
+                                    <Users className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{customers.length}</div>
+                                    <p className="text-xs text-muted-foreground">Total cadastrados</p>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
-                </div>
             </FadeIn>
         </div>
     );
