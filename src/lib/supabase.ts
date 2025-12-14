@@ -44,7 +44,7 @@ const mockSupabase = {
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      storage: Capacitor.isNativePlatform() ? CapacitorStorage : undefined,
+      storage: Capacitor.isNativePlatform() ? CapacitorStorage : window.localStorage,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
