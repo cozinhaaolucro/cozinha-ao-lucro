@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { SubscriptionBlocker } from '@/components/subscription/SubscriptionBlocker';
+import { TourGuide } from '@/components/onboarding/TourGuide';
 
 const DashboardLayout = () => {
     const { signOut, user, profile, loading } = useAuth();
@@ -108,13 +109,14 @@ const DashboardLayout = () => {
     };
 
     const navItems = [
-        { path: '/app/dashboard', label: 'Visão Geral', icon: LayoutDashboard },
-        { path: '/app/pedidos', label: 'Pedidos', icon: ShoppingBag },
-        { path: '/app/clientes', label: 'Clientes', icon: Users },
-        { path: '/app/produtos', label: 'Produtos', icon: ShoppingBag },
-        { path: '/app/agenda', label: 'Agenda', icon: Calendar },
-        { path: '/app/aprender', label: 'Aprender', icon: BookOpen },
-        { path: '/app/settings', label: 'Configurações', icon: Settings },
+        { path: '/app/dashboard', label: 'Visão Geral', icon: LayoutDashboard, id: 'nav-dashboard' },
+        { path: '/app/pedidos', label: 'Pedidos', icon: ShoppingBag, id: 'nav-pedidos' },
+        { path: '/app/clientes', label: 'Clientes', icon: Users, id: 'nav-clientes' },
+        { path: '/app/produtos', label: 'Produtos', icon: ShoppingBag, id: 'nav-produtos' },
+        { path: '/app/agenda', label: 'Agenda', icon: Calendar, id: 'nav-agenda' },
+        { path: '/app/compras', label: 'Compras', icon: ShoppingCart, id: 'nav-compras' },
+        { path: '/app/aprender', label: 'Aprender', icon: BookOpen, id: 'nav-aprender' },
+        { path: '/app/settings', label: 'Configurações', icon: Settings, id: 'nav-settings' },
     ];
 
     const isActive = (path: string) => location.pathname === path;
@@ -187,6 +189,7 @@ const DashboardLayout = () => {
     return (
         <div className="min-h-screen bg-background flex flex-col md:flex-row">
             {/* Desktop Sidebar */}
+            <TourGuide />
             <aside className="hidden md:flex w-64 flex-col border-r bg-card h-screen sticky top-0">
                 <div className="p-6 border-b flex items-center gap-3">
                     <UserAvatar size="md" clickable />
@@ -200,6 +203,7 @@ const DashboardLayout = () => {
                     {navItems.map((item) => (
                         <Link
                             key={item.path}
+                            id={item.id}
                             to={item.path}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path)
                                 ? 'bg-primary text-primary-foreground shadow-md'

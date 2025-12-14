@@ -20,9 +20,11 @@ import {
     Camera,
     Phone,
     Calendar,
+    Store,
     AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { SubscriptionManager } from '@/components/subscription/SubscriptionManager';
 
 const Settings = () => {
     const { user, signOut } = useAuth();
@@ -143,6 +145,10 @@ const Settings = () => {
                         <CreditCard className="w-4 h-4" />
                         Assinatura
                     </TabsTrigger>
+                    <TabsTrigger value="menu" className="gap-2">
+                        <Store className="w-4 h-4" />
+                        Cardápio
+                    </TabsTrigger>
                 </TabsList>
 
                 {/* General Settings Tab */}
@@ -262,128 +268,65 @@ const Settings = () => {
                 </TabsContent>
 
                 {/* Subscription Tab */}
-                <TabsContent value="subscription" className="space-y-6">
-                    <Card className="border-primary/20 shadow-lg relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-10">
-                            <Zap className="w-32 h-32 text-primary" />
-                        </div>
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <CardTitle className="text-2xl text-primary flex items-center gap-2">
-                                        Plano Pro
-                                        <Badge className={isTrialPeriod ? "bg-blue-500/20 text-blue-700 hover:bg-blue-500/30 border-0" : "bg-primary/20 text-primary hover:bg-primary/30 border-0"}>
-                                            {isTrialPeriod ? 'PERÍODO GRATUITO' : 'ATIVO'}
-                                        </Badge>
-                                    </CardTitle>
-                                    <CardDescription className="mt-2">
-                                        {isTrialPeriod
-                                            ? `Você está no período gratuito. Aproveite todos os recursos!`
-                                            : 'Você tem acesso a todos os recursos premium.'
-                                        }
-                                    </CardDescription>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="grid gap-6">
-                            <div className="grid md:grid-cols-3 gap-4">
-                                <div className="p-4 bg-muted/50 rounded-lg border">
-                                    <p className="text-sm text-muted-foreground mb-1">Valor</p>
-                                    <p className="text-2xl font-bold">R$ 39,90<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
-                                </div>
-                                <div className="p-4 bg-muted/50 rounded-lg border">
-                                    <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-                                        <Calendar className="w-3 h-3" />
-                                        {isTrialPeriod ? 'Fim do Período Grátis' : 'Próxima Cobrança'}
-                                    </p>
-                                    <p className="text-2xl font-bold">{nextBillingDate.toLocaleDateString('pt-BR')}</p>
-                                </div>
-                                <div className="p-4 bg-muted/50 rounded-lg border">
-                                    <p className="text-sm text-muted-foreground mb-1">Status</p>
-                                    <p className={`text-2xl font-bold ${isDueToday ? 'text-orange-600' : 'text-green-600'}`}>
-                                        {isDueToday ? 'Pagamento Pendente' : isTrialPeriod ? `${daysUntilBilling} dias restantes` : 'Em dia'}
-                                    </p>
-                                </div>
-                            </div>
+                <TabsContent value="subscription">
+                    <SubscriptionManager />
+                </TabsContent>
 
-                            <Separator />
-
-                            <div>
-                                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                                    <CheckCircle className="w-4 h-4 text-green-500" />
-                                    Recursos Inclusos
-                                </h3>
-                                <div className="grid sm:grid-cols-2 gap-3">
-                                    {[
-                                        "Precificação Automática Ilimitada",
-                                        "Gestão de Pedidos Completa",
-                                        "Controle de Estoque Avançado",
-                                        "Relatórios Financeiros Detalhados",
-                                        "Suporte Prioritário",
-                                        "Acesso aos Ebooks Exclusivos"
-                                    ].map((feature, i) => (
-                                        <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                            {feature}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </CardContent>
-                        <CardFooter className="flex flex-col sm:flex-row gap-4 justify-between bg-muted/20 p-6">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                {isDueToday ? (
-                                    <>
-                                        <AlertCircle className="w-4 h-4 text-orange-500" />
-                                        Pagamento necessário para continuar
-                                    </>
-                                ) : (
-                                    <>
-                                        <CreditCard className="w-4 h-4" />
-                                        Primeiro mês gratuito
-                                    </>
-                                )}
-                            </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    onClick={async () => {
-                                        try {
-                                            const { iniciarPagamento } = await import('@/lib/pagamento');
-                                            await iniciarPagamento();
-                                        } catch (error) {
-                                            console.error('Erro ao iniciar pagamento:', error);
-                                            toast.error('Erro ao processar pagamento');
-                                        }
-                                    }}
-                                    variant={isDueToday ? "default" : "outline"}
-                                    className={isDueToday ? "bg-primary hover:bg-primary/90" : ""}
-                                >
-                                    {isDueToday ? 'Efetuar Pagamento' : 'Antecipar Pagamento'}
-                                </Button>
-                            </div>
-                        </CardFooter>
-                    </Card>
-
+                {/* Digital Menu Tab */}
+                <TabsContent value="menu" className="space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Histórico de Faturas</CardTitle>
-                            <CardDescription>Baixe os comprovantes dos seus pagamentos.</CardDescription>
+                            <CardTitle>Cardápio Digital</CardTitle>
+                            <CardDescription>
+                                Compartilhe seu menu com seus clientes e receba pedidos no WhatsApp.
+                            </CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                            <Zap className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <p className="font-medium">{subscriptionStartDate.toLocaleDateString('pt-BR')}</p>
-                                            <p className="text-sm text-muted-foreground">Início do Período Gratuito</p>
-                                        </div>
+                        <CardContent className="space-y-6">
+                            <div className="bg-muted p-4 rounded-lg flex items-center justify-between gap-4">
+                                <div className="truncate flex-1 font-mono text-sm bg-background p-2 rounded border">
+                                    {window.location.origin}/menu/{user?.id}
+                                </div>
+                                <Button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(`${window.location.origin}/menu/${user?.id}`);
+                                        toast.success('Link copiado!');
+                                    }}
+                                    variant="secondary"
+                                >
+                                    Copiar
+                                </Button>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="border rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-4">
+                                    <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                                        {/* Placeholder for QR Code */}
+                                        <img
+                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/menu/${user?.id}`)}`}
+                                            alt="QR Code"
+                                            className="w-full h-full object-contain mix-blend-multiply"
+                                        />
                                     </div>
-                                    <div className="text-right">
-                                        <p className="font-bold">R$ 0,00</p>
-                                        <Badge variant="secondary" className="text-xs">Cortesia</Badge>
+                                    <p className="text-sm text-muted-foreground">Escaneie para testar</p>
+                                    <Button variant="outline" className="w-full" onClick={() => window.open(`/menu/${user?.id}`, '_blank')}>
+                                        Abrir Cardápio
+                                    </Button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h4 className="font-medium flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4 text-green-500" />
+                                        Como funciona?
+                                    </h4>
+                                    <ul className="space-y-2 text-sm text-muted-foreground">
+                                        <li>1. Seus produtos ativos aparecem automaticamente.</li>
+                                        <li>2. O cliente monta o pedido no link.</li>
+                                        <li>3. Ao finalizar, o pedido chega pronto no seu WhatsApp.</li>
+                                        <li>4. Você combina o pagamento e entrega diretamente.</li>
+                                    </ul>
+                                    <div className="bg-orange-50 text-orange-800 p-4 rounded-lg text-sm">
+                                        <p className="font-semibold mb-1">Dica:</p>
+                                        Adicione o link na bio do seu Instagram para vender mais!
                                     </div>
                                 </div>
                             </div>

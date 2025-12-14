@@ -38,6 +38,8 @@ interface StockDemandAnalysis {
     status: 'sufficient' | 'low' | 'critical';
 }
 
+import { RevenueChart } from '@/components/dashboard/RevenueChart';
+import { CostBreakdownChart } from '@/components/dashboard/CostBreakdownChart';
 import { seedAccount } from '@/lib/seeding';
 
 const Dashboard = () => {
@@ -373,84 +375,24 @@ const Dashboard = () => {
             {/* Clean Charts Grid */}
             <FadeIn delay={150}>
                 <div className="space-y-6">
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium flex items-center justify-between">
-                                    <span>Pedidos</span>
-                                    <span className="text-2xl font-bold text-blue-600">{filteredOrders.length}</span>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-[160px]">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={dailyData}>
-                                            <defs>
-                                                <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <XAxis
-                                                dataKey="date"
-                                                fontSize={10}
-                                                tickLine={false}
-                                                axisLine={false}
-                                                tick={{ fill: '#94a3b8' }}
-                                            />
-                                            <YAxis hide />
-                                            <Tooltip content={<CustomTooltip type="orders" />} />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="ordersCount"
-                                                stroke="#3b82f6"
-                                                strokeWidth={2}
-                                                fill="url(#colorOrders)"
-                                            />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </CardContent>
-                        </Card>
+                    {/* Main Charts */}
+                    <div className="grid gap-4 md:grid-cols-3">
+                        <RevenueChart data={dailyData} />
+                        <CostBreakdownChart data={
+                            filteredOrders.flatMap(o => o.items || []).reduce((acc, item) => {
+                                const prod = products.find(p => p.id === item.product_id);
+                                if (!prod?.product_ingredients) return acc;
 
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium flex items-center justify-between">
-                                    <span>Receita</span>
-                                    <span className="text-2xl font-bold text-green-600">R$ {totalRevenue.toFixed(0)}</span>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-[160px]">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={dailyData}>
-                                            <defs>
-                                                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
-                                                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <XAxis
-                                                dataKey="date"
-                                                fontSize={10}
-                                                tickLine={false}
-                                                axisLine={false}
-                                                tick={{ fill: '#94a3b8' }}
-                                            />
-                                            <YAxis hide />
-                                            <Tooltip content={<CustomTooltip type="revenue" />} />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="revenue"
-                                                stroke="#22c55e"
-                                                strokeWidth={2}
-                                                fill="url(#colorRevenue)"
-                                            />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </CardContent>
-                        </Card>
+                                prod.product_ingredients.forEach(pi => {
+                                    if (!pi.ingredient) return;
+                                    const cost = (pi.ingredient.cost_per_unit || 0) * pi.quantity * item.quantity;
+                                    const existing = acc.find(x => x.name === pi.ingredient!.name);
+                                    if (existing) existing.value += cost;
+                                    else acc.push({ name: pi.ingredient.name, value: cost });
+                                });
+                                return acc;
+                            }, [] as { name: string; value: number }[])
+                        } />
                     </div>
 
                     {/* Ticket médio - subtle indicator */}

@@ -23,6 +23,8 @@ const Pedidos = lazy(() => import("./pages/app/Pedidos"));
 const Clientes = lazy(() => import("./pages/app/Clientes"));
 const Produtos = lazy(() => import("./pages/app/Produtos"));
 const Agenda = lazy(() => import("./pages/app/Agenda"));
+const ShoppingList = lazy(() => import("./pages/app/ShoppingList"));
+const PublicMenu = lazy(() => import("./pages/public/PublicMenu"));
 const Aprender = lazy(() => import("./pages/app/Aprender"));
 const Settings = lazy(() => import("./pages/app/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -77,6 +79,7 @@ const App = () => {
                     <Route path="clientes" element={<Clientes />} />
                     <Route path="produtos" element={<Produtos />} />
                     <Route path="agenda" element={<Agenda />} />
+                    <Route path="compras" element={<ShoppingList />} />
                     <Route path="aprender" element={<Aprender />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="perfil" element={<Navigate to="settings" replace />} />
@@ -85,6 +88,8 @@ const App = () => {
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
+
+                  <Route path="/menu/:userId" element={<PublicMenu />} />
 
                   <Route path="*" element={<NotFound />} />
                 </Routes>
