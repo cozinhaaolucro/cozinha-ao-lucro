@@ -49,6 +49,18 @@ export const createIngredient = async (ingredient: Omit<Ingredient, 'id' | 'user
         return { data: null, error: new Error('Usuário não autenticado') };
     }
 
+    // Check for duplicates
+    const { data: existing } = await supabase
+        .from('ingredients')
+        .select('id')
+        .eq('user_id', user.id)
+        .ilike('name', ingredient.name)
+        .single();
+
+    if (existing) {
+        return { data: null, error: new Error('Já existe um ingrediente com esse nome.') };
+    }
+
     const { data, error } = await supabase
         .from('ingredients')
         .insert({ ...ingredient, user_id: user.id })

@@ -171,7 +171,7 @@ const PublicMenu = () => {
                                     <div>
                                         <div className="flex justify-between items-start">
                                             <h3 className="font-semibold text-gray-900 line-clamp-1">{product.name}</h3>
-                                            <Badge variant="secondary" className="font-bold text-green-700">
+                                            <Badge variant="outline" className="font-bold text-lg text-primary border-primary bg-primary/5 px-3 py-1">
                                                 R$ {product.selling_price?.toFixed(2)}
                                             </Badge>
                                         </div>
@@ -220,8 +220,16 @@ const PublicMenu = () => {
                                 <ShoppingBag className="w-4 h-4 mt-0.5" />
                                 <span>{cartCount} item(s)</span>
                             </div>
-                            <div className="text-lg font-bold text-gray-900">
-                                Total: R$ {cartTotal.toFixed(2)}
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setCart([])}
+                                    className="text-xs text-red-500 hover:text-red-700 font-medium underline"
+                                >
+                                    Limpar
+                                </button>
+                                <div className="text-lg font-bold text-gray-900">
+                                    Total: R$ {cartTotal.toFixed(2)}
+                                </div>
                             </div>
                         </div>
 

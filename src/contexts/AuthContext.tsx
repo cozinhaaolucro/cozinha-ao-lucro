@@ -75,19 +75,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            if (_event === 'SIGNED_IN') {
+            // Only set loading if we don't have a session match (initial load or sign out)
+            // PREVENT "loading" flash on token refresh
+            if (_event === 'SIGNED_IN' && !user) {
                 setLoading(true);
+            } else if (_event === 'SIGNED_OUT') {
+                setLoading(false);
+                setSession(null);
+                setUser(null);
+                setProfile(null);
             }
 
             try {
+                // If the session is effectively the same, don't trigger a full reload
+                // But update the session object just in case of token refresh
                 setSession(session);
                 setUser(session?.user ?? null);
 
-                // Add timeout to profile fetch to prevent hanging
-                const profilePromise = fetchProfile(session?.user?.id);
-                const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000)); // 5s max for profile
-
-                await Promise.race([profilePromise, timeoutPromise]);
+                // Only fetch profile if user CHANGED
+                if (session?.user?.id && session.user.id !== user?.id) {
+                    // Add timeout to profile fetch to prevent hanging
+                    const profilePromise = fetchProfile(session?.user?.id);
+                    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000)); // 5s max for profile
+                    await Promise.race([profilePromise, timeoutPromise]);
+                }
             } catch (error) {
                 console.error('Error in auth state change:', error);
             } finally {

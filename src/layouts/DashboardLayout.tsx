@@ -124,7 +124,6 @@ const DashboardLayout = () => {
         { path: '/app/clientes', label: 'Clientes', icon: Users, id: 'nav-clientes' },
         { path: '/app/produtos', label: 'Produtos', icon: ShoppingBag, id: 'nav-produtos' },
         { path: '/app/agenda', label: 'Agenda', icon: Calendar, id: 'nav-agenda' },
-        { path: '/app/compras', label: 'Compras', icon: ShoppingCart, id: 'nav-compras' },
         { path: '/app/aprender', label: 'Aprender', icon: BookOpen, id: 'nav-aprender' },
         { path: '/app/settings', label: 'Configurações', icon: Settings, id: 'nav-settings' },
     ];

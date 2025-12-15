@@ -1,5 +1,5 @@
 /* Design System para Landing Page de Alta Conversão - Da Cozinha ao Lucro */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -108,8 +108,9 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
   }
 
   h1,
@@ -118,9 +119,9 @@
   h4,
   h5,
   h6 {
-    font-family: 'Playfair Display', serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-family: 'Poppins', system-ui, sans-serif;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
   }
 }
 
