@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 
@@ -47,6 +47,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    // Use refs to track state in listeners without triggering re-effects
+    const userRef = useRef<User | null>(null);
+    const sessionRef = useRef<Session | null>(null);
+
+    // Update refs when state changes
+    useEffect(() => {
+        userRef.current = user;
+        sessionRef.current = session;
+    }, [user, session]);
+
     useEffect(() => {
         // Safety timeout to prevent infinite loading (e.g. network hang)
         const safetyTimer = setTimeout(() => {
@@ -75,9 +85,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            // Only set loading if we don't have a session match (initial load or sign out)
-            // PREVENT "loading" flash on token refresh
-            if (_event === 'SIGNED_IN' && !user) {
+            const currentUser = userRef.current;
+            const newUserId = session?.user?.id;
+            const currentUserId = currentUser?.id;
+
+            // Only set loading if we are actually changing users or logging in from null
+            const isDifferentUser = newUserId !== currentUserId;
+
+            if (_event === 'SIGNED_IN' && isDifferentUser) {
+                // Only show loading if we are essentially switching users
                 setLoading(true);
             } else if (_event === 'SIGNED_OUT') {
                 setLoading(false);
@@ -87,22 +103,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
 
             try {
-                // If the session is effectively the same, don't trigger a full reload
-                // But update the session object just in case of token refresh
+                // Always update session state
                 setSession(session);
                 setUser(session?.user ?? null);
 
                 // Only fetch profile if user CHANGED
-                if (session?.user?.id && session.user.id !== user?.id) {
-                    // Add timeout to profile fetch to prevent hanging
-                    const profilePromise = fetchProfile(session?.user?.id);
-                    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000)); // 5s max for profile
+                if (newUserId && isDifferentUser) {
+                    const profilePromise = fetchProfile(newUserId);
+                    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000));
                     await Promise.race([profilePromise, timeoutPromise]);
                 }
             } catch (error) {
                 console.error('Error in auth state change:', error);
             } finally {
-                setLoading(false);
+                // Only unset loading if we set it (or just force it false to be safe)
+                if ((_event === 'SIGNED_IN' && isDifferentUser) || _event === 'SIGNED_OUT') {
+                    setLoading(false);
+                }
             }
         });
 

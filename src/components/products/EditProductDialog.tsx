@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, X, Calculator } from 'lucide-react';
+import { Plus, X, Calculator, Camera, Image as ImageIcon } from 'lucide-react';
 import { getIngredients } from '@/lib/database';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Ingredient, Product } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 
@@ -35,7 +36,14 @@ const EditProductDialog = ({ product, open, onOpenChange, onSuccess }: EditProdu
         selling_unit: 'unidade',
     });
     const [selectedIngredients, setSelectedIngredients] = useState<Array<{ ingredient_id: string; quantity: number }>>([]);
+
+    // Image Upload State
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+
     const { toast } = useToast();
+    const { user } = useAuth();
 
     useEffect(() => {
         if (open) {
@@ -53,6 +61,8 @@ const EditProductDialog = ({ product, open, onOpenChange, onSuccess }: EditProdu
                         quantity: pi.quantity,
                     })) || []
                 );
+                setImagePreview(product.image_url || null);
+                setImageFile(null);
             }
         }
     }, [open, product]);
@@ -101,51 +111,81 @@ const EditProductDialog = ({ product, open, onOpenChange, onSuccess }: EditProdu
         return cost / 0.4; // 60% margin
     };
 
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const objectUrl = URL.createObjectURL(file);
+            setImagePreview(objectUrl);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!product) return;
+        setUploading(true);
 
-        // Update product
-        const { error: productError } = await supabase
-            .from('products')
-            .update({
-                name: formData.name,
-                description: formData.description,
-                selling_price: formData.selling_price,
-                selling_unit: formData.selling_unit,
-                updated_at: new Date().toISOString(),
-            })
-            .eq('id', product.id);
+        try {
+            // 1. Upload new image if selected
+            let imageUrl = product.image_url;
+            if (imageFile && user) {
+                const fileExt = imageFile.name.split('.').pop();
+                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                const { error: uploadError } = await supabase.storage
+                    .from('product-images')
+                    .upload(fileName, imageFile);
 
-        if (productError) {
-            toast({ title: 'Erro ao atualizar produto', description: productError.message, variant: 'destructive' });
-            return;
-        }
+                if (uploadError) throw uploadError;
 
-        // Delete old ingredients
-        await supabase.from('product_ingredients').delete().eq('product_id', product.id);
+                const { data } = supabase.storage
+                    .from('product-images')
+                    .getPublicUrl(fileName);
 
-        // Insert new ingredients
-        if (selectedIngredients.length > 0) {
-            const { error: ingredientsError } = await supabase
-                .from('product_ingredients')
-                .insert(
-                    selectedIngredients.map((ing) => ({
-                        product_id: product.id,
-                        ingredient_id: ing.ingredient_id,
-                        quantity: ing.quantity,
-                    }))
-                );
-
-            if (ingredientsError) {
-                toast({ title: 'Erro ao atualizar ingredientes', description: ingredientsError.message, variant: 'destructive' });
-                return;
+                imageUrl = data.publicUrl;
             }
-        }
 
-        toast({ title: 'Produto atualizado com sucesso!' });
-        onSuccess();
-        onOpenChange(false);
+            // 2. Update product
+            const { error: productError } = await supabase
+                .from('products')
+                .update({
+                    name: formData.name,
+                    description: formData.description,
+                    selling_price: formData.selling_price,
+                    selling_unit: formData.selling_unit,
+                    image_url: imageUrl,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('id', product.id);
+
+            if (productError) throw productError;
+
+            // 3. Delete old ingredients
+            await supabase.from('product_ingredients').delete().eq('product_id', product.id);
+
+            // 4. Insert new ingredients
+            if (selectedIngredients.length > 0) {
+                const { error: ingredientsError } = await supabase
+                    .from('product_ingredients')
+                    .insert(
+                        selectedIngredients.map((ing) => ({
+                            product_id: product.id,
+                            ingredient_id: ing.ingredient_id,
+                            quantity: ing.quantity,
+                        }))
+                    );
+
+                if (ingredientsError) throw ingredientsError;
+            }
+
+            toast({ title: 'Produto atualizado com sucesso!' });
+            onSuccess();
+            onOpenChange(false);
+        } catch (error: any) {
+            console.error('Error updating product:', error);
+            toast({ title: 'Erro ao atualizar produto', description: error.message || 'Erro desconhecido', variant: 'destructive' });
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleDelete = async () => {
@@ -180,38 +220,73 @@ const EditProductDialog = ({ product, open, onOpenChange, onSuccess }: EditProdu
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="name">Nome do Produto *</Label>
-                            <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                required
-                            />
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_200px] gap-6">
+                        <div className="space-y-4">
+                            <div>
+                                <Label htmlFor="name">Nome do Produto *</Label>
+                                <Input
+                                    id="name"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="description">Descrição</Label>
+                                <Textarea
+                                    id="description"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    className="h-[100px]"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="selling_unit">Unidade de Venda</Label>
+                                <Select value={formData.selling_unit} onValueChange={(value) => setFormData({ ...formData, selling_unit: value })}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="unidade">Unidade</SelectItem>
+                                        <SelectItem value="kg">Kg</SelectItem>
+                                        <SelectItem value="pacote">Pacote</SelectItem>
+                                        <SelectItem value="duzia">Dúzia</SelectItem>
+                                        <SelectItem value="caixa">Caixa</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
-                        <div>
-                            <Label htmlFor="description">Descrição</Label>
-                            <Textarea
-                                id="description"
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="selling_unit">Unidade de Venda</Label>
-                            <Select value={formData.selling_unit} onValueChange={(value) => setFormData({ ...formData, selling_unit: value })}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="unidade">Unidade</SelectItem>
-                                    <SelectItem value="kg">Kg</SelectItem>
-                                    <SelectItem value="pacote">Pacote</SelectItem>
-                                    <SelectItem value="duzia">Dúzia</SelectItem>
-                                    <SelectItem value="caixa">Caixa</SelectItem>
-                                </SelectContent>
-                            </Select>
+
+                        {/* Image Upload Area */}
+                        <div className="flex flex-col gap-2">
+                            <Label>Imagem do Produto</Label>
+                            <label
+                                htmlFor="edit-product-image"
+                                className="flex-1 border-2 border-dashed rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-muted/50 transition-colors relative overflow-hidden group min-h-[140px]"
+                            >
+                                {imagePreview ? (
+                                    <>
+                                        <img src={imagePreview} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Camera className="w-8 h-8 text-white" />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center space-y-2 text-muted-foreground">
+                                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto">
+                                            <ImageIcon className="w-6 h-6" />
+                                        </div>
+                                        <span className="text-xs">Clique para alterar</span>
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    id="edit-product-image"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageSelect}
+                                />
+                            </label>
                         </div>
                     </div>
 
@@ -313,7 +388,9 @@ const EditProductDialog = ({ product, open, onOpenChange, onSuccess }: EditProdu
                     </Card>
 
                     <div className="flex gap-2">
-                        <Button type="submit" className="flex-1">Salvar Alterações</Button>
+                        <Button type="submit" className="flex-1" disabled={uploading}>
+                            {uploading ? 'Salvando...' : 'Salvar Alterações'}
+                        </Button>
                         <Button type="button" variant="destructive" onClick={handleDelete}>Excluir</Button>
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
                     </div>

@@ -3,9 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -25,7 +28,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import { Plus, X, Calculator, ChevronDown, Check } from 'lucide-react';
+import { Plus, X, Calculator, ChevronDown, Check, Camera, Image as ImageIcon } from 'lucide-react';
 import { getIngredients, createProduct, createIngredient } from '@/lib/database';
 import type { Ingredient } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
@@ -81,7 +84,14 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
     });
     const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
     const [openCombobox, setOpenCombobox] = useState(false);
+
+    // Image Upload State
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+
     const { toast } = useToast();
+    const { user } = useAuth();
 
     useEffect(() => {
         if (open) {
@@ -230,8 +240,18 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
         return cost / 0.4; // 60% margin
     };
 
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const objectUrl = URL.createObjectURL(file);
+            setImagePreview(objectUrl);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setUploading(true);
 
         // 1. Process ingredients (create virtual ones if needed)
         const finalIngredients: Array<{ ingredient_id: string; quantity: number }> = [];
@@ -255,6 +275,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
 
                     if (error || !newIng) {
                         toast({ title: `Erro ao criar ingrediente: ${si.name}`, variant: 'destructive' });
+                        setUploading(false);
                         return; // Stop process
                     }
                     ingredientId = newIng.id;
@@ -266,17 +287,44 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
             }
         }
 
-        // 2. Create Product
+        // 2. Upload Image (if any)
+        let imageUrl = null;
+        if (imageFile && user) {
+            try {
+                const fileExt = imageFile.name.split('.').pop();
+                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                const { error: uploadError } = await supabase.storage
+                    .from('product-images')
+                    .upload(fileName, imageFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data } = supabase.storage
+                    .from('product-images')
+                    .getPublicUrl(fileName);
+
+                imageUrl = data.publicUrl;
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                toast({ title: 'Erro ao fazer upload da imagem', variant: 'destructive' });
+                setUploading(false);
+                return;
+            }
+        }
+
+        // 3. Create Product
         const { error } = await createProduct(
             {
                 name: formData.name,
                 description: formData.description,
                 selling_price: formData.selling_price,
                 active: true,
-                image_url: null,
+                image_url: imageUrl,
             },
             finalIngredients
         );
+
+        setUploading(false);
 
         if (!error) {
             toast({ title: 'Produto criado com sucesso!' });
@@ -290,12 +338,16 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
     const resetForm = () => {
         setFormData({ name: '', description: '', selling_price: 0 });
         setSelectedIngredients([]);
+        setImageFile(null);
+        setImagePreview(null);
         onOpenChange(false);
     };
 
     const clearForm = () => {
         setFormData({ name: '', description: '', selling_price: 0 });
         setSelectedIngredients([]);
+        setImageFile(null);
+        setImagePreview(null);
         toast({ title: 'Formulário limpo!' });
     };
 
@@ -323,11 +375,11 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
 
             if (existingDb) {
                 // Smart Unit Logic for EXISTING DB ingredients
-                const isKg = existingDb.unit === 'kg' || existingDb.unit === 'kilograma';
-                const isL = existingDb.unit === 'l' || existingDb.unit === 'litro';
+                const isKg = (existingDb.unit as string) === 'kg' || (existingDb.unit as string) === 'kilograma';
+                const isL = (existingDb.unit as string) === 'l' || (existingDb.unit as string) === 'litro';
 
                 const useSubUnit = (isKg || isL) && pi.quantity < 1;
-                let displayUnit = existingDb.unit;
+                let displayUnit: string = existingDb.unit;
                 if (useSubUnit) {
                     displayUnit = isKg ? 'g' : 'ml';
                 }
@@ -350,11 +402,11 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
 
                 if (presetIng) {
                     // Smart Unit Logic for VIRTUAL ingredients
-                    const isKg = presetIng.unit === 'kg';
-                    const isL = presetIng.unit === 'l' || presetIng.unit === 'litro';
+                    const isKg = (presetIng.unit as string) === 'kg';
+                    const isL = (presetIng.unit as string) === 'l' || (presetIng.unit as string) === 'litro';
 
                     const useSubUnit = (isKg || isL) && pi.quantity < 1;
-                    let displayUnit = presetIng.unit;
+                    let displayUnit: string = presetIng.unit;
                     if (useSubUnit) {
                         displayUnit = isKg ? 'g' : 'ml';
                     }
@@ -386,26 +438,61 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Basic Info */}
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="name">Nome do Produto</Label>
-                            <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="Ex: Brigadeiro Gourmet"
-                                required
-                            />
+                    {/* Basic Info & Image */}
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_200px] gap-6">
+                        <div className="space-y-4">
+                            <div>
+                                <Label htmlFor="name">Nome do Produto</Label>
+                                <Input
+                                    id="name"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    placeholder="Ex: Brigadeiro Gourmet"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="description">Descrição (opcional)</Label>
+                                <Textarea
+                                    id="description"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    placeholder="Brigadeiro de chocolate belga com granulado..."
+                                    className="h-[100px]"
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <Label htmlFor="description">Descrição (opcional)</Label>
-                            <Textarea
-                                id="description"
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                placeholder="Brigadeiro de chocolate belga com granulado..."
-                            />
+
+                        {/* Image Upload Area */}
+                        <div className="flex flex-col gap-2">
+                            <Label>Imagem do Produto</Label>
+                            <label
+                                htmlFor="product-image"
+                                className="flex-1 border-2 border-dashed rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-muted/50 transition-colors relative overflow-hidden group min-h-[140px]"
+                            >
+                                {imagePreview ? (
+                                    <>
+                                        <img src={imagePreview} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Camera className="w-8 h-8 text-white" />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center space-y-2 text-muted-foreground">
+                                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto">
+                                            <ImageIcon className="w-6 h-6" />
+                                        </div>
+                                        <span className="text-xs">Clique para adicionar</span>
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    id="product-image"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageSelect}
+                                />
+                            </label>
                         </div>
                     </div>
 
@@ -638,8 +725,8 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
 
                     {/* Actions */}
                     <div className="flex gap-2">
-                        <Button type="submit" className="flex-1">
-                            Criar Produto
+                        <Button type="submit" className="flex-1" disabled={uploading}>
+                            {uploading ? 'Criando...' : 'Criar Produto'}
                         </Button>
                         <Button type="button" variant="outline" onClick={resetForm}>
                             Cancelar

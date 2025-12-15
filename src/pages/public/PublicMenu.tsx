@@ -146,7 +146,12 @@ const PublicMenu = () => {
                         )}
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">{profile.business_name || 'Cardápio Digital'}</h1>
-                    <p className="text-gray-500 mt-1 flex items-center justify-center gap-2">
+                    {profile.description && (
+                        <p className="text-sm text-gray-600 mt-2 mb-3 max-w-sm mx-auto leading-relaxed">
+                            {profile.description}
+                        </p>
+                    )}
+                    <p className="text-gray-500 flex items-center justify-center gap-2 text-xs uppercase tracking-wide font-medium">
                         <MessageCircle className="w-4 h-4" /> Faça seu pedido pelo WhatsApp
                     </p>
                 </div>

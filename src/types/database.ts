@@ -4,6 +4,10 @@ export type Profile = {
     id: string;
     business_name: string | null;
     phone: string | null;
+    logo_url?: string | null;
+    description?: string | null;
+    banner_url?: string | null;
+    color_theme?: string | null;
     created_at: string;
     updated_at: string;
 };

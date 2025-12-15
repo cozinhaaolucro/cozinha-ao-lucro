@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -17,16 +17,35 @@ import {
     Lock,
     Camera,
     Phone,
-    Store
+    Store,
+    Image as ImageIcon,
+    Save
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { SubscriptionManager } from '@/components/subscription/SubscriptionManager';
+import { Profile } from '@/types/database';
 
 const Settings = () => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [profile, setProfile] = useState<Profile | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const logoInputRef = useRef<HTMLInputElement>(null);
+
+    // Initial load of profile data
+    useEffect(() => {
+        if (user) {
+            supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single()
+                .then(({ data }) => {
+                    if (data) setProfile(data);
+                });
+        }
+    }, [user]);
 
     // Get user data
     const fullName = user?.user_metadata?.full_name || '';
@@ -104,6 +123,76 @@ const Settings = () => {
             toast.error('Erro ao atualizar foto');
         } finally {
             setUploading(false);
+        }
+    };
+
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user || !profile) return;
+
+        setUploading(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `logo_${user.id}_${Date.now()}.${fileExt}`;
+
+            // Using product-images bucket for public access as configured
+            const { error: uploadError } = await supabase.storage
+                .from('product-images')
+                .upload(fileName, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+                .from('product-images')
+                .getPublicUrl(fileName);
+
+            const publicUrl = data.publicUrl;
+
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
+                .eq('id', user.id);
+
+            if (updateError) throw updateError;
+
+            setProfile({ ...profile, logo_url: publicUrl });
+            toast.success('Logo atualizada com sucesso!');
+        } catch (error) {
+            console.error('Error uploading logo:', error);
+            toast.error('Erro ao atualizar logo');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleSaveMenuSettings = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        if (!user || !profile) return;
+
+        const formData = new FormData(e.target as HTMLFormElement);
+        const businessName = formData.get('business_name') as string;
+        const description = formData.get('description') as string;
+
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    business_name: businessName,
+                    description: description,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id);
+
+            if (error) throw error;
+
+            setProfile({ ...profile, business_name: businessName, description });
+            toast.success('Configurações do cardápio salvas!');
+        } catch (error) {
+            console.error('Error saving menu settings:', error);
+            toast.error('Erro ao salvar configurações');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -253,60 +342,116 @@ const Settings = () => {
 
                 {/* Digital Menu Tab (Placeholder for now, re-implemented next) */}
                 <TabsContent value="menu" className="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Cardápio Digital</CardTitle>
-                            <CardDescription>
-                                Compartilhe seu menu com seus clientes e receba pedidos no WhatsApp.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="bg-muted p-4 rounded-lg flex items-center justify-between gap-4">
-                                <div className="truncate flex-1 font-mono text-sm bg-background p-2 rounded border">
-                                    {window.location.origin}/menu/{user?.id}
-                                </div>
-                                <Button
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(`${window.location.origin}/menu/${user?.id}`);
-                                        toast.success('Link copiado!');
-                                    }}
-                                    variant="secondary"
-                                >
-                                    Copiar
-                                </Button>
-                            </div>
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {/* Customization Form */}
+                        <Card className="md:order-1">
+                            <CardHeader>
+                                <CardTitle>Personalização</CardTitle>
+                                <CardDescription>
+                                    Como seu estabelecimento aparece para os clientes.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleSaveMenuSettings} className="space-y-6">
+                                    <div className="flex flex-col items-center gap-4 p-4 border rounded-lg bg-muted/20">
+                                        <div className="relative group">
+                                            <div className="w-24 h-24 rounded-full overflow-hidden bg-background border-2 border-border flex items-center justify-center">
+                                                {profile?.logo_url ? (
+                                                    <img src={profile.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Store className="w-10 h-10 text-muted-foreground" />
+                                                )}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => logoInputRef.current?.click()}
+                                                className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white font-medium text-xs"
+                                                disabled={uploading}
+                                            >
+                                                Alterar Logo
+                                            </button>
+                                        </div>
+                                        <input
+                                            ref={logoInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleLogoUpload}
+                                        />
+                                        <p className="text-xs text-muted-foreground">Clique na imagem para alterar a logo.</p>
+                                    </div>
 
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div className="border rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-4">
-                                    <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center">
-                                        {/* Placeholder for QR Code - using external API for simplicity in restoration */}
-                                        <img
-                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/menu/${user?.id}`)}`}
-                                            alt="QR Code"
-                                            className="w-full h-full object-contain mix-blend-multiply"
+                                    <div className="space-y-2">
+                                        <Label htmlFor="business_name">Nome do Estabelecimento no Cardápio</Label>
+                                        <Input
+                                            id="business_name"
+                                            name="business_name"
+                                            defaultValue={profile?.business_name || ''}
+                                            placeholder="Ex: Doces da Maria"
+                                            required
                                         />
                                     </div>
-                                    <p className="text-sm text-muted-foreground">Escaneie para testar</p>
-                                    <Button variant="outline" className="w-full" onClick={() => window.open(`/menu/${user?.id}`, '_blank')}>
-                                        Abrir Cardápio
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="description">Descrição / Bio</Label>
+                                        <textarea
+                                            id="description"
+                                            name="description"
+                                            defaultValue={profile?.description || ''}
+                                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            placeholder="Ex: Os melhores doces artesanais da cidade. Encomendas com 24h de antecedência."
+                                        />
+                                    </div>
+
+                                    <Button type="submit" disabled={loading} className="w-full">
+                                        <Save className="w-4 h-4 mr-2" />
+                                        Salvar Alterações
+                                    </Button>
+                                </form>
+                            </CardContent>
+                        </Card>
+
+                        {/* Sharing Card */}
+                        <Card className="md:order-2 h-fit">
+                            <CardHeader>
+                                <CardTitle>Compartilhar</CardTitle>
+                                <CardDescription>
+                                    Envie este link para seus clientes.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="bg-muted p-4 rounded-lg flex items-center justify-between gap-4">
+                                    <div className="truncate flex-1 font-mono text-sm bg-background p-2 rounded border">
+                                        {window.location.origin}/menu/{user?.id}
+                                    </div>
+                                    <Button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(`${window.location.origin}/menu/${user?.id}`);
+                                            toast.success('Link copiado!');
+                                        }}
+                                        variant="secondary"
+                                        size="sm"
+                                    >
+                                        Copiar
                                     </Button>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <h4 className="font-medium flex items-center gap-2">
-                                        <CheckCircle className="w-4 h-4 text-green-500" />
-                                        Como funciona?
-                                    </h4>
-                                    <ul className="space-y-2 text-sm text-muted-foreground">
-                                        <li>1. Seus produtos ativos aparecem automaticamente.</li>
-                                        <li>2. O cliente monta o pedido no link.</li>
-                                        <li>3. Ao finalizar, o pedido chega pronto no seu WhatsApp.</li>
-                                        <li>4. Você combina o pagamento e entrega diretamente.</li>
-                                    </ul>
+                                <div className="flex flex-col items-center justify-center text-center space-y-4">
+                                    <div className="w-40 h-40 bg-white p-2 rounded-lg border shadow-sm">
+                                        <img
+                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/menu/${user?.id}`)}`}
+                                            alt="QR Code"
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                    <Button variant="outline" className="w-full" onClick={() => window.open(`/menu/${user?.id}`, '_blank')}>
+                                        <Store className="w-4 h-4 mr-2" />
+                                        Visualizar Cardápio Público
+                                    </Button>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </TabsContent>
             </Tabs>
         </div>
