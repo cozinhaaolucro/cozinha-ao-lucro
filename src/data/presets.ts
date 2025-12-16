@@ -10,10 +10,10 @@ export const PRESET_INGREDIENTS = [
     { name: 'Açúcar Refinado', unit: 'kg', cost_per_unit: 4.50, stock_quantity: 0 },
     { name: 'Manteiga', unit: 'kg', cost_per_unit: 50.00, stock_quantity: 0 }, // R$ 10.00/200g -> 50.00/kg
     { name: 'Ovos', unit: 'unidade', cost_per_unit: 1.00, stock_quantity: 0 }, // R$ 12.00/dz -> 1.00/un
-    { name: 'Leite Integral', unit: 'litro', cost_per_unit: 5.00, stock_quantity: 0 },
+    { name: 'Leite Integral', unit: 'l', cost_per_unit: 5.00, stock_quantity: 0 },
     { name: 'Chocolate Nobre Barra', unit: 'kg', cost_per_unit: 60.00, stock_quantity: 0 },
     { name: 'Granulado', unit: 'kg', cost_per_unit: 36.00, stock_quantity: 0 }, // R$ 18.00/500g -> 36.00/kg
-    { name: 'Chantilly', unit: 'litro', cost_per_unit: 16.00, stock_quantity: 0 },
+    { name: 'Chantilly', unit: 'l', cost_per_unit: 16.00, stock_quantity: 0 },
     { name: 'Nutella', unit: 'kg', cost_per_unit: 71.40, stock_quantity: 0 }, // R$ 25.00/350g -> ~71.40/kg
 
     // Embalagens (Mantém unidade)

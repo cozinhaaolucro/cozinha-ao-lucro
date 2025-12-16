@@ -94,10 +94,11 @@ const ProductionStatusWidget = () => {
         return acc + orderPrepTime;
     }, 0);
 
+    // totalRealizedMinutes - recalculated when progressData updates (every second)
     const totalRealizedMinutes = activeOrders.reduce((acc, order) => {
         if (!order.production_started_at) return acc;
-        const elapsed = Math.floor((new Date().getTime() - new Date(order.production_started_at).getTime()) / 60000);
-        return acc + elapsed;
+        const elapsed = Math.floor((Date.now() - new Date(order.production_started_at).getTime()) / 60000);
+        return acc + Math.max(0, elapsed);
     }, 0);
 
     const formatHours = (minutes: number) => {

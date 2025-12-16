@@ -43,6 +43,9 @@ export type Order = {
     created_at: string;
     updated_at: string;
     delivered_at?: string | null;
+    production_started_at?: string | null;
+    production_completed_at?: string | null;
+    production_duration_minutes?: number | null;
 };
 
 export type OrderStatusLog = {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, memo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Order, OrderWithDetails } from '@/types/database';
@@ -16,11 +16,18 @@ const OperationsPanel = () => {
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
+    const [tick, setTick] = useState(0); // For real-time timer updates
 
-    // Polling for updates (simple real-time for MVP)
+    // Real-time timer tick (every second)
+    useEffect(() => {
+        const timer = setInterval(() => setTick(t => t + 1), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Polling for data updates (every 15s for fresher data)
     useEffect(() => {
         fetchOrders();
-        const interval = setInterval(fetchOrders, 30000); // Poll every 30s
+        const interval = setInterval(fetchOrders, 15000);
         return () => clearInterval(interval);
     }, []);
 
@@ -75,8 +82,7 @@ const OperationsPanel = () => {
         const orderProfit = (order.total_value || 0) - orderCost;
 
         return (
-            <Card className="bg-white/5 backdrop-blur-md border-white/10 text-white overflow-hidden group hover:border-white/20 transition-all duration-300 shadow-lg relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            <Card className="bg-white/5 backdrop-blur-md border-white/10 text-white overflow-hidden shadow-lg relative hover:border-white/20 transition-colors duration-200">
 
                 <CardHeader className="pb-2 relative z-10">
                     <div className="flex justify-between items-start">
@@ -163,17 +169,34 @@ const OperationsPanel = () => {
         return acc + orderPrepTime;
     }, 0);
 
-    // "Realized Hours": Sum of time spent on...
-    const totalRealizedMinutes = orders.reduce((acc, order) => {
-        if (!order.production_started_at) return acc;
-        let elapsed = 0;
-        if (order.status === 'preparing') {
-            elapsed = Math.floor((new Date().getTime() - new Date(order.production_started_at).getTime()) / 60000);
-        } else if ((order.status === 'ready' || order.status === 'delivered') && order.updated_at && isToday(new Date(order.updated_at))) {
-            elapsed = Math.floor((new Date(order.updated_at).getTime() - new Date(order.production_started_at).getTime()) / 60000);
-        }
-        return acc + (elapsed > 0 ? elapsed : 0);
-    }, 0);
+    // "Horas Realizadas": Sum of production time for ALL orders worked on TODAY
+    // - For 'preparing': real-time calculation (now - started_at)
+    // - For 'ready'/'delivered': use production_completed_at - started_at (locked time)
+    // - Tick dependency forces re-render every second
+    const totalRealizedMinutes = useMemo(() => {
+        return orders.reduce((acc, order) => {
+            if (!order.production_started_at) return acc;
+
+            // Check if this order was worked on today
+            const startDate = new Date(order.production_started_at);
+            if (!isToday(startDate)) return acc;
+
+            let elapsed = 0;
+
+            if (order.status === 'preparing') {
+                // Active order: calculate real-time
+                elapsed = Math.floor((Date.now() - startDate.getTime()) / 60000);
+            } else if (order.status === 'ready' || order.status === 'delivered') {
+                // Completed order: use locked time
+                if (order.production_completed_at) {
+                    const endDate = new Date(order.production_completed_at);
+                    elapsed = Math.floor((endDate.getTime() - startDate.getTime()) / 60000);
+                }
+            }
+
+            return acc + Math.max(0, elapsed);
+        }, 0);
+    }, [orders, tick]);
 
     const formatHours = (minutes: number) => {
         const h = Math.floor(minutes / 60);
@@ -186,15 +209,15 @@ const OperationsPanel = () => {
     const totalDailyProfit = dailyProfitOrders.reduce((acc, order) => acc + ((order.total_value || 0) - calculateOrderCost(order)), 0);
 
     return (
-        <div className="min-h-screen bg-slate-900 p-6 md:p-8 font-sans selection:bg-blue-500/30">
+        <div className="-m-4 md:-m-8 min-h-screen w-[calc(100%+2rem)] md:w-[calc(100%+4rem)] bg-slate-900">
             {/* Ambient Background */}
-            <div className="fixed inset-0 pointer-events-none">
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-[120px]" />
             </div>
 
-            <div className="max-w-7xl mx-auto relative z-10">
-                <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+            <div className="relative z-10 p-6 md:p-8 max-w-7xl mx-auto">
+                <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8 overflow-visible">
                     <div>
                         <h1 className="text-4xl font-extrabold tracking-tight text-white mb-2 flex items-center gap-3">
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
@@ -209,13 +232,13 @@ const OperationsPanel = () => {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 overflow-visible">
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px] hover:bg-white/10 transition-colors cursor-help group relative">
                             <span className="text-[10px] md:text-xs text-neutral-400 uppercase tracking-wider font-bold mb-1">Tempo Estimado</span>
                             <span className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
                                 {formatHours(totalEstimatedTime)}
                             </span>
-                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-black/90 text-white text-xs p-2 rounded hidden group-hover:block z-50 pointer-events-none">
+                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-neutral-900 text-white text-xs p-2 rounded shadow-xl border border-white/10 hidden group-hover:block z-[100] pointer-events-none">
                                 Soma do tempo de preparo de todos pedidos ativos.
                             </div>
                         </div>
@@ -225,7 +248,7 @@ const OperationsPanel = () => {
                             <span className="text-xl md:text-2xl font-bold text-blue-400 flex items-center gap-2">
                                 {formatHours(totalRealizedMinutes)}
                             </span>
-                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-black/90 text-white text-xs p-2 rounded hidden group-hover:block z-50 pointer-events-none">
+                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-neutral-900 text-white text-xs p-2 rounded shadow-xl border border-white/10 hidden group-hover:block z-[100] pointer-events-none">
                                 Tempo total gasto nos pedidos hoje (Finalizados + Ativos).
                             </div>
                         </div>

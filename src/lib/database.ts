@@ -249,11 +249,18 @@ export const updateOrderStatus = async (orderId: string, newStatus: string, prev
     if (!user) return { error: new Error('Usuario não autenticado') };
 
     const updates: any = { status: newStatus };
-    if (newStatus === 'ready') {
-        // If "ready", we might interpret as kitchen done.
-        // But user wants "delivered_at" specifically for "entregue/pago".
-        // Let's assume "delivered" status sets this.
+
+    // Set production_started_at when moving to 'preparing'
+    if (newStatus === 'preparing' && previousStatus !== 'preparing') {
+        updates.production_started_at = new Date().toISOString();
     }
+
+    // Set production_completed_at when moving to 'ready'
+    if (newStatus === 'ready' && previousStatus === 'preparing') {
+        updates.production_completed_at = new Date().toISOString();
+    }
+
+    // Set delivered_at when moving to 'delivered'
     if (newStatus === 'delivered') {
         updates.delivered_at = new Date().toISOString();
     }
