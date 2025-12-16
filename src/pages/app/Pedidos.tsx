@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Phone, Filter, Pencil, Download } from 'lucide-react';
+import { Plus, Phone, Filter, Pencil, Download, Upload } from 'lucide-react';
 import { getOrders, deductStockFromOrder } from '@/lib/database';
 import { exportToExcel, importFromExcel } from '@/lib/excel';
 import { supabase } from '@/lib/supabase';
@@ -182,8 +182,8 @@ const Pedidos = () => {
                             }}
                             title="Importar Excel"
                         />
-                        <Button variant="outline" size="icon">
-                            <Download className="w-4 h-4 rotate-180" /> {/* Upload icon simulation */}
+                        <Button variant="outline" size="icon" title="Importar Excel">
+                            <Upload className="w-4 h-4" />
                         </Button>
                     </div>
                     <Button variant="outline" size="icon" onClick={handleExport} title="Exportar Excel">
