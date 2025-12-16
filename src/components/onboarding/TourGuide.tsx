@@ -15,25 +15,43 @@ const steps: Step[] = [
     {
         targetId: 'nav-dashboard',
         title: 'Seu Painel de Controle',
-        description: 'Aqui você tem uma visão geral do lucro, receita e pedidos do dia.',
+        description: 'Visão geral do negócio: lucros, receitas e atalhos rápidos.',
         position: 'right'
     },
     {
         targetId: 'nav-pedidos',
-        title: 'Gerencie Pedidos',
-        description: 'Adicione novos pedidos, calcule custos automaticamente e mude o status para "Entregue".',
+        title: 'Central de Pedidos',
+        description: 'Gerencie novos pedidos, mude status e organize suas entregas.',
+        position: 'right'
+    },
+    {
+        targetId: 'nav-agenda',
+        title: 'Agenda Inteligente',
+        description: 'Visualize suas entregas em um calendário e sincronize com o Google Agenda.',
         position: 'right'
     },
     {
         targetId: 'nav-produtos',
-        title: 'Seus Produtos',
-        description: 'Cadastre suas receitas e ingredientes. O sistema calcula o preço ideal de venda para você!',
+        title: 'Produtos & Fichas Técnicas',
+        description: 'Cadastre suas receitas com custos automáticos e defina seus preços de venda.',
         position: 'right'
     },
     {
-        targetId: 'nav-compras',
-        title: 'Lista de Compras Inteligente',
-        description: 'Gere listas de compras baseadas nos pedidos da semana, descontando o que já tem no estoque.',
+        targetId: 'nav-financeiro',
+        title: 'Fluxo de Caixa',
+        description: 'Controle todas as entradas e saídas e veja relatórios detalhados.',
+        position: 'right'
+    },
+    {
+        targetId: 'nav-menu',
+        title: 'Seu Cardápio Digital',
+        description: 'Configure como seus clientes veem seus produtos e compartilhe seu link.',
+        position: 'right'
+    },
+    {
+        targetId: 'nav-aprender',
+        title: 'Área de Estudo',
+        description: 'Acesse materiais educativos para crescer seu negócio.',
         position: 'right'
     }
 ];

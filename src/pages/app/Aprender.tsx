@@ -54,10 +54,13 @@ const Aprender = () => {
                         <CardContent className="space-y-2">
                             <Button
                                 className="w-full gap-2"
-                                onClick={() => window.open(ebook.file, '_blank')}
+                                onClick={() => {
+                                    // Open in new tab/window
+                                    window.open(ebook.file, '_blank', 'noopener,noreferrer');
+                                }}
                             >
                                 <BookOpen className="w-4 h-4" />
-                                Abrir PDF
+                                Ler Agora
                             </Button>
                             <Button
                                 variant="outline"

@@ -89,7 +89,29 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                             <Card key={product.id} className="hover:shadow-lg transition-shadow">
                                 <CardHeader className="pb-3">
                                     <div className="flex items-start justify-between">
-                                        <CardTitle className="text-lg">{product.name}</CardTitle>
+                                        <div className="flex items-center gap-3">
+                                            {product.image_url ? (
+                                                <div className="w-12 h-12 rounded-md overflow-hidden bg-muted">
+                                                    <img
+                                                        src={product.image_url}
+                                                        alt={product.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground font-medium">
+                                                    Foto
+                                                </div>
+                                            )}
+                                            <div>
+                                                <CardTitle className="text-lg line-clamp-1">{product.name}</CardTitle>
+                                                <div className="flex gap-2 mt-1">
+                                                    <Badge variant={margin >= 60 ? "default" : "secondary"}>
+                                                        {margin.toFixed(0)}% margem
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <div className="flex gap-2">
                                             <Button
                                                 variant="ghost"
@@ -98,9 +120,6 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                             >
                                                 <Pencil className="w-4 h-4" />
                                             </Button>
-                                            <Badge variant={margin >= 60 ? "default" : "secondary"}>
-                                                {margin.toFixed(0)}% margem
-                                            </Badge>
                                         </div>
                                     </div>
                                     {product.description && (

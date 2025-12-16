@@ -37,7 +37,6 @@ export const PRESET_PRODUCTS = [
         description: 'Receita completa para um cento de festa (aprox. 50 unidades de 12g).',
         selling_price: 120.00, // ~R$ 2.40/unidade se vendida solta, mas aqui é o cento/batch
         active: true,
-        image_url: 'https://images.unsplash.com/photo-1579372786545-d24232daf58c',
         ingredients: [
             { name: 'Leite Condensado', quantity: 0.395 }, // 1 lata (395g)
             { name: 'Creme de Leite', quantity: 0.200 }, // 1 caixa (200g)
@@ -52,7 +51,6 @@ export const PRESET_PRODUCTS = [
         description: 'Massa fofinha de chocolate, recheio cremoso de Ninho e Nutella pura.',
         selling_price: 12.00,
         active: true,
-        image_url: 'https://images.unsplash.com/photo-1571115177098-24ec42ed204d',
         ingredients: [
             { name: 'Farinha de Trigo', quantity: 0.050 }, // 50g
             { name: 'Ovos', quantity: 1 }, // 1 ovo
@@ -68,7 +66,6 @@ export const PRESET_PRODUCTS = [
         description: 'Brownie úmido por dentro e casquinha crocante, recheado com doce de leite.',
         selling_price: 8.00,
         active: true,
-        image_url: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476d',
         ingredients: [
             { name: 'Chocolate Nobre Barra', quantity: 0.050 }, // 50g
             { name: 'Manteiga', quantity: 0.010 }, // 10g
@@ -82,7 +79,6 @@ export const PRESET_PRODUCTS = [
         description: 'Super cremoso, feito com base de leite ninho e leite condensado.',
         selling_price: 5.00,
         active: true,
-        image_url: 'https://images.unsplash.com/photo-1623654605953-ad793448a39b',
         ingredients: [
             { name: 'Leite Integral', quantity: 0.100 }, // 100ml
             { name: 'Leite Condensado', quantity: 0.050 }, // 50g
@@ -94,7 +90,6 @@ export const PRESET_PRODUCTS = [
         description: 'Camadas de brownie, creme de morango e ganache de chocolate.',
         selling_price: 18.00,
         active: true,
-        image_url: 'https://images.unsplash.com/photo-1563729768-6af7846bd387',
         ingredients: [
             { name: 'Copo Bolha', quantity: 1 },
             { name: 'Chocolate Nobre Barra', quantity: 0.050 }, // 50g
@@ -108,7 +103,6 @@ export const PRESET_PRODUCTS = [
         description: 'Refeição equilibrada com 150g de frango grelhado e 100g de purê de batata doce.',
         selling_price: 22.00,
         active: true,
-        image_url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
         ingredients: [
             { name: 'Peito de Frango', quantity: 0.150 }, // 150g
             { name: 'Batata Doce', quantity: 0.100 }, // 100g
@@ -121,7 +115,6 @@ export const PRESET_PRODUCTS = [
         description: 'Receita para produção de 30 trufas médias (~40g cada).',
         selling_price: 90.00, // ~R$ 3.00/unidade nesse lote
         active: true,
-        image_url: 'https://images.unsplash.com/photo-1605692608409-5e7834517316',
         ingredients: [
             { name: 'Chocolate Nobre Barra', quantity: 0.500 }, // 500g (casca + ganache)
             { name: 'Creme de Leite', quantity: 0.200 }, // 200g (ganache)
