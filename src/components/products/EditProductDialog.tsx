@@ -34,6 +34,7 @@ const EditProductDialog = ({ product, open, onOpenChange, onSuccess }: EditProdu
         description: '',
         selling_price: 0,
         selling_unit: 'unidade',
+        active: true,
     });
     const [selectedIngredients, setSelectedIngredients] = useState<Array<{ ingredient_id: string; quantity: number }>>([]);
 
@@ -54,6 +55,7 @@ const EditProductDialog = ({ product, open, onOpenChange, onSuccess }: EditProdu
                     description: product.description || '',
                     selling_price: product.selling_price || 0,
                     selling_unit: (product as ProductWithIngredients & { selling_unit?: string }).selling_unit || 'unidade',
+                    active: product.active !== false, // Default to true if null/undefined
                 });
                 setSelectedIngredients(
                     product.product_ingredients?.map(pi => ({
@@ -153,6 +155,7 @@ const EditProductDialog = ({ product, open, onOpenChange, onSuccess }: EditProdu
                     selling_price: formData.selling_price,
                     selling_unit: formData.selling_unit,
                     image_url: imageUrl,
+                    active: formData.active,
                     updated_at: new Date().toISOString(),
                 })
                 .eq('id', product.id);
@@ -252,8 +255,22 @@ const EditProductDialog = ({ product, open, onOpenChange, onSuccess }: EditProdu
                                         <SelectItem value="pacote">Pacote</SelectItem>
                                         <SelectItem value="duzia">Dúzia</SelectItem>
                                         <SelectItem value="caixa">Caixa</SelectItem>
+                                        <SelectItem value="caixa">Caixa</SelectItem>
                                     </SelectContent>
                                 </Select>
+                            </div>
+
+                            <div className="flex items-center space-x-2 pt-2">
+                                <input
+                                    type="checkbox"
+                                    id="active"
+                                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    checked={formData.active}
+                                    onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                                />
+                                <Label htmlFor="active" className="cursor-pointer">
+                                    Produto Ativo (Visível no Cardápio)
+                                </Label>
                             </div>
                         </div>
 

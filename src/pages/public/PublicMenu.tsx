@@ -13,6 +13,7 @@ interface ExtendedProfile extends Profile {
     logo_url?: string;
     banner_url?: string;
     color_theme?: string;
+    slug?: string | null;
 }
 
 interface CartItem {
@@ -20,8 +21,13 @@ interface CartItem {
     quantity: number;
 }
 
+// Regex to check if string is a valid UUID
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const PublicMenu = () => {
-    const { userId } = useParams<{ userId: string }>();
+    // We use a generic 'identifier' which can be userId OR slug
+    const { userId: identifier } = useParams<{ userId: string }>();
+
     const [profile, setProfile] = useState<ExtendedProfile | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
     const [cart, setCart] = useState<CartItem[]>([]);
@@ -31,33 +37,58 @@ const PublicMenu = () => {
     const { toast } = useToast();
 
     useEffect(() => {
-        if (userId) {
+        if (identifier) {
             loadMenuData();
         }
-    }, [userId]);
+    }, [identifier]);
 
     const loadMenuData = async () => {
         setLoading(true);
-        // 1. Fetch Profile
-        const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single();
+        if (!identifier) return;
 
-        if (profileError) {
-            console.error('Error fetching profile:', profileError);
-            setLoading(false);
-            return;
+        let profileId = identifier;
+
+        // 1. Determine if identifier is ID or Slug
+        const isUuid = UUID_REGEX.test(identifier);
+
+        if (!isUuid) {
+            // It's a slug, fetch profile by slug to get ID
+            const { data: slugProfile, error: slugError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('slug', identifier)
+                .single();
+
+            if (slugError || !slugProfile) {
+                console.error('Error fetching profile by slug:', slugError);
+                setLoading(false);
+                return;
+            }
+            setProfile(slugProfile);
+            profileId = slugProfile.id;
+        } else {
+            // It's a UUID, fetch directly
+            const { data: profileData, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', profileId)
+                .single();
+
+            if (profileError) {
+                console.error('Error fetching profile:', profileError);
+                setLoading(false);
+                return;
+            }
+            setProfile(profileData);
         }
-        setProfile(profileData);
 
-        // 2. Fetch Active Products
+        // 2. Fetch Active Products (using the resolved profileId)
+        // We handle 'active' being null as true for backward compatibility
         const { data: productsData, error: productsError } = await supabase
             .from('products')
             .select('*')
-            .eq('user_id', userId)
-            .eq('active', true)
+            .eq('user_id', profileId)
+            .or('active.eq.true,active.is.null') // Fetch active or null (legacy)
             .order('name');
 
         if (productsError) console.error(productsError);
@@ -166,37 +197,38 @@ const PublicMenu = () => {
                 ) : (
                     products.map(product => (
                         <Card key={product.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow">
-                            <CardContent className="p-0 flex">
+                            <CardContent className="p-0 flex items-center">
                                 {product.image_url && (
                                     <div className="w-24 h-24 bg-gray-100 flex-shrink-0">
                                         <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                                     </div>
                                 )}
-                                <div className="p-4 flex-1 flex flex-col justify-between">
-                                    <div>
-                                        <div className="flex justify-between items-start">
-                                            <h3 className="font-semibold text-gray-900 line-clamp-1">{product.name}</h3>
-                                            <Badge variant="outline" className="font-bold text-lg text-primary border-primary bg-primary/5 px-3 py-1">
-                                                R$ {product.selling_price?.toFixed(2)}
-                                            </Badge>
+                                <div className="p-4 flex-1 flex flex-col justify-between h-full min-h-[6rem]">
+                                    <div className="flex justify-between items-start gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-gray-900 line-clamp-2 leading-tight">{product.name}</h3>
+                                            <p className="text-xs text-gray-500 line-clamp-2 mt-1">{product.description}</p>
                                         </div>
-                                        <p className="text-sm text-gray-500 line-clamp-2 mt-1">{product.description}</p>
+                                        <Badge variant="outline" className="font-bold text-base text-primary border-primary bg-primary/5 px-2 py-0.5 whitespace-nowrap flex-shrink-0">
+                                            R$ {product.selling_price?.toFixed(2)}
+                                        </Badge>
                                     </div>
+
                                     <div className="mt-3 flex justify-end">
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2">
                                             {cart.find(i => i.product.id === product.id) ? (
-                                                <div className="flex items-center bg-orange-50 rounded-lg p-1">
+                                                <div className="flex items-center bg-orange-50 rounded-lg p-1 border border-orange-100">
                                                     <Button
-                                                        variant="ghost" size="icon" className="h-6 w-6 text-orange-600 hover:text-orange-700"
+                                                        variant="ghost" size="icon" className="h-7 w-7 text-orange-600 hover:text-orange-700 hover:bg-orange-200 rounded-md"
                                                         onClick={() => removeFromCart(product.id)}
                                                     >
                                                         <Minus className="w-3 h-3" />
                                                     </Button>
-                                                    <span className="w-6 text-center text-sm font-medium text-orange-700">
+                                                    <span className="w-8 text-center text-sm font-bold text-orange-700">
                                                         {cart.find(i => i.product.id === product.id)?.quantity}
                                                     </span>
                                                     <Button
-                                                        variant="ghost" size="icon" className="h-6 w-6 text-orange-600 hover:text-orange-700"
+                                                        variant="ghost" size="icon" className="h-7 w-7 text-orange-600 hover:text-orange-700 hover:bg-orange-200 rounded-md"
                                                         onClick={() => addToCart(product)}
                                                     >
                                                         <Plus className="w-3 h-3" />
@@ -218,7 +250,7 @@ const PublicMenu = () => {
 
             {/* Floating Cart Footer */}
             {cart.length > 0 && (
-                <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50 p-4">
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50 p-4 safe-area-pb">
                     <div className="max-w-md mx-auto space-y-4">
                         <div className="flex justify-between items-center mb-2">
                             <div className="flex items-start gap-2 text-sm text-gray-600">
@@ -256,7 +288,7 @@ const PublicMenu = () => {
                             </div>
                         </div>
 
-                        <Button className="w-full bg-green-500 hover:bg-green-600 text-white gap-2 h-12 text-lg font-semibold" onClick={handleCheckout}>
+                        <Button className="w-full bg-green-500 hover:bg-green-600 text-white gap-2 h-12 text-lg font-semibold shadow-md active:scale-[0.98] transition-all" onClick={handleCheckout}>
                             <MessageCircle className="w-5 h-5" />
                             Enviar Pedido no WhatsApp
                         </Button>

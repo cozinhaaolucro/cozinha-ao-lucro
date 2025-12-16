@@ -173,6 +173,8 @@ const Settings = () => {
         const formData = new FormData(e.target as HTMLFormElement);
         const businessName = formData.get('business_name') as string;
         const description = formData.get('description') as string;
+        let slug = formData.get('slug') as string;
+        slug = slug ? slug.toLowerCase().replace(/[^a-z0-9-]/g, '') : ''; // Sanitize
 
         try {
             const { error } = await supabase
@@ -180,13 +182,19 @@ const Settings = () => {
                 .update({
                     business_name: businessName,
                     description: description,
+                    slug: slug || null,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', user.id);
 
-            if (error) throw error;
+            if (error) {
+                if (error.code === '23505') { // Unique violation
+                    throw new Error('Este link personalizado já está em uso. Escolha outro.');
+                }
+                throw error;
+            }
 
-            setProfile({ ...profile, business_name: businessName, description });
+            setProfile({ ...profile, business_name: businessName, description, slug: slug || null });
             toast.success('Configurações do cardápio salvas!');
         } catch (error) {
             console.error('Error saving menu settings:', error);
@@ -393,6 +401,22 @@ const Settings = () => {
                                     </div>
 
                                     <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <Label htmlFor="slug">Link Personalizado</Label>
+                                            <span className="text-xs text-muted-foreground">{window.location.host}/menu/{profile?.slug || 'seu-nome'}</span>
+                                        </div>
+                                        <Input
+                                            id="slug"
+                                            name="slug"
+                                            defaultValue={profile?.slug || ''}
+                                            placeholder="ex: doces-da-maria"
+                                            pattern="^[a-z0-9-]+$"
+                                            title="Apenas letras minúsculas, números e hífens."
+                                        />
+                                        <p className="text-xs text-muted-foreground">Deixe em branco para usar apenas o link padrão.</p>
+                                    </div>
+
+                                    <div className="space-y-2">
                                         <Label htmlFor="description">Descrição / Bio</Label>
                                         <textarea
                                             id="description"
@@ -422,11 +446,11 @@ const Settings = () => {
                             <CardContent className="space-y-6">
                                 <div className="bg-muted p-4 rounded-lg flex items-center justify-between gap-4">
                                     <div className="truncate flex-1 font-mono text-sm bg-background p-2 rounded border">
-                                        {window.location.origin}/menu/{user?.id}
+                                        {window.location.origin}/menu/{profile?.slug || user?.id}
                                     </div>
                                     <Button
                                         onClick={() => {
-                                            navigator.clipboard.writeText(`${window.location.origin}/menu/${user?.id}`);
+                                            navigator.clipboard.writeText(`${window.location.origin}/menu/${profile?.slug || user?.id}`);
                                             toast.success('Link copiado!');
                                         }}
                                         variant="secondary"
@@ -439,15 +463,20 @@ const Settings = () => {
                                 <div className="flex flex-col items-center justify-center text-center space-y-4">
                                     <div className="w-40 h-40 bg-white p-2 rounded-lg border shadow-sm">
                                         <img
-                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/menu/${user?.id}`)}`}
+                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/menu/${profile?.slug || user?.id}`)}`}
                                             alt="QR Code"
                                             className="w-full h-full object-contain"
                                         />
                                     </div>
-                                    <Button variant="outline" className="w-full" onClick={() => window.open(`/menu/${user?.id}`, '_blank')}>
+                                    <Button variant="outline" className="w-full" onClick={() => window.open(`/menu/${profile?.slug || user?.id}`, '_blank')}>
                                         <Store className="w-4 h-4 mr-2" />
                                         Visualizar Cardápio Público
                                     </Button>
+                                    {profile?.slug && (
+                                        <p className="text-xs text-muted-foreground">
+                                            Seu link personalizado está ativo!
+                                        </p>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

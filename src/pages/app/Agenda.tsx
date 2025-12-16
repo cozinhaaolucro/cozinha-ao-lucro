@@ -10,7 +10,7 @@ import { parseLocalDate, formatLocalDate } from '@/lib/dateUtils';
 import EditOrderDialog from '@/components/orders/EditOrderDialog';
 import { generateWhatsAppLink, getDefaultTemplateForStatus, parseMessageTemplate } from '@/lib/crm';
 import { toast } from '@/components/ui/use-toast';
-
+import { supabase } from '@/lib/supabase';
 import { createCalendarEvent } from '@/lib/googleCalendar';
 
 const Agenda = () => {
@@ -23,10 +23,35 @@ const Agenda = () => {
     const [editingOrder, setEditingOrder] = useState<OrderWithDetails | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
 
+    const handleConnectGoogle = async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                scopes: 'https://www.googleapis.com/auth/calendar',
+                redirectTo: window.location.href
+            }
+        });
+        if (error) {
+            toast({ title: 'Erro ao conectar Google', description: error.message, variant: 'destructive' });
+        }
+    };
+
     const handleSyncToCalendar = async () => {
         setIsSyncing(true);
         try {
-            const pendingOrders = orders.filter(o => o.status !== 'cancelled' && o.delivery_date);
+            // Filter orders that are not cancelled, have delivery date, and NOT already synced
+            const pendingOrders = orders.filter(o =>
+                o.status !== 'cancelled' &&
+                o.delivery_date &&
+                !o.google_event_id // Check if already synced
+            );
+
+            if (pendingOrders.length === 0) {
+                toast({ title: 'Tudo sincronizado', description: 'Nenhum pedido novo para enviar.' });
+                setIsSyncing(false);
+                return;
+            }
+
             let syncedCount = 0;
 
             for (const order of pendingOrders) {
@@ -50,14 +75,39 @@ const Agenda = () => {
                     end: { dateTime: endDateTime.toISOString() }
                 };
 
-                await createCalendarEvent(event);
-                syncedCount++;
+                // Create event
+                const createdEvent = await createCalendarEvent(event);
+
+                if (createdEvent && createdEvent.id) {
+                    // Save event ID to order
+                    const { error } = await supabase // Use global supabase client, assuming it's imported or available
+                        .from('orders')
+                        .update({ google_event_id: createdEvent.id })
+                        .eq('id', order.id);
+
+                    if (!error) {
+                        syncedCount++;
+                    } else {
+                        console.error('Failed to save event ID for order', order.id, error);
+                    }
+                }
             }
 
-            toast({ title: 'Sincronização concluída', description: `${syncedCount} pedidos enviados para o Google Agenda.` });
+            if (syncedCount > 0) {
+                toast({ title: 'Sincronização concluída', description: `${syncedCount} pedidos enviados.` });
+                loadOrders(); // Reload to update state
+            } else {
+                toast({ title: 'Erro parcial', description: 'Não foi possível salvar alguns eventos.' });
+            }
+
         } catch (error) {
             console.error(error);
-            toast({ title: 'Erro na sincronização', description: 'Verifique se você fez login com Google.', variant: 'destructive' });
+            toast({
+                title: 'Erro na sincronização',
+                description: 'É necessário conectar sua conta Google.',
+                variant: 'destructive',
+                action: <Button onClick={handleConnectGoogle} variant="outline" size="sm">Conectar Google</Button>
+            });
         } finally {
             setIsSyncing(false);
         }
@@ -338,7 +388,7 @@ const Agenda = () => {
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-3">
+                    <CardContent className="p-3 max-h-[600px] overflow-y-auto">
                         <div className="grid grid-cols-7 gap-1">
                             {weekDays.map(day => (
                                 <div key={day} className="text-center text-xs font-medium text-muted-foreground h-7 flex items-center justify-center">
