@@ -133,9 +133,12 @@ const Dashboard = () => {
         }, 0);
     };
 
-    // Stock vs demand analysis for pending/preparing orders
+    // Stock vs demand analysis for pending orders (Future Demand)
     const calculateStockDemand = (): StockDemandAnalysis[] => {
-        const pending = orders.filter(o => o.status === 'pending' || o.status === 'preparing');
+        // We ONLY look at 'pending' orders for demand forecast.
+        // 'preparing' orders have ALREADY triggered the stock deduction in the DB.
+        // If we count 'preparing' here, we would be double-counting the usage against the already reduced stock.
+        const pending = orders.filter(o => o.status === 'pending');
         const demandMap = new Map<string, number>();
         pending.forEach(order => {
             order.items?.forEach(item => {

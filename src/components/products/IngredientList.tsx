@@ -238,253 +238,251 @@ const IngredientList = () => {
         e.target.value = '';
     };
 
-    return (
-        <div className="space-y-4">
-            {/* Toolbar */}
-            const [activeOrders, setActiveOrders] = useState<any[]>([]);
+
+    const [activeOrders, setActiveOrders] = useState<any[]>([]);
 
     useEffect(() => {
         const loadActiveOrders = async () => {
-             const {data} = await getOrders();
+            const { data } = await getOrders();
             if (data) {
                 setActiveOrders(data.filter(o => ['pending', 'preparing'].includes(o.status)));
-             }
+            }
         };
-            loadActiveOrders();
+        loadActiveOrders();
     }, []);
 
     const getDemand = (ingredientId: string) => {
-                let demand = 0;
+        let demand = 0;
         activeOrders.forEach(order => {
-                order.items?.forEach((item: any) => {
-                    // Check if product has ingredients (needs to be fetched with product details in getOrders, which it is)
-                    item.product?.product_ingredients?.forEach((pi: any) => {
-                        if (pi.ingredient_id === ingredientId) {
-                            demand += pi.quantity * item.quantity;
-                        }
-                    });
+            order.items?.forEach((item: any) => {
+                // Check if product has ingredients (needs to be fetched with product details in getOrders, which it is)
+                item.product?.product_ingredients?.forEach((pi: any) => {
+                    if (pi.ingredient_id === ingredientId) {
+                        demand += pi.quantity * item.quantity;
+                    }
                 });
+            });
         });
-            return demand;
+        return demand;
     };
 
     const getStatusColor = (stock: number, demand: number) => {
         if (demand === 0) return stock > 0 ? 'bg-green-500/5 border-l-green-500' : 'bg-gray-100 border-l-gray-300'; // No demand: Green if stock exists, else Grey
 
-            const ratio = stock / demand;
+        const ratio = stock / demand;
         if (ratio >= 1) return 'bg-green-500/10 border-l-green-500'; // Sufficient stock
         if (ratio >= 0.5) return 'bg-yellow-500/10 border-l-yellow-500'; // Low/Tight stock
-            return 'bg-red-500/10 border-l-red-500'; // Critical shortage
+        return 'bg-red-500/10 border-l-red-500'; // Critical shortage
     };
 
-            return (
-            <div className="space-y-4">
-                {/* Toolbar */}
-                {/* ... toolbar ... */}
-                <div className="flex items-center justify-between bg-card p-4 rounded-lg border shadow-sm">
-                    {/* ... */}
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <Checkbox
-                                checked={ingredients.length > 0 && selectedIngredients.length === ingredients.length}
-                                onCheckedChange={toggleSelectAll}
-                            />
-                            <span className="text-sm text-muted-foreground">
-                                {selectedIngredients.length} selecionados
-                            </span>
-                        </div>
-                        {selectedIngredients.length > 0 && (
-                            <div className="flex gap-2">
-                                <Button variant="outline" size="sm" onClick={() => setIsBulkEditDialogOpen(true)}>
-                                    <Pencil className="w-4 h-4 mr-2" />
-                                    Editar em Massa
-                                </Button>
-                                <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Excluir
-                                </Button>
-                            </div>
-                        )}
+    return (
+        <div className="space-y-4">
+            {/* Toolbar */}
+            {/* ... toolbar ... */}
+            <div className="flex items-center justify-between bg-card p-4 rounded-lg border shadow-sm">
+                {/* ... */}
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <Checkbox
+                            checked={ingredients.length > 0 && selectedIngredients.length === ingredients.length}
+                            onCheckedChange={toggleSelectAll}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                            {selectedIngredients.length} selecionados
+                        </span>
                     </div>
-                    <div className="flex gap-2">
-                        <div className="relative">
-                            <input
-                                type="file"
-                                accept=".xlsx, .xls"
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                onChange={handleImport}
-                                title="Importar Excel"
-                            />
-                            <Button variant="outline" size="icon" title="Importar Excel">
-                                <Upload className="w-4 h-4" />
+                    {selectedIngredients.length > 0 && (
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setIsBulkEditDialogOpen(true)}>
+                                <Pencil className="w-4 h-4 mr-2" />
+                                Editar em Massa
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Excluir
                             </Button>
                         </div>
-                        <Button variant="outline" size="icon" onClick={handleExport} title="Exportar Excel">
-                            <Download className="w-4 h-4" />
-                        </Button>
-                        <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
-                            <Plus className="w-4 h-4" />
-                            Novo Ingrediente
+                    )}
+                </div>
+                <div className="flex gap-2">
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            onChange={handleImport}
+                            title="Importar Excel"
+                        />
+                        <Button variant="outline" size="icon" title="Importar Excel">
+                            <Upload className="w-4 h-4" />
                         </Button>
                     </div>
+                    <Button variant="outline" size="icon" onClick={handleExport} title="Exportar Excel">
+                        <Download className="w-4 h-4" />
+                    </Button>
+                    <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
+                        <Plus className="w-4 h-4" />
+                        Novo Ingrediente
+                    </Button>
                 </div>
+            </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {ingredients.map((ingredient) => {
-                        const demand = getDemand(ingredient.id);
-                        const statusClass = getStatusColor(ingredient.stock_quantity || 0, demand);
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {ingredients.map((ingredient) => {
+                    const demand = getDemand(ingredient.id);
+                    const statusClass = getStatusColor(ingredient.stock_quantity || 0, demand);
 
-                        return (
-                            <Card key={ingredient.id} className={`border-l-4 ${statusClass}`}>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <div className="flex items-center gap-3">
-                                        <Checkbox
-                                            checked={selectedIngredients.includes(ingredient.id)}
-                                            onCheckedChange={() => toggleSelect(ingredient.id)}
-                                        />
-                                        <div>
-                                            <CardTitle className="text-sm font-medium">
-                                                {ingredient.name}
-                                            </CardTitle>
-                                            {demand > 0 && (
-                                                <p className="text-[10px] text-muted-foreground">
-                                                    Demanda ativa: {demand.toFixed(2)} {ingredient.unit}
-                                                </p>
-                                            )}
-                                        </div>
+                    return (
+                        <Card key={ingredient.id} className={`border-l-4 ${statusClass}`}>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <div className="flex items-center gap-3">
+                                    <Checkbox
+                                        checked={selectedIngredients.includes(ingredient.id)}
+                                        onCheckedChange={() => toggleSelect(ingredient.id)}
+                                    />
+                                    <div>
+                                        <CardTitle className="text-sm font-medium">
+                                            {ingredient.name}
+                                        </CardTitle>
+                                        {demand > 0 && (
+                                            <p className="text-[10px] text-muted-foreground">
+                                                Demanda ativa: {demand.toFixed(2)} {ingredient.unit}
+                                            </p>
+                                        )}
                                     </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold">R$ {ingredient.cost_per_unit.toFixed(2)} / {ingredient.unit}</div>
-                                    <p className="text-xs text-muted-foreground">
-                                        Estoque: {ingredient.stock_quantity} {ingredient.unit}
-                                    </p>
-                                    <div className="mt-4 flex gap-2">
-                                        <Button variant="outline" size="sm" className="w-full" onClick={() => {
-                                            openEditDialog(ingredient);
-                                        }}>
-                                            <Pencil className="w-4 h-4 mr-2" />
-                                            Editar
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )
-                    })}
-                </div>
-
-                <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                    if (!open) resetForm();
-                    setIsDialogOpen(open);
-                }}>
-
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>{editingIngredient ? 'Editar' : 'Novo'} Ingrediente</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            {!editingIngredient && (
-                                <div>
-                                    <Label>Preencher com modelo</Label>
-                                    <Select onValueChange={handlePresetSelect}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Selecione um ingrediente padrão..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {presetIngredients.map((preset) => (
-                                                <SelectItem key={preset.name} value={preset.name}>
-                                                    {preset.name} - R$ {(preset.price * 1.15).toFixed(2)}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
                                 </div>
-                            )}
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">R$ {ingredient.cost_per_unit.toFixed(2)} / {ingredient.unit}</div>
+                                <p className="text-xs text-muted-foreground">
+                                    Estoque: {ingredient.stock_quantity} {ingredient.unit}
+                                </p>
+                                <div className="mt-4 flex gap-2">
+                                    <Button variant="outline" size="sm" className="w-full" onClick={() => {
+                                        openEditDialog(ingredient);
+                                    }}>
+                                        <Pencil className="w-4 h-4 mr-2" />
+                                        Editar
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )
+                })}
+            </div>
+
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                if (!open) resetForm();
+                setIsDialogOpen(open);
+            }}>
+
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{editingIngredient ? 'Editar' : 'Novo'} Ingrediente</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {!editingIngredient && (
                             <div>
-                                <Label htmlFor="name">Nome</Label>
+                                <Label>Preencher com modelo</Label>
+                                <Select onValueChange={handlePresetSelect}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione um ingrediente padrão..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {presetIngredients.map((preset) => (
+                                            <SelectItem key={preset.name} value={preset.name}>
+                                                {preset.name} - R$ {(preset.price * 1.15).toFixed(2)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                        <div>
+                            <Label htmlFor="name">Nome</Label>
+                            <Input
+                                id="name"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                placeholder="Ex: Leite Condensado"
+                                required
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="unit">Unidade</Label>
+                                <Select
+                                    value={formData.unit}
+                                    onValueChange={(value) => setFormData({ ...formData, unit: value as Ingredient['unit'] })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="kg">Kg</SelectItem>
+                                        <SelectItem value="litro">Litro</SelectItem>
+                                        <SelectItem value="grama">Grama</SelectItem>
+                                        <SelectItem value="ml">ML</SelectItem>
+                                        <SelectItem value="unidade">Unidade</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label htmlFor="cost">Custo por Unidade (R$)</Label>
                                 <Input
-                                    id="name"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder="Ex: Leite Condensado"
+                                    id="cost"
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.cost_per_unit}
+                                    onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) })}
                                     required
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="unit">Unidade</Label>
-                                    <Select
-                                        value={formData.unit}
-                                        onValueChange={(value) => setFormData({ ...formData, unit: value as Ingredient['unit'] })}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="kg">Kg</SelectItem>
-                                            <SelectItem value="litro">Litro</SelectItem>
-                                            <SelectItem value="grama">Grama</SelectItem>
-                                            <SelectItem value="ml">ML</SelectItem>
-                                            <SelectItem value="unidade">Unidade</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label htmlFor="cost">Custo por Unidade (R$)</Label>
-                                    <Input
-                                        id="cost"
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.cost_per_unit}
-                                        onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) })}
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="stock">Quantidade em Estoque</Label>
-                                <Input
-                                    id="stock"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={formData.stock_quantity}
-                                    onChange={(e) => setFormData({ ...formData, stock_quantity: parseFloat(e.target.value) || 0 })}
-                                    placeholder="Ex: 5.5"
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Quantidade disponível na mesma unidade ({formData.unit})
-                                </p>
-                            </div>
-                            <div className="flex gap-2">
-                                <Button type="submit" className="flex-1">
-                                    {editingIngredient ? 'Atualizar' : 'Criar'}
+                        </div>
+                        <div>
+                            <Label htmlFor="stock">Quantidade em Estoque</Label>
+                            <Input
+                                id="stock"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={formData.stock_quantity}
+                                onChange={(e) => setFormData({ ...formData, stock_quantity: parseFloat(e.target.value) || 0 })}
+                                placeholder="Ex: 5.5"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Quantidade disponível na mesma unidade ({formData.unit})
+                            </p>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button type="submit" className="flex-1">
+                                {editingIngredient ? 'Atualizar' : 'Criar'}
+                            </Button>
+                            {editingIngredient && (
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    onClick={() => handleDelete(editingIngredient.id)}
+                                >
+                                    Excluir
                                 </Button>
-                                {editingIngredient && (
-                                    <Button
-                                        type="button"
-                                        variant="destructive"
-                                        onClick={() => handleDelete(editingIngredient.id)}
-                                    >
-                                        Excluir
-                                    </Button>
-                                )}
-                                <Button type="button" variant="outline" onClick={resetForm}>
-                                    Cancelar
-                                </Button>
-                            </div>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+                            )}
+                            <Button type="button" variant="outline" onClick={resetForm}>
+                                Cancelar
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
 
-                <BulkEditIngredientsDialog
-                    open={isBulkEditDialogOpen}
-                    onOpenChange={setIsBulkEditDialogOpen}
-                    selectedCount={selectedIngredients.length}
-                    onSave={handleBulkSave}
-                />
-            </div>
-            );
+            <BulkEditIngredientsDialog
+                open={isBulkEditDialogOpen}
+                onOpenChange={setIsBulkEditDialogOpen}
+                selectedCount={selectedIngredients.length}
+                onSave={handleBulkSave}
+            />
+        </div>
+    );
 };
 
-            export default IngredientList;
+export default IngredientList;

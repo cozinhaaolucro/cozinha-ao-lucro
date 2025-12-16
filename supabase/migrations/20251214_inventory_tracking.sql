@@ -28,16 +28,11 @@ DECLARE
     ing RECORD;
     qty_needed NUMERIC;
 BEGIN
-    -- Only trigger when status changes to 'preparing' (production started) or 'delivered' (if skipped)
-    -- And only if it wasn't already in one of those states (to avoid double deduction)
-    -- Simplification: Deduct when status becomes 'preparing'
-    
+    -- CASE 1: Production Started (Pending -> Preparing)
+    -- Action: DEDUCT Stock
     IF NEW.status = 'preparing' AND (OLD.status = 'pending' OR OLD.status IS NULL) THEN
         
-        -- Loop through order items
         FOR item IN SELECT * FROM public.order_items WHERE order_id = NEW.id LOOP
-            
-            -- Loop through ingredients for each product
             FOR ing IN 
                 SELECT ingredient_id, quantity 
                 FROM public.product_ingredients 
@@ -45,16 +40,39 @@ BEGIN
             LOOP
                 qty_needed := ing.quantity * item.quantity;
                 
-                -- Record movement (Log)
+                -- Log Sale
                 INSERT INTO public.stock_movements (user_id, ingredient_id, type, quantity, reason)
-                VALUES (NEW.user_id, ing.ingredient_id, 'sale', qty_needed, 'Pedido #' || COALESCE(NEW.order_number, 'N/A'));
+                VALUES (NEW.user_id, ing.ingredient_id, 'sale', qty_needed, 'Produção: Pedido #' || COALESCE(NEW.order_number, 'N/A'));
                 
-                -- Update Ingredient Stock
+                -- Deduct
                 UPDATE public.ingredients
                 SET stock_quantity = stock_quantity - qty_needed,
                     updated_at = NOW()
                 WHERE id = ing.ingredient_id;
+            END LOOP;
+        END LOOP;
+
+    -- CASE 2: Production Rolled Back (Preparing -> Pending) OR Cancelled (Preparing -> Cancelled)
+    -- Action: REFUND Stock (Items were not used/wasted)
+    ELSIF OLD.status = 'preparing' AND (NEW.status = 'pending' OR NEW.status = 'cancelled') THEN
+        
+        FOR item IN SELECT * FROM public.order_items WHERE order_id = NEW.id LOOP
+            FOR ing IN 
+                SELECT ingredient_id, quantity 
+                FROM public.product_ingredients 
+                WHERE product_id = item.product_id
+            LOOP
+                qty_needed := ing.quantity * item.quantity;
                 
+                -- Log Restock
+                INSERT INTO public.stock_movements (user_id, ingredient_id, type, quantity, reason)
+                VALUES (NEW.user_id, ing.ingredient_id, 'adjustment', qty_needed, 'Estorno: Pedido #' || COALESCE(NEW.order_number, 'N/A') || ' (' || NEW.status || ')');
+                
+                -- Refund
+                UPDATE public.ingredients
+                SET stock_quantity = stock_quantity + qty_needed,
+                    updated_at = NOW()
+                WHERE id = ing.ingredient_id;
             END LOOP;
         END LOOP;
     END IF;

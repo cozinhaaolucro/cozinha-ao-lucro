@@ -86,7 +86,7 @@ const ProductionStatusWidget = () => {
         return () => clearInterval(timer);
     }, [activeOrders]);
 
-    if (!visible) return null;
+
 
     return (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 md:left-auto md:top-auto md:bottom-6 md:right-24 md:translate-x-0">
