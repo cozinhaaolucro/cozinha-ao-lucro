@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -8,8 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle2, AlertTriangle, ChefHat, Timer, ArrowRight } from 'lucide-react';
-import { getOrders } from '@/lib/database';
-import { format } from 'date-fns';
+import { getOrders, updateOrderStatus } from '@/lib/database';
+import { format, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,42 +19,31 @@ const OperationsPanel = () => {
 
     // Polling for updates (simple real-time for MVP)
     useEffect(() => {
-        loadOrders();
-        const interval = setInterval(loadOrders, 30000); // Poll every 30s
+        fetchOrders();
+        const interval = setInterval(fetchOrders, 30000); // Poll every 30s
         return () => clearInterval(interval);
     }, []);
 
-    const loadOrders = async () => {
+    const fetchOrders = async () => {
         const { data, error } = await getOrders();
         if (!error && data) {
-            // Filter only active orders for the panel
-            const activeOrders = data.filter(o =>
-                ['pending', 'preparing', 'ready'].includes(o.status)
-            );
-            setOrders(activeOrders);
+            // We want to keep active orders AND delivered orders from TODAY for stats.
+            setOrders(data);
         }
         setLoading(false);
     };
 
-    const updateStatus = async (orderId: string, newStatus: Order['status']) => {
-        const updateData: any = { status: newStatus };
+    const updateStatus = async (id: string, newStatus: string) => {
+        const order = orders.find(o => o.id === id);
+        const currentStatus = order?.status;
 
-        if (newStatus === 'preparing') {
-            updateData.production_started_at = new Date().toISOString();
-        } else if (newStatus === 'ready') {
-            updateData.production_completed_at = new Date().toISOString();
-        }
+        const { error } = await updateOrderStatus(id, newStatus, currentStatus);
 
-        const { error } = await supabase
-            .from('orders')
-            .update(updateData)
-            .eq('id', orderId);
-
-        if (!error) {
-            toast({ title: `Status atualizado para ${newStatus}` });
-            loadOrders();
+        if (error) {
+            toast({ title: 'Erro ao atualizar status', variant: 'destructive' });
         } else {
-            toast({ title: 'Erro ao atualizar', variant: 'destructive' });
+            toast({ title: 'Status atualizado!' });
+            fetchOrders();
         }
     };
 
@@ -65,7 +53,6 @@ const OperationsPanel = () => {
         return order.items.reduce((acc, item) => {
             const productCost = item.product?.product_ingredients?.reduce((pAcc: number, pi: any) => {
                 const costPerUnit = pi.ingredient?.cost_per_unit || 0;
-                // Normalize quantity if needed (assuming DB stores normalized)
                 return pAcc + (costPerUnit * pi.quantity);
             }, 0) || 0;
             return acc + (productCost * item.quantity);
@@ -81,14 +68,14 @@ const OperationsPanel = () => {
             if (minutes < 60) return `${minutes} min`;
             const hours = Math.floor(minutes / 60);
             const mins = minutes % 60;
-            return `${hours}h ${mins}m`;
+            return `${hours}h ${mins} min`;
         };
 
         const orderCost = calculateOrderCost(order);
         const orderProfit = (order.total_value || 0) - orderCost;
 
         return (
-            <Card key={order.id} className="bg-white/5 backdrop-blur-md border-white/10 text-white overflow-hidden group hover:border-white/20 transition-all duration-300 shadow-lg relative">
+            <Card className="bg-white/5 backdrop-blur-md border-white/10 text-white overflow-hidden group hover:border-white/20 transition-all duration-300 shadow-lg relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                 <CardHeader className="pb-2 relative z-10">
@@ -154,11 +141,11 @@ const OperationsPanel = () => {
                             )}
                             {order.status === 'ready' && (
                                 <Button
-                                    variant="outline"
-                                    className="w-full border-white/20 hover:bg-white/10 text-white/70"
-                                    disabled
+                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 transition-all active:scale-95"
+                                    onClick={() => updateStatus(order.id, 'delivered')}
                                 >
-                                    Aguardando Entrega
+                                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                                    Entregar (Pago)
                                 </Button>
                             )}
                         </div>
@@ -169,18 +156,23 @@ const OperationsPanel = () => {
     };
 
     // Metrics Calculation
-    const activeOrders = orders.filter(o => ['pending', 'preparing'].includes(o.status));
-    const preparingOrders = orders.filter(o => o.status === 'preparing');
+    const activeOrders = orders.filter(o => ['pending', 'preparing', 'ready'].includes(o.status));
     const totalEstimatedTime = activeOrders.reduce((acc, order) => {
+        if (order.status === 'ready') return acc;
         const orderPrepTime = order.items.reduce((iAcc, item) => iAcc + (item.product?.preparation_time_minutes || 0) * item.quantity, 0);
         return acc + orderPrepTime;
     }, 0);
 
-    // "Realized Hours": Sum of time spent on currently preparing orders
-    const totalRealizedMinutes = preparingOrders.reduce((acc, order) => {
+    // "Realized Hours": Sum of time spent on...
+    const totalRealizedMinutes = orders.reduce((acc, order) => {
         if (!order.production_started_at) return acc;
-        const elapsed = Math.floor((new Date().getTime() - new Date(order.production_started_at).getTime()) / 60000);
-        return acc + elapsed;
+        let elapsed = 0;
+        if (order.status === 'preparing') {
+            elapsed = Math.floor((new Date().getTime() - new Date(order.production_started_at).getTime()) / 60000);
+        } else if ((order.status === 'ready' || order.status === 'delivered') && order.updated_at && isToday(new Date(order.updated_at))) {
+            elapsed = Math.floor((new Date(order.updated_at).getTime() - new Date(order.production_started_at).getTime()) / 60000);
+        }
+        return acc + (elapsed > 0 ? elapsed : 0);
     }, 0);
 
     const formatHours = (minutes: number) => {
@@ -189,11 +181,9 @@ const OperationsPanel = () => {
         return `${h}h ${m}m`;
     };
 
-    // Profit from "Ready" orders (assuming this represents completed production for the session)
-    // In a real app, this might filter by "Today"
-    const finishedOrders = orders.filter(o => o.status === 'ready');
-    const totalSessionProfit = finishedOrders.reduce((acc, order) => acc + ((order.total_value || 0) - calculateOrderCost(order)), 0);
-
+    // "Daily Profit": Sum of (Value - Cost) for orders delivered TODAY
+    const dailyProfitOrders = orders.filter(o => o.status === 'delivered' && o.delivered_at && isToday(new Date(o.delivered_at)));
+    const totalDailyProfit = dailyProfitOrders.reduce((acc, order) => acc + ((order.total_value || 0) - calculateOrderCost(order)), 0);
 
     return (
         <div className="min-h-screen bg-slate-900 p-6 md:p-8 font-sans selection:bg-blue-500/30">
@@ -236,13 +226,13 @@ const OperationsPanel = () => {
                                 {formatHours(totalRealizedMinutes)}
                             </span>
                             <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-black/90 text-white text-xs p-2 rounded hidden group-hover:block z-50 pointer-events-none">
-                                Tempo total gasto nos pedidos em andamento até agora.
+                                Tempo total gasto nos pedidos hoje (Finalizados + Ativos).
                             </div>
                         </div>
 
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px]">
-                            <span className="text-[10px] md:text-xs text-neutral-400 uppercase tracking-wider font-bold mb-1">Lucro Sessão</span>
-                            <span className="text-xl md:text-2xl font-bold text-emerald-400">R$ {totalSessionProfit.toFixed(2)}</span>
+                            <span className="text-[10px] md:text-xs text-neutral-400 uppercase tracking-wider font-bold mb-1">Lucro Dia</span>
+                            <span className="text-xl md:text-2xl font-bold text-emerald-400">R$ {totalDailyProfit.toFixed(2)}</span>
                         </div>
 
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px]">
@@ -253,50 +243,52 @@ const OperationsPanel = () => {
                 </header>
 
                 <div className="border border-white/10 rounded-xl p-6 bg-white/5 backdrop-blur-sm shadow-2xl shadow-black/20">
-
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Coluna: A Fazer */}
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between text-white/50 px-2 uppercase text-xs font-bold tracking-wider">
-                                <span>A Fazer</span>
-                                <span className="bg-white/10 px-2 py-0.5 rounded text-white/70">{orders.filter(o => o.status === 'pending').length}</span>
-                            </div>
+                        {/* Pending Logic */}
+                        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                                Aguardando
+                                <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded">{orders.filter(o => o.status === 'pending').length}</span>
+                            </h2>
                             <div className="space-y-4">
                                 {orders.filter(o => o.status === 'pending').map(order => (
                                     <OrderCard key={order.id} order={order} />
                                 ))}
                                 {orders.filter(o => o.status === 'pending').length === 0 && (
                                     <div className="h-32 border-2 border-dashed border-white/5 rounded-xl flex items-center justify-center text-white/20 text-sm">
-                                        Fila vazia
+                                        Nenhum pedido pendente
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Coluna: Em Preparo */}
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between text-blue-400/80 px-2 uppercase text-xs font-bold tracking-wider">
-                                <span className="flex items-center gap-2"><ChefHat className="w-4 h-4" /> Em Preparo</span>
-                                <span className="bg-blue-500/20 px-2 py-0.5 rounded text-blue-300">{orders.filter(o => o.status === 'preparing').length}</span>
-                            </div>
+                        {/* Preparing Logic */}
+                        <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20">
+                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
+                                Preparando
+                                <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded">{orders.filter(o => o.status === 'preparing').length}</span>
+                            </h2>
                             <div className="space-y-4">
                                 {orders.filter(o => o.status === 'preparing').map(order => (
                                     <OrderCard key={order.id} order={order} />
                                 ))}
                                 {orders.filter(o => o.status === 'preparing').length === 0 && (
                                     <div className="h-32 border-2 border-dashed border-white/5 rounded-xl flex items-center justify-center text-white/20 text-sm">
-                                        Sem produção ativa
+                                        Nenhum pedido em preparo
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Coluna: Pronto */}
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between text-green-400/80 px-2 uppercase text-xs font-bold tracking-wider">
-                                <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Prontos</span>
-                                <span className="bg-green-500/20 px-2 py-0.5 rounded text-green-300">{orders.filter(o => o.status === 'ready').length}</span>
-                            </div>
+                        {/* Ready Logic */}
+                        <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/20">
+                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-green-500" />
+                                Prontos para Entrega
+                                <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded">{orders.filter(o => o.status === 'ready').length}</span>
+                            </h2>
                             <div className="space-y-4">
                                 {orders.filter(o => o.status === 'ready').map(order => (
                                     <OrderCard key={order.id} order={order} />

@@ -244,6 +244,41 @@ export const getOrders = async (status?: string) => {
     return { data: data as OrderWithDetails[] | null, error };
 };
 
+export const updateOrderStatus = async (orderId: string, newStatus: string, previousStatus?: string) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { error: new Error('Usuario não autenticado') };
+
+    const updates: any = { status: newStatus };
+    if (newStatus === 'ready') {
+        // If "ready", we might interpret as kitchen done.
+        // But user wants "delivered_at" specifically for "entregue/pago".
+        // Let's assume "delivered" status sets this.
+    }
+    if (newStatus === 'delivered') {
+        updates.delivered_at = new Date().toISOString();
+    }
+
+    // 1. Update Order
+    const { error: updateError } = await supabase
+        .from('orders')
+        .update(updates)
+        .eq('id', orderId);
+
+    if (updateError) return { error: updateError };
+
+    // 2. Insert Log
+    const { error: logError } = await supabase
+        .from('order_status_logs')
+        .insert({
+            order_id: orderId,
+            previous_status: previousStatus,
+            new_status: newStatus,
+            user_id: user.id
+        });
+
+    return { error: logError };
+};
+
 export const createOrder = async (
     order: Omit<Order, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
     items: Array<Omit<OrderItem, 'id' | 'order_id'>>
@@ -278,15 +313,7 @@ export const createOrder = async (
     return { data: orderData, error: null };
 };
 
-export const updateOrderStatus = async (id: string, status: string) => {
-    const { data, error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', id)
-        .select()
-        .single();
-    return { data, error };
-};
+
 
 export const deleteOrder = async (id: string) => {
     const { error } = await supabase

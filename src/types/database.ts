@@ -42,6 +42,16 @@ export type Order = {
     google_event_id?: string | null;
     created_at: string;
     updated_at: string;
+    delivered_at?: string | null;
+};
+
+export type OrderStatusLog = {
+    id: string;
+    order_id: string;
+    previous_status: string | null;
+    new_status: string;
+    created_at: string;
+    user_id: string | null;
 };
 
 export type OrderItem = {
