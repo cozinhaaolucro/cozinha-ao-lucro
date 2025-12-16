@@ -1,20 +1,43 @@
-import React, { useState, useEffect, useMemo, memo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { supabase, subscribeToOrders } from '@/lib/supabase';
 import { Order, OrderWithDetails } from '@/types/database';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle2, AlertTriangle, ChefHat, Timer, ArrowRight } from 'lucide-react';
+import { Clock, CheckCircle2, AlertTriangle, ChefHat, Timer, Package, Zap } from 'lucide-react';
 import { getOrders, updateOrderStatus } from '@/lib/database';
 import { format, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
+// Toast-inspired color thresholds (in minutes)
+const TIME_THRESHOLDS = {
+    NEW: 5,      // Green: 0-5 min
+    WARNING: 15, // Yellow: 5-15 min
+    URGENT: 20,  // Red: 15+ min
+};
+
+// Get border color class based on waiting time (Toast KDS style)
+const getTimeBorderClass = (minutes: number, status: string) => {
+    if (status === 'pending') {
+        if (minutes < TIME_THRESHOLDS.NEW) return 'border-l-4 border-l-emerald-500';
+        if (minutes < TIME_THRESHOLDS.WARNING) return 'border-l-4 border-l-yellow-500';
+        return 'border-l-4 border-l-red-500 animate-pulse';
+    }
+    if (status === 'preparing') {
+        if (minutes < TIME_THRESHOLDS.WARNING) return 'border-l-4 border-l-blue-500';
+        if (minutes < TIME_THRESHOLDS.URGENT) return 'border-l-4 border-l-yellow-500';
+        return 'border-l-4 border-l-red-500 animate-pulse';
+    }
+    return 'border-l-4 border-l-emerald-500'; // Ready = always green
+};
+
 const OperationsPanel = () => {
+    const { user } = useAuth();
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isRealtime, setIsRealtime] = useState(false);
     const { toast } = useToast();
     const [tick, setTick] = useState(0); // For real-time timer updates
 
@@ -24,17 +47,47 @@ const OperationsPanel = () => {
         return () => clearInterval(timer);
     }, []);
 
-    // Polling for data updates (every 15s for fresher data)
+    // Initial fetch and real-time subscription
     useEffect(() => {
         fetchOrders();
+
+        // Set up real-time subscription if user is authenticated
+        if (user?.id) {
+            const channel = subscribeToOrders(
+                user.id,
+                // On INSERT: refetch all orders (simpler than merging nested data)
+                () => {
+                    console.log('[Realtime] New order received');
+                    fetchOrders();
+                },
+                // On UPDATE: refetch all orders
+                () => {
+                    console.log('[Realtime] Order updated');
+                    fetchOrders();
+                },
+                // On DELETE: refetch all orders
+                () => {
+                    console.log('[Realtime] Order deleted');
+                    fetchOrders();
+                }
+            );
+
+            if (channel) {
+                setIsRealtime(true);
+                return () => {
+                    channel.unsubscribe();
+                };
+            }
+        }
+
+        // Fallback: polling every 15s if realtime is not available
         const interval = setInterval(fetchOrders, 15000);
         return () => clearInterval(interval);
-    }, []);
+    }, [user?.id]);
 
     const fetchOrders = async () => {
         const { data, error } = await getOrders();
         if (!error && data) {
-            // We want to keep active orders AND delivered orders from TODAY for stats.
             setOrders(data);
         }
         setLoading(false);
@@ -50,6 +103,7 @@ const OperationsPanel = () => {
             toast({ title: 'Erro ao atualizar status', variant: 'destructive' });
         } else {
             toast({ title: 'Status atualizado!' });
+            // Real-time will handle the update, but fetch immediately for responsiveness
             fetchOrders();
         }
     };
@@ -66,43 +120,59 @@ const OperationsPanel = () => {
         }, 0);
     };
 
+    // Calculate waiting time since order was created (for pending) or started (for preparing)
+    const getWaitingMinutes = (order: OrderWithDetails) => {
+        if (order.status === 'preparing' && order.production_started_at) {
+            return Math.floor((Date.now() - new Date(order.production_started_at).getTime()) / 60000);
+        }
+        // For pending orders, use created_at
+        return Math.floor((Date.now() - new Date(order.created_at).getTime()) / 60000);
+    };
+
     const OrderCard = ({ order }: { order: OrderWithDetails }) => {
-        const waitingTimeMinutes = order.production_started_at
-            ? Math.floor((new Date().getTime() - new Date(order.production_started_at).getTime()) / 60000)
-            : 0;
+        const waitingMinutes = getWaitingMinutes(order);
+        const borderClass = getTimeBorderClass(waitingMinutes, order.status);
 
         const formatDuration = (minutes: number) => {
             if (minutes < 60) return `${minutes} min`;
             const hours = Math.floor(minutes / 60);
             const mins = minutes % 60;
-            return `${hours}h ${mins} min`;
+            return `${hours}h ${mins}m`;
         };
 
         const orderCost = calculateOrderCost(order);
         const orderProfit = (order.total_value || 0) - orderCost;
 
         return (
-            <Card className="bg-white/5 backdrop-blur-md border-white/10 text-white overflow-hidden shadow-lg relative hover:border-white/20 transition-colors duration-200">
-
+            <Card className={`bg-white/5 backdrop-blur-md border-white/10 text-white overflow-hidden shadow-lg relative hover:border-white/20 transition-all duration-200 ${borderClass}`}>
                 <CardHeader className="pb-2 relative z-10">
                     <div className="flex justify-between items-start">
                         <div>
                             <CardTitle className="text-xl font-bold flex items-center gap-2">
-                                <span className="text-blue-400">#{order.order_number || order.id.slice(0, 4)}</span>
+                                <span className="text-blue-400 font-mono">#{order.order_number || order.id.slice(0, 4)}</span>
                                 <span className="text-sm font-normal opacity-70">- {order.customer?.name || 'Balcão'}</span>
                             </CardTitle>
                             <div className="text-xs text-muted-slate-400 mt-1 flex items-center gap-2 opacity-60">
                                 <Clock className="w-3 h-3" />
                                 {format(new Date(order.created_at), "HH:mm", { locale: ptBR })}
+                                {order.delivery_time && (
+                                    <span className="ml-2">→ Entrega: {order.delivery_time}</span>
+                                )}
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                            {order.status === 'preparing' && (
-                                <Badge variant="outline" className={`${waitingTimeMinutes > 20 ? 'bg-red-500/20 text-red-200 border-red-500/50 animate-pulse' : 'bg-blue-500/20 text-blue-200 border-blue-500/50'} text-xs py-0.5 px-2`}>
-                                    <Timer className="w-3 h-3 mr-1" />
-                                    {formatDuration(waitingTimeMinutes)}
-                                </Badge>
-                            )}
+                            <Badge
+                                variant="outline"
+                                className={`${waitingMinutes > TIME_THRESHOLDS.URGENT
+                                        ? 'bg-red-500/20 text-red-200 border-red-500/50 animate-pulse'
+                                        : waitingMinutes > TIME_THRESHOLDS.WARNING
+                                            ? 'bg-yellow-500/20 text-yellow-200 border-yellow-500/50'
+                                            : 'bg-blue-500/20 text-blue-200 border-blue-500/50'
+                                    } text-xs py-0.5 px-2`}
+                            >
+                                <Timer className="w-3 h-3 mr-1" />
+                                {formatDuration(waitingMinutes)}
+                            </Badge>
                             <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] hover:bg-emerald-500/20">
                                 Lucro: R$ {orderProfit.toFixed(2)}
                             </Badge>
@@ -111,10 +181,13 @@ const OperationsPanel = () => {
                 </CardHeader>
                 <CardContent className="relative z-10">
                     <div className="space-y-3">
+                        {/* All Day View: Item summary (Toast-inspired) */}
                         <div className="space-y-1">
                             {order.items.map((item, idx) => (
                                 <div key={idx} className="flex justify-between text-sm py-1 border-b border-white/5 last:border-0">
-                                    <span className="font-medium text-white/90">{item.quantity}x {item.product_name}</span>
+                                    <span className="font-medium text-white/90">
+                                        <span className="text-blue-400 font-mono">{item.quantity}x</span> {item.product_name}
+                                    </span>
                                 </div>
                             ))}
                         </div>
@@ -169,25 +242,31 @@ const OperationsPanel = () => {
         return acc + orderPrepTime;
     }, 0);
 
+    // "All Day View" counts (Toast-inspired)
+    const allDayCounts = useMemo(() => {
+        const counts = new Map<string, number>();
+        activeOrders.forEach(order => {
+            order.items.forEach(item => {
+                const current = counts.get(item.product_name) || 0;
+                counts.set(item.product_name, current + item.quantity);
+            });
+        });
+        return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    }, [activeOrders]);
+
     // "Horas Realizadas": Sum of production time for ALL orders worked on TODAY
-    // - For 'preparing': real-time calculation (now - started_at)
-    // - For 'ready'/'delivered': use production_completed_at - started_at (locked time)
-    // - Tick dependency forces re-render every second
     const totalRealizedMinutes = useMemo(() => {
         return orders.reduce((acc, order) => {
             if (!order.production_started_at) return acc;
 
-            // Check if this order was worked on today
             const startDate = new Date(order.production_started_at);
             if (!isToday(startDate)) return acc;
 
             let elapsed = 0;
 
             if (order.status === 'preparing') {
-                // Active order: calculate real-time
                 elapsed = Math.floor((Date.now() - startDate.getTime()) / 60000);
             } else if (order.status === 'ready' || order.status === 'delivered') {
-                // Completed order: use locked time
                 if (order.production_completed_at) {
                     const endDate = new Date(order.production_completed_at);
                     elapsed = Math.floor((endDate.getTime() - startDate.getTime()) / 60000);
@@ -223,8 +302,9 @@ const OperationsPanel = () => {
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
                                 Painel de Operações
                             </span>
-                            <div className="px-2 py-1 rounded bg-white/10 text-xs text-white/60 border border-white/10 font-mono">
-                                LIVE
+                            <div className={`px-2 py-1 rounded text-xs border font-mono flex items-center gap-1 ${isRealtime ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-white/10 text-white/60 border-white/10'}`}>
+                                {isRealtime && <Zap className="w-3 h-3" />}
+                                {isRealtime ? 'REALTIME' : 'POLLING'}
                             </div>
                         </h1>
                         <p className="text-neutral-400 flex items-center gap-2">
@@ -265,9 +345,26 @@ const OperationsPanel = () => {
                     </div>
                 </header>
 
+                {/* Toast-inspired All Day View */}
+                {allDayCounts.length > 0 && (
+                    <div className="mb-6 bg-white/5 backdrop-blur border border-white/10 rounded-xl p-4">
+                        <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <Package className="w-4 h-4" />
+                            Produção do Dia
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                            {allDayCounts.map(([name, count]) => (
+                                <Badge key={name} variant="outline" className="bg-blue-500/10 text-blue-300 border-blue-500/20 py-1 px-3">
+                                    <span className="font-mono font-bold mr-1">{count}x</span> {name}
+                                </Badge>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <div className="border border-white/10 rounded-xl p-6 bg-white/5 backdrop-blur-sm shadow-2xl shadow-black/20">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Pending Logic */}
+                        {/* Pending Column */}
                         <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-blue-500" />
@@ -286,7 +383,7 @@ const OperationsPanel = () => {
                             </div>
                         </div>
 
-                        {/* Preparing Logic */}
+                        {/* Preparing Column */}
                         <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
@@ -305,7 +402,7 @@ const OperationsPanel = () => {
                             </div>
                         </div>
 
-                        {/* Ready Logic */}
+                        {/* Ready Column */}
                         <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/20">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-green-500" />
@@ -324,7 +421,6 @@ const OperationsPanel = () => {
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

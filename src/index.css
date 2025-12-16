@@ -7,9 +7,9 @@
 
 @layer base {
   :root {
-    /* Base Colors - Warm & Premium (Slightly Darker) */
-    --background: 40 18% 96%;
-    /* Warmer, slightly darker off-white */
+    /* Base Colors - Warm & Premium (Lighter for better contrast) */
+    --background: 40 15% 98%;
+    /* Cleaner, more white background */
     --foreground: 40 10% 8%;
     /* Deeper warm black */
 

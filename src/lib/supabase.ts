@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, RealtimeChannel } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -22,9 +22,70 @@ const mockSupabase = {
   },
   from: () => ({
     select: () => Promise.resolve({ data: [], error: null }),
-  })
+  }),
+  channel: () => ({
+    on: () => ({ subscribe: () => ({ unsubscribe: () => { } }) }),
+    subscribe: () => ({ unsubscribe: () => { } }),
+  }),
 } as unknown as ReturnType<typeof createClient>;
 
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : mockSupabase;
+
+// ============================================================================
+// REAL-TIME SUBSCRIPTIONS (Toast-inspired live updates)
+// ============================================================================
+
+/**
+ * Subscribe to real-time order changes for a specific user.
+ * Returns a channel that can be unsubscribed.
+ */
+export const subscribeToOrders = (
+  userId: string,
+  onInsert?: (payload: any) => void,
+  onUpdate?: (payload: any) => void,
+  onDelete?: (payload: any) => void
+): RealtimeChannel | null => {
+  if (!isSupabaseConfigured) return null;
+
+  const channel = supabase
+    .channel(`orders-${userId}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'orders', filter: `user_id=eq.${userId}` },
+      (payload) => onInsert?.(payload)
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${userId}` },
+      (payload) => onUpdate?.(payload)
+    )
+    .on(
+      'postgres_changes',
+      { event: 'DELETE', schema: 'public', table: 'orders', filter: `user_id=eq.${userId}` },
+      (payload) => onDelete?.(payload)
+    )
+    .subscribe();
+
+  return channel;
+};
+
+/**
+ * Subscribe to ingredient stock changes (for low-stock alerts).
+ */
+export const subscribeToIngredients = (
+  userId: string,
+  onUpdate?: (payload: any) => void
+): RealtimeChannel | null => {
+  if (!isSupabaseConfigured) return null;
+
+  return supabase
+    .channel(`ingredients-${userId}`)
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'ingredients', filter: `user_id=eq.${userId}` },
+      (payload) => onUpdate?.(payload)
+    )
+    .subscribe();
+};

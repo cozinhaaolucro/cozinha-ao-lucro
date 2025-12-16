@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,7 +16,9 @@ import {
     Bell,
     X,
     ShoppingCart,
-    Monitor
+    Monitor,
+    Search,
+    Command
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -39,6 +40,8 @@ import { SpeedDial } from '@/components/layout/SpeedDial';
 import { TourGuide } from '@/components/onboarding/TourGuide';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
+import CommandPalette from '@/components/CommandPalette';
+import OnboardingModal from '@/components/onboarding/OnboardingModal';
 
 // Dialogs for Speed Dial
 import NewOrderDialog from '@/components/orders/NewOrderDialog';
@@ -62,6 +65,20 @@ const DashboardLayout = () => {
     const [isClientOpen, setIsClientOpen] = useState(false);
     const [isProductOpen, setIsProductOpen] = useState(false);
     const [isIngredientOpen, setIsIngredientOpen] = useState(false);
+    const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+    // Global keyboard shortcut for Command Palette (Cmd+K / Ctrl+K)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                setIsCommandPaletteOpen(true);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     // Trial Logic
     const created = user?.created_at ? new Date(user.created_at) : new Date();
@@ -228,6 +245,7 @@ const DashboardLayout = () => {
         <div className="min-h-screen bg-background flex flex-col md:flex-row">
             {/* Desktop Sidebar */}
             <TourGuide />
+            <OnboardingModal />
             <aside className="hidden md:flex w-64 flex-col border-r bg-card h-screen sticky top-0">
                 <div className="p-6 border-b flex items-center gap-3">
                     <UserAvatar size="md" clickable />
@@ -235,6 +253,19 @@ const DashboardLayout = () => {
                         <span className="font-bold text-lg truncate block">{firstName}</span>
                         <span className="text-xs text-muted-foreground">Plano Pro</span>
                     </div>
+                </div>
+
+                {/* Linear-inspired search button */}
+                <div className="px-4 pt-4">
+                    <Button
+                        variant="outline"
+                        className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setIsCommandPaletteOpen(true)}
+                    >
+                        <Search className="w-4 h-4" />
+                        <span className="flex-1 text-left">Buscar...</span>
+                        <kbd className="text-xs bg-muted px-1.5 py-0.5 rounded border">⌘K</kbd>
+                    </Button>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -480,6 +511,12 @@ const DashboardLayout = () => {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Command Palette (Linear-inspired) */}
+            <CommandPalette
+                isOpen={isCommandPaletteOpen}
+                onClose={() => setIsCommandPaletteOpen(false)}
+            />
         </div >
     );
 };

@@ -32,7 +32,7 @@ const HeroSection = () => {
                             </span>
                         </motion.div>
 
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-foreground">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-foreground [text-wrap:balance]">
                             Gerencie sua Cozinha e
                             <span className="block text-gradient-gold mt-2">
                                 Multiplique seus Lucros
