@@ -30,7 +30,9 @@ const Register = () => {
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
-    const [usePresets, setUsePresets] = useState(true);
+    const [password, setPassword] = useState('');
+    const usePresets = true; // Always enabled
+    const [loading, setLoading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
@@ -180,14 +182,7 @@ const Register = () => {
                             </div>
 
                             <div className="flex items-center space-x-2 pb-2">
-                                <Checkbox
-                                    id="presets"
-                                    checked={usePresets}
-                                    onCheckedChange={(checked) => setUsePresets(checked as boolean)}
-                                />
-                                <Label htmlFor="presets" className="text-sm font-normal text-muted-foreground">
-                                    Iniciar com produtos de exemplo (Brigadeiros, Marmitas...)
-                                </Label>
+                                {/* Presets always enabled */}
                             </div>
 
                             <Button type="submit" className="w-full" disabled={loading}>
