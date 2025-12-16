@@ -16,7 +16,8 @@ import {
     Loader2,
     Bell,
     X,
-    ShoppingCart
+    ShoppingCart,
+    Monitor
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -146,6 +147,7 @@ const DashboardLayout = () => {
 
     const navItems = [
         { path: '/app/dashboard', label: 'Visão Geral', icon: LayoutDashboard, id: 'nav-dashboard' },
+        { path: '/app/painel', label: 'Produção em Tempo Real', icon: Monitor, id: 'nav-painel' },
         { path: '/app/pedidos', label: 'Pedidos', icon: ShoppingBag, id: 'nav-pedidos' },
         { path: '/app/clientes', label: 'Clientes', icon: Users, id: 'nav-clientes' },
         { path: '/app/produtos', label: 'Produtos', icon: ShoppingBag, id: 'nav-produtos' },

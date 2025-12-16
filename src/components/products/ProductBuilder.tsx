@@ -81,6 +81,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
         name: '',
         description: '',
         selling_price: 0,
+        preparation_time_minutes: 0,
     });
     const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
     const [openCombobox, setOpenCombobox] = useState(false);
@@ -320,6 +321,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                 selling_price: formData.selling_price,
                 active: true,
                 image_url: imageUrl,
+                preparation_time_minutes: formData.preparation_time_minutes,
             },
             finalIngredients
         );
@@ -336,7 +338,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
     };
 
     const resetForm = () => {
-        setFormData({ name: '', description: '', selling_price: 0 });
+        setFormData({ name: '', description: '', selling_price: 0, preparation_time_minutes: 0 });
         setSelectedIngredients([]);
         setImageFile(null);
         setImagePreview(null);
@@ -451,15 +453,34 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                                     required
                                 />
                             </div>
-                            <div>
-                                <Label htmlFor="description">Descrição (opcional)</Label>
-                                <Textarea
-                                    id="description"
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder="Brigadeiro de chocolate belga com granulado..."
-                                    className="h-[100px]"
-                                />
+
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <Label htmlFor="description">Descrição (opcional)</Label>
+                                    <Textarea
+                                        id="description"
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        placeholder="Brigadeiro de chocolate belga com granulado..."
+                                        className="h-[100px]"
+                                    />
+                                </div>
+                                <div className="w-[140px]">
+                                    <Label htmlFor="prep_time">Tempo (min)</Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="prep_time"
+                                            type="number"
+                                            min="0"
+                                            value={formData.preparation_time_minutes}
+                                            onChange={(e) => setFormData({ ...formData, preparation_time_minutes: parseInt(e.target.value) || 0 })}
+                                            className="h-[100px] text-center text-3xl font-bold"
+                                        />
+                                        <div className="absolute bottom-2 left-0 right-0 text-center text-xs text-muted-foreground">
+                                            Minutos
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -734,7 +755,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                     </div>
                 </form>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 };
 
