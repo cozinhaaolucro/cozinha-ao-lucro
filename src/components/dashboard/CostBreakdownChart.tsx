@@ -50,7 +50,7 @@ export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
-                                <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '12px' }} />
+                                <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                             </PieChart>
                         </ResponsiveContainer>
                     )}

@@ -18,6 +18,7 @@ import {
     CheckCircle,
     XCircle,
     AlertCircle,
+    Calendar
 } from 'lucide-react';
 import {
     AreaChart,
@@ -40,6 +41,8 @@ interface StockDemandAnalysis {
 
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import { CostBreakdownChart } from '@/components/dashboard/CostBreakdownChart';
+import { DashboardInsights } from '@/components/dashboard/DashboardInsights';
+import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 
 import { seedAccount } from '@/lib/seeding';
 
@@ -252,9 +255,16 @@ const Dashboard = () => {
         return null;
     };
 
+
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const clearDateFilter = () => {
         setDateFilter({ start: '', end: '' });
     };
+
+    if (isLoading) {
+        return <DashboardSkeleton />;
+    }
 
     return (
         <div className="space-y-6">
@@ -294,7 +304,15 @@ const Dashboard = () => {
                         </Select>
                     )}
                 </div>
+
+
             </div>
+
+            <DashboardInsights
+                hasProducts={products.length > 0}
+                hasOrders={orders.length > 0}
+                hasStock={ingredients.some(i => (i.stock_quantity || 0) > 0)}
+            />
 
             {/* Financial cards */}
             <FadeIn delay={50}>
@@ -529,6 +547,32 @@ const Dashboard = () => {
                             <CardContent>
                                 <div className="text-2xl font-bold">{customers.length}</div>
                                 <p className="text-xs text-muted-foreground">Total cadastrados</p>
+                            </CardContent>
+                        </Card>
+                        <Card
+                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => navigate('/app/agenda')}
+                        >
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Agenda</CardTitle>
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">Ver Agenda</div>
+                                <p className="text-xs text-muted-foreground">Organize sua produção</p>
+                            </CardContent>
+                        </Card>
+                        <Card
+                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => navigate('/app/shopping-list')} // Verify route
+                        >
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Lista de Compras</CardTitle>
+                                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">Lista de Compras</div>
+                                <p className="text-xs text-muted-foreground">Baseada em pedidos</p>
                             </CardContent>
                         </Card>
                     </div>

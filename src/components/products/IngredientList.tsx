@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Download, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,9 +14,23 @@ import { useToast } from '@/hooks/use-toast';
 
 import { presetIngredients } from '@/data/presetIngredients';
 
+
+
 const IngredientList = () => {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Check for 'new' action ONLY if we are on the ingredients tab (checked implicitly by parent or URL context)
+    // Actually simpler: if this component is mounted and action=new matches requirements
+    useEffect(() => {
+        if (searchParams.get('action') === 'new' && searchParams.get('tab') === 'ingredients') {
+            setIsDialogOpen(true);
+            searchParams.delete('action');
+            setSearchParams(searchParams, { replace: true });
+        }
+    }, [searchParams, setSearchParams]);
     const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
     const [formData, setFormData] = useState({
         name: '',

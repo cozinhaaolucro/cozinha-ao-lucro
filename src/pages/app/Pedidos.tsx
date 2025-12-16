@@ -37,6 +37,7 @@ const Pedidos = () => {
     const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
 
     const { toast } = useToast();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const loadOrders = async () => {
         const { data, error } = await getOrders();

@@ -34,7 +34,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { SubscriptionBlocker } from '@/components/subscription/SubscriptionBlocker';
+import { SpeedDial } from '@/components/layout/SpeedDial';
 import { TourGuide } from '@/components/onboarding/TourGuide';
+import { PageTransition } from '@/components/layout/PageTransition';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+
+// Dialogs for Speed Dial
+import NewOrderDialog from '@/components/orders/NewOrderDialog';
+import NewCustomerDialog from '@/components/customers/NewCustomerDialog';
+import ProductBuilder from '@/components/products/ProductBuilder';
+import NewIngredientDialog from '@/components/products/NewIngredientDialog';
 
 const DashboardLayout = () => {
     const { signOut, user, profile, loading } = useAuth();
@@ -45,6 +54,23 @@ const DashboardLayout = () => {
     const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Global Dialog States
+    const [isOrderOpen, setIsOrderOpen] = useState(false);
+    const [isClientOpen, setIsClientOpen] = useState(false);
+    const [isProductOpen, setIsProductOpen] = useState(false);
+    const [isIngredientOpen, setIsIngredientOpen] = useState(false);
+
+    // Trial Logic
+    const created = user?.created_at ? new Date(user.created_at) : new Date();
+    const now = new Date();
+    const trialDays = 7;
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const daysRemaining = trialDays - Math.ceil(Math.abs(now.getTime() - created.getTime()) / msPerDay);
+    const isTrialExpired = daysRemaining <= 0;
+    const hasActiveSubscription = profile?.subscription_status === 'active';
+    const isBlocked = isTrialExpired && !hasActiveSubscription;
+    const showBanner = !isBlocked && daysRemaining <= 3 && !hasActiveSubscription;
 
     useEffect(() => {
         if (!loading && !user) {
@@ -291,29 +317,11 @@ const DashboardLayout = () => {
                 <div className="hidden md:flex absolute top-6 right-8 z-10">
                     <NotificationBell />
                 </div>
-                {(() => {
-                    const created = user?.created_at ? new Date(user.created_at) : new Date();
-                    const now = new Date();
-                    const trialDays = 7;
-                    const msPerDay = 1000 * 60 * 60 * 24;
-                    const diffTime = Math.abs(now.getTime() - created.getTime());
-                    const diffDays = Math.ceil(diffTime / msPerDay);
-                    const daysRemaining = trialDays - diffDays;
-
-                    // Subscription Check Logic
-                    const isTrialExpired = daysRemaining <= 0;
-                    const hasActiveSubscription = profile?.subscription_status === 'active';
-
-                    // BLOCKER: Show blocker if trial expired and no active subscription
-                    if (isTrialExpired && !hasActiveSubscription) {
-                        return <SubscriptionBlocker />;
-                    }
-
-                    // BANNER: Show banner if trial is ending soon (last 3 days) AND no active subscription
-                    const showBanner = daysRemaining <= 3 && !hasActiveSubscription;
-
-                    if (showBanner) {
-                        return (
+                {/* Content Logic: Mutually Exclusive */}
+                {!isBlocked ? (
+                    <>
+                        {/* Subscription Banner (Only for active users w/ generic trial ending soon) */}
+                        {showBanner && (
                             <div className="mb-6 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in slide-in-from-top-2">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-orange-200 flex items-center justify-center flex-shrink-0">
@@ -342,33 +350,21 @@ const DashboardLayout = () => {
                                     Assinar Agora
                                 </Button>
                             </div>
-                        );
-                    }
-                    return null;
-                })()}
-                {/* Only render Outlet if NOT blocked (logic handled above returns early for blocker) 
-                    Wait, returning above only returns from the IIFE, not the component. 
-                    We need to conditionally render Outlet or Blocker.
-                */}
-                {(() => {
-                    const created = user?.created_at ? new Date(user.created_at) : new Date();
-                    const now = new Date();
-                    const trialDays = 7;
-                    const msPerDay = 1000 * 60 * 60 * 24;
-                    const diffTime = Math.abs(now.getTime() - created.getTime());
-                    const diffDays = Math.ceil(diffTime / msPerDay);
-                    const daysRemaining = trialDays - diffDays;
-                    const isTrialExpired = daysRemaining <= 0;
-                    const hasActiveSubscription = profile?.subscription_status === 'active';
+                        )}
 
-                    if (isTrialExpired && !hasActiveSubscription) {
-                        // Already rendered blocker above? No, the IIFE above just returned JSX to be rendered inside Main.
-                        // But we want to REPLACE Outlet with Blocker.
-                        return null;
-                    }
-                    return <Outlet />;
-                })()}
+                        <PageTransition key={location.pathname}>
+                            <ErrorBoundary>
+                                <Outlet />
+                            </ErrorBoundary>
+                        </PageTransition>
+                    </>
+                ) : null}
             </main>
+
+            {/* Render Blocker OUTSIDE main if blocked */}
+            {isBlocked && <SubscriptionBlocker />}
+
+
 
             {/* Mobile Bottom Nav */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t h-16 flex items-center justify-around z-50 px-2">
@@ -386,6 +382,47 @@ const DashboardLayout = () => {
                     </Link>
                 ))}
             </nav>
+
+            <SpeedDial
+                onNewOrder={() => setIsOrderOpen(true)}
+                onNewClient={() => setIsClientOpen(true)}
+                onNewProduct={() => setIsProductOpen(true)}
+                onNewIngredient={() => setIsIngredientOpen(true)}
+            />
+
+            <NewOrderDialog
+                open={isOrderOpen}
+                onOpenChange={setIsOrderOpen}
+                onSuccess={() => {
+                    setIsOrderOpen(false);
+                    if (location.pathname.includes('pedidos')) window.location.reload();
+                }}
+            />
+            <NewCustomerDialog
+                open={isClientOpen}
+                onOpenChange={setIsClientOpen}
+                onSuccess={() => {
+                    setIsClientOpen(false);
+                    if (location.pathname.includes('clientes')) window.location.reload();
+                }}
+            />
+            <ProductBuilder
+                open={isProductOpen}
+                onOpenChange={setIsProductOpen}
+                onSuccess={() => {
+                    setIsProductOpen(false);
+                    if (location.pathname.includes('produtos')) window.location.reload();
+                }}
+            />
+            <NewIngredientDialog
+                open={isIngredientOpen}
+                onOpenChange={setIsIngredientOpen}
+                onSuccess={() => {
+                    setIsIngredientOpen(false);
+                    if (location.pathname.includes('produtos')) window.location.reload();
+                }}
+            />
+
 
             {/* Photo Upload Dialog */}
             <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>
@@ -420,7 +457,7 @@ const DashboardLayout = () => {
                     </div>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 };
 
