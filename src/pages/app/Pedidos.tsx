@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Phone, Filter, Pencil, Download, Upload } from 'lucide-react';
+import { Plus, Phone, Filter, Pencil, Download, Upload, Copy } from 'lucide-react';
 import { getOrders, deductStockFromOrder } from '@/lib/database';
 import { exportToExcel, importFromExcel } from '@/lib/excel';
 import { supabase } from '@/lib/supabase';
@@ -58,6 +58,37 @@ const Pedidos = () => {
     const handleWhatsApp = (order: OrderWithDetails) => {
         setMessageOrder(order);
         setIsMessageDialogOpen(true);
+    };
+
+    const handleDuplicate = async (order: OrderWithDetails) => {
+        const orderData = {
+            customer_id: order.customer_id,
+            delivery_date: null,
+            delivery_time: null,
+            notes: order.notes ? `Cópia: ${order.notes}` : 'Cópia duplicada',
+            status: 'pending' as const, // Force type literal
+            total_value: order.total_value,
+            order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+        };
+
+        const items = order.items.map(item => ({
+            product_id: item.product_id,
+            product_name: item.product_name,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            subtotal: item.subtotal,
+        }));
+
+        // Use createOrder but we need to import it properly or check if its available in scope
+        // It is imported as createOrder from '@/lib/database'
+        const { error } = await import('@/lib/database').then(mod => mod.createOrder(orderData, items));
+
+        if (!error) {
+            toast({ title: 'Pedido duplicado com sucesso!' });
+            loadOrders();
+        } else {
+            toast({ title: 'Erro ao duplicar pedido', variant: 'destructive' });
+        }
     };
 
     const handleCustomerClick = (customer: Customer | null) => {
@@ -274,6 +305,18 @@ const Pedidos = () => {
                                                         {order.customer?.name || 'Cliente não informado'}
                                                     </span>
                                                     <div className="flex gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDuplicate(order);
+                                                            }}
+                                                            title="Duplicar Pedido"
+                                                        >
+                                                            <Copy className="w-3 h-3" />
+                                                        </Button>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
