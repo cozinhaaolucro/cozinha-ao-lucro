@@ -22,8 +22,6 @@ const Clientes = () => {
     const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
     const [selectedClients, setSelectedClients] = useState<string[]>([]);
 
-    const [searchParams, setSearchParams] = useSearchParams();
-
     const loadCustomers = async () => {
         const { data, error } = await getCustomers();
         if (!error && data) {
