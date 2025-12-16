@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Order, OrderWithDetails } from '@/types/database';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle2, AlertTriangle, ChefHat, Timer, ArrowRight } from 'lucide-react';
@@ -84,8 +85,8 @@ const OperationsPanel = () => {
 
         return (
             <Card className={`border-l-4 ${order.status === 'pending' ? 'border-l-yellow-500' :
-                    order.status === 'preparing' ? (isDelayed ? 'border-l-red-500 animate-pulse' : 'border-l-blue-500') :
-                        'border-l-green-500'
+                order.status === 'preparing' ? (isDelayed ? 'border-l-red-500 animate-pulse' : 'border-l-blue-500') :
+                    'border-l-green-500'
                 }`}>
                 <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
@@ -167,7 +168,52 @@ const OperationsPanel = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full overflow-hidden">
+            {/* Mobile Tabs View (Hidden on Desktop) */}
+            <div className="md:hidden flex-1 flex flex-col min-h-0">
+                <Tabs defaultValue="pending" className="flex-1 flex flex-col h-full">
+                    <TabsList className="grid w-full grid-cols-3 mb-4">
+                        <TabsTrigger value="pending" className="text-yellow-700 data-[state=active]:bg-yellow-100">
+                            A Fazer ({orders.filter(o => o.status === 'pending').length})
+                        </TabsTrigger>
+                        <TabsTrigger value="preparing" className="text-blue-700 data-[state=active]:bg-blue-100">
+                            Produzindo ({orders.filter(o => o.status === 'preparing').length})
+                        </TabsTrigger>
+                        <TabsTrigger value="ready" className="text-green-700 data-[state=active]:bg-green-100">
+                            Pronto ({orders.filter(o => o.status === 'ready').length})
+                        </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="pending" className="flex-1 overflow-y-auto space-y-4 p-1">
+                        {orders.filter(o => o.status === 'pending').map(order => (
+                            <OrderCard key={order.id} order={order} />
+                        ))}
+                        {orders.filter(o => o.status === 'pending').length === 0 && (
+                            <div className="text-center py-10 text-muted-foreground">Nenhum pedido pendente</div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="preparing" className="flex-1 overflow-y-auto space-y-4 p-1">
+                        {orders.filter(o => o.status === 'preparing').map(order => (
+                            <OrderCard key={order.id} order={order} />
+                        ))}
+                        {orders.filter(o => o.status === 'preparing').length === 0 && (
+                            <div className="text-center py-10 text-muted-foreground">Nada em produção no momento</div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="ready" className="flex-1 overflow-y-auto space-y-4 p-1">
+                        {orders.filter(o => o.status === 'ready').map(order => (
+                            <OrderCard key={order.id} order={order} />
+                        ))}
+                        {orders.filter(o => o.status === 'ready').length === 0 && (
+                            <div className="text-center py-10 text-muted-foreground">Nenhum pedido aguardando entrega</div>
+                        )}
+                    </TabsContent>
+                </Tabs>
+            </div>
+
+            {/* Desktop Grid View (Hidden on Mobile) */}
+            <div className="hidden md:grid grid-cols-3 gap-6 h-full overflow-hidden">
                 {/* Column: Pending */}
                 <div className="bg-gray-100/50 p-4 rounded-xl border flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-200px)]">
                     <h3 className="font-semibold text-lg flex items-center gap-2 text-yellow-700">

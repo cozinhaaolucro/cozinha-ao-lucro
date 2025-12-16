@@ -45,6 +45,7 @@ import NewOrderDialog from '@/components/orders/NewOrderDialog';
 import NewCustomerDialog from '@/components/customers/NewCustomerDialog';
 import ProductBuilder from '@/components/products/ProductBuilder';
 import NewIngredientDialog from '@/components/products/NewIngredientDialog';
+import ProductionStatusWidget from '@/components/production/ProductionStatusWidget'; // New Widget
 
 const DashboardLayout = () => {
     const { signOut, user, profile, loading } = useAuth();
@@ -391,6 +392,8 @@ const DashboardLayout = () => {
                 onNewProduct={() => setIsProductOpen(true)}
                 onNewIngredient={() => setIsIngredientOpen(true)}
             />
+
+            <ProductionStatusWidget />
 
             <NewOrderDialog
                 open={isOrderOpen}
