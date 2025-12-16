@@ -85,7 +85,7 @@ const OperationsPanel = () => {
 
         return (
             <Card className={`border-l-4 ${order.status === 'pending' ? 'border-l-yellow-500' :
-                order.status === 'preparing' ? (isDelayed ? 'border-l-red-500 animate-pulse' : 'border-l-blue-500') :
+                order.status === 'preparing' ? (isDelayed ? 'border-l-red-500 animate-subtle-pulse' : 'border-l-blue-500') :
                     'border-l-green-500'
                 }`}>
                 <CardHeader className="pb-2">

@@ -29,8 +29,8 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { Plus, X, Calculator, ChevronDown, Check, Camera, Image as ImageIcon } from 'lucide-react';
-import { getIngredients, createProduct, createIngredient } from '@/lib/database';
-import type { Ingredient } from '@/types/database';
+import { getIngredients, createProduct, createIngredient, updateProduct } from '@/lib/database';
+import type { Ingredient, Product } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import { PRESET_PRODUCTS, PRESET_INGREDIENTS } from '@/data/presets';
 import { cn } from '@/lib/utils';
@@ -39,43 +39,40 @@ type ProductBuilderProps = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSuccess: () => void;
+    productToEdit?: any; // Product with ingredients
 };
 
 type SelectedIngredient = {
     ingredient_id?: string;
     name: string;
-    unit: string; // Base unit (kg, l, un)
-    cost: number; // Cost per base unit
-    quantity: number; // Quantity in base unit
-    display_unit: string; // Unit shown to user (g, ml, kg, etc.)
-    display_quantity: number; // Quantity shown to user
+    unit: string;
+    cost: number;
+    quantity: number;
+    display_unit: string;
+    display_quantity: number;
     is_virtual?: boolean;
 };
 
+// ... helpers logic remains ...
 // Helper to determine available units based on base unit
 const getUnitOptions = (baseUnit: string) => {
     const normalized = baseUnit.toLowerCase();
     if (['kg', 'quilo', 'kilograma'].includes(normalized)) return ['kg', 'g'];
     if (['l', 'litro'].includes(normalized)) return ['l', 'ml'];
-    return [baseUnit]; // 'un', 'dz' etc have no sub-units typically used this way yet
+    return [baseUnit];
 };
 
 // Helper to convert between units
 const convertQuantity = (qty: number, fromUnit: string, toUnit: string): number => {
     if (fromUnit === toUnit) return qty;
-
-    // kg <-> g
     if (fromUnit === 'kg' && toUnit === 'g') return qty * 1000;
     if (fromUnit === 'g' && toUnit === 'kg') return qty / 1000;
-
-    // l <-> ml
     if (fromUnit === 'l' && toUnit === 'ml') return qty * 1000;
     if (fromUnit === 'ml' && toUnit === 'l') return qty / 1000;
-
     return qty;
 };
 
-const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) => {
+const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: ProductBuilderProps) => {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [formData, setFormData] = useState({
         name: '',
@@ -97,8 +94,36 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
     useEffect(() => {
         if (open) {
             loadIngredients();
+
+            if (productToEdit) {
+                // Populate form for editing
+                setFormData({
+                    name: productToEdit.name,
+                    description: productToEdit.description || '',
+                    selling_price: productToEdit.selling_price || 0,
+                    preparation_time_minutes: productToEdit.preparation_time_minutes || 0,
+                });
+                setImagePreview(productToEdit.image_url || null);
+
+                // Populate ingredients
+                if (productToEdit.product_ingredients) {
+                    const mappedIngredients = productToEdit.product_ingredients.map((pi: any) => ({
+                        ingredient_id: pi.ingredient.id,
+                        name: pi.ingredient.name,
+                        unit: pi.ingredient.unit, // Base unit from DB
+                        cost: pi.ingredient.cost_per_unit,
+                        quantity: pi.quantity, // Quantity in base unit
+                        display_unit: pi.ingredient.unit, // Default to base unit
+                        display_quantity: pi.quantity,
+                    }));
+                    setSelectedIngredients(mappedIngredients);
+                }
+            } else {
+                // Reset for new product
+                resetFields();
+            }
         }
-    }, [open]);
+    }, [open, productToEdit]);
 
     const loadIngredients = async () => {
         const { data, error } = await getIngredients();
@@ -314,34 +339,69 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
         }
 
         // 3. Create Product
-        const { error } = await createProduct(
-            {
-                name: formData.name,
-                description: formData.description,
-                selling_price: formData.selling_price,
-                active: true,
-                image_url: imageUrl,
-                preparation_time_minutes: formData.preparation_time_minutes,
-            },
-            finalIngredients
-        );
+        // 3. Create or Update Product
+        if (productToEdit) {
+            const { error } = await updateProduct(
+                productToEdit.id,
+                {
+                    name: formData.name,
+                    description: formData.description,
+                    selling_price: formData.selling_price,
+                    active: true,
+                    // Only update image if new one uploaded, else keep existing
+                    ...(imageUrl ? { image_url: imageUrl } : {}),
+                    preparation_time_minutes: formData.preparation_time_minutes,
+                },
+                // For update, we pass ingredients to be replaced
+                finalIngredients
+            );
 
-        setUploading(false);
+            setUploading(false);
 
-        if (!error) {
-            toast({ title: 'Produto criado com sucesso!' });
-            onSuccess();
-            resetForm();
+            if (!error) {
+                toast({ title: 'Produto atualizado com sucesso!' });
+                onSuccess();
+                // Don't reset form fully here, maybe close dialog or let parent handle?
+                // Parent handles closing via onOpenChange(false) which is triggered by onSuccess usually? 
+                // No, onSuccess usually just reloads data.
+                onOpenChange(false);
+            } else {
+                toast({ title: 'Erro ao atualizar produto', description: error.message, variant: 'destructive' });
+            }
         } else {
-            toast({ title: 'Erro ao criar produto', description: error.message, variant: 'destructive' });
+            const { error } = await createProduct(
+                {
+                    name: formData.name,
+                    description: formData.description,
+                    selling_price: formData.selling_price,
+                    active: true,
+                    image_url: imageUrl,
+                    preparation_time_minutes: formData.preparation_time_minutes,
+                },
+                finalIngredients
+            );
+
+            setUploading(false);
+
+            if (!error) {
+                toast({ title: 'Produto criado com sucesso!' });
+                onSuccess();
+                resetForm();
+            } else {
+                toast({ title: 'Erro ao criar produto', description: error.message, variant: 'destructive' });
+            }
         }
     };
 
-    const resetForm = () => {
+    const resetFields = () => {
         setFormData({ name: '', description: '', selling_price: 0, preparation_time_minutes: 0 });
         setSelectedIngredients([]);
         setImageFile(null);
         setImagePreview(null);
+    };
+
+    const resetForm = () => {
+        resetFields();
         onOpenChange(false);
     };
 
@@ -747,7 +807,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess }: ProductBuilderProps) 
                     {/* Actions */}
                     <div className="flex gap-2">
                         <Button type="submit" className="flex-1" disabled={uploading}>
-                            {uploading ? 'Criando...' : 'Criar Produto'}
+                            {uploading ? (productToEdit ? 'Salvando...' : 'Criando...') : (productToEdit ? 'Salvar Alterações' : 'Criar Produto')}
                         </Button>
                         <Button type="button" variant="outline" onClick={resetForm}>
                             Cancelar

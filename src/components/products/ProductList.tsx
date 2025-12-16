@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus, TrendingUp, Pencil, Download } from 'lucide-react';
-import { getProducts } from '@/lib/database';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, TrendingUp, Pencil, Download, Trash2, Copy } from 'lucide-react';
+import { getProducts, deleteProduct, updateProduct } from '@/lib/database';
 import { exportToExcel } from '@/lib/excel';
 import type { Product, Ingredient } from '@/types/database';
-import EditProductDialog from './EditProductDialog';
+// import EditProductDialog from './EditProductDialog'; // Removed
+import ProductBuilder from './ProductBuilder';
+import { useToast } from '@/hooks/use-toast';
 
 type ProductWithIngredients = Product & {
     product_ingredients: Array<{
@@ -18,6 +21,8 @@ type ProductWithIngredients = Product & {
 const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     const [products, setProducts] = useState<ProductWithIngredients[]>([]);
     const [editingProduct, setEditingProduct] = useState<ProductWithIngredients | null>(null);
+    const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+    const { toast } = useToast();
 
     const loadProducts = async () => {
         const { data, error } = await getProducts();
@@ -30,6 +35,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
         loadProducts();
     }, []);
 
+    // ... calculation helpers ...
     const calculateTotalCost = (product: ProductWithIngredients) => {
         return product.product_ingredients.reduce((total, pi) => {
             return total + (pi.ingredient.cost_per_unit * pi.quantity);
@@ -41,7 +47,76 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
         return ((price - cost) / price) * 100;
     };
 
+    // Bulk Actions
+    const toggleSelectAll = () => {
+        if (selectedProducts.length === products.length) {
+            setSelectedProducts([]);
+        } else {
+            setSelectedProducts(products.map(p => p.id));
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        if (selectedProducts.includes(id)) {
+            setSelectedProducts(selectedProducts.filter(pid => pid !== id));
+        } else {
+            setSelectedProducts([...selectedProducts, id]);
+        }
+    };
+
+    const handleDelete = async (id?: string) => {
+        const idsToDelete = id ? [id] : selectedProducts;
+
+        if (idsToDelete.length === 0) return;
+
+        if (!confirm(`Tem certeza que deseja excluir ${idsToDelete.length} produto(s)?`)) return;
+
+        let errorOccurred = false;
+        for (const pid of idsToDelete) {
+            const { error } = await deleteProduct(pid);
+            if (error) errorOccurred = true;
+        }
+
+        if (errorOccurred) {
+            toast({ title: 'Erro ao excluir alguns produtos', variant: 'destructive' });
+        } else {
+            toast({ title: 'Produtos excluídos com sucesso' });
+            setSelectedProducts([]);
+            loadProducts();
+        }
+    };
+
+    const handleDuplicateProduct = async (product: ProductWithIngredients) => {
+        const confirmDuplicate = confirm(`Deseja duplicar o produto "${product.name}"?`);
+        if (!confirmDuplicate) return;
+
+        // Prepare new product data
+        const productData = {
+            name: `${product.name} (Cópia)`,
+            description: product.description,
+            selling_price: product.selling_price,
+            preparation_time_minutes: product.preparation_time_minutes,
+            image_url: product.image_url,
+            active: true
+        };
+
+        const ingredientsPayload = product.product_ingredients.map(pi => ({
+            ingredient_id: pi.ingredient.id,
+            quantity: pi.quantity
+        }));
+
+        const { error } = await createProduct(productData, ingredientsPayload);
+
+        if (!error) {
+            toast({ title: 'Produto duplicado com sucesso!' });
+            loadProducts();
+        } else {
+            toast({ title: 'Erro ao duplicar produto', variant: 'destructive' });
+        }
+    };
+
     const handleExport = () => {
+        // ... existing export logic ...
         const dataToExport = products.map(p => {
             const totalCost = calculateTotalCost(p);
             const profit = (p.selling_price || 0) - totalCost;
@@ -59,8 +134,42 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Produtos</h3>
+            <div className="flex items-center justify-between bg-card p-4 rounded-lg border shadow-sm">
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <Checkbox
+                            checked={products.length > 0 && selectedProducts.length === products.length}
+                            onCheckedChange={toggleSelectAll}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                            {selectedProducts.length} selecionados
+                        </span>
+                    </div>
+                    {selectedProducts.length > 0 && (
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => {
+                                const productToDupe = products.find(p => p.id === selectedProducts[0]);
+                                if (productToDupe) handleDuplicateProduct(productToDupe);
+                                if (selectedProducts.length > 1) {
+                                    // Duplicate loop for others if needed, but keeping simple for now as per previous attempt logic
+                                    const remaining = selectedProducts.slice(1);
+                                    remaining.forEach(async id => {
+                                        const p = products.find(prod => prod.id === id);
+                                        if (p) await handleDuplicateProduct(p);
+                                    });
+                                }
+                            }} className="gap-2">
+                                <Copy className="w-4 h-4" />
+                                Duplicar ({selectedProducts.length})
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => handleDelete()} className="gap-2">
+                                <Trash2 className="w-4 h-4" />
+                                Excluir ({selectedProducts.length})
+                            </Button>
+                        </div>
+                    )}
+                </div>
+
                 <div className="flex gap-2">
                     <Button variant="outline" size="icon" onClick={handleExport} title="Exportar Excel">
                         <Download className="w-4 h-4" />
@@ -90,6 +199,11 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                 <CardHeader className="pb-3">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">
+                                            <Checkbox
+                                                checked={selectedProducts.includes(product.id)}
+                                                onCheckedChange={() => toggleSelect(product.id)}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
                                             {product.image_url ? (
                                                 <div className="w-12 h-12 rounded-md overflow-hidden bg-muted">
                                                     <img
@@ -112,13 +226,47 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex items-center gap-2">
+                                            <div onClick={(e) => e.stopPropagation()}>
+                                                <label className="relative inline-flex items-center cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="sr-only peer"
+                                                        checked={product.active !== false}
+                                                        onChange={async (e) => {
+                                                            const newActive = e.target.checked;
+                                                            // Optimistic update
+                                                            const updatedProducts = products.map(p =>
+                                                                p.id === product.id ? { ...p, active: newActive } : p
+                                                            );
+                                                            setProducts(updatedProducts);
+
+                                                            const { error } = await updateProduct(product.id, { active: newActive }, null);
+                                                            if (error) {
+                                                                toast({ title: 'Erro ao atualizar status', variant: 'destructive' });
+                                                                loadProducts();
+                                                            }
+                                                        }}
+                                                    />
+                                                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                                </label>
+                                            </div>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => setEditingProduct(product)}
+                                                title="Editar"
                                             >
                                                 <Pencil className="w-4 h-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-destructive hover:text-destructive/90"
+                                                onClick={() => handleDelete(product.id)}
+                                                title="Excluir"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
                                             </Button>
                                         </div>
                                     </div>
@@ -166,10 +314,10 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                 )}
             </div>
 
-            <EditProductDialog
-                product={editingProduct}
+            <ProductBuilder
                 open={!!editingProduct}
                 onOpenChange={(open) => !open && setEditingProduct(null)}
+                productToEdit={editingProduct}
                 onSuccess={() => {
                     loadProducts();
                     setEditingProduct(null);

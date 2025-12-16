@@ -252,11 +252,30 @@ html {
 }
 
 .animate-subtle-pulse {
-  animation: subtle-pulse 2s ease-in-out infinite;
+  animation: subtle-pulse 4s ease-in-out infinite;
 }
 
 /* Reusable fade-in animation for staggered content */
 .animate-fade-in {
   animation-name: fade-in;
   animation-timing-function: ease-out;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
 }

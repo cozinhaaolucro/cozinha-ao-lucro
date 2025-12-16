@@ -143,6 +143,58 @@ export const createProduct = async (
     return { data: productData, error: null };
 };
 
+export const updateProduct = async (
+    id: string,
+    updates: Partial<Omit<Product, 'id' | 'user_id' | 'created_at' | 'updated_at'>>,
+    ingredients: Array<{ ingredient_id: string; quantity: number }> | null
+) => {
+    // 1. Update product details
+    const { data: productData, error: productError } = await supabase
+        .from('products')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (productError) return { data: null, error: productError };
+
+    // 2. Update ingredients if provided (Full Replace Strategy)
+    if (ingredients !== null) {
+        // Delete existing ingredients
+        const { error: deleteError } = await supabase
+            .from('product_ingredients')
+            .delete()
+            .eq('product_id', id);
+
+        if (deleteError) return { data: null, error: deleteError };
+
+        // Insert new ingredients
+        if (ingredients.length > 0) {
+            const { error: insertError } = await supabase
+                .from('product_ingredients')
+                .insert(
+                    ingredients.map(ing => ({
+                        product_id: id,
+                        ingredient_id: ing.ingredient_id,
+                        quantity: ing.quantity
+                    }))
+                );
+
+            if (insertError) return { data: null, error: insertError };
+        }
+    }
+
+    return { data: productData, error: null };
+};
+
+export const deleteProduct = async (id: string) => {
+    const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+    return { error };
+};
+
 // Customers
 export const getCustomers = async () => {
     const { data, error } = await supabase
