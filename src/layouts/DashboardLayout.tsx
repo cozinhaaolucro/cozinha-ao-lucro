@@ -245,22 +245,21 @@ const DashboardLayout = () => {
                                 key={item.path}
                                 id={item.id}
                                 to={item.path}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 relative overflow-hidden group ${isActive(item.path)
-                                    ? isSpecial
-                                        ? 'bg-gradient-to-r from-blue-700 to-purple-800 text-white shadow-lg shadow-blue-900/40 transform scale-[0.98]'
-                                        : 'bg-primary text-primary-foreground shadow-md'
-                                    : isSpecial
-                                        ? 'bg-gradient-to-r from-blue-900/20 to-purple-900/20 text-blue-400 border border-blue-800/30 hover:shadow-md hover:border-blue-700/50'
+                                to={item.path}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 relative overflow-hidden group ${isSpecial
+                                    ? 'bg-gradient-to-r from-blue-700 to-purple-800 text-white shadow-lg hover:shadow-blue-900/40 active:scale-[0.98] border border-white/10'
+                                    : isActive(item.path)
+                                        ? 'bg-primary text-primary-foreground shadow-md'
                                         : 'hover:bg-muted text-muted-foreground hover:text-foreground hover:translate-x-1'
                                     }`}
                             >
                                 {isSpecial && (
                                     <div className={`absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:animate-[shimmer_2s_infinite] pointer-events-none`} />
                                 )}
-                                <item.icon className={`w-5 h-5 ${isSpecial && !isActive(item.path) ? 'text-blue-500' : ''}`} />
+                                <item.icon className="w-5 h-5" />
                                 <span className={`font-medium ${isSpecial ? 'font-bold' : ''}`}>{item.label}</span>
                                 {isSpecial && (
-                                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
                                 )}
                             </Link>
                         );
