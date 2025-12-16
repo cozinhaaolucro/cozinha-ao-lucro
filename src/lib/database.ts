@@ -225,7 +225,13 @@ export const getOrders = async (status?: string) => {
       customer:customers (*),
       items:order_items (
         *,
-        product:products (*)
+        product:products (
+            *,
+            product_ingredients (
+                quantity,
+                ingredient:ingredients (*)
+            )
+        )
       )
     `)
         .order('delivery_date', { ascending: true });

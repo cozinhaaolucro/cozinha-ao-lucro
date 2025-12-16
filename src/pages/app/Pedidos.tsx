@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Phone, Filter, Pencil, Download, Upload, Copy } from 'lucide-react';
+import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2 } from 'lucide-react';
 import { getOrders, deductStockFromOrder } from '@/lib/database';
 import { exportToExcel, importFromExcel } from '@/lib/excel';
 import { supabase } from '@/lib/supabase';
@@ -366,36 +366,67 @@ const Pedidos = () => {
                 })}
             </div>
 
-            <NewOrderDialog
-                open={isDialogOpen}
-                onOpenChange={setIsDialogOpen}
-                onSuccess={() => {
-                    loadOrders();
-                    setIsDialogOpen(false);
-                }}
-            />
+            {isDialogOpen && (
+                <NewOrderDialog
+                    open={isDialogOpen}
+                    onOpenChange={setIsDialogOpen}
+                    onSuccess={loadOrders}
+                />
+            )}
 
-            <EditOrderDialog
-                order={editingOrder}
-                open={!!editingOrder}
-                onOpenChange={(open) => !open && setEditingOrder(null)}
-                onSuccess={() => {
-                    loadOrders();
-                    setEditingOrder(null);
+            {editingOrder && (
+                <EditOrderDialog
+                    order={editingOrder}
+                    open={!!editingOrder}
+                    onOpenChange={(open) => !open && setEditingOrder(null)}
+                    onSuccess={loadOrders}
+                />
+            )}
+
+            {/* Drag to Delete Zone */}
+            <div
+                className={`fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-red-600/90 to-red-500/0 z-50 transition-all duration-300 pointer-events-none flex items-end justify-center pb-8 ${draggedOrder ? 'opacity-100' : 'opacity-0'}`}
+                onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
                 }}
-            />
+                onDrop={async (e) => {
+                    e.preventDefault();
+                    if (draggedOrder) {
+                        if (confirm('Tem certeza que deseja EXCLUIR este pedido permanentemente?')) {
+                            const { error } = await supabase
+                                .from('orders')
+                                .delete()
+                                .eq('id', draggedOrder);
+
+                            if (error) {
+                                toast({ title: 'Erro ao excluir pedido', variant: 'destructive' });
+                            } else {
+                                toast({ title: 'Pedido excluído' });
+                                loadOrders();
+                            }
+                        }
+                        setDraggedOrder(null);
+                    }
+                }}
+                style={{ pointerEvents: draggedOrder ? 'auto' : 'none' }}
+            >
+                <div className="bg-red-600 text-white px-8 py-3 rounded-full font-bold shadow-lg flex items-center gap-3 animate-bounce">
+                    <Trash2 className="w-6 h-6" />
+                    Solte para Excluir
+                </div>
+            </div>
 
             <ClientProfileDrawer
                 customer={selectedCustomer}
                 open={isDrawerOpen}
-                onOpenChange={setIsDrawerOpen}
-                onUpdate={loadOrders}
+                onClose={() => setIsDrawerOpen(false)}
             />
 
             <SendMessageDialog
+                isOpen={isMessageDialogOpen}
+                onClose={() => setIsMessageDialogOpen(false)}
                 order={messageOrder}
-                open={isMessageDialogOpen}
-                onOpenChange={setIsMessageDialogOpen}
             />
         </div>
     );

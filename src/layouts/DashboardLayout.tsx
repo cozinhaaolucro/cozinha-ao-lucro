@@ -238,20 +238,33 @@ const DashboardLayout = () => {
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.path}
-                            id={item.id}
-                            to={item.path}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path)
-                                ? 'bg-primary text-primary-foreground shadow-md'
-                                : 'hover:bg-muted text-muted-foreground hover:text-foreground hover:translate-x-1'
-                                }`}
-                        >
-                            <item.icon className="w-5 h-5" />
-                            <span className="font-medium">{item.label}</span>
-                        </Link>
-                    ))}
+                    {navItems.map((item) => {
+                        const isSpecial = item.id === 'nav-painel';
+                        return (
+                            <Link
+                                key={item.path}
+                                id={item.id}
+                                to={item.path}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 relative overflow-hidden group ${isActive(item.path)
+                                    ? isSpecial
+                                        ? 'bg-gradient-to-r from-blue-700 to-purple-800 text-white shadow-lg shadow-blue-900/40 transform scale-[0.98]'
+                                        : 'bg-primary text-primary-foreground shadow-md'
+                                    : isSpecial
+                                        ? 'bg-gradient-to-r from-blue-900/20 to-purple-900/20 text-blue-400 border border-blue-800/30 hover:shadow-md hover:border-blue-700/50'
+                                        : 'hover:bg-muted text-muted-foreground hover:text-foreground hover:translate-x-1'
+                                    }`}
+                            >
+                                {isSpecial && (
+                                    <div className={`absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:animate-[shimmer_2s_infinite] pointer-events-none`} />
+                                )}
+                                <item.icon className={`w-5 h-5 ${isSpecial && !isActive(item.path) ? 'text-blue-500' : ''}`} />
+                                <span className={`font-medium ${isSpecial ? 'font-bold' : ''}`}>{item.label}</span>
+                                {isSpecial && (
+                                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                                )}
+                            </Link>
+                        );
+                    })}
                 </nav>
 
                 <div className="p-4 border-t">
@@ -289,20 +302,27 @@ const DashboardLayout = () => {
                                 </div>
                             </div>
                             <nav className="flex-1 p-4 space-y-2">
-                                {navItems.map((item) => (
-                                    <Link
-                                        key={item.path}
-                                        to={item.path}
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path)
-                                            ? 'bg-primary text-primary-foreground shadow-md'
-                                            : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                                            }`}
-                                    >
-                                        <item.icon className="w-5 h-5" />
-                                        <span className="font-medium">{item.label}</span>
-                                    </Link>
-                                ))}
+                                {navItems.map((item) => {
+                                    const isSpecial = item.id === 'nav-painel';
+                                    return (
+                                        <Link
+                                            key={item.path}
+                                            to={item.path}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path)
+                                                ? isSpecial
+                                                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                                                    : 'bg-primary text-primary-foreground shadow-md'
+                                                : isSpecial
+                                                    ? 'bg-blue-50 text-blue-700 border border-blue-100'
+                                                    : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                                                }`}
+                                        >
+                                            <item.icon className="w-5 h-5" />
+                                            <span className="font-medium">{item.label}</span>
+                                        </Link>
+                                    );
+                                })}
                                 <div className="pt-4 mt-4 border-t">
                                     <Button variant="ghost" className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={handleSignOut}>
                                         <LogOut className="w-4 h-4" />

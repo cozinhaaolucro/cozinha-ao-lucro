@@ -49,17 +49,9 @@ export const DashboardInsights = ({ hasProducts, hasOrders, hasStock }: Dashboar
             border: "border-green-200"
         };
     } else {
-        // Default "Keep going" insight
-        insight = {
-            title: "Dica de Mestre",
-            description: "Mantenha seu estoque atualizado para garantir que a margem de lucro de cada pedido seja real.",
-            action: "Ver Relatórios",
-            path: "/app/dashboard",
-            icon: Lightbulb,
-            color: "text-purple-600",
-            bg: "bg-purple-50",
-            border: "border-purple-200"
-        };
+        // All set! No insight to show, or maybe a "Good Job" one?
+        // User requested removal of placeholders.
+        return null;
     }
 
     if (!insight) return null;
