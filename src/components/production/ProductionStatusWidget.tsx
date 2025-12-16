@@ -134,49 +134,75 @@ const ProductionStatusWidget = () => {
                                 </span>
                             )}
                         </div>
+                    </div>
+                </div>
 
-                        return (
-                        <div key={order.id} className={`space-y-1 p-2 rounded ${isOverdue ? 'bg-red-500/10 animate-pulse' : ''}`}>
-                            <div className="flex justify-between text-xs">
-                                <span className="text-white/90 font-medium">#{order.id.slice(0, 4)} - {order.customer?.name?.split(' ')[0] || 'Balcão'}</span>
-                                <span className="text-white/60">{order.items.length} itens</span>
-                            </div>
-                            <div className="flex justify-between text-[10px] text-white/50">
-                                <span>{p?.idealTime?.toFixed(0)} min previstos</span>
-                            </div>
-                            {isOverdue && <span className="text-red-400 font-bold text-[10px]">ATRASADO</span>}
-
-                            <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                                <motion.div
-                                    className={`h-full ${isOverdue ? 'bg-red-500' : 'bg-blue-500'}`}
-                                    animate={{ width: `${progress}%` }}
-                                />
-                            </div>
+                {/* Expanded State */}
+                <div className={`p-5 h-full flex flex-col transition-opacity duration-300 ${isHovered ? 'opacity-100 delay-100' : 'opacity-0 pointer-events-none'}`}>
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                            <ChefHat className="text-blue-400 w-5 h-5" />
+                            Produção Atual
+                        </h3>
+                        <div className="text-xs text-neutral-400 bg-neutral-800 px-2 py-1 rounded">
+                            {formatHours(totalEstimatedTime)} est.
                         </div>
-                        )
-                                    })}
                     </div>
-                    ) : (
-                    <div className="text-center text-xs text-white/50 py-2">
-                        Nenhum pedido em produção.
-                    </div>
-                            )}
 
-                    {pendingCount > 0 && (
-                        <div className="mt-2 text-xs bg-yellow-500/10 text-yellow-200 p-2 rounded flex items-center gap-2 justify-center border border-yellow-500/20">
-                            <AlertTriangle className="w-3 h-3" />
-                            {pendingCount} pedidos aguardando início
+                    {/* Mini Stats */}
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="bg-neutral-800/50 p-2 rounded border border-white/5">
+                            <span className="text-[10px] text-neutral-400 uppercase block">Trabalho</span>
+                            <span className="text-sm font-bold text-blue-400">{formatHours(totalRealizedMinutes)}</span>
                         </div>
-                    )}
-
-                    <div className="text-[10px] text-center text-white/40 pt-1 uppercase tracking-wide">
-                        Clique para abrir Painel
+                        <div className="bg-neutral-800/50 p-2 rounded border border-white/5">
+                            <span className="text-[10px] text-neutral-400 uppercase block">Fila</span>
+                            <span className="text-sm font-bold text-white">{pendingCount} aguardando</span>
+                        </div>
                     </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+                        {activeOrders.length > 0 ? (
+                            activeOrders.map(order => {
+                                const pData = progressData.find(p => p.id === order.id);
+                                const progress = pData?.progress || 0;
+                                const isOverdue = pData?.isOverdue || false;
+
+                                return (
+                                    <div key={order.id} className="bg-neutral-800/40 p-3 rounded-lg border border-white/5">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className="text-sm font-medium text-white">#{order.order_number || order.id.slice(0, 4)}</span>
+                                            <span className="text-xs text-neutral-400">{order.customer?.name?.split(' ')[0]}</span>
+                                        </div>
+                                        <div className="h-1.5 w-full bg-neutral-700 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full rounded-full transition-all duration-1000 ${isOverdue ? 'bg-red-500' : 'bg-blue-500'}`}
+                                                style={{ width: `${progress}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="text-center text-neutral-500 text-sm py-8">
+                                Nenhum pedido no fogo
+                            </div>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            navigate('/app/painel');
+                        }}
+                        className="mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 group"
+                    >
+                        Abrir Painel Completo
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                </div>
             </motion.div>
-                    )}
         </div>
-            </motion.div >
-        </div >
     );
 };
 
