@@ -445,90 +445,152 @@ const Pedidos = () => {
                 order={messageOrder}
             />
 
-            {/* Mobile Long-Press Action Sheet */}
+            {/* Mobile Long-Press Action Sheet - Centered Modal */}
             {longPressOrder && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center md:hidden"
+                    className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 md:hidden"
                     onClick={() => setLongPressOrder(null)}
                 >
                     <div
-                        className="bg-white w-full rounded-t-2xl p-4 pb-8 safe-area-pb animate-in slide-in-from-bottom duration-300"
+                        className="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl animate-in zoom-in-95 duration-200"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
-                        <h3 className="font-bold text-lg mb-2">
-                            #{longPressOrder.order_number || longPressOrder.id.slice(0, 4)}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                            {longPressOrder.customer?.name || 'Cliente não informado'}
-                        </p>
+                        <div className="text-center mb-4">
+                            <div className="text-2xl font-bold text-primary">
+                                #{longPressOrder.order_number || longPressOrder.id.slice(0, 4)}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                {longPressOrder.customer?.name || 'Sem cliente'}
+                            </p>
+                        </div>
+
                         <div className="space-y-2">
+                            {/* Forward actions */}
                             {longPressOrder.status === 'pending' && (
                                 <Button
-                                    className="w-full justify-between bg-blue-600 hover:bg-blue-500"
+                                    className="w-full bg-blue-600 hover:bg-blue-500"
                                     onClick={async () => {
-                                        await handleDrop({ preventDefault: () => { } } as any, 'preparing');
-                                        setDraggedOrder(longPressOrder.id);
-                                        setTimeout(async () => {
+                                        const { error } = await supabase
+                                            .from('orders')
+                                            .update({ status: 'preparing', updated_at: new Date().toISOString() })
+                                            .eq('id', longPressOrder.id);
+                                        if (!error) {
+                                            toast({ title: '→ Em Produção' });
+                                            loadOrders();
+                                        }
+                                        setLongPressOrder(null);
+                                    }}
+                                >
+                                    Iniciar Produção →
+                                </Button>
+                            )}
+                            {longPressOrder.status === 'preparing' && (
+                                <>
+                                    <Button
+                                        className="w-full bg-green-600 hover:bg-green-500"
+                                        onClick={async () => {
+                                            const { error } = await supabase
+                                                .from('orders')
+                                                .update({ status: 'ready', updated_at: new Date().toISOString() })
+                                                .eq('id', longPressOrder.id);
+                                            if (!error) {
+                                                toast({ title: '→ Pronto' });
+                                                loadOrders();
+                                            }
+                                            setLongPressOrder(null);
+                                        }}
+                                    >
+                                        Marcar Pronto →
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={async () => {
+                                            const { error } = await supabase
+                                                .from('orders')
+                                                .update({ status: 'pending', updated_at: new Date().toISOString() })
+                                                .eq('id', longPressOrder.id);
+                                            if (!error) {
+                                                toast({ title: '← Voltou para A Fazer' });
+                                                loadOrders();
+                                            }
+                                            setLongPressOrder(null);
+                                        }}
+                                    >
+                                        ← Voltar para A Fazer
+                                    </Button>
+                                </>
+                            )}
+                            {longPressOrder.status === 'ready' && (
+                                <>
+                                    <Button
+                                        className="w-full bg-emerald-600 hover:bg-emerald-500"
+                                        onClick={async () => {
+                                            const { error } = await supabase
+                                                .from('orders')
+                                                .update({
+                                                    status: 'delivered',
+                                                    delivered_at: new Date().toISOString(),
+                                                    updated_at: new Date().toISOString()
+                                                })
+                                                .eq('id', longPressOrder.id);
+                                            if (!error) {
+                                                toast({ title: '→ Entregue' });
+                                                loadOrders();
+                                            }
+                                            setLongPressOrder(null);
+                                        }}
+                                    >
+                                        Marcar Entregue →
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={async () => {
                                             const { error } = await supabase
                                                 .from('orders')
                                                 .update({ status: 'preparing', updated_at: new Date().toISOString() })
                                                 .eq('id', longPressOrder.id);
                                             if (!error) {
-                                                toast({ title: 'Pedido em produção!' });
+                                                toast({ title: '← Voltou para Produção' });
                                                 loadOrders();
                                             }
                                             setLongPressOrder(null);
-                                            setDraggedOrder(null);
-                                        }, 0);
-                                    }}
-                                >
-                                    Iniciar Produção <ChevronRight className="w-4 h-4" />
-                                </Button>
+                                        }}
+                                    >
+                                        ← Voltar para Produção
+                                    </Button>
+                                </>
                             )}
-                            {longPressOrder.status === 'preparing' && (
+                            {longPressOrder.status === 'delivered' && (
                                 <Button
-                                    className="w-full justify-between bg-green-600 hover:bg-green-500"
+                                    variant="outline"
+                                    className="w-full"
                                     onClick={async () => {
                                         const { error } = await supabase
                                             .from('orders')
-                                            .update({ status: 'ready', updated_at: new Date().toISOString() })
+                                            .update({ status: 'ready', delivered_at: null, updated_at: new Date().toISOString() })
                                             .eq('id', longPressOrder.id);
                                         if (!error) {
-                                            toast({ title: 'Pedido pronto!' });
+                                            toast({ title: '← Voltou para Pronto' });
                                             loadOrders();
                                         }
                                         setLongPressOrder(null);
                                     }}
                                 >
-                                    Marcar como Pronto <ChevronRight className="w-4 h-4" />
+                                    ← Voltar para Pronto
                                 </Button>
                             )}
-                            {longPressOrder.status === 'ready' && (
+
+                            <div className="pt-2">
                                 <Button
-                                    className="w-full justify-between bg-emerald-600 hover:bg-emerald-500"
-                                    onClick={async () => {
-                                        const { error } = await supabase
-                                            .from('orders')
-                                            .update({ status: 'delivered', delivered_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-                                            .eq('id', longPressOrder.id);
-                                        if (!error) {
-                                            toast({ title: 'Pedido entregue!' });
-                                            loadOrders();
-                                        }
-                                        setLongPressOrder(null);
-                                    }}
+                                    variant="ghost"
+                                    className="w-full text-muted-foreground"
+                                    onClick={() => setLongPressOrder(null)}
                                 >
-                                    Marcar como Entregue <ChevronRight className="w-4 h-4" />
+                                    Fechar
                                 </Button>
-                            )}
-                            <Button
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => setLongPressOrder(null)}
-                            >
-                                Cancelar
-                            </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
