@@ -494,7 +494,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="fixed inset-0 w-full h-full max-w-none max-h-none rounded-none overflow-y-auto p-4 pb-24 sm:inset-auto sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-full sm:max-w-2xl sm:h-auto sm:max-h-[85vh] sm:rounded-xl sm:p-6">
+            <DialogContent className="p-4 pb-20 sm:p-6 sm:pb-6 sm:max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>Criar Novo Produto</DialogTitle>
                 </DialogHeader>
