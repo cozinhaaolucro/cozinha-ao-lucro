@@ -46,6 +46,7 @@ export type Order = {
     production_started_at?: string | null;
     production_completed_at?: string | null;
     production_duration_minutes?: number | null;
+    ready_for_pickup?: boolean;
 };
 
 export type OrderStatusLog = {

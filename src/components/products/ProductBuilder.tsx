@@ -494,7 +494,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>Criar Novo Produto</DialogTitle>
                 </DialogHeader>
@@ -679,10 +679,10 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                                 </CardContent>
                             </Card>
                         ) : (
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 {selectedIngredients.map((si, index) => (
-                                    <div key={index} className="flex items-center gap-2">
-                                        <div className="flex-1 min-w-[180px]">
+                                    <div key={index} className="flex flex-wrap items-center gap-2 p-2 bg-muted/30 rounded-lg border">
+                                        <div className="flex-1 min-w-[150px] sm:min-w-[180px]">
                                             {si.is_virtual ? (
                                                 <div className="px-3 py-2 text-sm border rounded-md bg-muted/50 flex justify-between items-center h-10">
                                                     <span>{si.name} <span className="text-xs text-muted-foreground">(Novo)</span></span>
@@ -707,13 +707,13 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                                             )}
                                         </div>
 
-                                        <div className="flex items-center gap-2 w-[180px]">
+                                        <div className="flex items-center gap-2 flex-shrink-0">
                                             <Input
                                                 type="number"
                                                 step="0.001"
                                                 value={si.display_quantity}
                                                 onChange={(e) => updateIngredientDisplayQuantity(index, parseFloat(e.target.value) || 0)}
-                                                className="w-20 text-right h-10"
+                                                className="w-16 sm:w-20 text-right h-10"
                                                 placeholder="Qtd"
                                             />
 
@@ -738,7 +738,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                                             )}
                                         </div>
 
-                                        <div className="text-xs text-muted-foreground w-16 text-right">
+                                        <div className="text-xs text-muted-foreground w-14 sm:w-16 text-right font-medium">
                                             R$ {(si.cost * si.quantity).toFixed(2)}
                                         </div>
 

@@ -279,32 +279,31 @@ const IngredientList = () => {
         <div className="space-y-4">
             {/* Toolbar */}
             {/* ... toolbar ... */}
-            <div className="flex items-center justify-between bg-card p-4 rounded-lg border shadow-sm">
-                {/* ... */}
-                <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-card p-3 sm:p-4 rounded-lg border shadow-sm">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                     <div className="flex items-center gap-2">
                         <Checkbox
                             checked={ingredients.length > 0 && selectedIngredients.length === ingredients.length}
                             onCheckedChange={toggleSelectAll}
                         />
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                             {selectedIngredients.length} selecionados
                         </span>
                     </div>
                     {selectedIngredients.length > 0 && (
                         <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setIsBulkEditDialogOpen(true)}>
-                                <Pencil className="w-4 h-4 mr-2" />
-                                Editar em Massa
+                            <Button variant="outline" size="sm" className="text-xs sm:text-sm" onClick={() => setIsBulkEditDialogOpen(true)}>
+                                <Pencil className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                                <span className="hidden xs:inline">Editar</span>
                             </Button>
-                            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Excluir
+                            <Button variant="destructive" size="sm" className="text-xs sm:text-sm" onClick={handleBulkDelete}>
+                                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                                <span className="hidden xs:inline">Excluir</span>
                             </Button>
                         </div>
                     )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 ml-auto">
                     <div className="relative">
                         <input
                             type="file"
@@ -313,16 +312,16 @@ const IngredientList = () => {
                             onChange={handleImport}
                             title="Importar Excel"
                         />
-                        <Button variant="outline" size="icon" title="Importar Excel">
-                            <Upload className="w-4 h-4" />
+                        <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" title="Importar Excel">
+                            <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
                     </div>
-                    <Button variant="outline" size="icon" onClick={handleExport} title="Exportar Excel">
-                        <Download className="w-4 h-4" />
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={handleExport} title="Exportar Excel">
+                        <Download className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
-                    <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
-                        <Plus className="w-4 h-4" />
-                        Novo Ingrediente
+                    <Button onClick={() => setIsDialogOpen(true)} className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-4">
+                        <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden xs:inline">Novo</span> Ingrediente
                     </Button>
                 </div>
             </div>

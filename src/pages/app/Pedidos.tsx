@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2 } from 'lucide-react';
+import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2, PackageCheck, ChevronRight } from 'lucide-react';
 import { getOrders, deductStockFromOrder } from '@/lib/database';
 import { exportToExcel, importFromExcel } from '@/lib/excel';
 import { supabase } from '@/lib/supabase';
@@ -29,6 +29,8 @@ const Pedidos = () => {
     const [editingOrder, setEditingOrder] = useState<OrderWithDetails | null>(null);
     const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
     const [draggedOrder, setDraggedOrder] = useState<string | null>(null);
+    const [longPressOrder, setLongPressOrder] = useState<OrderWithDetails | null>(null);
+    const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // CRM States
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -288,77 +290,124 @@ const Pedidos = () => {
                                         </CardContent>
                                     </Card>
                                 ) : (
-                                    statusOrders.map((order) => (
-                                        <Card
-                                            key={order.id}
-                                            draggable
-                                            onDragStart={(e) => handleDragStart(e, order.id)}
-                                            className={`${config.color} border-2 hover:shadow-md transition-all cursor-move group ${draggedOrder === order.id ? 'opacity-50' : ''
-                                                }`}
-                                        >
-                                            <CardHeader className="pb-3">
-                                                <CardTitle className="text-sm flex items-center justify-between">
-                                                    <span
-                                                        className="hover:underline cursor-pointer text-primary"
-                                                        onClick={() => handleCustomerClick(order.customer)}
-                                                    >
-                                                        {order.customer?.name || 'Cliente não informado'}
-                                                    </span>
-                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-6 w-6"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDuplicate(order);
-                                                            }}
-                                                            title="Duplicar Pedido"
-                                                        >
-                                                            <Copy className="w-3 h-3" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-6 w-6"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setEditingOrder(order);
-                                                            }}
-                                                        >
-                                                            <Pencil className="w-3 h-3" />
-                                                        </Button>
-                                                        {order.customer?.phone && (
+                                    statusOrders.map((order) => {
+                                        const nextStatus = order.status === 'pending' ? 'preparing'
+                                            : order.status === 'preparing' ? 'ready'
+                                                : order.status === 'ready' ? 'delivered' : null;
+
+                                        return (
+                                            <Card
+                                                key={order.id}
+                                                draggable
+                                                onDragStart={(e) => handleDragStart(e, order.id)}
+                                                onTouchStart={() => {
+                                                    longPressTimerRef.current = setTimeout(() => {
+                                                        setLongPressOrder(order);
+                                                    }, 500);
+                                                }}
+                                                onTouchEnd={() => {
+                                                    if (longPressTimerRef.current) {
+                                                        clearTimeout(longPressTimerRef.current);
+                                                    }
+                                                }}
+                                                onTouchMove={() => {
+                                                    if (longPressTimerRef.current) {
+                                                        clearTimeout(longPressTimerRef.current);
+                                                    }
+                                                }}
+                                                className={`${config.color} border-2 hover:shadow-md transition-all cursor-move group ${draggedOrder === order.id ? 'opacity-50' : ''
+                                                    }`}
+                                            >
+                                                <CardHeader className="pb-3">
+                                                    <CardTitle className="text-sm flex items-center justify-between">
+                                                        <div className="flex items-center gap-1">
+                                                            {order.ready_for_pickup && (
+                                                                <PackageCheck className="w-4 h-4 text-amber-600" title="Disponível para entrega" />
+                                                            )}
+                                                            <span
+                                                                className="hover:underline cursor-pointer text-primary"
+                                                                onClick={() => handleCustomerClick(order.customer)}
+                                                            >
+                                                                {order.customer?.name || 'Cliente não informado'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                                className="h-6 w-6"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    handleWhatsApp(order);
+                                                                    handleDuplicate(order);
+                                                                }}
+                                                                title="Duplicar Pedido"
+                                                            >
+                                                                <Copy className="w-3 h-3" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-6 w-6"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setEditingOrder(order);
                                                                 }}
                                                             >
-                                                                <Phone className="w-3 h-3" />
+                                                                <Pencil className="w-3 h-3" />
                                                             </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation();
+                                                                    if (confirm('Excluir este pedido?')) {
+                                                                        const { error } = await supabase
+                                                                            .from('orders')
+                                                                            .delete()
+                                                                            .eq('id', order.id);
+                                                                        if (!error) {
+                                                                            toast({ title: 'Pedido excluído' });
+                                                                            loadOrders();
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                title="Excluir"
+                                                            >
+                                                                <Trash2 className="w-3 h-3" />
+                                                            </Button>
+                                                            {order.customer?.phone && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleWhatsApp(order);
+                                                                    }}
+                                                                >
+                                                                    <Phone className="w-3 h-3" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </CardTitle>
+                                                </CardHeader>
+                                                <CardContent className="space-y-2">
+                                                    <div className="text-xs space-y-1">
+                                                        <p><strong>Entrega:</strong> {formatDate(order.delivery_date)}</p>
+                                                        <p><strong>Total:</strong> R$ {order.total_value.toFixed(2)}</p>
+                                                        {order.items && order.items.length > 0 && (
+                                                            <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">
+                                                                {order.items.map((item, idx) => (
+                                                                    <p key={idx}>• {item.product_name} (x{item.quantity})</p>
+                                                                ))}
+                                                            </div>
                                                         )}
                                                     </div>
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="space-y-2">
-                                                <div className="text-xs space-y-1">
-                                                    <p><strong>Entrega:</strong> {formatDate(order.delivery_date)}</p>
-                                                    <p><strong>Total:</strong> R$ {order.total_value.toFixed(2)}</p>
-                                                    {order.items && order.items.length > 0 && (
-                                                        <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">
-                                                            {order.items.map((item, idx) => (
-                                                                <p key={idx}>• {item.product_name} (x{item.quantity})</p>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    ))
+                                                </CardContent>
+                                            </Card>
+                                        );
+                                    })
                                 )}
                             </div>
                         </div>
@@ -383,39 +432,6 @@ const Pedidos = () => {
                 />
             )}
 
-            {/* Drag to Delete Zone */}
-            <div
-                className={`fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-red-600/90 to-red-500/0 z-50 transition-all duration-300 pointer-events-none flex items-end justify-center pb-8 ${draggedOrder ? 'opacity-100' : 'opacity-0'}`}
-                onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                }}
-                onDrop={async (e) => {
-                    e.preventDefault();
-                    if (draggedOrder) {
-                        if (confirm('Tem certeza que deseja EXCLUIR este pedido permanentemente?')) {
-                            const { error } = await supabase
-                                .from('orders')
-                                .delete()
-                                .eq('id', draggedOrder);
-
-                            if (error) {
-                                toast({ title: 'Erro ao excluir pedido', variant: 'destructive' });
-                            } else {
-                                toast({ title: 'Pedido excluído' });
-                                loadOrders();
-                            }
-                        }
-                        setDraggedOrder(null);
-                    }
-                }}
-                style={{ pointerEvents: draggedOrder ? 'auto' : 'none' }}
-            >
-                <div className="bg-red-600 text-white px-8 py-3 rounded-full font-bold shadow-lg flex items-center gap-3 animate-bounce">
-                    <Trash2 className="w-6 h-6" />
-                    Solte para Excluir
-                </div>
-            </div>
 
             <ClientProfileDrawer
                 customer={selectedCustomer}
@@ -428,6 +444,95 @@ const Pedidos = () => {
                 onClose={() => setIsMessageDialogOpen(false)}
                 order={messageOrder}
             />
+
+            {/* Mobile Long-Press Action Sheet */}
+            {longPressOrder && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center md:hidden"
+                    onClick={() => setLongPressOrder(null)}
+                >
+                    <div
+                        className="bg-white w-full rounded-t-2xl p-4 pb-8 safe-area-pb animate-in slide-in-from-bottom duration-300"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
+                        <h3 className="font-bold text-lg mb-2">
+                            #{longPressOrder.order_number || longPressOrder.id.slice(0, 4)}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            {longPressOrder.customer?.name || 'Cliente não informado'}
+                        </p>
+                        <div className="space-y-2">
+                            {longPressOrder.status === 'pending' && (
+                                <Button
+                                    className="w-full justify-between bg-blue-600 hover:bg-blue-500"
+                                    onClick={async () => {
+                                        await handleDrop({ preventDefault: () => { } } as any, 'preparing');
+                                        setDraggedOrder(longPressOrder.id);
+                                        setTimeout(async () => {
+                                            const { error } = await supabase
+                                                .from('orders')
+                                                .update({ status: 'preparing', updated_at: new Date().toISOString() })
+                                                .eq('id', longPressOrder.id);
+                                            if (!error) {
+                                                toast({ title: 'Pedido em produção!' });
+                                                loadOrders();
+                                            }
+                                            setLongPressOrder(null);
+                                            setDraggedOrder(null);
+                                        }, 0);
+                                    }}
+                                >
+                                    Iniciar Produção <ChevronRight className="w-4 h-4" />
+                                </Button>
+                            )}
+                            {longPressOrder.status === 'preparing' && (
+                                <Button
+                                    className="w-full justify-between bg-green-600 hover:bg-green-500"
+                                    onClick={async () => {
+                                        const { error } = await supabase
+                                            .from('orders')
+                                            .update({ status: 'ready', updated_at: new Date().toISOString() })
+                                            .eq('id', longPressOrder.id);
+                                        if (!error) {
+                                            toast({ title: 'Pedido pronto!' });
+                                            loadOrders();
+                                        }
+                                        setLongPressOrder(null);
+                                    }}
+                                >
+                                    Marcar como Pronto <ChevronRight className="w-4 h-4" />
+                                </Button>
+                            )}
+                            {longPressOrder.status === 'ready' && (
+                                <Button
+                                    className="w-full justify-between bg-emerald-600 hover:bg-emerald-500"
+                                    onClick={async () => {
+                                        const { error } = await supabase
+                                            .from('orders')
+                                            .update({ status: 'delivered', delivered_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+                                            .eq('id', longPressOrder.id);
+                                        if (!error) {
+                                            toast({ title: 'Pedido entregue!' });
+                                            loadOrders();
+                                        }
+                                        setLongPressOrder(null);
+                                    }}
+                                >
+                                    Marcar como Entregue <ChevronRight className="w-4 h-4" />
+                                </Button>
+                            )}
+                            <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => setLongPressOrder(null)}
+                            >
+                                Cancelar
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

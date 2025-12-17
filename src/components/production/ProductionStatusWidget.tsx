@@ -121,13 +121,18 @@ const ProductionStatusWidget = () => {
                 className={`bg-neutral-900 border border-neutral-800 shadow-2xl overflow-hidden relative ${visible ? 'block' : 'hidden'}`}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                onClick={() => !isHovered && navigate('/app/painel')}
+                onClick={() => {
+                    // On mobile: tap toggles mini-panel first, not navigate
+                    if (!isHovered) {
+                        setIsHovered(true);
+                    }
+                }}
             >
                 {/* Collapsed State */}
                 <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                     <div className="relative">
-                        <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 animate-pulse"></div>
-                        <div className="bg-gradient-to-br from-blue-600 to-purple-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-blue-900/40 relative z-10">
+                        <div className="absolute inset-0 bg-blue-500 blur-lg opacity-10"></div>
+                        <div className="bg-gradient-to-br from-blue-600 to-purple-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-blue-900/20 relative z-10">
                             <ChefHat className="text-white w-7 h-7" />
                             {activeOrders.length > 0 && (
                                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-neutral-900">
@@ -194,6 +199,7 @@ const ProductionStatusWidget = () => {
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
+                            setIsHovered(false); // Close mini-panel first
                             navigate('/app/painel');
                         }}
                         className="mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 group"

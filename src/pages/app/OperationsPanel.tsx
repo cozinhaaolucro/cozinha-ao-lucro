@@ -23,12 +23,12 @@ const getTimeBorderClass = (minutes: number, status: string) => {
     if (status === 'pending') {
         if (minutes < TIME_THRESHOLDS.NEW) return 'border-l-4 border-l-emerald-500';
         if (minutes < TIME_THRESHOLDS.WARNING) return 'border-l-4 border-l-yellow-500';
-        return 'border-l-4 border-l-red-500 animate-subtle-pulse';
+        return 'border-l-4 border-l-red-500';
     }
     if (status === 'preparing') {
         if (minutes < TIME_THRESHOLDS.WARNING) return 'border-l-4 border-l-blue-500';
         if (minutes < TIME_THRESHOLDS.URGENT) return 'border-l-4 border-l-yellow-500';
-        return 'border-l-4 border-l-red-500 animate-subtle-pulse';
+        return 'border-l-4 border-l-red-500';
     }
     return 'border-l-4 border-l-emerald-500'; // Ready = always green
 };
@@ -144,7 +144,7 @@ const OperationsPanel = () => {
         const orderProfit = (order.total_value || 0) - orderCost;
 
         return (
-            <Card className={`bg-white/5 backdrop-blur-md border-white/10 text-white overflow-hidden shadow-lg relative hover:border-white/20 transition-all duration-200 ${borderClass}`}>
+            <Card className={`bg-slate-800/50 border-slate-700/50 text-white overflow-hidden shadow-lg relative transition-all duration-200 ${borderClass}`}>
                 <CardHeader className="pb-2 relative z-10">
                     <div className="flex justify-between items-start">
                         <div>
@@ -164,7 +164,7 @@ const OperationsPanel = () => {
                             <Badge
                                 variant="outline"
                                 className={`${waitingMinutes > TIME_THRESHOLDS.URGENT
-                                    ? 'bg-red-500/20 text-red-200 border-red-500/50 animate-pulse'
+                                    ? 'bg-red-500/20 text-red-200 border-red-500/50'
                                     : waitingMinutes > TIME_THRESHOLDS.WARNING
                                         ? 'bg-yellow-500/20 text-yellow-200 border-yellow-500/50'
                                         : 'bg-blue-500/20 text-blue-200 border-blue-500/50'
@@ -218,13 +218,31 @@ const OperationsPanel = () => {
                                     Marcar Pronto
                                 </Button>
                             )}
-                            {order.status === 'ready' && (
+                            {order.status === 'ready' && !order.ready_for_pickup && (
+                                <Button
+                                    className="w-full bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-900/20 transition-all active:scale-95"
+                                    onClick={async () => {
+                                        const { error } = await supabase
+                                            .from('orders')
+                                            .update({ ready_for_pickup: true, updated_at: new Date().toISOString() })
+                                            .eq('id', order.id);
+                                        if (!error) {
+                                            toast({ title: 'Marcado como disponível para entrega!' });
+                                            fetchOrders();
+                                        }
+                                    }}
+                                >
+                                    <Package className="w-4 h-4 mr-2" />
+                                    Disponível para Entrega
+                                </Button>
+                            )}
+                            {order.status === 'ready' && order.ready_for_pickup && (
                                 <Button
                                     className="w-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 transition-all active:scale-95"
                                     onClick={() => updateStatus(order.id, 'delivered')}
                                 >
                                     <CheckCircle2 className="w-4 h-4 mr-2" />
-                                    Entregar (Pago)
+                                    Finalizar Entrega
                                 </Button>
                             )}
                         </div>
@@ -288,11 +306,11 @@ const OperationsPanel = () => {
     const totalDailyProfit = dailyProfitOrders.reduce((acc, order) => acc + ((order.total_value || 0) - calculateOrderCost(order)), 0);
 
     return (
-        <div className="-m-4 md:-m-8 min-h-screen w-[calc(100%+2rem)] md:w-[calc(100%+4rem)] bg-slate-900">
+        <div className="-m-4 md:-m-8 min-h-screen h-full w-[calc(100%+2rem)] md:w-[calc(100%+4rem)] bg-slate-900">
             {/* Ambient Background */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-[120px]" />
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-[120px]" />
             </div>
 
             <div className="relative z-10 p-6 md:p-8 max-w-7xl mx-auto">
@@ -313,32 +331,32 @@ const OperationsPanel = () => {
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 overflow-visible">
-                        <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px] hover:bg-white/10 transition-colors cursor-help group relative">
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px] hover:bg-slate-700/50 transition-colors cursor-help group relative">
                             <span className="text-[10px] md:text-xs text-neutral-400 uppercase tracking-wider font-bold mb-1">Tempo Estimado</span>
                             <span className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
                                 {formatHours(totalEstimatedTime)}
                             </span>
-                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-neutral-900 text-white text-xs p-2 rounded shadow-xl border border-white/10 hidden group-hover:block z-[100] pointer-events-none">
+                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-neutral-900 text-white text-xs p-2 rounded shadow-xl border border-slate-700 hidden group-hover:block z-[9999] pointer-events-none">
                                 Soma do tempo de preparo de todos pedidos ativos.
                             </div>
                         </div>
 
-                        <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px] hover:bg-white/10 transition-colors cursor-help group relative">
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px] hover:bg-slate-700/50 transition-colors cursor-help group relative">
                             <span className="text-[10px] md:text-xs text-neutral-400 uppercase tracking-wider font-bold mb-1">Horas Realizadas</span>
                             <span className="text-xl md:text-2xl font-bold text-blue-400 flex items-center gap-2">
                                 {formatHours(totalRealizedMinutes)}
                             </span>
-                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-neutral-900 text-white text-xs p-2 rounded shadow-xl border border-white/10 hidden group-hover:block z-[100] pointer-events-none">
+                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-neutral-900 text-white text-xs p-2 rounded shadow-xl border border-slate-700 hidden group-hover:block z-[9999] pointer-events-none">
                                 Tempo total gasto nos pedidos hoje (Finalizados + Ativos).
                             </div>
                         </div>
 
-                        <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px]">
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px]">
                             <span className="text-[10px] md:text-xs text-neutral-400 uppercase tracking-wider font-bold mb-1">Lucro Dia</span>
                             <span className="text-xl md:text-2xl font-bold text-emerald-400">R$ {totalDailyProfit.toFixed(2)}</span>
                         </div>
 
-                        <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px]">
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px]">
                             <span className="text-[10px] md:text-xs text-neutral-400 uppercase tracking-wider font-bold mb-1">Fila Total</span>
                             <span className="text-xl md:text-2xl font-bold text-white">{orders.filter(o => o.status === 'pending').length}</span>
                         </div>
@@ -347,7 +365,7 @@ const OperationsPanel = () => {
 
                 {/* Toast-inspired All Day View */}
                 {allDayCounts.length > 0 && (
-                    <div className="mb-6 bg-white/5 backdrop-blur border border-white/10 rounded-xl p-4">
+                    <div className="mb-6 bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
                         <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                             <Package className="w-4 h-4" />
                             Produção do Dia

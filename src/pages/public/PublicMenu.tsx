@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -187,10 +188,6 @@ const PublicMenu = () => {
                     </p>
                 </div>
             </div>
-
-            import {motion, AnimatePresence} from 'framer-motion';
-
-            // ... layout wrapper ...
 
             {/* Menu Items */}
             <div className="max-w-md mx-auto p-4 space-y-4">
