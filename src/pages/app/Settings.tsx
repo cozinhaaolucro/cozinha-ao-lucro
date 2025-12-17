@@ -348,142 +348,135 @@ const Settings = () => {
                     <SubscriptionManager />
                 </TabsContent>
 
-                {/* Digital Menu Tab (Placeholder for now, re-implemented next) */}
-                <TabsContent value="menu" className="space-y-3 sm:space-y-6">
-                    <div className="grid gap-3 sm:gap-6 md:grid-cols-2">
-                        {/* Customization Form */}
-                        <Card className="md:order-1">
-                            <CardHeader className="p-4 sm:p-6">
-                                <CardTitle className="text-base sm:text-xl">Personalização</CardTitle>
-                                <CardDescription className="text-xs sm:text-sm">
-                                    Como seu estabelecimento aparece para os clientes.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-4 sm:p-6 pt-0">
-                                <form onSubmit={handleSaveMenuSettings} className="space-y-3 sm:space-y-6">
-                                    <div className="flex flex-col items-center gap-2 sm:gap-4 p-3 sm:p-4 border rounded-lg bg-muted/20">
-                                        <div className="relative group">
-                                            <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-background border-2 border-border flex items-center justify-center">
-                                                {profile?.logo_url ? (
-                                                    <img src={profile.logo_url} alt="Logo" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <Store className="w-10 h-10 text-muted-foreground" />
-                                                )}
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => logoInputRef.current?.click()}
-                                                className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white font-medium text-xs"
-                                                disabled={uploading}
-                                            >
-                                                Alterar Logo
-                                            </button>
+                {/* Digital Menu Tab */}
+                <TabsContent value="menu" className="space-y-2">
+                    <Card>
+                        <CardHeader className="p-3 sm:p-6 pb-2">
+                            <CardTitle className="text-sm sm:text-xl">Cardápio Digital</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 sm:p-6 pt-0">
+                            <form onSubmit={handleSaveMenuSettings} className="space-y-2">
+                                {/* Logo - inline */}
+                                <div className="flex items-center gap-3 p-2 border rounded-lg bg-muted/20">
+                                    <div className="relative group">
+                                        <div className="w-12 h-12 rounded-full overflow-hidden bg-background border flex items-center justify-center">
+                                            {profile?.logo_url ? (
+                                                <img src={profile.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <Store className="w-5 h-5 text-muted-foreground" />
+                                            )}
                                         </div>
-                                        <input
-                                            ref={logoInputRef}
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={handleLogoUpload}
-                                        />
-                                        <p className="text-xs text-muted-foreground">Clique na imagem para alterar a logo.</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => logoInputRef.current?.click()}
+                                            className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 text-white text-[10px]"
+                                            disabled={uploading}
+                                        >
+                                            Alterar
+                                        </button>
                                     </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="business_name">Nome do Estabelecimento no Cardápio</Label>
-                                        <Input
-                                            id="business_name"
-                                            name="business_name"
-                                            defaultValue={profile?.business_name || ''}
-                                            placeholder="Ex: Doces da Maria"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between">
-                                            <Label htmlFor="slug">Link Personalizado</Label>
-                                            <span className="text-xs text-muted-foreground">{window.location.host}/menu/{profile?.slug || 'seu-nome'}</span>
-                                        </div>
-                                        <Input
-                                            id="slug"
-                                            name="slug"
-                                            defaultValue={profile?.slug || ''}
-                                            placeholder="ex: doces-da-maria"
-                                            pattern="^[a-z0-9-]+$"
-                                            title="Apenas letras minúsculas, números e hífens."
-                                        />
-                                        <p className="text-xs text-muted-foreground">Deixe em branco para usar apenas o link padrão.</p>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="description">Descrição / Bio</Label>
-                                        <textarea
-                                            id="description"
-                                            name="description"
-                                            defaultValue={profile?.description || ''}
-                                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            placeholder="Ex: Os melhores doces artesanais da cidade. Encomendas com 24h de antecedência."
-                                        />
-                                    </div>
-
-                                    <Button type="submit" disabled={loading} className="w-full">
-                                        <Save className="w-4 h-4 mr-2" />
-                                        Salvar Alterações
-                                    </Button>
-                                </form>
-                            </CardContent>
-                        </Card>
-
-                        {/* Sharing Card */}
-                        <Card className="md:order-2 h-fit">
-                            <CardHeader>
-                                <CardTitle>Compartilhar</CardTitle>
-                                <CardDescription>
-                                    Envie este link para seus clientes.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="bg-muted p-4 rounded-lg flex items-center justify-between gap-4">
-                                    <div className="truncate flex-1 font-mono text-sm bg-background p-2 rounded border">
-                                        {window.location.origin}/menu/{profile?.slug || user?.id}
-                                    </div>
-                                    <Button
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(`${window.location.origin}/menu/${profile?.slug || user?.id}`);
-                                            toast.success('Link copiado!');
-                                        }}
-                                        variant="secondary"
-                                        size="sm"
-                                    >
-                                        Copiar
-                                    </Button>
+                                    <input
+                                        ref={logoInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleLogoUpload}
+                                    />
+                                    <span className="text-xs text-muted-foreground">Clique para alterar</span>
                                 </div>
 
-                                <div className="flex flex-col items-center justify-center text-center space-y-4">
-                                    <div className="w-40 h-40 bg-white p-2 rounded-lg border shadow-sm">
-                                        <img
-                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/menu/${profile?.slug || user?.id}`)}`}
-                                            alt="QR Code"
-                                            className="w-full h-full object-contain"
-                                        />
-                                    </div>
-                                    <Button variant="outline" className="w-full" onClick={() => window.open(`/menu/${profile?.slug || user?.id}`, '_blank')}>
-                                        <Store className="w-4 h-4 mr-2" />
-                                        Visualizar Cardápio Público
-                                    </Button>
-                                    {profile?.slug && (
-                                        <p className="text-xs text-muted-foreground">
-                                            Seu link personalizado está ativo!
-                                        </p>
-                                    )}
+                                {/* Name */}
+                                <div>
+                                    <Label htmlFor="business_name" className="text-xs">Nome do Estabelecimento</Label>
+                                    <Input
+                                        id="business_name"
+                                        name="business_name"
+                                        defaultValue={profile?.business_name || ''}
+                                        placeholder="Ex: Doces da Maria"
+                                        className="h-8"
+                                        required
+                                    />
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+
+                                {/* Slug */}
+                                <div>
+                                    <Label htmlFor="slug" className="text-xs">Link Personalizado</Label>
+                                    <Input
+                                        id="slug"
+                                        name="slug"
+                                        defaultValue={profile?.slug || ''}
+                                        placeholder="doces-da-maria"
+                                        className="h-8"
+                                        pattern="^[a-z0-9-]+$"
+                                    />
+                                </div>
+
+                                {/* Description */}
+                                <div>
+                                    <Label htmlFor="description" className="text-xs">Descrição</Label>
+                                    <textarea
+                                        id="description"
+                                        name="description"
+                                        defaultValue={profile?.description || ''}
+                                        className="flex min-h-[50px] w-full rounded-md border border-input bg-background px-2 py-1 text-xs resize-none"
+                                        placeholder="Os melhores doces artesanais..."
+                                    />
+                                </div>
+
+                                <Button type="submit" disabled={loading} className="w-full h-8 text-sm">
+                                    <Save className="w-4 h-4 mr-2" />
+                                    Salvar Alterações
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+
+                    {/* Sharing Card */}
+                    <Card>
+                        <CardHeader className="p-3 sm:p-6 pb-2">
+                            <CardTitle className="text-sm sm:text-xl">Compartilhar</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 sm:p-6 pt-0 space-y-3">
+                            <div className="bg-muted p-2 rounded-lg flex items-center justify-between gap-2">
+                                <div className="truncate flex-1 font-mono text-xs bg-background p-1.5 rounded border">
+                                    {window.location.origin}/menu/{profile?.slug || user?.id}
+                                </div>
+                                <Button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(`${window.location.origin}/menu/${profile?.slug || user?.id}`);
+                                        toast.success('Link copiado!');
+                                    }}
+                                    variant="secondary"
+                                    size="sm"
+                                    className="h-7 text-xs"
+                                >
+                                    Copiar
+                                </Button>
+                            </div>
+
+                            <div className="flex flex-col items-center text-center space-y-2">
+                                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white p-1 rounded-lg border shadow-sm">
+                                    <img
+                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/menu/${profile?.slug || user?.id}`)}`}
+                                        alt="QR Code"
+                                        className="w-full h-full object-contain"
+                                    />
+                                </div>
+                                <Button variant="outline" className="w-full" onClick={() => window.open(`/menu/${profile?.slug || user?.id}`, '_blank')}>
+                                    <Store className="w-4 h-4 mr-2" />
+                                    Visualizar Cardápio Público
+                                </Button>
+                                {profile?.slug && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Seu link personalizado está ativo!
+                                    </p>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
             </Tabs>
-        </div>
+        </div >
     );
 };
 

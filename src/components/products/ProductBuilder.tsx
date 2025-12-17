@@ -494,65 +494,63 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="p-4 pb-20 sm:p-6 sm:pb-6 sm:max-w-2xl">
-                <DialogHeader>
-                    <DialogTitle>Criar Novo Produto</DialogTitle>
+            <DialogContent className="p-3 pb-20 sm:p-6 sm:pb-6 sm:max-w-2xl">
+                <DialogHeader className="pb-1">
+                    <DialogTitle className="text-sm sm:text-lg">Novo Produto</DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-6">
-                    {/* Basic Info - Mobile First Stack */}
-                    <div className="space-y-2 sm:space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-2">
+                    {/* Basic Info - Ultra compact */}
+                    <div className="space-y-1">
                         <div>
-                            <Label htmlFor="name" className="text-xs sm:text-sm">Nome do Produto</Label>
+                            <Label htmlFor="name" className="text-[10px] sm:text-sm">Nome</Label>
                             <Input
                                 id="name"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="Ex: Brigadeiro Gourmet"
-                                className="h-9 sm:h-10"
+                                placeholder="Ex: Brigadeiro"
+                                className="h-8"
                                 required
                             />
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2">
-                            <div className="col-span-2">
-                                <Label htmlFor="description" className="text-xs sm:text-sm">Descrição</Label>
-                                <Textarea
+                        <div className="flex gap-2">
+                            <div className="flex-1">
+                                <Label htmlFor="description" className="text-[10px] sm:text-sm">Descrição</Label>
+                                <Input
                                     id="description"
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     placeholder="Chocolate belga..."
-                                    className="h-10 sm:h-16 text-xs sm:text-sm resize-none"
+                                    className="h-8 text-xs"
                                 />
                             </div>
-                            <div>
-                                <Label htmlFor="prep_time" className="text-xs sm:text-sm">Tempo</Label>
+                            <div className="w-16">
+                                <Label htmlFor="prep_time" className="text-[10px] sm:text-sm">Min</Label>
                                 <Input
                                     id="prep_time"
                                     type="number"
                                     min="0"
                                     value={formData.preparation_time_minutes}
                                     onChange={(e) => setFormData({ ...formData, preparation_time_minutes: parseInt(e.target.value) || 0 })}
-                                    className="h-10 sm:h-16 text-center text-lg sm:text-2xl font-bold"
+                                    className="h-8 text-center text-sm font-bold"
                                 />
                             </div>
                         </div>
 
-                        {/* Image - Compact on mobile */}
-                        <div>
-                            <Label className="text-xs sm:text-sm">Imagem</Label>
+                        {/* Image - Ultra compact inline */}
+                        <div className="flex items-center gap-2">
+                            <Label className="text-[10px] sm:text-sm whitespace-nowrap">Foto:</Label>
                             <label
                                 htmlFor="product-image"
-                                className="block border-2 border-dashed rounded-lg p-2 cursor-pointer hover:bg-muted/50 relative overflow-hidden h-12 sm:h-24 flex items-center justify-center"
+                                className="flex-1 border border-dashed rounded px-2 py-1 cursor-pointer hover:bg-muted/50 flex items-center justify-center gap-2 h-8"
                             >
                                 {imagePreview ? (
-                                    <img src={imagePreview} alt="Preview" className="h-full w-auto object-contain" />
+                                    <img src={imagePreview} alt="Preview" className="h-6 w-6 object-cover rounded" />
                                 ) : (
-                                    <div className="flex items-center gap-2 text-muted-foreground">
-                                        <ImageIcon className="w-4 h-4 sm:w-6 sm:h-6" />
-                                        <span className="text-xs">Adicionar foto</span>
-                                    </div>
+                                    <ImageIcon className="w-4 h-4 text-muted-foreground" />
                                 )}
+                                <span className="text-[10px] text-muted-foreground">{imagePreview ? 'Alterar' : 'Adicionar'}</span>
                                 <input
                                     type="file"
                                     id="product-image"
@@ -564,13 +562,13 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                         </div>
                     </div>
 
-                    {/* Presets Button */}
-                    <div className="flex justify-end">
+                    {/* Presets Button - Compact */}
+                    <div>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button type="button" variant="secondary" className="gap-2 w-full sm:w-auto">
-                                    <Calculator className="w-4 h-4" />
-                                    Carregar Modelo de Produto
+                                <Button type="button" variant="secondary" size="sm" className="w-full h-8 text-xs gap-1">
+                                    <Calculator className="w-3 h-3" />
+                                    Modelo de Produto
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-[300px]">
@@ -594,15 +592,15 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                         </DropdownMenu>
                     </div>
 
-                    {/* Recipe (Ingredients) */}
-                    <div className="space-y-3">
+                    {/* Recipe (Ingredients) - Compact */}
+                    <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                            <Label>Receita (Ingredientes)</Label>
-                            <div className="flex gap-2">
+                            <Label className="text-[10px] sm:text-sm">Ingredientes</Label>
+                            <div className="flex gap-1">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button type="button" variant="outline" size="sm" className="gap-2">
-                                            + Rápido (Presets) <ChevronDown className="w-3 h-3" />
+                                        <Button type="button" variant="outline" size="sm" className="h-6 text-[10px] px-2">
+                                            + Preset
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-56 max-h-60 overflow-y-auto">
