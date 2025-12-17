@@ -293,7 +293,7 @@ const Pedidos = () => {
                                             key={order.id}
                                             draggable
                                             onDragStart={(e) => handleDragStart(e, order.id)}
-                                            className={`${config.color} border-2 hover:shadow-md transition-all cursor-move ${draggedOrder === order.id ? 'opacity-50' : ''
+                                            className={`${config.color} border-2 hover:shadow-md transition-all cursor-move group ${draggedOrder === order.id ? 'opacity-50' : ''
                                                 }`}
                                         >
                                             <CardHeader className="pb-3">
@@ -304,7 +304,7 @@ const Pedidos = () => {
                                                     >
                                                         {order.customer?.name || 'Cliente não informado'}
                                                     </span>
-                                                    <div className="flex gap-1">
+                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"

@@ -264,7 +264,6 @@ const DashboardLayout = () => {
                     >
                         <Search className="w-4 h-4" />
                         <span className="flex-1 text-left">Buscar...</span>
-                        <kbd className="text-xs bg-muted px-1.5 py-0.5 rounded border">⌘K</kbd>
                     </Button>
                 </div>
 

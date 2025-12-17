@@ -1,32 +1,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Download } from 'lucide-react';
+import { BookOpen, ExternalLink, FileText } from 'lucide-react';
 
-const EBOOKS = [
+const CONTENT = [
     {
         id: 1,
-        title: 'Cozinha ao Lucro',
-        description: 'Guia completo para transformar sua cozinha em uma fonte de renda',
-        file: '/ebook_cozinha_ao_lucro.pdf',
+        title: 'Cozinha ao Lucro - Guia Completo',
+        description: 'Aprenda a transformar sua cozinha em uma fonte de renda estável',
         cover: '/images/ebook_da_cozinha_ao_lucro_20251117_062259.png',
+        type: 'guide',
     },
     {
         id: 2,
         title: 'Receitas que Vendem',
         description: '50 receitas testadas com alto lucro e baixo custo',
-        file: '/ebook_receitas_que_vendem.pdf',
         cover: '/images/ebook_receitas_que_vendem_20251117_062322.png',
+        type: 'recipe',
     },
 ];
 
 const Aprender = () => {
-    const handleDownload = (file: string, title: string) => {
-        const link = document.createElement('a');
-        link.href = file;
-        link.download = title + '.pdf';
-        link.click();
-    };
-
     return (
         <div className="space-y-6">
             <div>
@@ -34,55 +27,53 @@ const Aprender = () => {
                     <BookOpen className="w-8 h-8" />
                     Aprender
                 </h1>
-                <p className="text-muted-foreground">Acesse seus materiais de estudo</p>
+                <p className="text-muted-foreground">Acesse materiais de estudo e dicas de crescimento</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-                {EBOOKS.map((ebook) => (
-                    <Card key={ebook.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                        <div className="h-64 overflow-hidden bg-muted flex items-center justify-center">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {CONTENT.map((item) => (
+                    <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
+                        <div className="h-48 overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
                             <img
-                                src={ebook.cover}
-                                alt={ebook.title}
-                                className="h-full object-contain"
+                                src={item.cover}
+                                alt={item.title}
+                                className="h-full object-contain group-hover:scale-105 transition-transform duration-300"
                             />
                         </div>
-                        <CardHeader>
-                            <CardTitle>{ebook.title}</CardTitle>
-                            <p className="text-sm text-muted-foreground">{ebook.description}</p>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-lg">{item.title}</CardTitle>
+                            <p className="text-sm text-muted-foreground">{item.description}</p>
                         </CardHeader>
-                        <CardContent className="space-y-2">
-                            <Button
-                                className="w-full gap-2"
-                                onClick={() => {
-                                    // Open in new tab/window
-                                    window.open(ebook.file, '_blank', 'noopener,noreferrer');
-                                }}
-                            >
-                                <BookOpen className="w-4 h-4" />
-                                Ler Agora
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="w-full gap-2"
-                                onClick={() => handleDownload(ebook.file, ebook.title)}
-                            >
-                                <Download className="w-4 h-4" />
-                                Baixar
-                            </Button>
+                        <CardContent>
+                            <div className="flex flex-col gap-2">
+                                <div className="p-4 bg-muted/50 rounded-lg text-center">
+                                    <FileText className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                                    <p className="text-sm text-muted-foreground">
+                                        Conteúdo em desenvolvimento
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        Em breve disponível para assinantes
+                                    </p>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
                 ))}
             </div>
 
-            <Card>
+            <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
                 <CardHeader>
-                    <CardTitle>Próximos Conteúdos</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                        🚀 Próximos Conteúdos
+                    </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                        Em breve: Vídeo-aulas exclusivas, templates de precificação e muito mais! 🚀
-                    </p>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li>• Vídeo-aulas exclusivas sobre precificação</li>
+                        <li>• Templates prontos para fichas técnicas</li>
+                        <li>• Guia de marketing para doceiras</li>
+                        <li>• Comunidade de empreendedores</li>
+                    </ul>
                 </CardContent>
             </Card>
         </div>

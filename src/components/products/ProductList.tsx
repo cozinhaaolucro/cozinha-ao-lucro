@@ -195,7 +195,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                         const profit = (product.selling_price || 0) - totalCost;
 
                         return (
-                            <Card key={product.id} className="hover:shadow-lg transition-shadow">
+                            <Card key={product.id} className="hover:shadow-lg transition-shadow group">
                                 <CardHeader className="pb-3">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">
@@ -251,23 +251,36 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                                                 </label>
                                             </div>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => setEditingProduct(product)}
-                                                title="Editar"
-                                            >
-                                                <Pencil className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="text-destructive hover:text-destructive/90"
-                                                onClick={() => handleDelete(product.id)}
-                                                title="Excluir"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
+                                            {/* Desktop: hover-only */}
+                                            <div className="hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => setEditingProduct(product)}
+                                                    title="Editar"
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="text-destructive hover:text-destructive/90"
+                                                    onClick={() => handleDelete(product.id)}
+                                                    title="Excluir"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                            {/* Mobile: always visible */}
+                                            <div className="flex md:hidden gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => setEditingProduct(product)}
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                     {product.description && (

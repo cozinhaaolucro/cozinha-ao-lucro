@@ -23,12 +23,12 @@ const getTimeBorderClass = (minutes: number, status: string) => {
     if (status === 'pending') {
         if (minutes < TIME_THRESHOLDS.NEW) return 'border-l-4 border-l-emerald-500';
         if (minutes < TIME_THRESHOLDS.WARNING) return 'border-l-4 border-l-yellow-500';
-        return 'border-l-4 border-l-red-500 animate-pulse';
+        return 'border-l-4 border-l-red-500 animate-subtle-pulse';
     }
     if (status === 'preparing') {
         if (minutes < TIME_THRESHOLDS.WARNING) return 'border-l-4 border-l-blue-500';
         if (minutes < TIME_THRESHOLDS.URGENT) return 'border-l-4 border-l-yellow-500';
-        return 'border-l-4 border-l-red-500 animate-pulse';
+        return 'border-l-4 border-l-red-500 animate-subtle-pulse';
     }
     return 'border-l-4 border-l-emerald-500'; // Ready = always green
 };
@@ -164,10 +164,10 @@ const OperationsPanel = () => {
                             <Badge
                                 variant="outline"
                                 className={`${waitingMinutes > TIME_THRESHOLDS.URGENT
-                                        ? 'bg-red-500/20 text-red-200 border-red-500/50 animate-pulse'
-                                        : waitingMinutes > TIME_THRESHOLDS.WARNING
-                                            ? 'bg-yellow-500/20 text-yellow-200 border-yellow-500/50'
-                                            : 'bg-blue-500/20 text-blue-200 border-blue-500/50'
+                                    ? 'bg-red-500/20 text-red-200 border-red-500/50 animate-pulse'
+                                    : waitingMinutes > TIME_THRESHOLDS.WARNING
+                                        ? 'bg-yellow-500/20 text-yellow-200 border-yellow-500/50'
+                                        : 'bg-blue-500/20 text-blue-200 border-blue-500/50'
                                     } text-xs py-0.5 px-2`}
                             >
                                 <Timer className="w-3 h-3 mr-1" />

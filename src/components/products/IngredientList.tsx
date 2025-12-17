@@ -327,41 +327,65 @@ const IngredientList = () => {
                 </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {ingredients.map((ingredient) => {
                     const demand = getDemand(ingredient.id);
                     const statusClass = getStatusColor(ingredient.stock_quantity || 0, demand);
 
                     return (
-                        <Card key={ingredient.id} className={`border-l-4 ${statusClass}`}>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <div className="flex items-center gap-3">
-                                    <Checkbox
-                                        checked={selectedIngredients.includes(ingredient.id)}
-                                        onCheckedChange={() => toggleSelect(ingredient.id)}
-                                    />
-                                    <div>
-                                        <CardTitle className="text-sm font-medium">
+                        <Card key={ingredient.id} className={`border-l-4 ${statusClass} group`}>
+                            <CardContent className="p-3">
+                                <div className="flex items-start justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox
+                                            checked={selectedIngredients.includes(ingredient.id)}
+                                            onCheckedChange={() => toggleSelect(ingredient.id)}
+                                        />
+                                        <CardTitle className="text-sm font-medium line-clamp-1">
                                             {ingredient.name}
                                         </CardTitle>
-                                        {demand > 0 && (
-                                            <p className="text-[10px] text-muted-foreground">
-                                                Demanda ativa: {demand.toFixed(2)} {ingredient.unit}
-                                            </p>
-                                        )}
                                     </div>
                                 </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">R$ {ingredient.cost_per_unit.toFixed(2)} / {ingredient.unit}</div>
+                                <div className="text-lg font-bold text-primary">
+                                    R$ {ingredient.cost_per_unit.toFixed(2)}
+                                </div>
                                 <p className="text-xs text-muted-foreground">
-                                    Estoque: {ingredient.stock_quantity} {ingredient.unit}
+                                    {ingredient.stock_quantity} {ingredient.unit}
                                 </p>
-                                <div className="mt-4 flex gap-2">
-                                    <Button variant="outline" size="sm" className="w-full" onClick={() => {
-                                        openEditDialog(ingredient);
-                                    }}>
-                                        <Pencil className="w-4 h-4 mr-2" />
+                                {demand > 0 && (
+                                    <p className="text-[10px] text-orange-600 mt-1">
+                                        Demanda: {demand.toFixed(1)} {ingredient.unit}
+                                    </p>
+                                )}
+                                {/* Desktop: hover-only */}
+                                <div className="mt-2 hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 h-7 text-xs"
+                                        onClick={() => openEditDialog(ingredient)}
+                                    >
+                                        <Pencil className="w-3 h-3 mr-1" />
+                                        Editar
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 px-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                        onClick={() => handleDelete(ingredient.id)}
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                </div>
+                                {/* Mobile: always visible */}
+                                <div className="mt-2 flex md:hidden">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 h-7 text-xs"
+                                        onClick={() => openEditDialog(ingredient)}
+                                    >
+                                        <Pencil className="w-3 h-3 mr-1" />
                                         Editar
                                     </Button>
                                 </div>

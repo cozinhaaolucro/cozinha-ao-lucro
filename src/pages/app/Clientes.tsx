@@ -316,7 +316,7 @@ const Clientes = () => {
                         return (
                             <Card
                                 key={customer.id}
-                                className={`hover:shadow-md transition-all ${isSelected ? 'border-primary bg-primary/5' : ''}`}
+                                className={`hover:shadow-md transition-all group ${isSelected ? 'border-primary bg-primary/5' : ''}`}
                             >
                                 <CardContent className="flex items-center justify-between p-4">
                                     <div className="flex items-center gap-4 flex-1">
@@ -356,13 +356,31 @@ const Clientes = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity md:flex hidden">
                                         <Button
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => setEditingCustomer(customer)}
+                                            title="Editar"
                                         >
                                             <Pencil className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                            onClick={async () => {
+                                                if (confirm(`Excluir ${customer.name}?`)) {
+                                                    const { error } = await deleteCustomer(customer.id);
+                                                    if (!error) {
+                                                        toast({ title: 'Cliente excluído' });
+                                                        loadCustomers();
+                                                    }
+                                                }
+                                            }}
+                                            title="Excluir"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
                                         </Button>
                                         {customer.phone && (
                                             <Button
@@ -375,6 +393,16 @@ const Clientes = () => {
                                                 WhatsApp
                                             </Button>
                                         )}
+                                    </div>
+                                    {/* Mobile: always visible */}
+                                    <div className="flex gap-2 md:hidden">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => setEditingCustomer(customer)}
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>
