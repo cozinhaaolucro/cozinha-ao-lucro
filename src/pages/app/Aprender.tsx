@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, ExternalLink, FileText } from 'lucide-react';
+import { BookOpen, Download, FileText } from 'lucide-react';
 
 const CONTENT = [
     {
@@ -9,6 +9,7 @@ const CONTENT = [
         description: 'Aprenda a transformar sua cozinha em uma fonte de renda estável',
         cover: '/images/ebook_da_cozinha_ao_lucro_20251117_062259.png',
         type: 'guide',
+        pdfUrl: '/ebook_cozinha_ao_lucro.pdf',
     },
     {
         id: 2,
@@ -16,6 +17,7 @@ const CONTENT = [
         description: '50 receitas testadas com alto lucro e baixo custo',
         cover: '/images/ebook_receitas_que_vendem_20251117_062322.png',
         type: 'recipe',
+        pdfUrl: '/ebook_receitas_que_vendem.pdf',
     },
 ];
 
@@ -45,17 +47,16 @@ const Aprender = () => {
                             <p className="text-sm text-muted-foreground">{item.description}</p>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex flex-col gap-2">
-                                <div className="p-4 bg-muted/50 rounded-lg text-center">
-                                    <FileText className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                                    <p className="text-sm text-muted-foreground">
-                                        Conteúdo em desenvolvimento
-                                    </p>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        Em breve disponível para assinantes
-                                    </p>
-                                </div>
-                            </div>
+                            <a
+                                href={item.pdfUrl}
+                                download
+                                className="block"
+                            >
+                                <Button className="w-full gap-2">
+                                    <Download className="w-4 h-4" />
+                                    Baixar PDF
+                                </Button>
+                            </a>
                         </CardContent>
                     </Card>
                 ))}

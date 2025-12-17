@@ -144,7 +144,7 @@ const OperationsPanel = () => {
         const orderProfit = (order.total_value || 0) - orderCost;
 
         return (
-            <Card className={`bg-slate-800/50 border-slate-700/50 text-white overflow-hidden shadow-lg relative transition-all duration-200 ${borderClass}`}>
+            <Card className={`bg-slate-800/50 border-slate-700/50 text-white overflow-hidden relative ${borderClass}`}>
                 <CardHeader className="pb-2 relative z-10">
                     <div className="flex justify-between items-start">
                         <div>
@@ -202,7 +202,7 @@ const OperationsPanel = () => {
                         <div className="pt-2">
                             {order.status === 'pending' && (
                                 <Button
-                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20 transition-all active:scale-95"
+                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white"
                                     onClick={() => updateStatus(order.id, 'preparing')}
                                 >
                                     <ChefHat className="w-4 h-4 mr-2" />
@@ -211,38 +211,20 @@ const OperationsPanel = () => {
                             )}
                             {order.status === 'preparing' && (
                                 <Button
-                                    className="w-full bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-900/20 transition-all active:scale-95"
+                                    className="w-full bg-green-600 hover:bg-green-500 text-white"
                                     onClick={() => updateStatus(order.id, 'ready')}
                                 >
                                     <CheckCircle2 className="w-4 h-4 mr-2" />
                                     Marcar Pronto
                                 </Button>
                             )}
-                            {order.status === 'ready' && !order.ready_for_pickup && (
+                            {order.status === 'ready' && (
                                 <Button
-                                    className="w-full bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-900/20 transition-all active:scale-95"
-                                    onClick={async () => {
-                                        const { error } = await supabase
-                                            .from('orders')
-                                            .update({ ready_for_pickup: true, updated_at: new Date().toISOString() })
-                                            .eq('id', order.id);
-                                        if (!error) {
-                                            toast({ title: 'Marcado como disponível para entrega!' });
-                                            fetchOrders();
-                                        }
-                                    }}
-                                >
-                                    <Package className="w-4 h-4 mr-2" />
-                                    Disponível para Entrega
-                                </Button>
-                            )}
-                            {order.status === 'ready' && order.ready_for_pickup && (
-                                <Button
-                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 transition-all active:scale-95"
+                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
                                     onClick={() => updateStatus(order.id, 'delivered')}
                                 >
                                     <CheckCircle2 className="w-4 h-4 mr-2" />
-                                    Finalizar Entrega
+                                    Entregar/Finalizar
                                 </Button>
                             )}
                         </div>
@@ -404,7 +386,7 @@ const OperationsPanel = () => {
                         {/* Preparing Column */}
                         <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
+                                <span className="w-2 h-2 rounded-full bg-yellow-500" />
                                 Preparando
                                 <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded">{orders.filter(o => o.status === 'preparing').length}</span>
                             </h2>

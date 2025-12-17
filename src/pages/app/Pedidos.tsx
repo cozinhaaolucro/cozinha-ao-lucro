@@ -320,17 +320,12 @@ const Pedidos = () => {
                                             >
                                                 <CardHeader className="pb-3">
                                                     <CardTitle className="text-sm flex items-center justify-between">
-                                                        <div className="flex items-center gap-1">
-                                                            {order.ready_for_pickup && (
-                                                                <PackageCheck className="w-4 h-4 text-amber-600" title="Disponível para entrega" />
-                                                            )}
-                                                            <span
-                                                                className="hover:underline cursor-pointer text-primary"
-                                                                onClick={() => handleCustomerClick(order.customer)}
-                                                            >
-                                                                {order.customer?.name || 'Cliente não informado'}
-                                                            </span>
-                                                        </div>
+                                                        <span
+                                                            className="hover:underline cursor-pointer text-primary"
+                                                            onClick={() => handleCustomerClick(order.customer)}
+                                                        >
+                                                            {order.customer?.name || 'Cliente não informado'}
+                                                        </span>
                                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <Button
                                                                 variant="ghost"

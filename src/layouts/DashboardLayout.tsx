@@ -165,7 +165,7 @@ const DashboardLayout = () => {
 
     const navItems = [
         { path: '/app/dashboard', label: 'Visão Geral', icon: LayoutDashboard, id: 'nav-dashboard' },
-        { path: '/app/painel', label: 'Produção em Tempo Real', icon: Monitor, id: 'nav-painel' },
+        { path: '/app/painel', label: 'Painel de Operações', icon: Monitor, id: 'nav-painel' },
         { path: '/app/pedidos', label: 'Pedidos', icon: ShoppingBag, id: 'nav-pedidos' },
         { path: '/app/clientes', label: 'Clientes', icon: Users, id: 'nav-clientes' },
         { path: '/app/produtos', label: 'Produtos', icon: ShoppingBag, id: 'nav-produtos' },
