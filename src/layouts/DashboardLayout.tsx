@@ -164,14 +164,14 @@ const DashboardLayout = () => {
     };
 
     const navItems = [
-        { path: '/app/dashboard', label: 'Visão Geral', icon: LayoutDashboard, id: 'nav-dashboard' },
-        { path: '/app/painel', label: 'Painel de Operações', icon: Monitor, id: 'nav-painel' },
-        { path: '/app/pedidos', label: 'Pedidos', icon: ShoppingBag, id: 'nav-pedidos' },
-        { path: '/app/clientes', label: 'Clientes', icon: Users, id: 'nav-clientes' },
-        { path: '/app/produtos', label: 'Produtos', icon: ShoppingBag, id: 'nav-produtos' },
-        { path: '/app/agenda', label: 'Agenda', icon: Calendar, id: 'nav-agenda' },
-        { path: '/app/aprender', label: 'Aprender', icon: BookOpen, id: 'nav-aprender' },
-        { path: '/app/settings', label: 'Configurações', icon: Settings, id: 'nav-settings' },
+        { path: '/app/dashboard', label: 'Visão Geral', shortLabel: 'Visão', icon: LayoutDashboard, id: 'nav-dashboard' },
+        { path: '/app/painel', label: 'Painel de Operações', shortLabel: 'Painel', icon: Monitor, id: 'nav-painel' },
+        { path: '/app/pedidos', label: 'Pedidos', shortLabel: 'Pedidos', icon: ShoppingBag, id: 'nav-pedidos' },
+        { path: '/app/clientes', label: 'Clientes', shortLabel: 'Clientes', icon: Users, id: 'nav-clientes' },
+        { path: '/app/produtos', label: 'Produtos', shortLabel: 'Produtos', icon: ShoppingBag, id: 'nav-produtos' },
+        { path: '/app/agenda', label: 'Agenda', shortLabel: 'Agenda', icon: Calendar, id: 'nav-agenda' },
+        { path: '/app/aprender', label: 'Aprender', shortLabel: 'Aprender', icon: BookOpen, id: 'nav-aprender' },
+        { path: '/app/settings', label: 'Configurações', shortLabel: 'Config', icon: Settings, id: 'nav-settings' },
     ];
 
     const isActive = (path: string) => location.pathname === path;
@@ -423,16 +423,15 @@ const DashboardLayout = () => {
                     <Link
                         key={item.path}
                         to={item.path}
-                        className={`flex flex-col items-center justify-center w-full h-full gap-1 ${isActive(item.path)
+                        className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 ${isActive(item.path)
                             ? 'text-primary'
                             : 'text-muted-foreground hover:text-foreground'
                             }`}
                     >
                         <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'fill-current' : ''}`} />
-                        <span className="text-[10px] font-medium">{item.label}</span>
+                        <span className="text-[9px] font-medium text-center leading-tight">{item.shortLabel}</span>
                     </Link>
-                ))}
-            </nav>
+                ))}            </nav>
 
             <SpeedDial
                 onNewOrder={() => setIsOrderOpen(true)}

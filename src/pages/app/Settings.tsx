@@ -349,21 +349,21 @@ const Settings = () => {
                 </TabsContent>
 
                 {/* Digital Menu Tab (Placeholder for now, re-implemented next) */}
-                <TabsContent value="menu" className="space-y-6">
-                    <div className="grid gap-6 md:grid-cols-2">
+                <TabsContent value="menu" className="space-y-3 sm:space-y-6">
+                    <div className="grid gap-3 sm:gap-6 md:grid-cols-2">
                         {/* Customization Form */}
                         <Card className="md:order-1">
-                            <CardHeader>
-                                <CardTitle>Personalização</CardTitle>
-                                <CardDescription>
+                            <CardHeader className="p-4 sm:p-6">
+                                <CardTitle className="text-base sm:text-xl">Personalização</CardTitle>
+                                <CardDescription className="text-xs sm:text-sm">
                                     Como seu estabelecimento aparece para os clientes.
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                <form onSubmit={handleSaveMenuSettings} className="space-y-6">
-                                    <div className="flex flex-col items-center gap-4 p-4 border rounded-lg bg-muted/20">
+                            <CardContent className="p-4 sm:p-6 pt-0">
+                                <form onSubmit={handleSaveMenuSettings} className="space-y-3 sm:space-y-6">
+                                    <div className="flex flex-col items-center gap-2 sm:gap-4 p-3 sm:p-4 border rounded-lg bg-muted/20">
                                         <div className="relative group">
-                                            <div className="w-24 h-24 rounded-full overflow-hidden bg-background border-2 border-border flex items-center justify-center">
+                                            <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-background border-2 border-border flex items-center justify-center">
                                                 {profile?.logo_url ? (
                                                     <img src={profile.logo_url} alt="Logo" className="w-full h-full object-cover" />
                                                 ) : (

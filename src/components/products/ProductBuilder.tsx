@@ -499,71 +499,58 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     <DialogTitle>Criar Novo Produto</DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Basic Info & Image */}
-                    <div className="grid grid-cols-1 md:grid-cols-[1fr_200px] gap-6">
-                        <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="name">Nome do Produto</Label>
-                                <Input
-                                    id="name"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder="Ex: Brigadeiro Gourmet"
-                                    required
+                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-6">
+                    {/* Basic Info - Mobile First Stack */}
+                    <div className="space-y-2 sm:space-y-4">
+                        <div>
+                            <Label htmlFor="name" className="text-xs sm:text-sm">Nome do Produto</Label>
+                            <Input
+                                id="name"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                placeholder="Ex: Brigadeiro Gourmet"
+                                className="h-9 sm:h-10"
+                                required
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2">
+                            <div className="col-span-2">
+                                <Label htmlFor="description" className="text-xs sm:text-sm">Descrição</Label>
+                                <Textarea
+                                    id="description"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    placeholder="Chocolate belga..."
+                                    className="h-10 sm:h-16 text-xs sm:text-sm resize-none"
                                 />
                             </div>
-
-                            <div className="flex gap-4">
-                                <div className="flex-1">
-                                    <Label htmlFor="description">Descrição (opcional)</Label>
-                                    <Textarea
-                                        id="description"
-                                        value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        placeholder="Brigadeiro de chocolate belga com granulado..."
-                                        className="h-[100px]"
-                                    />
-                                </div>
-                                <div className="w-[140px]">
-                                    <Label htmlFor="prep_time">Tempo (min)</Label>
-                                    <div className="relative">
-                                        <Input
-                                            id="prep_time"
-                                            type="number"
-                                            min="0"
-                                            value={formData.preparation_time_minutes}
-                                            onChange={(e) => setFormData({ ...formData, preparation_time_minutes: parseInt(e.target.value) || 0 })}
-                                            className="h-[100px] text-center text-3xl font-bold"
-                                        />
-                                        <div className="absolute bottom-2 left-0 right-0 text-center text-xs text-muted-foreground">
-                                            Minutos
-                                        </div>
-                                    </div>
-                                </div>
+                            <div>
+                                <Label htmlFor="prep_time" className="text-xs sm:text-sm">Tempo</Label>
+                                <Input
+                                    id="prep_time"
+                                    type="number"
+                                    min="0"
+                                    value={formData.preparation_time_minutes}
+                                    onChange={(e) => setFormData({ ...formData, preparation_time_minutes: parseInt(e.target.value) || 0 })}
+                                    className="h-10 sm:h-16 text-center text-lg sm:text-2xl font-bold"
+                                />
                             </div>
                         </div>
 
-                        {/* Image Upload Area */}
-                        <div className="flex flex-col gap-2">
-                            <Label>Imagem do Produto</Label>
+                        {/* Image - Compact on mobile */}
+                        <div>
+                            <Label className="text-xs sm:text-sm">Imagem</Label>
                             <label
                                 htmlFor="product-image"
-                                className="flex-1 border-2 border-dashed rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-muted/50 transition-colors relative overflow-hidden group min-h-[140px]"
+                                className="block border-2 border-dashed rounded-lg p-2 cursor-pointer hover:bg-muted/50 relative overflow-hidden h-12 sm:h-24 flex items-center justify-center"
                             >
                                 {imagePreview ? (
-                                    <>
-                                        <img src={imagePreview} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Camera className="w-8 h-8 text-white" />
-                                        </div>
-                                    </>
+                                    <img src={imagePreview} alt="Preview" className="h-full w-auto object-contain" />
                                 ) : (
-                                    <div className="text-center space-y-2 text-muted-foreground">
-                                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto">
-                                            <ImageIcon className="w-6 h-6" />
-                                        </div>
-                                        <span className="text-xs">Clique para adicionar</span>
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                        <ImageIcon className="w-4 h-4 sm:w-6 sm:h-6" />
+                                        <span className="text-xs">Adicionar foto</span>
                                     </div>
                                 )}
                                 <input
