@@ -248,7 +248,7 @@ const Pedidos = () => {
                                                 {order.customer?.name || 'Cliente não informado'}
                                             </span>
                                             <div className="text-xs text-muted-foreground font-normal">
-                                                #{order.order_number || order.id.slice(0, 4)}
+                                                #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
                                             </div>
                                         </div>
 
@@ -467,7 +467,7 @@ const Pedidos = () => {
                     >
                         <div className="text-center mb-4">
                             <div className="text-2xl font-bold text-primary">
-                                #{longPressOrder.order_number || longPressOrder.id.slice(0, 4)}
+                                #{longPressOrder.display_id ? String(longPressOrder.display_id).padStart(4, '0') : (longPressOrder.order_number || longPressOrder.id.slice(0, 4))}
                             </div>
                             <p className="text-sm text-muted-foreground">
                                 {longPressOrder.customer?.name || 'Sem cliente'}

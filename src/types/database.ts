@@ -83,6 +83,7 @@ export type Order = {
     user_id: string;
     customer_id: string | null;
     order_number: string | null;
+    display_id?: number;
     status: OrderStatus;
     total_value: number;
     delivery_date: string | null;

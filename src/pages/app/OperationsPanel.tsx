@@ -149,7 +149,9 @@ const OperationsPanel = () => {
                     <div className="flex justify-between items-start">
                         <div>
                             <CardTitle className="text-xl font-bold flex items-center gap-2">
-                                <span className="text-blue-400 font-mono">#{order.order_number || order.id.slice(0, 4)}</span>
+                                <span className="text-blue-400 font-mono">
+                                    #{order.display_id ? String(order.display_id).padStart(4, '0') : order.id.slice(0, 4)}
+                                </span>
                                 <span className="text-sm font-normal opacity-70">- {order.customer?.name || 'Balcão'}</span>
                             </CardTitle>
                             <div className="text-xs text-muted-slate-400 mt-1 flex items-center gap-2 opacity-60">
@@ -217,13 +219,10 @@ const OperationsPanel = () => {
                                 </Button>
                             )}
                             {order.status === 'ready' && (
-                                <Button
-                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
-                                    onClick={() => updateStatus(order.id, 'delivered')}
-                                >
-                                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                                    Entregar/Finalizar
-                                </Button>
+                                <div className="text-center text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 py-2 rounded">
+                                    <CheckCircle2 className="w-3 h-3 inline mr-1" />
+                                    Aguardando Retirada/Entrega
+                                </div>
                             )}
                         </div>
                     </div>
@@ -311,27 +310,19 @@ const OperationsPanel = () => {
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 overflow-visible">
-                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px] hover:bg-slate-700/50 transition-colors cursor-help group relative">
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px] transition-colors">
                             <span className="text-[10px] md:text-xs text-neutral-400 uppercase tracking-wider font-bold mb-1">Tempo Estimado</span>
                             <span className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
                                 {formatHours(totalEstimatedTime)}
                             </span>
-                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-neutral-900 text-white text-xs p-2 rounded shadow-xl border border-slate-700 hidden group-hover:block z-[9999] pointer-events-none">
-                                Soma do tempo de preparo de todos pedidos ativos.
-                            </div>
                         </div>
 
-                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px] hover:bg-slate-700/50 transition-colors cursor-help group relative">
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px] transition-colors">
                             <span className="text-[10px] md:text-xs text-neutral-400 uppercase tracking-wider font-bold mb-1">Horas Realizadas</span>
                             <span className="text-xl md:text-2xl font-bold text-blue-400 flex items-center gap-2">
                                 {formatHours(totalRealizedMinutes)}
                             </span>
-                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-neutral-900 text-white text-xs p-2 rounded shadow-xl border border-slate-700 hidden group-hover:block z-[9999] pointer-events-none">
-                                Tempo total gasto nos pedidos hoje (Finalizados + Ativos).
-                            </div>
                         </div>
-
-
 
                         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px]">
                             <span className="text-[10px] md:text-xs text-neutral-400 uppercase tracking-wider font-bold mb-1">Fila Total</span>
