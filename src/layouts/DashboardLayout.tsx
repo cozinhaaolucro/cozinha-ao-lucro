@@ -37,7 +37,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { SubscriptionBlocker } from '@/components/subscription/SubscriptionBlocker';
 import { SpeedDial } from '@/components/layout/SpeedDial';
-import { TourGuide } from '@/components/onboarding/TourGuide';
+
 import { PageTransition } from '@/components/layout/PageTransition';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import CommandPalette from '@/components/CommandPalette';
@@ -244,7 +244,7 @@ const DashboardLayout = () => {
     return (
         <div className="min-h-screen bg-background flex flex-col md:flex-row">
             {/* Desktop Sidebar */}
-            <TourGuide />
+
             <OnboardingModal />
             <aside className="hidden md:flex w-64 flex-col border-r bg-card h-screen sticky top-0">
                 <div className="p-6 border-b flex items-center gap-3">

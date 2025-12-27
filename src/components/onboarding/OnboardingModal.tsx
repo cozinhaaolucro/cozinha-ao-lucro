@@ -35,6 +35,7 @@ const OnboardingModal = () => {
     const [completedSteps, setCompletedSteps] = useState<string[]>([]);
 
     // Check if user should see onboarding
+    // Check if user should see onboarding
     useEffect(() => {
         if (!user) return;
 
@@ -42,16 +43,9 @@ const OnboardingModal = () => {
         const savedStep = localStorage.getItem(ONBOARDING_STEP_KEY);
 
         if (!hasCompletedOnboarding) {
-            // Check if user is new (created within last 24 hours)
-            const createdAt = new Date(user.created_at || Date.now());
-            const now = new Date();
-            const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
-
-            if (hoursSinceCreation < 24) {
-                setIsOpen(true);
-                if (savedStep) {
-                    setCurrentStep(parseInt(savedStep));
-                }
+            setIsOpen(true);
+            if (savedStep) {
+                setCurrentStep(parseInt(savedStep));
             }
         }
     }, [user]);
@@ -164,10 +158,10 @@ const OnboardingModal = () => {
                             <div
                                 key={step.id}
                                 className={`w-3 h-3 rounded-full transition-colors ${index === currentStep
-                                        ? 'bg-primary'
-                                        : completedSteps.includes(step.id)
-                                            ? 'bg-green-500'
-                                            : 'bg-gray-200'
+                                    ? 'bg-primary'
+                                    : completedSteps.includes(step.id)
+                                        ? 'bg-green-500'
+                                        : 'bg-gray-200'
                                     }`}
                             />
                         ))}
@@ -176,11 +170,11 @@ const OnboardingModal = () => {
                     {/* Actions */}
                     <div className="flex gap-3">
                         <Button
-                            variant="outline"
-                            className="flex-1"
+                            variant="ghost"
+                            className="flex-1 text-muted-foreground hover:text-foreground"
                             onClick={handleSkip}
                         >
-                            Pular Tutorial
+                            Pular Introdução
                         </Button>
                         <Button
                             className="flex-1 gap-2"

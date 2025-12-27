@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Added Tabs
 import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2, PackageCheck, ChevronRight } from 'lucide-react';
-import { getOrders, deductStockFromOrder } from '@/lib/database';
+import { getOrders, deductStockFromOrder, updateOrderStatus, deleteOrder } from '@/lib/database'; // Added updateOrderStatus, deleteOrder
 import { exportToExcel, importFromExcel } from '@/lib/excel';
 import { supabase } from '@/lib/supabase';
 import type { OrderWithDetails } from '@/types/database';
+import { useIsMobile } from '@/hooks/use-mobile'; // Added useIsMobile
 import NewOrderDialog from '@/components/orders/NewOrderDialog';
 import EditOrderDialog from '@/components/orders/EditOrderDialog';
 import { useToast } from '@/hooks/use-toast';
@@ -38,7 +40,9 @@ const Pedidos = () => {
     const [messageOrder, setMessageOrder] = useState<OrderWithDetails | null>(null);
     const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
 
+    const isDrawerOpenRef = useRef(false);
     const { toast } = useToast();
+    const isMobile = useIsMobile();
 
 
     const loadOrders = async () => {
@@ -170,6 +174,16 @@ const Pedidos = () => {
         setDraggedOrder(null);
     };
 
+    const handleDeleteOrder = async (id: string) => {
+        const { error } = await deleteOrder(id);
+        if (!error) {
+            toast({ title: 'Pedido excluído' });
+            loadOrders();
+        } else {
+            toast({ title: 'Erro ao excluir pedido', variant: 'destructive' });
+        }
+    };
+
     const handleExport = () => {
         const dataToExport = filteredOrders.map(o => ({
             Status: STATUS_COLUMNS[o.status]?.label || o.status,
@@ -182,15 +196,150 @@ const Pedidos = () => {
         exportToExcel(dataToExport, 'pedidos_cozinha_ao_lucro');
     };
 
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Pedidos</h1>
-                    <p className="text-muted-foreground">Gerencie seus pedidos em um quadro Kanban</p>
+    const renderColumn = (status: string, config: typeof STATUS_COLUMNS[keyof typeof STATUS_COLUMNS]) => {
+        const statusOrders = filteredOrders.filter((o) => o.status === status);
+
+        const isEmpty = statusOrders.length === 0;
+
+        return (
+            <div
+                key={status}
+                className="space-y-3 h-full"
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, status)}
+            >
+                {!isMobile && (
+                    <div className="flex items-center justify-between">
+                        <h3 className="font-semibold">{config.label}</h3>
+                        <Badge variant="secondary">{statusOrders.length}</Badge>
+                    </div>
+                )}
+
+                <div className={isMobile ? "space-y-3 pb-20" : "space-y-2 min-h-[400px]"}>
+                    {isEmpty ? (
+                        <Card className={`${config.color} border-2 border-dashed h-full min-h-[150px]`}>
+                            <CardContent className="p-6 text-center text-sm text-muted-foreground flex items-center justify-center h-full">
+                                {isMobile ? "Nenhuem pedido" : "Arraste pedidos aqui"}
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        statusOrders.map((order) => (
+                            <Card
+                                key={order.id}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, order.id)}
+                                onTouchStart={() => {
+                                    longPressTimerRef.current = setTimeout(() => {
+                                        setLongPressOrder(order);
+                                    }, 500);
+                                }}
+                                onTouchEnd={() => {
+                                    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+                                }}
+                                onTouchMove={() => {
+                                    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+                                }}
+                                className={`${config.color} border-2 hover:shadow-md transition-all cursor-move group ${draggedOrder === order.id ? 'opacity-50' : ''}`}
+                            >
+                                <CardHeader className="pb-3">
+                                    <div className="text-sm flex items-center justify-between">
+                                        <div className="font-semibold" onClick={() => handleCustomerClick(order.customer)}>
+                                            <span className="hover:underline cursor-pointer text-primary">
+                                                {order.customer?.name || 'Cliente não informado'}
+                                            </span>
+                                            <div className="text-xs text-muted-foreground font-normal">
+                                                #{order.order_number || order.id.slice(0, 4)}
+                                            </div>
+                                        </div>
+
+                                        <div className={isMobile ? "flex gap-1" : "flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"}>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDuplicate(order);
+                                                }}
+                                                title="Duplicar Pedido"
+                                            >
+                                                <Copy className="w-4 h-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setEditingOrder(order);
+                                                }}
+                                            >
+                                                <Pencil className="w-4 h-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-destructive hover:text-red-600 hover:bg-red-50"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (confirm('Excluir este pedido?')) {
+                                                        handleDeleteOrder(order.id);
+                                                    }
+                                                }}
+                                                title="Excluir"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                            {order.customer?.phone && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleWhatsApp(order);
+                                                    }}
+                                                >
+                                                    <Phone className="w-4 h-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-2">
+                                    <div className="text-xs space-y-1">
+                                        <div className="flex justify-between">
+                                            <span><strong>Entrega:</strong> {formatDate(order.delivery_date)}</span>
+                                            <span className="font-bold text-base">R$ {order.total_value.toFixed(2)}</span>
+                                        </div>
+
+                                        {order.items && order.items.length > 0 && (
+                                            <div className="text-xs text-muted-foreground mt-2 pt-2 border-t text-left">
+                                                {order.items.slice(0, 2).map((item, idx) => (
+                                                    <p key={idx} className="line-clamp-1">• {item.product_name} (x{item.quantity})</p>
+                                                ))}
+                                                {order.items.length > 2 && <p className="text-[10px] italic">+ {order.items.length - 2} itens...</p>}
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))
+                    )}
                 </div>
-                <div className="flex gap-2">
-                    <div className="relative">
+            </div>
+        );
+    };
+
+    return (
+        <div className="space-y-6 h-full flex flex-col">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Pedidos</h1>
+                    <p className="text-sm text-muted-foreground">Visão Macro: Planejamento, Agendamento e Histórico de Todos os Pedidos.</p>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:flex-none">
                         <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -198,34 +347,20 @@ const Pedidos = () => {
                             onChange={async (e) => {
                                 const file = e.target.files?.[0];
                                 if (!file) return;
-
-                                try {
-                                    const data = await importFromExcel(file);
-                                    // Basic validation and import logic would go here.
-                                    // For now, alerting user that import is purely visual/mock for this demo or needs mapped fields.
-                                    // Since Orders are complex (relations), doing a full import is risky without strict template.
-                                    // I'll implement a basic alert or placeholder logic, or trying to map "Cliente", "Total".
-
-                                    toast({ title: 'Importação', description: 'Funcionalidade de importação de pedidos em desenvolvimento avançado (requer mapeamento de clientes).' });
-
-                                } catch (error) {
-                                    toast({ title: 'Erro na importação', variant: 'destructive' });
-                                }
-                                // Reset input
+                                toast({ title: 'Importação', description: 'Em breve: Importação inteligente de pedidos.' });
                                 e.target.value = '';
                             }}
-                            title="Importar Excel"
                         />
-                        <Button variant="outline" size="icon" title="Importar Excel">
+                        <Button variant="outline" size="icon" title="Importar Excel" className="w-full sm:w-10">
                             <Upload className="w-4 h-4" />
                         </Button>
                     </div>
-                    <Button variant="outline" size="icon" onClick={handleExport} title="Exportar Excel">
+                    <Button variant="outline" size="icon" onClick={handleExport} title="Exportar Excel" className="flex-1 sm:flex-none">
                         <Download className="w-4 h-4" />
                     </Button>
-                    <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
+                    <Button className="gap-2 flex-[2] sm:flex-none" onClick={() => setIsDialogOpen(true)}>
                         <Plus className="w-4 h-4" />
-                        Novo Pedido
+                        Novo
                     </Button>
                 </div>
             </div>
@@ -235,21 +370,19 @@ const Pedidos = () => {
                 <CardContent className="p-3">
                     <div className="flex items-center gap-3 flex-wrap">
                         <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-1 sm:flex-none">
                             <Input
                                 type="date"
                                 value={dateFilter.start}
                                 onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
-                                placeholder="Data inicial"
-                                className="w-36 h-9"
+                                className="h-9 text-xs"
                             />
                             <span className="text-sm text-muted-foreground">até</span>
                             <Input
                                 type="date"
                                 value={dateFilter.end}
                                 onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
-                                placeholder="Data final"
-                                className="w-36 h-9"
+                                className="h-9 text-xs"
                             />
                         </div>
                         {(dateFilter.start || dateFilter.end) && (
@@ -265,150 +398,32 @@ const Pedidos = () => {
                 </CardContent>
             </Card>
 
-            {/* Kanban Board */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {Object.entries(STATUS_COLUMNS).map(([status, config]) => {
-                    const statusOrders = filteredOrders.filter((o) => o.status === status);
+            {/* Kanban Board - Layout Switch */}
+            {isMobile ? (
+                <Tabs defaultValue="pending" className="flex-1 flex flex-col">
+                    <TabsList className="grid w-full grid-cols-4 mb-4 h-auto p-1 sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                        {Object.entries(STATUS_COLUMNS).map(([status, config]) => {
+                            const count = filteredOrders.filter((o) => o.status === status).length;
+                            return (
+                                <TabsTrigger key={status} value={status} className="text-[10px] px-1 h-9 flex flex-col items-center justify-center gap-0.5 sm:flex-row">
+                                    <span className="truncate w-full text-center">{config.label.split(' ')[0]}</span>
+                                    {count > 0 && <span className="bg-primary/10 text-primary rounded-full px-1 py-0 text-[9px] font-bold">{count}</span>}
+                                </TabsTrigger>
+                            )
+                        })}
+                    </TabsList>
 
-                    return (
-                        <div
-                            key={status}
-                            className="space-y-3"
-                            onDragOver={handleDragOver}
-                            onDrop={(e) => handleDrop(e, status)}
-                        >
-                            <div className="flex items-center justify-between">
-                                <h3 className="font-semibold">{config.label}</h3>
-                                <Badge variant="secondary">{statusOrders.length}</Badge>
-                            </div>
-
-                            <div className="space-y-2 min-h-[400px]">
-                                {statusOrders.length === 0 ? (
-                                    <Card className={`${config.color} border-2 border-dashed`}>
-                                        <CardContent className="p-6 text-center text-sm text-muted-foreground">
-                                            Arraste pedidos aqui
-                                        </CardContent>
-                                    </Card>
-                                ) : (
-                                    statusOrders.map((order) => {
-                                        const nextStatus = order.status === 'pending' ? 'preparing'
-                                            : order.status === 'preparing' ? 'ready'
-                                                : order.status === 'ready' ? 'delivered' : null;
-
-                                        return (
-                                            <Card
-                                                key={order.id}
-                                                draggable
-                                                onDragStart={(e) => handleDragStart(e, order.id)}
-                                                onTouchStart={() => {
-                                                    longPressTimerRef.current = setTimeout(() => {
-                                                        setLongPressOrder(order);
-                                                    }, 500);
-                                                }}
-                                                onTouchEnd={() => {
-                                                    if (longPressTimerRef.current) {
-                                                        clearTimeout(longPressTimerRef.current);
-                                                    }
-                                                }}
-                                                onTouchMove={() => {
-                                                    if (longPressTimerRef.current) {
-                                                        clearTimeout(longPressTimerRef.current);
-                                                    }
-                                                }}
-                                                className={`${config.color} border-2 hover:shadow-md transition-all cursor-move group ${draggedOrder === order.id ? 'opacity-50' : ''
-                                                    }`}
-                                            >
-                                                <CardHeader className="pb-3">
-                                                    <CardTitle className="text-sm flex items-center justify-between">
-                                                        <span
-                                                            className="hover:underline cursor-pointer text-primary"
-                                                            onClick={() => handleCustomerClick(order.customer)}
-                                                        >
-                                                            {order.customer?.name || 'Cliente não informado'}
-                                                        </span>
-                                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-6 w-6"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleDuplicate(order);
-                                                                }}
-                                                                title="Duplicar Pedido"
-                                                            >
-                                                                <Copy className="w-3 h-3" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-6 w-6"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setEditingOrder(order);
-                                                                }}
-                                                            >
-                                                                <Pencil className="w-3 h-3" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                                                onClick={async (e) => {
-                                                                    e.stopPropagation();
-                                                                    if (confirm('Excluir este pedido?')) {
-                                                                        const { error } = await supabase
-                                                                            .from('orders')
-                                                                            .delete()
-                                                                            .eq('id', order.id);
-                                                                        if (!error) {
-                                                                            toast({ title: 'Pedido excluído' });
-                                                                            loadOrders();
-                                                                        }
-                                                                    }
-                                                                }}
-                                                                title="Excluir"
-                                                            >
-                                                                <Trash2 className="w-3 h-3" />
-                                                            </Button>
-                                                            {order.customer?.phone && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleWhatsApp(order);
-                                                                    }}
-                                                                >
-                                                                    <Phone className="w-3 h-3" />
-                                                                </Button>
-                                                            )}
-                                                        </div>
-                                                    </CardTitle>
-                                                </CardHeader>
-                                                <CardContent className="space-y-2">
-                                                    <div className="text-xs space-y-1">
-                                                        <p><strong>Entrega:</strong> {formatDate(order.delivery_date)}</p>
-                                                        <p><strong>Total:</strong> R$ {order.total_value.toFixed(2)}</p>
-                                                        {order.items && order.items.length > 0 && (
-                                                            <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">
-                                                                {order.items.map((item, idx) => (
-                                                                    <p key={idx}>• {item.product_name} (x{item.quantity})</p>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        );
-                                    })
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
+                    {Object.entries(STATUS_COLUMNS).map(([status, config]) => (
+                        <TabsContent key={status} value={status} className="flex-1 mt-0">
+                            {renderColumn(status, config)}
+                        </TabsContent>
+                    ))}
+                </Tabs>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                    {Object.entries(STATUS_COLUMNS).map(([status, config]) => renderColumn(status, config))}
+                </div>
+            )}
 
             {isDialogOpen && (
                 <NewOrderDialog
@@ -427,16 +442,16 @@ const Pedidos = () => {
                 />
             )}
 
-
             <ClientProfileDrawer
                 customer={selectedCustomer}
                 open={isDrawerOpen}
-                onClose={() => setIsDrawerOpen(false)}
+                onOpenChange={setIsDrawerOpen} // Fixed Prop Name
+                onUpdate={loadOrders} // Fixed Prop Name (was missing or inferred)
             />
 
             <SendMessageDialog
-                isOpen={isMessageDialogOpen}
-                onClose={() => setIsMessageDialogOpen(false)}
+                open={isMessageDialogOpen} // Fixed Prop Name
+                onOpenChange={setIsMessageDialogOpen} // Fixed Prop Name
                 order={messageOrder}
             />
 
@@ -460,19 +475,14 @@ const Pedidos = () => {
                         </div>
 
                         <div className="space-y-2">
-                            {/* Forward actions */}
+                            {/* Optimized Action Buttons logic using updateOrderStatus */}
                             {longPressOrder.status === 'pending' && (
                                 <Button
                                     className="w-full bg-blue-600 hover:bg-blue-500"
                                     onClick={async () => {
-                                        const { error } = await supabase
-                                            .from('orders')
-                                            .update({ status: 'preparing', updated_at: new Date().toISOString() })
-                                            .eq('id', longPressOrder.id);
-                                        if (!error) {
-                                            toast({ title: '→ Em Produção' });
-                                            loadOrders();
-                                        }
+                                        await updateOrderStatus(longPressOrder.id, 'preparing', longPressOrder.status);
+                                        toast({ title: '→ Em Produção - Estoque Deduzido' });
+                                        loadOrders();
                                         setLongPressOrder(null);
                                     }}
                                 >
@@ -484,14 +494,9 @@ const Pedidos = () => {
                                     <Button
                                         className="w-full bg-green-600 hover:bg-green-500"
                                         onClick={async () => {
-                                            const { error } = await supabase
-                                                .from('orders')
-                                                .update({ status: 'ready', updated_at: new Date().toISOString() })
-                                                .eq('id', longPressOrder.id);
-                                            if (!error) {
-                                                toast({ title: '→ Pronto' });
-                                                loadOrders();
-                                            }
+                                            await updateOrderStatus(longPressOrder.id, 'ready', longPressOrder.status);
+                                            toast({ title: '→ Pronto' });
+                                            loadOrders();
                                             setLongPressOrder(null);
                                         }}
                                     >
@@ -501,14 +506,9 @@ const Pedidos = () => {
                                         variant="outline"
                                         className="w-full"
                                         onClick={async () => {
-                                            const { error } = await supabase
-                                                .from('orders')
-                                                .update({ status: 'pending', updated_at: new Date().toISOString() })
-                                                .eq('id', longPressOrder.id);
-                                            if (!error) {
-                                                toast({ title: '← Voltou para A Fazer' });
-                                                loadOrders();
-                                            }
+                                            await updateOrderStatus(longPressOrder.id, 'pending', longPressOrder.status);
+                                            toast({ title: '← Voltou para A Fazer - Estoque Estornado' });
+                                            loadOrders();
                                             setLongPressOrder(null);
                                         }}
                                     >
@@ -516,23 +516,15 @@ const Pedidos = () => {
                                     </Button>
                                 </>
                             )}
+                            {/* ... Other status conditions using updateOrderStatus ... */}
                             {longPressOrder.status === 'ready' && (
                                 <>
                                     <Button
                                         className="w-full bg-emerald-600 hover:bg-emerald-500"
                                         onClick={async () => {
-                                            const { error } = await supabase
-                                                .from('orders')
-                                                .update({
-                                                    status: 'delivered',
-                                                    delivered_at: new Date().toISOString(),
-                                                    updated_at: new Date().toISOString()
-                                                })
-                                                .eq('id', longPressOrder.id);
-                                            if (!error) {
-                                                toast({ title: '→ Entregue' });
-                                                loadOrders();
-                                            }
+                                            await updateOrderStatus(longPressOrder.id, 'delivered', longPressOrder.status);
+                                            toast({ title: '→ Entregue' });
+                                            loadOrders();
                                             setLongPressOrder(null);
                                         }}
                                     >
@@ -542,14 +534,9 @@ const Pedidos = () => {
                                         variant="outline"
                                         className="w-full"
                                         onClick={async () => {
-                                            const { error } = await supabase
-                                                .from('orders')
-                                                .update({ status: 'preparing', updated_at: new Date().toISOString() })
-                                                .eq('id', longPressOrder.id);
-                                            if (!error) {
-                                                toast({ title: '← Voltou para Produção' });
-                                                loadOrders();
-                                            }
+                                            await updateOrderStatus(longPressOrder.id, 'preparing', longPressOrder.status);
+                                            toast({ title: '← Voltou para Produção' });
+                                            loadOrders();
                                             setLongPressOrder(null);
                                         }}
                                     >
@@ -562,14 +549,9 @@ const Pedidos = () => {
                                     variant="outline"
                                     className="w-full"
                                     onClick={async () => {
-                                        const { error } = await supabase
-                                            .from('orders')
-                                            .update({ status: 'ready', delivered_at: null, updated_at: new Date().toISOString() })
-                                            .eq('id', longPressOrder.id);
-                                        if (!error) {
-                                            toast({ title: '← Voltou para Pronto' });
-                                            loadOrders();
-                                        }
+                                        await updateOrderStatus(longPressOrder.id, 'ready', longPressOrder.status);
+                                        toast({ title: '← Voltou para Pronto' });
+                                        loadOrders();
                                         setLongPressOrder(null);
                                     }}
                                 >

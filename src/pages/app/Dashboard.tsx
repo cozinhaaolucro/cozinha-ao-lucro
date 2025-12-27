@@ -36,7 +36,7 @@ interface StockDemandAnalysis {
     stock: number;
     demand: number;
     balance: number;
-    status: 'sufficient' | 'low' | 'critical';
+    status: 'sufficient' | 'low' | 'critical' | 'unused';
 }
 
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
@@ -134,10 +134,10 @@ const Dashboard = () => {
     };
 
     // Stock vs demand analysis for pending orders (Future Demand)
+    // Stock vs demand analysis for pending orders (Future Demand)
     const calculateStockDemand = (): StockDemandAnalysis[] => {
         // We ONLY look at 'pending' orders for demand forecast.
         // 'preparing' orders have ALREADY triggered the stock deduction in the DB.
-        // If we count 'preparing' here, we would be double-counting the usage against the already reduced stock.
         const pending = orders.filter(o => o.status === 'pending');
         const demandMap = new Map<string, number>();
         pending.forEach(order => {
@@ -155,11 +155,28 @@ const Dashboard = () => {
             const stock = ing.stock_quantity ?? 0;
             const demand = demandMap.get(ing.id) ?? 0;
             const balance = stock - demand;
-            let status: 'sufficient' | 'low' | 'critical' = 'sufficient';
-            if (balance < 0) status = 'critical';
-            else if (balance < stock * 0.2) status = 'low';
+
+            let status: 'sufficient' | 'low' | 'critical' | 'unused' = 'sufficient';
+
+            if (stock === 0 && demand === 0) {
+                status = 'unused'; // Cinza: Sem estoque mas também sem demanda
+            } else if (balance < 0) {
+                status = 'critical'; // Vermelho: Demanda excedeu estoque
+            } else {
+                const initial = stock; // As reduction hasn't happened yet for pending orders, stock IS the "before" value.
+                const ratio = initial > 0 ? balance / initial : 0;
+
+                // User: "Amarelo(Para quando a demanda do dia fez o ingrediente ir para 30% do que era antes)"
+                // This implies remaining stock is less than 30% of initial.
+                if (ratio < 0.3) {
+                    status = 'low'; // Amarelo
+                } else {
+                    status = 'sufficient'; // Verde: Estoque acima de 30%
+                }
+            }
+
             return { ingredient: ing, stock, demand, balance, status };
-        }).filter(i => i.demand > 0 || i.stock > 0);
+        }).filter(i => i.status !== 'unused' || i.stock > 0);
     };
 
     const filteredOrders = getFilteredOrders();
@@ -474,6 +491,7 @@ const Dashboard = () => {
                                                     {item.status === 'sufficient' && <CheckCircle className="w-4 h-4 text-green-600" />}
                                                     {item.status === 'low' && <AlertCircle className="w-4 h-4 text-yellow-600" />}
                                                     {item.status === 'critical' && <XCircle className="w-4 h-4 text-red-600" />}
+                                                    {item.status === 'unused' && <AlertCircle className="w-4 h-4 text-gray-400" />}
                                                     <div className="flex-1">
                                                         <p className="font-medium text-sm">{item.ingredient.name}</p>
                                                         <p className="text-xs text-muted-foreground">
@@ -485,12 +503,12 @@ const Dashboard = () => {
                                                     variant={
                                                         item.status === 'sufficient' ? 'default' :
                                                             item.status === 'low' ? 'secondary' :
-                                                                'destructive'
+                                                                item.status === 'critical' ? 'destructive' : 'outline'
                                                     }
                                                     className={
                                                         item.status === 'sufficient' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
                                                             item.status === 'low' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
-                                                                ''
+                                                                item.status === 'unused' ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : ''
                                                     }
                                                 >
                                                     {item.balance > 0 ? '+' : ''}{item.balance.toFixed(1)} {item.ingredient.unit}

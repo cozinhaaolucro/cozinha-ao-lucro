@@ -173,9 +173,7 @@ const OperationsPanel = () => {
                                 <Timer className="w-3 h-3 mr-1" />
                                 {formatDuration(waitingMinutes)}
                             </Badge>
-                            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] hover:bg-emerald-500/20">
-                                Lucro: R$ {orderProfit.toFixed(2)}
-                            </Badge>
+
                         </div>
                     </div>
                 </CardHeader>
@@ -333,10 +331,7 @@ const OperationsPanel = () => {
                             </div>
                         </div>
 
-                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px]">
-                            <span className="text-[10px] md:text-xs text-neutral-400 uppercase tracking-wider font-bold mb-1">Lucro Dia</span>
-                            <span className="text-xl md:text-2xl font-bold text-emerald-400">R$ {totalDailyProfit.toFixed(2)}</span>
-                        </div>
+
 
                         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 md:p-4 flex flex-col items-center min-w-[100px]">
                             <span className="text-[10px] md:text-xs text-neutral-400 uppercase tracking-wider font-bold mb-1">Fila Total</span>

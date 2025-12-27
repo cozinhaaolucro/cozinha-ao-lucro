@@ -13,21 +13,68 @@ export type Profile = {
     updated_at: string;
 };
 
-// ... Ingredient ...
+export type Ingredient = {
+    id: string;
+    user_id: string;
+    name: string;
+    unit: string;
+    cost_per_unit: number; // calculated or manual
+    stock_quantity: number;
+    min_stock_threshold?: number;
+    created_at?: string;
+    updated_at?: string;
+};
+
+export type ProductIngredient = {
+    id?: string;
+    product_id: string;
+    ingredient_id: string;
+    quantity: number;
+    ingredient?: Ingredient;
+};
 
 export type Product = {
     id: string;
     user_id: string;
     name: string;
     description: string | null;
-    selling_price: number | null;
+    selling_price: number;
     image_url: string | null;
     active?: boolean;
+    preparation_time_minutes?: number; // Added new field
     created_at: string;
     updated_at: string;
+    product_ingredients?: ProductIngredient[];
 };
 
-// ... (Rest of types)
+export type ProductIngredientWithDetails = ProductIngredient & {
+    ingredient: Ingredient | null;
+};
+
+export type ProductWithIngredients = Product & {
+    product_ingredients: ProductIngredientWithDetails[];
+};
+
+export type ProductWithCost = Product & {
+    total_cost: number;
+    margin: number;
+};
+
+export type Customer = {
+    id: string;
+    user_id: string;
+    name: string;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
+    notes: string | null;
+    total_orders?: number;
+    total_spent?: number;
+    created_at?: string;
+    updated_at?: string;
+};
+
+export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
 
 export type Order = {
     id: string;
@@ -38,15 +85,16 @@ export type Order = {
     total_value: number;
     delivery_date: string | null;
     delivery_time: string | null;
+    delivery_method?: 'pickup' | 'delivery' | null;
+    payment_method?: 'cash' | 'pix' | 'card' | null;
+    delivery_fee?: number | null;
     notes: string | null;
-    google_event_id?: string | null;
     created_at: string;
     updated_at: string;
     delivered_at?: string | null;
     production_started_at?: string | null;
     production_completed_at?: string | null;
     production_duration_minutes?: number | null;
-    ready_for_pickup?: boolean;
 };
 
 export type OrderStatusLog = {
@@ -71,4 +119,24 @@ export type OrderItem = {
 export type OrderWithDetails = Order & {
     customer: Customer | null;
     items: Array<OrderItem & { product: Product | null }>;
+};
+
+export type MessageTemplate = {
+    id: string;
+    user_id: string;
+    title: string;
+    content: string;
+    type: 'whatsapp' | 'email' | 'sms';
+    created_at?: string;
+    updated_at?: string;
+};
+
+export type InteractionLog = {
+    id: string;
+    user_id: string;
+    customer_id: string | null;
+    order_id: string | null;
+    type: string;
+    content: string;
+    sent_at: string;
 };

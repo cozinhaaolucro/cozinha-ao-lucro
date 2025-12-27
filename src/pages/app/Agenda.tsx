@@ -11,7 +11,7 @@ import EditOrderDialog from '@/components/orders/EditOrderDialog';
 import { generateWhatsAppLink, getDefaultTemplateForStatus, parseMessageTemplate } from '@/lib/crm';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
-import { createCalendarEvent } from '@/lib/googleCalendar';
+
 
 const Agenda = () => {
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
@@ -23,95 +23,7 @@ const Agenda = () => {
     const [editingOrder, setEditingOrder] = useState<OrderWithDetails | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
 
-    const handleConnectGoogle = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                scopes: 'https://www.googleapis.com/auth/calendar',
-                redirectTo: window.location.href
-            }
-        });
-        if (error) {
-            toast({ title: 'Erro ao conectar Google', description: error.message, variant: 'destructive' });
-        }
-    };
 
-    const handleSyncToCalendar = async () => {
-        setIsSyncing(true);
-        try {
-            // Filter orders that are not cancelled, have delivery date, and NOT already synced
-            const pendingOrders = orders.filter(o =>
-                o.status !== 'cancelled' &&
-                o.delivery_date &&
-                !o.google_event_id // Check if already synced
-            );
-
-            if (pendingOrders.length === 0) {
-                toast({ title: 'Tudo sincronizado', description: 'Nenhum pedido novo para enviar.' });
-                setIsSyncing(false);
-                return;
-            }
-
-            let syncedCount = 0;
-
-            for (const order of pendingOrders) {
-                if (!order.delivery_date) continue;
-
-                const startDateTime = new Date(order.delivery_date);
-                if (order.delivery_time) {
-                    const [hours, minutes] = order.delivery_time.split(':');
-                    startDateTime.setHours(parseInt(hours), parseInt(minutes));
-                } else {
-                    startDateTime.setHours(9, 0); // Default to 9 AM
-                }
-
-                const endDateTime = new Date(startDateTime);
-                endDateTime.setHours(startDateTime.getHours() + 1); // 1 hour duration default
-
-                const event = {
-                    summary: `Entrega: ${order.customer?.name || 'Cliente'}`,
-                    description: `Pedido #${order.id.slice(0, 6)}\nTotal: R$ ${order.total_value.toFixed(2)}\nItens: ${order.items?.map(i => `${i.product_name} x${i.quantity}`).join(', ')}`,
-                    start: { dateTime: startDateTime.toISOString() },
-                    end: { dateTime: endDateTime.toISOString() }
-                };
-
-                // Create event
-                const createdEvent = await createCalendarEvent(event);
-
-                if (createdEvent && createdEvent.id) {
-                    // Save event ID to order
-                    const { error } = await supabase // Use global supabase client, assuming it's imported or available
-                        .from('orders')
-                        .update({ google_event_id: createdEvent.id })
-                        .eq('id', order.id);
-
-                    if (!error) {
-                        syncedCount++;
-                    } else {
-                        console.error('Failed to save event ID for order', order.id, error);
-                    }
-                }
-            }
-
-            if (syncedCount > 0) {
-                toast({ title: 'Sincronização concluída', description: `${syncedCount} pedidos enviados.` });
-                loadOrders(); // Reload to update state
-            } else {
-                toast({ title: 'Erro parcial', description: 'Não foi possível salvar alguns eventos.' });
-            }
-
-        } catch (error) {
-            console.error(error);
-            toast({
-                title: 'Erro na sincronização',
-                description: 'É necessário conectar sua conta Google.',
-                variant: 'destructive',
-                action: <Button onClick={handleConnectGoogle} variant="outline" size="sm">Conectar Google</Button>
-            });
-        } finally {
-            setIsSyncing(false);
-        }
-    };
 
     const loadOrders = async () => {
         const { data, error } = await getOrders();
@@ -331,10 +243,7 @@ const Agenda = () => {
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handleSyncToCalendar} disabled={isSyncing} className="gap-2 h-9 border-blue-200 text-blue-700 hover:bg-blue-50">
-                        {isSyncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CalendarIcon className="w-4 h-4" />}
-                        Sincronizar Google
-                    </Button>
+
                     <div className="flex items-center gap-2">
                         <Input
                             type="date"

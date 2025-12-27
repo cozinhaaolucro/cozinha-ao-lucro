@@ -1,14 +1,26 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, X, UserPlus } from 'lucide-react';
+import { Plus, X, UserPlus, ShoppingCart, Calendar, User as UserIcon } from 'lucide-react'; // Added icons
 import { getCustomers, getProducts, createOrder, createCustomer } from '@/lib/database';
 import type { Customer, Product, OrderStatus } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type NewOrderDialogProps = {
     open: boolean;
@@ -36,6 +48,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
     });
     const [creatingCustomer, setCreatingCustomer] = useState(false);
     const { toast } = useToast();
+    const isMobile = useIsMobile();
 
     useEffect(() => {
         if (open) {
@@ -64,7 +77,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
             phone: newCustomerData.phone || null,
             address: newCustomerData.address || null,
             notes: newCustomerData.notes || null,
-            last_order_date: null,
+            email: null,
         });
 
         if (!error && data) {
@@ -104,8 +117,8 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
         }, 0);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
 
         if (items.length === 0) {
             toast({ title: 'Adicione pelo menos um produto', variant: 'destructive' });
@@ -158,105 +171,93 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
         onOpenChange(false);
     };
 
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Novo Pedido</DialogTitle>
-                </DialogHeader>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="customer">Cliente (opcional)</Label>
-                            {!showNewCustomer ? (
-                                <div className="flex gap-2">
-                                    <Select value={formData.customer_id} onValueChange={(value) => setFormData({ ...formData, customer_id: value })}>
-                                        <SelectTrigger className="flex-1">
-                                            <SelectValue placeholder="Selecione o cliente" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {customers.map((c) => (
-                                                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() => setShowNewCustomer(true)}
-                                        title="Criar novo cliente"
-                                    >
-                                        <UserPlus className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium">Novo Cliente</span>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6"
-                                            onClick={() => setShowNewCustomer(false)}
-                                        >
-                                            <X className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                    <Input
-                                        placeholder="Nome do cliente *"
-                                        value={newCustomerData.name}
-                                        onChange={(e) => setNewCustomerData({ ...newCustomerData, name: e.target.value })}
-                                    />
-                                    <Input
-                                        placeholder="Telefone (WhatsApp)"
-                                        value={newCustomerData.phone}
-                                        onChange={(e) => setNewCustomerData({ ...newCustomerData, phone: e.target.value })}
-                                    />
-                                    <Input
-                                        placeholder="Endereço"
-                                        value={newCustomerData.address}
-                                        onChange={(e) => setNewCustomerData({ ...newCustomerData, address: e.target.value })}
-                                    />
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        onClick={handleCreateCustomer}
-                                        disabled={creatingCustomer}
-                                        className="w-full"
-                                    >
-                                        {creatingCustomer ? 'Criando...' : 'Criar e Selecionar'}
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-
-                        <div>
-                            <Label htmlFor="status">Status</Label>
-                            <Select value={formData.status} onValueChange={(value: string) => setFormData({ ...formData, status: value as OrderStatus })}>
-                                <SelectTrigger>
-                                    <SelectValue />
+    const FormContent = (
+        <div className="space-y-6 pb-20 sm:pb-0"> {/* Added pb-20 to prevent content hidden behind button on mobile */}
+            <div className="space-y-4">
+                <div className="flex items-center gap-2 text-lg font-semibold border-b pb-2">
+                    <UserIcon className="w-5 h-5 text-primary" />
+                    <h3>Cliente</h3>
+                </div>
+                <div className="space-y-2">
+                    {!showNewCustomer ? (
+                        <div className="flex gap-2 items-center px-1">
+                            <Select value={formData.customer_id} onValueChange={(value) => setFormData({ ...formData, customer_id: value })}>
+                                <SelectTrigger className="flex-1 h-9 min-w-0 text-sm"> {/* Reduced to h-9 and added min-w-0 */}
+                                    <SelectValue placeholder="Selecione o cliente" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="pending">A Fazer</SelectItem>
-                                    <SelectItem value="preparing">Em Produção</SelectItem>
-                                    <SelectItem value="ready">Pronto</SelectItem>
-                                    <SelectItem value="delivered">Entregue</SelectItem>
+                                    {customers.length === 0 && <SelectItem value="none" disabled>Nenhum cliente cadastrado</SelectItem>}
+                                    {customers.map((c) => (
+                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setShowNewCustomer(true)}
+                                title="Criar novo cliente"
+                                className="h-9 w-9 flex-shrink-0" /* Reduced to h-9 w-9 */
+                            >
+                                <UserPlus className="w-4 h-4" />
+                            </Button>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="space-y-3 p-4 border rounded-xl bg-muted/30 shadow-inner">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">Novo Cliente</span>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => setShowNewCustomer(false)}
+                                >
+                                    <X className="w-4 h-4" />
+                                </Button>
+                            </div>
+                            <Input
+                                placeholder="Nome do cliente *"
+                                value={newCustomerData.name}
+                                onChange={(e) => setNewCustomerData({ ...newCustomerData, name: e.target.value })}
+                                className="h-11"
+                            />
+                            <Input
+                                placeholder="WhatsApp"
+                                value={newCustomerData.phone}
+                                onChange={(e) => setNewCustomerData({ ...newCustomerData, phone: e.target.value })}
+                                className="h-11"
+                            />
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={handleCreateCustomer}
+                                disabled={creatingCustomer}
+                                className="w-full h-10"
+                            >
+                                {creatingCustomer ? 'Criando...' : 'Salvar Novo Cliente'}
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-lg font-semibold border-b pb-2">
+                        <Calendar className="w-5 h-5 text-primary" />
+                        <h3>Entrega</h3>
+                    </div>
+                    <div className="space-y-3">
                         <div>
-                            <Label htmlFor="delivery_date">Data de Entrega</Label>
+                            <Label htmlFor="delivery_date">Data</Label>
                             <Input
                                 id="delivery_date"
                                 type="date"
                                 value={formData.delivery_date}
                                 onChange={(e) => setFormData({ ...formData, delivery_date: e.target.value })}
+                                className="h-10"
                             />
                         </div>
                         <div>
@@ -266,87 +267,169 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                                 type="time"
                                 value={formData.delivery_time}
                                 onChange={(e) => setFormData({ ...formData, delivery_time: e.target.value })}
+                                className="h-10"
                             />
                         </div>
                     </div>
+                </div>
 
-                    <div>
-                        <Label htmlFor="notes">Observações</Label>
-                        <Textarea
-                            id="notes"
-                            value={formData.notes}
-                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                            placeholder="Detalhes adicionais do pedido..."
-                        />
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-lg font-semibold border-b pb-2">
+                        <div className="w-5 h-5 rounded-full border-2 border-primary" />
+                        <h3>Status</h3>
                     </div>
+                    <div>
+                        <Label htmlFor="status" className="sr-only">Status</Label>
+                        <Select value={formData.status} onValueChange={(value: string) => setFormData({ ...formData, status: value as OrderStatus })}>
+                            <SelectTrigger className="h-10">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="pending">A Fazer</SelectItem>
+                                <SelectItem value="preparing">Em Produção</SelectItem>
+                                <SelectItem value="ready">Pronto</SelectItem>
+                                <SelectItem value="delivered">Entregue</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            </div>
 
+            <div className="space-y-4">
+                <div className="flex items-center justify-between border-b pb-2">
+                    <div className="flex items-center gap-2 text-lg font-semibold">
+                        <ShoppingCart className="w-5 h-5 text-primary" />
+                        <h3>Itens</h3>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={addItem} className="gap-2 h-8">
+                        <Plus className="w-4 h-4" />
+                        Add
+                    </Button>
+                </div>
+
+                {items.length === 0 ? (
+                    <div className="text-center py-8 border-2 border-dashed rounded-xl text-muted-foreground bg-muted/10">
+                        <p>Nenhum produto adicionado</p>
+                        <Button variant="link" onClick={addItem}>Adicionar agora</Button>
+                    </div>
+                ) : (
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <Label>Itens do Pedido</Label>
-                            <Button type="button" variant="outline" size="sm" onClick={addItem} className="gap-2">
-                                <Plus className="w-4 h-4" />
-                                Adicionar Produto
-                            </Button>
-                        </div>
-
-                        {items.length === 0 ? (
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                                Nenhum item adicionado
-                            </p>
-                        ) : (
-                            <div className="space-y-2">
-                                {items.map((item, index) => {
-                                    const product = products.find((p) => p.id === item.product_id);
-                                    return (
-                                        <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                                            <Select
-                                                value={item.product_id}
-                                                onValueChange={(value) => updateItem(index, 'product_id', value)}
-                                            >
-                                                <SelectTrigger className="flex-1">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {products.map((p) => (
-                                                        <SelectItem key={p.id} value={p.id}>
-                                                            {p.name} - R$ {(p.selling_price || 0).toFixed(2)}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                        {items.map((item, index) => {
+                            const product = products.find((p) => p.id === item.product_id);
+                            return (
+                                <div key={index} className="flex flex-col gap-2 p-3 border rounded-xl bg-card shadow-sm">
+                                    <div className="flex gap-2">
+                                        <Select
+                                            value={item.product_id}
+                                            onValueChange={(value) => updateItem(index, 'product_id', value)}
+                                        >
+                                            <SelectTrigger className="flex-1 h-10 text-sm">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {products.map((p) => (
+                                                    <SelectItem key={p.id} value={p.id}>
+                                                        {p.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => removeItem(index)}
+                                            className="h-10 w-10 text-muted-foreground hover:text-destructive"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </Button>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="flex items-center gap-2 border rounded-md p-1 bg-background">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateItem(index, 'quantity', Math.max(1, item.quantity - 1))}>-</Button>
                                             <Input
                                                 type="number"
                                                 min="1"
                                                 value={item.quantity}
                                                 onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                                                className="w-20"
+                                                className="w-12 h-8 border-none text-center p-0 focus-visible:ring-0"
                                             />
-                                            <span className="text-sm font-medium w-24 text-right">
-                                                R$ {((product?.selling_price || 0) * item.quantity).toFixed(2)}
-                                            </span>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => removeItem(index)}
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateItem(index, 'quantity', item.quantity + 1)}>+</Button>
                                         </div>
-                                    );
-                                })}
-                                <div className="flex justify-end font-bold text-lg pt-2 border-t">
-                                    Total: R$ {calculateTotal().toFixed(2)}
+                                        <span className="font-medium text-sm">
+                                            R$ {((product?.selling_price || 0) * item.quantity).toFixed(2)}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })}
                     </div>
+                )}
+            </div>
 
-                    <div className="flex gap-2">
-                        <Button type="submit" className="flex-1">Criar Pedido</Button>
-                        <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>
+            <div>
+                <Label htmlFor="notes">Observações</Label>
+                <Textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="Detalhes adicionais..."
+                    className="min-h-[80px]"
+                />
+            </div>
+        </div>
+    );
+
+    const TotalFooter = (
+        <div className="flex items-center justify-between w-full gap-4 pt-2 border-t mt-auto bg-background/95 backdrop-blur">
+            <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground">Total do Pedido</span>
+                <span className="text-xl font-bold text-primary">R$ {calculateTotal().toFixed(2)}</span>
+            </div>
+            <div className="flex gap-2">
+                <Button type="button" variant="ghost" onClick={resetForm}>Voltar</Button>
+                <Button onClick={() => handleSubmit()} className="px-6">Criar Pedido</Button>
+            </div>
+        </div>
+    );
+
+    if (isMobile) {
+        return (
+            <Drawer open={open} onOpenChange={onOpenChange}>
+                <DrawerContent className="h-[90vh] flex flex-col">
+                    <DrawerHeader className="border-b pb-4">
+                        <DrawerTitle>Novo Pedido</DrawerTitle>
+                        <DrawerDescription>Preencha os dados abaixo.</DrawerDescription>
+                    </DrawerHeader>
+                    <ScrollArea className="flex-1 overflow-y-auto">
+                        <div className="px-4 py-4 w-full max-w-md mx-auto">
+                            {FormContent}
+                        </div>
+                    </ScrollArea>
+                    <div className="p-4 border-t mt-auto">
+                        <Button className="w-full text-lg h-12" onClick={() => handleSubmit()}>
+                            Criar Pedido - R$ {calculateTotal().toFixed(2)}
+                        </Button>
                     </div>
-                </form>
+                </DrawerContent>
+            </Drawer>
+        );
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0">
+                <DialogHeader className="p-6 pb-2 border-b bg-background z-10 rounded-t-lg">
+                    <DialogTitle>Novo Pedido</DialogTitle>
+                </DialogHeader>
+
+                <ScrollArea className="flex-1 p-6 overflow-y-auto">
+                    {FormContent}
+                </ScrollArea>
+
+                <div className="p-4 border-t bg-muted/10 rounded-b-lg">
+                    {TotalFooter}
+                </div>
             </DialogContent>
         </Dialog>
     );

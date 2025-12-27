@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -28,12 +30,13 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import { Plus, X, Calculator, ChevronDown, Check, Camera, Image as ImageIcon } from 'lucide-react';
+import { Plus, X, Calculator, ChevronDown, Check, Camera, Image as ImageIcon, Trash2, PackageCheck } from 'lucide-react';
 import { getIngredients, createProduct, createIngredient, updateProduct } from '@/lib/database';
 import type { Ingredient, Product } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import { PRESET_PRODUCTS, PRESET_INGREDIENTS } from '@/data/presets';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type ProductBuilderProps = {
     open: boolean;
@@ -73,6 +76,7 @@ const convertQuantity = (qty: number, fromUnit: string, toUnit: string): number 
 };
 
 const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: ProductBuilderProps) => {
+    const isMobile = useIsMobile();
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [formData, setFormData] = useState({
         name: '',
@@ -406,7 +410,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
     };
 
     const clearForm = () => {
-        setFormData({ name: '', description: '', selling_price: 0 });
+        setFormData({ name: '', description: '', selling_price: 0, preparation_time_minutes: 0 });
         setSelectedIngredients([]);
         setImageFile(null);
         setImagePreview(null);
@@ -425,7 +429,8 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         setFormData({
             name: preset.name,
             description: preset.description,
-            selling_price: preset.selling_price
+            selling_price: preset.selling_price,
+            preparation_time_minutes: 0
         });
 
         // 2. Map ingredients
@@ -492,315 +497,322 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         toast({ title: 'Modelo carregado!', description: 'Receita preenchida com sucesso.' });
     };
 
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="p-3 pb-20 sm:p-6 sm:pb-6 sm:max-w-2xl">
-                <DialogHeader className="pb-1">
-                    <DialogTitle className="text-sm sm:text-lg">Novo Produto</DialogTitle>
-                </DialogHeader>
-
-                <form onSubmit={handleSubmit} className="space-y-2">
-                    {/* Basic Info - Ultra compact */}
-                    <div className="space-y-1">
-                        <div>
-                            <Label htmlFor="name" className="text-[10px] sm:text-sm">Nome</Label>
-                            <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="Ex: Brigadeiro"
-                                className="h-8"
-                                required
-                            />
-                        </div>
-
-                        <div className="flex gap-2">
-                            <div className="flex-1">
-                                <Label htmlFor="description" className="text-[10px] sm:text-sm">Descrição</Label>
+    const FormContent = (
+        <form onSubmit={handleSubmit} className="flex flex-col h-full gap-4">
+            <ScrollArea className={cn("flex-1", isMobile ? "-mx-4 px-4" : "")}>
+                <div className="space-y-6 pb-4">
+                    {/* 1. Basic Info Section */}
+                    <Card className="border-none shadow-none sm:border sm:shadow-sm">
+                        <CardContent className="p-0 sm:p-4 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name" className="text-base font-semibold">Nome do Produto</Label>
                                 <Input
+                                    id="name"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    placeholder="Ex: Brigadeiro Gourmet"
+                                    className="h-11 text-lg"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Descrição</Label>
+                                <Textarea
                                     id="description"
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder="Chocolate belga..."
-                                    className="h-8 text-xs"
+                                    placeholder="Detalhes sobre o produto..."
+                                    className="resize-none"
+                                    rows={2}
                                 />
                             </div>
-                            <div className="w-16">
-                                <Label htmlFor="prep_time" className="text-[10px] sm:text-sm">Min</Label>
-                                <Input
-                                    id="prep_time"
-                                    type="number"
-                                    min="0"
-                                    value={formData.preparation_time_minutes}
-                                    onChange={(e) => setFormData({ ...formData, preparation_time_minutes: parseInt(e.target.value) || 0 })}
-                                    className="h-8 text-center text-sm font-bold"
-                                />
-                            </div>
-                        </div>
 
-                        {/* Image - Ultra compact inline */}
-                        <div className="flex items-center gap-2">
-                            <Label className="text-[10px] sm:text-sm whitespace-nowrap">Foto:</Label>
-                            <label
-                                htmlFor="product-image"
-                                className="flex-1 border border-dashed rounded px-2 py-1 cursor-pointer hover:bg-muted/50 flex items-center justify-center gap-2 h-8"
-                            >
-                                {imagePreview ? (
-                                    <img src={imagePreview} alt="Preview" className="h-6 w-6 object-cover rounded" />
-                                ) : (
-                                    <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                                )}
-                                <span className="text-[10px] text-muted-foreground">{imagePreview ? 'Alterar' : 'Adicionar'}</span>
-                                <input
-                                    type="file"
-                                    id="product-image"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={handleImageSelect}
-                                />
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* Presets Button - Compact */}
-                    <div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button type="button" variant="secondary" size="sm" className="w-full h-8 text-xs gap-1">
-                                    <Calculator className="w-3 h-3" />
-                                    Modelo de Produto
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-[300px]">
-                                <DropdownMenuItem
-                                    onClick={clearForm}
-                                    className="flex items-center gap-2 py-2 text-destructive focus:text-destructive"
-                                >
-                                    <span className="font-medium">Limpar Tudo</span>
-                                </DropdownMenuItem>
-                                {PRESET_PRODUCTS.map((preset) => (
-                                    <DropdownMenuItem
-                                        key={preset.name}
-                                        onClick={() => loadProductPreset(preset.name)}
-                                        className="flex flex-col items-start py-2"
-                                    >
-                                        <span className="font-medium">{preset.name}</span>
-                                        <span className="text-xs text-muted-foreground line-clamp-1">{preset.description}</span>
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-
-                    {/* Recipe (Ingredients) - Compact */}
-                    <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                            <Label className="text-[10px] sm:text-sm">Ingredientes</Label>
-                            <div className="flex gap-1">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button type="button" variant="outline" size="sm" className="h-6 text-[10px] px-2">
-                                            + Preset
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-56 max-h-60 overflow-y-auto">
-                                        {PRESET_INGREDIENTS.map((preset) => (
-                                            <DropdownMenuItem
-                                                key={preset.name}
-                                                onClick={() => addPresetIngredient(preset.name)}
-                                            >
-                                                {preset.name}
-                                            </DropdownMenuItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-
-                                <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="secondary"
-                                            role="combobox"
-                                            aria-expanded={openCombobox}
-                                            size="sm"
-                                            className="gap-2"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                            Adicionar Existente
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[200px] p-0">
-                                        <Command>
-                                            <CommandInput placeholder="Buscar ingrediente..." />
-                                            <CommandList>
-                                                <CommandEmpty>Nenhum ingrediente encontrado.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {ingredients.map((ingredient) => (
-                                                        <CommandItem
-                                                            key={ingredient.id}
-                                                            value={ingredient.name}
-                                                            onSelect={() => addExistingIngredient(ingredient)}
-                                                        >
-                                                            <Check
-                                                                className={cn(
-                                                                    "mr-2 h-4 w-4",
-                                                                    selectedIngredients.some(si => si.ingredient_id === ingredient.id) ? "opacity-100" : "opacity-0"
-                                                                )}
-                                                            />
-                                                            {ingredient.name}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                        </div>
-
-                        {selectedIngredients.length === 0 ? (
-                            <Card>
-                                <CardContent className="p-6 text-center text-sm text-muted-foreground">
-                                    Adicione os ingredientes que compõem este produto
-                                </CardContent>
-                            </Card>
-                        ) : (
-                            <div className="space-y-3">
-                                {selectedIngredients.map((si, index) => (
-                                    <div key={index} className="flex flex-wrap items-center gap-2 p-2 bg-muted/30 rounded-lg border">
-                                        <div className="flex-1 min-w-[150px] sm:min-w-[180px]">
-                                            {si.is_virtual ? (
-                                                <div className="px-3 py-2 text-sm border rounded-md bg-muted/50 flex justify-between items-center h-10">
-                                                    <span>{si.name} <span className="text-xs text-muted-foreground">(Novo)</span></span>
-                                                    <span className="text-xs text-muted-foreground">R$ {si.cost.toFixed(2)}/{si.unit}</span>
-                                                </div>
-                                            ) : (
-                                                <Select
-                                                    value={si.ingredient_id}
-                                                    onValueChange={(value) => updateIngredientSelection(index, value)}
-                                                >
-                                                    <SelectTrigger className="h-10">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {ingredients.map((ing) => (
-                                                            <SelectItem key={ing.id} value={ing.id}>
-                                                                {ing.name} (R$ {ing.cost_per_unit.toFixed(2)}/{ing.unit})
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            )}
-                                        </div>
-
-                                        <div className="flex items-center gap-2 flex-shrink-0">
-                                            <Input
-                                                type="number"
-                                                step="0.001"
-                                                value={si.display_quantity}
-                                                onChange={(e) => updateIngredientDisplayQuantity(index, parseFloat(e.target.value) || 0)}
-                                                className="w-16 sm:w-20 text-right h-10"
-                                                placeholder="Qtd"
-                                            />
-
-                                            {getUnitOptions(si.unit).length > 1 ? (
-                                                <Select
-                                                    value={si.display_unit}
-                                                    onValueChange={(val) => updateIngredientDisplayUnit(index, val)}
-                                                >
-                                                    <SelectTrigger className="w-20 h-10 px-2">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {getUnitOptions(si.unit).map(u => (
-                                                            <SelectItem key={u} value={u}>{u}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            ) : (
-                                                <div className="w-20 px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md h-10 flex items-center justify-center border">
-                                                    {si.display_unit}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="text-xs text-muted-foreground w-14 sm:w-16 text-right font-medium">
-                                            R$ {(si.cost * si.quantity).toFixed(2)}
-                                        </div>
-
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-10 w-10 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                            onClick={() => removeIngredient(index)}
-                                        >
-                                            <X className="w-4 h-4" />
-                                        </Button>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="prep_time">Tempo de Preparo</Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="prep_time"
+                                            type="number"
+                                            min="0"
+                                            value={formData.preparation_time_minutes}
+                                            onChange={(e) => setFormData({ ...formData, preparation_time_minutes: parseInt(e.target.value) || 0 })}
+                                            className="h-10 pl-9"
+                                        />
+                                        <span className="absolute left-3 top-2.5 text-muted-foreground text-sm">Min</span>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Pricing */}
-                    <Card className="bg-muted/30">
-                        <CardContent className="p-4 space-y-3">
-                            <div className="flex items-center gap-2 text-sm">
-                                <Calculator className="w-4 h-4 text-primary" />
-                                <span className="font-medium">Cálculo de Precificação</span>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <p className="text-muted-foreground">Custo Total:</p>
-                                    <p className="text-lg font-bold">R$ {totalCost.toFixed(2)}</p>
                                 </div>
-                                <div>
-                                    <p className="text-muted-foreground">Preço Sugerido (60% margem):</p>
-                                    <p className="text-lg font-bold text-primary">R$ {suggestedPrice.toFixed(2)}</p>
-                                </div>
-                            </div>
-
-                            <div>
-                                <Label htmlFor="price">Preço de Venda</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        id="price"
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.selling_price}
-                                        onChange={(e) => setFormData({ ...formData, selling_price: parseFloat(e.target.value) || 0 })}
-                                        required
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => setFormData({ ...formData, selling_price: parseFloat(suggestedPrice.toFixed(2)) })}
+                                <div className="space-y-2">
+                                    <Label>Imagem</Label>
+                                    <label
+                                        htmlFor="product-image"
+                                        className="flex h-10 w-full cursor-pointer items-center justify-center rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
                                     >
-                                        Usar Sugerido
-                                    </Button>
+                                        <span className="flex items-center gap-2 truncate">
+                                            {imagePreview ? (
+                                                <>
+                                                    <img src={imagePreview} alt="Preview" className="h-6 w-6 rounded object-cover" />
+                                                    <span className="text-muted-foreground">Alterar</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <ImageIcon className="h-4 w-4" />
+                                                    <span>Adicionar Foto</span>
+                                                </>
+                                            )}
+                                        </span>
+                                        <input
+                                            type="file"
+                                            id="product-image"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleImageSelect}
+                                        />
+                                    </label>
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Margem: <span className={margin >= 60 ? 'text-green-600 font-medium' : 'text-yellow-600'}>
-                                        {margin.toFixed(1)}%
-                                    </span>
-                                </p>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Actions */}
-                    <div className="flex gap-2">
-                        <Button type="submit" className="flex-1" disabled={uploading}>
-                            {uploading ? (productToEdit ? 'Salvando...' : 'Criando...') : (productToEdit ? 'Salvar Alterações' : 'Criar Produto')}
-                        </Button>
-                        <Button type="button" variant="outline" onClick={resetForm}>
-                            Cancelar
-                        </Button>
+                    {/* 2. Ingredients Section */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-base font-semibold">Ingredientes</Label>
+
+                            {/* Presets Menu */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button type="button" variant="outline" size="sm" className="h-8 gap-1">
+                                        <Calculator className="w-3.5 h-3.5" />
+                                        <span className="sr-only sm:not-sr-only">Carregar Modelo</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                    <DropdownMenuItem onClick={clearForm} className="text-destructive">
+                                        Limpar Tudo
+                                    </DropdownMenuItem>
+                                    {PRESET_PRODUCTS.map((preset) => (
+                                        <DropdownMenuItem key={preset.name} onClick={() => loadProductPreset(preset.name)}>
+                                            {preset.name}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+
+                        {selectedIngredients.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl bg-muted/20 gap-3 text-center">
+                                <PackageCheck className="w-10 h-10 text-muted-foreground/50" />
+                                <div className="space-y-1">
+                                    <p className="font-medium">Nenhum ingrediente</p>
+                                    <p className="text-sm text-muted-foreground">Adicione ingredientes para calcular o custo.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {selectedIngredients.map((si, index) => (
+                                    <Card key={index} className="overflow-hidden border shadow-sm">
+                                        <div className="p-3 flex flex-col gap-3">
+                                            <div className="flex items-center justify-between gap-2">
+                                                {/* Ingredient Selector on Mobile can be a modal or just text if locked. 
+                                                    Currently implementation allows changing ingredient in place.
+                                                    For simplicity in this overhaul, let's keep it robust.
+                                                */}
+                                                {si.is_virtual ? (
+                                                    <div className="flex items-center gap-2 font-medium">
+                                                        <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wide">Novo</span>
+                                                        {si.name}
+                                                    </div>
+                                                ) : (
+                                                    <Select
+                                                        value={si.ingredient_id}
+                                                        onValueChange={(value) => updateIngredientSelection(index, value)}
+                                                    >
+                                                        <SelectTrigger className="h-8 border-none shadow-none p-0 font-medium bg-transparent hover:bg-transparent w-auto gap-2 focus:ring-0">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {ingredients.map((ing) => (
+                                                                <SelectItem key={ing.id} value={ing.id}>{ing.name}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-muted-foreground hover:text-destructive -mr-2"
+                                                    onClick={() => removeIngredient(index)}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center">
+                                                        <Input
+                                                            type="number"
+                                                            step="0.001"
+                                                            value={si.display_quantity}
+                                                            onChange={(e) => updateIngredientDisplayQuantity(index, parseFloat(e.target.value) || 0)}
+                                                            className="h-10 rounded-r-none border-r-0 text-center text-lg font-medium"
+                                                        />
+                                                        {getUnitOptions(si.unit).length > 1 ? (
+                                                            <Select
+                                                                value={si.display_unit}
+                                                                onValueChange={(val) => updateIngredientDisplayUnit(index, val)}
+                                                            >
+                                                                <SelectTrigger className="h-10 w-20 rounded-l-none border-l-0 bg-muted/50">
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {getUnitOptions(si.unit).map(u => (
+                                                                        <SelectItem key={u} value={u}>{u}</SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        ) : (
+                                                            <div className="h-10 w-16 flex items-center justify-center bg-muted/50 border border-l-0 rounded-r-md text-sm font-medium text-muted-foreground">
+                                                                {si.display_unit}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right min-w-[30%]">
+                                                    <p className="text-xs text-muted-foreground">Custo</p>
+                                                    <p className="font-semibold">R$ {(si.cost * si.quantity).toFixed(2)}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Add Buttons */}
+                        <div className="grid grid-cols-2 gap-2">
+                            <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="h-12 border-dashed border-2 hover:border-primary hover:bg-primary/5 text-muted-foreground hover:text-primary gap-2"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        Existente
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[280px] p-0" align="start">
+                                    <Command>
+                                        <CommandInput placeholder="Buscar ingrediente..." />
+                                        <CommandList>
+                                            <CommandEmpty>Nenhum ingrediente encontrado.</CommandEmpty>
+                                            <CommandGroup>
+                                                {ingredients.map((ingredient) => (
+                                                    <CommandItem
+                                                        key={ingredient.id}
+                                                        value={ingredient.name}
+                                                        onSelect={() => addExistingIngredient(ingredient)}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                selectedIngredients.some(si => si.ingredient_id === ingredient.id) ? "opacity-100" : "opacity-0"
+                                                            )}
+                                                        />
+                                                        {ingredient.name}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="h-12 border-dashed border-2 hover:border-primary hover:bg-primary/5 text-muted-foreground hover:text-primary gap-2">
+                                        <Plus className="w-4 h-4" />
+                                        Da Tabela
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56 max-h-60 overflow-y-auto">
+                                    {PRESET_INGREDIENTS.map((preset) => (
+                                        <DropdownMenuItem
+                                            key={preset.name}
+                                            onClick={() => addPresetIngredient(preset.name)}
+                                        >
+                                            {preset.name}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
-                </form>
+                </div>
+            </ScrollArea>
+
+            {/* Sticky Footer for Pricing and Action */}
+            <div className={cn("pt-2 border-t bg-background space-y-4", isMobile ? "-mx-4 px-4 pb-4" : "")}>
+                <div className="flex items-center justify-between bg-muted/40 p-3 rounded-lg">
+                    <div>
+                        <p className="text-xs text-muted-foreground">Custo Total</p>
+                        <p className="font-bold text-lg">R$ {totalCost.toFixed(2)}</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-xs text-muted-foreground">Preço (Margem {margin.toFixed(0)}%)</p>
+                        <div className="flex items-center gap-2">
+                            <Input
+                                type="number"
+                                value={formData.selling_price}
+                                onChange={(e) => setFormData({ ...formData, selling_price: parseFloat(e.target.value) || 0 })}
+                                className="h-8 w-24 text-right font-bold bg-background"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex gap-3">
+                    <Button type="button" variant="outline" onClick={resetForm} className="flex-1 h-12">
+                        Cancelar
+                    </Button>
+                    <Button type="submit" className="flex-[2] h-12 text-base" disabled={uploading}>
+                        {uploading ? 'Salvando...' : (productToEdit ? 'Salvar Alterações' : 'Criar Produto')}
+                    </Button>
+                </div>
+            </div>
+        </form>
+    );
+
+    if (isMobile) {
+        return (
+            <Drawer open={open} onOpenChange={onOpenChange}>
+                <DrawerContent className="h-[95vh]">
+                    <DrawerHeader className="text-left">
+                        <DrawerTitle>{productToEdit ? 'Editar Produto' : 'Novo Produto'}</DrawerTitle>
+                    </DrawerHeader>
+                    <div className="px-4 h-full pb-4">
+                        {FormContent}
+                    </div>
+                </DrawerContent>
+            </Drawer>
+        );
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle>{productToEdit ? 'Editar Produto' : 'Novo Produto'}</DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 overflow-hidden p-1">
+                    {FormContent}
+                </div>
             </DialogContent>
-        </Dialog >
+        </Dialog>
     );
 };
 
