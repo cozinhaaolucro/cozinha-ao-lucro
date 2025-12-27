@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Trash2 } from 'lucide-react';
+import { Plus, X, Trash2, MessageCircle } from 'lucide-react';
 import { getCustomers, getProducts } from '@/lib/database';
 import { supabase } from '@/lib/supabase';
 import type { Customer, Product, OrderWithDetails, OrderStatus } from '@/types/database';
@@ -188,6 +188,35 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
         }
     };
 
+    const sendWhatsAppUpdate = (type: 'confirm' | 'dispatch' | 'ready') => {
+        const customer = customers.find(c => c.id === formData.customer_id);
+        if (!customer?.phone) {
+            toast({ title: 'Cliente sem telefone cadastrado', variant: 'destructive' });
+            return;
+        }
+
+        let message = '';
+        const orderId = order?.id.slice(0, 8); // Short ID
+
+        switch (type) {
+            case 'confirm':
+                message = `Olá ${customer.name}! Seu pedido #${orderId} foi confirmado e já está sendo preparado. ${formData.delivery_time ? `Previsão de entrega: ${formData.delivery_time}` : ''}`;
+                break;
+            case 'dispatch':
+                message = `Olá ${customer.name}! Boas notícias: Seu pedido #${orderId} saiu para entrega! 🛵💨`;
+                break;
+            case 'ready':
+                message = `Olá ${customer.name}! Seu pedido #${orderId} está pronto para retirada! 🛍️`;
+                break;
+        }
+
+        const encodedMessage = encodeURIComponent(message);
+        const cleanPhone = customer.phone.replace(/\D/g, '');
+        const finalPhone = cleanPhone.length <= 11 ? `55${cleanPhone}` : cleanPhone;
+
+        window.open(`https://wa.me/${finalPhone}?text=${encodedMessage}`, '_blank');
+    };
+
     if (!order) return null;
 
     return (
@@ -232,6 +261,22 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                                     <SelectItem value="cancelled">Cancelado</SelectItem>
                                 </SelectContent>
                             </Select>
+                        </div>
+                    </div>
+
+                    {/* Quick Status Updates */}
+                    <div className="bg-muted/30 p-3 rounded-lg border space-y-2">
+                        <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Ações Rápidas (WhatsApp)</Label>
+                        <div className="flex flex-wrap gap-2">
+                            <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-green-700 border-green-200 bg-green-50 hover:bg-green-100" onClick={() => sendWhatsAppUpdate('confirm')}>
+                                <MessageCircle className="w-3.5 h-3.5" /> Confirmar
+                            </Button>
+                            <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100" onClick={() => sendWhatsAppUpdate('dispatch')}>
+                                <MessageCircle className="w-3.5 h-3.5" /> Saiu p/ Entrega
+                            </Button>
+                            <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-orange-700 border-orange-200 bg-orange-50 hover:bg-orange-100" onClick={() => sendWhatsAppUpdate('ready')}>
+                                <MessageCircle className="w-3.5 h-3.5" /> Pronto p/ Retirada
+                            </Button>
                         </div>
                     </div>
 

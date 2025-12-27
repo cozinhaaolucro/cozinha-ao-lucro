@@ -9,6 +9,7 @@ export type Profile = {
     banner_url?: string | null;
     color_theme?: string | null;
     slug?: string | null;
+    facebook_pixel_id?: string | null;
     created_at: string;
     updated_at: string;
 };
@@ -41,6 +42,7 @@ export type Product = {
     selling_price: number;
     image_url: string | null;
     active?: boolean;
+    is_highlight?: boolean; // Added new field
     preparation_time_minutes?: number; // Added new field
     created_at: string;
     updated_at: string;

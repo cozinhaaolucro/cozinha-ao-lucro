@@ -183,6 +183,7 @@ const Settings = () => {
                     business_name: businessName,
                     description: description,
                     slug: slug || null,
+                    facebook_pixel_id: formData.get('facebook_pixel_id') as string || null,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', user.id);
@@ -194,7 +195,13 @@ const Settings = () => {
                 throw error;
             }
 
-            setProfile({ ...profile, business_name: businessName, description, slug: slug || null });
+            setProfile({
+                ...profile,
+                business_name: businessName,
+                description,
+                slug: slug || null,
+                facebook_pixel_id: formData.get('facebook_pixel_id') as string || null
+            });
             toast.success('Configurações do cardápio salvas!');
         } catch (error) {
             console.error('Error saving menu settings:', error);
@@ -411,6 +418,7 @@ const Settings = () => {
                                     />
                                 </div>
 
+
                                 {/* Description */}
                                 <div>
                                     <Label htmlFor="description" className="text-xs">Descrição</Label>
@@ -421,6 +429,21 @@ const Settings = () => {
                                         className="flex min-h-[50px] w-full rounded-md border border-input bg-background px-2 py-1 text-xs resize-none"
                                         placeholder="Os melhores doces artesanais..."
                                     />
+                                </div>
+
+                                {/* Facebook Pixel */}
+                                <div>
+                                    <Label htmlFor="facebook_pixel_id" className="text-xs">Facebook Pixel ID</Label>
+                                    <Input
+                                        id="facebook_pixel_id"
+                                        name="facebook_pixel_id"
+                                        defaultValue={profile?.facebook_pixel_id || ''}
+                                        placeholder="Ex: 1234567890"
+                                        className="h-8"
+                                    />
+                                    <p className="text-[10px] text-muted-foreground mt-1">
+                                        Adicione o ID do seu Pixel para rastrear visitas no cardápio.
+                                    </p>
                                 </div>
 
                                 <Button type="submit" disabled={loading} className="w-full h-8 text-sm">

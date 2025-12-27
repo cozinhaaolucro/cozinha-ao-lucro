@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -83,6 +84,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         description: '',
         selling_price: 0,
         preparation_time_minutes: 0,
+        is_highlight: false
     });
     const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
     const [openCombobox, setOpenCombobox] = useState(false);
@@ -106,6 +108,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     description: productToEdit.description || '',
                     selling_price: productToEdit.selling_price || 0,
                     preparation_time_minutes: productToEdit.preparation_time_minutes || 0,
+                    is_highlight: productToEdit.is_highlight || false,
                 });
                 setImagePreview(productToEdit.image_url || null);
 
@@ -355,6 +358,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     // Only update image if new one uploaded, else keep existing
                     ...(imageUrl ? { image_url: imageUrl } : {}),
                     preparation_time_minutes: formData.preparation_time_minutes,
+                    is_highlight: formData.is_highlight,
                 },
                 // For update, we pass ingredients to be replaced
                 finalIngredients
@@ -381,6 +385,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     active: true,
                     image_url: imageUrl,
                     preparation_time_minutes: formData.preparation_time_minutes,
+                    is_highlight: formData.is_highlight,
                 },
                 finalIngredients
             );
@@ -398,7 +403,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
     };
 
     const resetFields = () => {
-        setFormData({ name: '', description: '', selling_price: 0, preparation_time_minutes: 0 });
+        setFormData({ name: '', description: '', selling_price: 0, preparation_time_minutes: 0, is_highlight: false });
         setSelectedIngredients([]);
         setImageFile(null);
         setImagePreview(null);
@@ -410,7 +415,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
     };
 
     const clearForm = () => {
-        setFormData({ name: '', description: '', selling_price: 0, preparation_time_minutes: 0 });
+        setFormData({ name: '', description: '', selling_price: 0, preparation_time_minutes: 0, is_highlight: false });
         setSelectedIngredients([]);
         setImageFile(null);
         setImagePreview(null);
@@ -430,7 +435,8 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
             name: preset.name,
             description: preset.description,
             selling_price: preset.selling_price,
-            preparation_time_minutes: 0
+            preparation_time_minutes: 0,
+            is_highlight: false
         });
 
         // 2. Map ingredients
@@ -498,9 +504,9 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
     };
 
     const FormContent = (
-        <form onSubmit={handleSubmit} className="flex flex-col h-full gap-4">
-            <ScrollArea className={cn("flex-1", isMobile ? "-mx-4 px-4" : "")}>
-                <div className="space-y-6 pb-4">
+        <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-6">
+                <div className="space-y-6 py-4">
                     {/* 1. Basic Info Section */}
                     <Card className="border-none shadow-none sm:border sm:shadow-sm">
                         <CardContent className="p-0 sm:p-4 space-y-4">
@@ -528,6 +534,22 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                                 />
                             </div>
 
+                            <div className="flex items-center space-x-2 border p-3 rounded-md bg-muted/50">
+                                <Switch
+                                    id="is_highlight"
+                                    checked={formData.is_highlight}
+                                    onCheckedChange={(checked) => setFormData({ ...formData, is_highlight: checked })}
+                                />
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="is_highlight" className="text-base cursor-pointer">
+                                        Destaque no Cardápio (Sugestão)
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Exibe este produto na vitrine de cima do cardápio digital (Modo Vitrine).
+                                    </p>
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="prep_time">Tempo de Preparo</Label>
@@ -538,9 +560,9 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                                             min="0"
                                             value={formData.preparation_time_minutes}
                                             onChange={(e) => setFormData({ ...formData, preparation_time_minutes: parseInt(e.target.value) || 0 })}
-                                            className="h-10 pl-9"
+                                            className="h-10 pr-10"
                                         />
-                                        <span className="absolute left-3 top-2.5 text-muted-foreground text-sm">Min</span>
+                                        <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">Min</span>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -694,15 +716,16 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                         )}
 
                         {/* Add Buttons */}
-                        <div className="grid grid-cols-2 gap-2">
+                        {/* Add Buttons */}
+                        <div className="flex gap-2">
                             <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant="outline"
-                                        className="h-12 border-dashed border-2 hover:border-primary hover:bg-primary/5 text-muted-foreground hover:text-primary gap-2"
+                                        className="h-12 flex-1 border-dashed border-2 hover:border-primary hover:bg-primary/5 text-muted-foreground hover:text-primary gap-2"
                                     >
                                         <Plus className="w-4 h-4" />
-                                        Existente
+                                        Adicionar Ingrediente
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-[280px] p-0" align="start">
@@ -731,32 +754,13 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                                     </Command>
                                 </PopoverContent>
                             </Popover>
-
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="h-12 border-dashed border-2 hover:border-primary hover:bg-primary/5 text-muted-foreground hover:text-primary gap-2">
-                                        <Plus className="w-4 h-4" />
-                                        Da Tabela
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56 max-h-60 overflow-y-auto">
-                                    {PRESET_INGREDIENTS.map((preset) => (
-                                        <DropdownMenuItem
-                                            key={preset.name}
-                                            onClick={() => addPresetIngredient(preset.name)}
-                                        >
-                                            {preset.name}
-                                        </DropdownMenuItem>
-                                    ))}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
                         </div>
                     </div>
                 </div>
-            </ScrollArea>
+            </div>
 
             {/* Sticky Footer for Pricing and Action */}
-            <div className={cn("pt-2 border-t bg-background space-y-4", isMobile ? "-mx-4 px-4 pb-4" : "")}>
+            <div className="shrink-0 border-t bg-background p-6 space-y-4">
                 <div className="flex items-center justify-between bg-muted/40 p-3 rounded-lg">
                     <div>
                         <p className="text-xs text-muted-foreground">Custo Total</p>
@@ -804,11 +808,11 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-                <DialogHeader>
+            <DialogContent className="sm:max-w-2xl h-[80vh] flex flex-col p-0 gap-0 overflow-hidden">
+                <DialogHeader className="p-6 pb-2 shrink-0">
                     <DialogTitle>{productToEdit ? 'Editar Produto' : 'Novo Produto'}</DialogTitle>
                 </DialogHeader>
-                <div className="flex-1 overflow-hidden p-1">
+                <div className="flex-1 min-h-0 overflow-hidden">
                     {FormContent}
                 </div>
             </DialogContent>

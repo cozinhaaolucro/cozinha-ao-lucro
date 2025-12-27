@@ -189,8 +189,59 @@ const PublicMenu = () => {
                 </div>
             </div>
 
-            {/* Menu Items */}
+            {/* Facebook Pixel */}
+            {profile.facebook_pixel_id && (
+                <img height="1" width="1" style={{ display: 'none' }}
+                    src={`https://www.facebook.com/tr?id=${profile.facebook_pixel_id}&ev=PageView&noscript=1`}
+                />
+            )}
+
+            {/* Highlights Carousel (Vitrine) */}
+            {products.filter(p => p.is_highlight).length > 0 && (
+                <div className="max-w-md mx-auto pt-6 px-4">
+                    <h2 className="text-lg font-bold mb-3 flex items-center gap-2 text-gray-800">
+                        <Store className="w-5 h-5 text-orange-500" />
+                        Destaques da Casa
+                    </h2>
+                    <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide snap-x">
+                        {products.filter(p => p.is_highlight).map((product) => (
+                            <motion.div
+                                key={product.id}
+                                className="min-w-[200px] snap-center aspect-[4/5] relative rounded-xl overflow-hidden shadow-md"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                            >
+                                {product.image_url ? (
+                                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full bg-orange-100 flex items-center justify-center">
+                                        <Store className="w-12 h-12 text-orange-300" />
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-3 flex flex-col justify-end text-white">
+                                    <div className="font-bold text-lg leading-tight mb-1">{product.name}</div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-semibold bg-white/20 px-2 py-0.5 rounded text-sm backdrop-blur-sm">
+                                            R$ {product.selling_price?.toFixed(2)}
+                                        </span>
+                                        <Button
+                                            size="sm"
+                                            className="h-8 w-8 rounded-full bg-orange-500 hover:bg-orange-600 text-white p-0"
+                                            onClick={() => addToCart(product)}
+                                        >
+                                            <Plus className="w-5 h-5" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Regular Menu Items */}
             <div className="max-w-md mx-auto p-4 space-y-4">
+                <h2 className="text-lg font-bold mb-2 text-gray-800">Cardápio Completo</h2>
                 {products.length === 0 ? (
                     <div className="text-center text-gray-500 py-10">
                         Nenhum produto disponível no momento.
@@ -203,60 +254,74 @@ const PublicMenu = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1 }}
                         >
-                            <Card className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow">
-                                {/* ... existing card content ... */}
-                                <CardContent className="p-0 flex items-center">
-                                    {product.image_url && (
-                                        <div className="w-24 h-24 bg-gray-100 flex-shrink-0 relative overflow-hidden">
-                                            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
+                            <Card className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow group">
+                                <CardContent className="p-0 flex items-stretch h-28">
+                                    {/* Image Section */}
+                                    {product.image_url ? (
+                                        <div className="w-28 relative overflow-hidden">
+                                            <img
+                                                src={product.image_url}
+                                                alt={product.name}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="w-28 bg-gray-50 flex items-center justify-center text-gray-300">
+                                            <Store className="w-8 h-8 opacity-50" />
                                         </div>
                                     )}
-                                    <div className="p-4 flex-1 flex flex-col justify-between h-full min-h-[6rem]">
-                                        <div className="flex justify-between items-start gap-2">
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="font-semibold text-gray-900 line-clamp-2 leading-tight">{product.name}</h3>
-                                                <p className="text-xs text-gray-500 line-clamp-2 mt-1">{product.description}</p>
+
+                                    {/* Content Section */}
+                                    <div className="flex-1 p-3 flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex justify-between items-start gap-2">
+                                                <h3 className="font-semibold text-gray-900 leading-tight line-clamp-2 text-[15px]">
+                                                    {product.name}
+                                                </h3>
+                                                <span className="font-bold text-gray-900 text-[15px] whitespace-nowrap">
+                                                    R$ {product.selling_price?.toFixed(2)}
+                                                </span>
                                             </div>
-                                            <Badge variant="outline" className="font-bold text-base text-primary border-primary bg-primary/5 px-2 py-0.5 whitespace-nowrap flex-shrink-0">
-                                                R$ {product.selling_price?.toFixed(2)}
-                                            </Badge>
+                                            {product.description && (
+                                                <p className="text-xs text-gray-500 line-clamp-2 mt-1 leading-relaxed">
+                                                    {product.description}
+                                                </p>
+                                            )}
                                         </div>
 
-                                        <div className="mt-3 flex justify-end">
-                                            <div className="flex items-center gap-2">
-                                                {cart.find(i => i.product.id === product.id) ? (
-                                                    <motion.div
-                                                        initial={{ scale: 0.8, opacity: 0 }}
-                                                        animate={{ scale: 1, opacity: 1 }}
-                                                        className="flex items-center bg-orange-50 rounded-lg p-1 border border-orange-100"
+                                        <div className="flex justify-end mt-2">
+                                            {cart.find(i => i.product.id === product.id) ? (
+                                                <motion.div
+                                                    initial={{ scale: 0.9, opacity: 0 }}
+                                                    animate={{ scale: 1, opacity: 1 }}
+                                                    className="flex items-center bg-orange-50 rounded-lg p-0.5 border border-orange-100 shadow-sm"
+                                                >
+                                                    <Button
+                                                        variant="ghost" size="icon" className="h-7 w-7 text-orange-600 hover:text-orange-700 hover:bg-orange-200 rounded-md"
+                                                        onClick={() => removeFromCart(product.id)}
                                                     >
-                                                        <Button
-                                                            variant="ghost" size="icon" className="h-7 w-7 text-orange-600 hover:text-orange-700 hover:bg-orange-200 rounded-md"
-                                                            onClick={() => removeFromCart(product.id)}
-                                                        >
-                                                            <Minus className="w-3 h-3" />
-                                                        </Button>
-                                                        <motion.span
-                                                            key={cart.find(i => i.product.id === product.id)?.quantity}
-                                                            initial={{ scale: 1.2 }}
-                                                            animate={{ scale: 1 }}
-                                                            className="w-8 text-center text-sm font-bold text-orange-700"
-                                                        >
-                                                            {cart.find(i => i.product.id === product.id)?.quantity}
-                                                        </motion.span>
-                                                        <Button
-                                                            variant="ghost" size="icon" className="h-7 w-7 text-orange-600 hover:text-orange-700 hover:bg-orange-200 rounded-md"
-                                                            onClick={() => addToCart(product)}
-                                                        >
-                                                            <Plus className="w-3 h-3" />
-                                                        </Button>
-                                                    </motion.div>
-                                                ) : (
-                                                    <Button size="sm" variant="outline" className="h-8 text-xs bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 transition-colors" onClick={() => addToCart(product)}>
-                                                        Adicionar
+                                                        <Minus className="w-3.5 h-3.5" />
                                                     </Button>
-                                                )}
-                                            </div>
+                                                    <span className="w-6 text-center text-sm font-bold text-orange-700">
+                                                        {cart.find(i => i.product.id === product.id)?.quantity}
+                                                    </span>
+                                                    <Button
+                                                        variant="ghost" size="icon" className="h-7 w-7 text-orange-600 hover:text-orange-700 hover:bg-orange-200 rounded-md"
+                                                        onClick={() => addToCart(product)}
+                                                    >
+                                                        <Plus className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                </motion.div>
+                                            ) : (
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="h-8 px-3 text-xs font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 hover:text-orange-700 transition-colors rounded-lg"
+                                                    onClick={() => addToCart(product)}
+                                                >
+                                                    Adicionar
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
                                 </CardContent>
