@@ -2,6 +2,7 @@ import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/sections/HeroSection';
 import QuizSection from '@/components/sections/QuizSection';
 import PricingSection from '@/components/sections/PricingSection';
+import AuthoritySection from '@/components/sections/AuthoritySection';
 import FAQSection from '@/components/sections/FAQSection';
 import Footer from '@/components/sections/Footer';
 
@@ -18,6 +19,9 @@ const Index = () => {
 
       {/* Pricing */}
       <PricingSection />
+
+      {/* Authority Block */}
+      <AuthoritySection />
 
       {/* FAQ */}
       <FAQSection />
