@@ -110,7 +110,7 @@ const ProfitCalculator = () => {
                         <div className="space-y-1">
                             <Label className="text-foreground/80 text-xs">Escolha uma receita do Ebook:</Label>
                             <Select value={selectedPreset} onValueChange={handlePresetChange}>
-                                <SelectTrigger className="h-9 text-sm border-primary/20 bg-white/50 backdrop-blur-sm focus:ring-primary/20">
+                                <SelectTrigger className="h-9 text-sm border-primary/20 bg-white/5 backdrop-blur-sm focus:ring-primary/20 text-foreground">
                                     <SelectValue placeholder="Selecione uma receita" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -130,7 +130,7 @@ const ProfitCalculator = () => {
                                     id="product"
                                     value={productName}
                                     onChange={(e) => setProductName(e.target.value)}
-                                    className="h-9 text-sm border-primary/20 focus:border-primary bg-white/50"
+                                    className="h-9 text-sm border-primary/20 focus:border-primary bg-white/5 text-foreground placeholder:text-muted-foreground"
                                 />
                             </div>
                         )}
@@ -149,7 +149,7 @@ const ProfitCalculator = () => {
                                             setCostPerUnit(Number(e.target.value));
                                             setSelectedPreset('Personalizado');
                                         }}
-                                        className="h-9 pl-7 text-sm border-primary/20 bg-white/50"
+                                        className="h-9 pl-7 text-sm border-primary/20 bg-white/5 text-foreground"
                                     />
                                 </div>
                             </div>
@@ -166,7 +166,7 @@ const ProfitCalculator = () => {
                                             setSalePrice(Number(e.target.value));
                                             setSelectedPreset('Personalizado');
                                         }}
-                                        className="h-9 pl-7 text-sm font-bold text-primary border-primary/20 bg-white/50"
+                                        className="h-9 pl-7 text-sm font-bold text-primary border-primary/20 bg-white/5"
                                     />
                                 </div>
                             </div>
@@ -194,7 +194,7 @@ const ProfitCalculator = () => {
                 </div>
 
                 {/* Resultado Visual */}
-                <div className="w-full bg-gradient-to-br from-primary/10 via-white/50 to-secondary/10 rounded-xl p-3 flex flex-col items-center justify-center text-center border border-white/60 shadow-lg relative overflow-hidden group min-h-[140px]">
+                <div className="w-full bg-gradient-to-br from-primary/10 via-white/5 to-secondary/10 rounded-xl p-3 flex flex-col items-center justify-center text-center border border-white/10 shadow-lg relative overflow-hidden group min-h-[140px]">
                     <div className="absolute -top-10 -right-10 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors"></div>
 
                     <div className="relative z-10 w-full max-w-lg mx-auto">
@@ -210,7 +210,7 @@ const ProfitCalculator = () => {
                             {formatCurrency(monthlyProfit)}
                         </div>
 
-                        <div className="w-full bg-white/60 rounded-full h-3 overflow-hidden mb-3 border border-white/40">
+                        <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden mb-3 border border-white/5">
                             <div
                                 className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-1000 ease-out relative"
                                 style={{ width: `${Math.min((monthlyProfit / 8000) * 100, 100)}%` }}

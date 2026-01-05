@@ -26,21 +26,33 @@ const Navbar = () => {
 
     return (
         <nav
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-                    ? 'bg-white/95 backdrop-blur-sm shadow-sm py-3'
-                    : 'bg-transparent py-4'
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
+                ? 'bg-background/90 backdrop-blur-md shadow-elegant py-2'
+                : 'bg-transparent py-6'
                 }`}
         >
-            <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
-                {/* Logo - Clean & Minimal */}
+            <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between">
+                {/* Logo Transformation */}
+                {/* Logo Transformation */}
                 <div
-                    className="flex items-center gap-2 cursor-pointer"
+                    className="flex items-center cursor-pointer relative h-20 md:h-24 w-48 transition-all duration-500"
+                    style={{ height: isScrolled ? '3rem' : '6rem', width: isScrolled ? '3rem' : '12rem' }}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
+                    {/* Full Logo */}
                     <img
-                        src="/images/logo_circle.png"
+                        src="/images/logo-full.png"
                         alt="Cozinha ao Lucro"
-                        className="h-12 w-auto"
+                        className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 object-contain w-full h-full ${isScrolled ? 'opacity-0 scale-75 invisible' : 'opacity-100 scale-100 visible'
+                            }`}
+                    />
+
+                    {/* Icon Logo */}
+                    <img
+                        src="/images/logo-icon.png"
+                        alt="Icone"
+                        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto ${isScrolled ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-50 invisible'
+                            }`}
                     />
                 </div>
 
@@ -54,7 +66,7 @@ const Navbar = () => {
                             <button
                                 key={item.label}
                                 onClick={() => scrollToSection(item.id)}
-                                className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
+                                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors font-heading tracking-wide"
                             >
                                 {item.label}
                             </button>
@@ -88,7 +100,7 @@ const Navbar = () => {
 
                 {/* Mobile Menu Overlay */}
                 {isMobileMenuOpen && (
-                    <div className="absolute top-full left-0 right-0 bg-white shadow-lg p-6 md:hidden flex flex-col gap-3 border-t">
+                    <div className="absolute top-full left-0 right-0 bg-background/95 backdrop-blur-md shadow-lg p-6 md:hidden flex flex-col gap-3 border-t border-white/10 animate-in slide-in-from-top-2">
                         {[
                             { label: 'Preços', id: 'precos' },
                             { label: 'FAQ', id: 'faq' }
@@ -96,22 +108,22 @@ const Navbar = () => {
                             <button
                                 key={item.label}
                                 onClick={() => scrollToSection(item.id)}
-                                className="text-base font-medium text-foreground/80 hover:text-primary text-left py-2"
+                                className="text-base font-medium text-foreground/90 hover:text-primary text-left py-3 border-b border-white/5"
                             >
                                 {item.label}
                             </button>
                         ))}
-                        <hr className="my-2" />
+                        <div className="h-4"></div>
                         <Button
                             onClick={() => navigate('/register')}
-                            className="w-full"
+                            className="w-full btn-primary"
                         >
                             Começar Grátis
                         </Button>
                         <Button
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => navigate('/login')}
-                            className="w-full"
+                            className="w-full hover:bg-white/5"
                         >
                             Entrar
                         </Button>

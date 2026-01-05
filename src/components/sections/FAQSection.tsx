@@ -4,23 +4,23 @@ import { RevealOnScroll } from '@/components/RevealOnScroll';
 const FAQSection = () => {
     const faqs = [
         {
-            question: "Para quem é este ebook?",
-            answer: "Este ebook é perfeito para mulheres que têm talento culinário e querem transformar essa habilidade em uma fonte de renda. Não importa se você é iniciante em negócios - o conteúdo é explicado de forma simples e prática."
+            question: "Como a plataforma ajuda a aumentar meus lucros?",
+            answer: "A plataforma o ajuda a eliminar o 'achismo' na precificação. Você saberá exatamente o custo de cada receita e a margem de lucro real. Além disso, com a gestão eficiente de pedidos e estoque, você evita desperdícios e fideliza mais clientes."
         }, {
-            question: "Como vou receber o acesso?",
-            answer: "Após a confirmação do pagamento, você receberá um email com o link para download dos ebooks e todos os bônus. O acesso é imediato e vitalício."
+            question: "Preciso instalar algum programa no computador?",
+            answer: "Não! O Cozinha ao Lucro é 100% online. Você pode acessar de qualquer lugar (computador, tablet ou celular) sem precisar baixar nada. Seus dados ficam salvos na nuvem com total segurança."
         }, {
-            question: "Preciso ter muito dinheiro para começar?",
-            answer: "Não! Uma das grandes vantagens do negócio culinário caseiro é que você pode começar com pouco investimento. O ebook ensina como iniciar com o que você já tem em casa."
+            question: "Funciona bem no celular?",
+            answer: "Sim! Desenvolvemos a interface pensando no seu dia a dia na cozinha. O sistema é totalmente responsivo e funciona perfeitamente no seu smartphone, permitindo que você controle seu negócio na palma da mão."
         }, {
-            question: "E se eu não souber vender?",
-            answer: "O ebook inclui um módulo completo sobre vendas e marketing simples, além de scripts prontos que você pode usar. Você aprenderá técnicas fáceis para atrair e conquistar clientes."
+            question: "Tenho garantia ou período de teste?",
+            answer: "Com certeza. Oferecemos 7 dias totalmente grátis para você testar todas as funcionalidades da plataforma. Se não se adaptar, você pode cancelar a qualquer momento sem custo algum."
         }, {
-            question: "A compra é segura?",
-            answer: "Sim! Utilizamos plataformas de pagamento seguras e criptografadas. Além disso, oferecemos os primeiros 7 dias grátis para você testar. Se não ficar satisfeita, cancelamos sua assinatura sem custos."
+            question: "Meus dados estão seguros?",
+            answer: "Absolutamente. Utilizamos criptografia de ponta (a mesma usada por bancos) para proteger suas receitas, lista de clientes e dados financeiros. Sua privacidade é nossa prioridade."
         }, {
-            question: "Quanto tempo leva para ver resultados?",
-            answer: "Muitas alunas começam a ter suas primeiras vendas já na primeira semana após aplicar as estratégias do ebook. Os resultados dependem da sua dedicação e aplicação do método."
+            question: "Serve para quem está começando agora?",
+            answer: "Perfeito para iniciantes! A plataforma foi criada para simplificar a gestão, não complicar. Temos tutoriais passo a passo e você não precisa de conhecimentos avançados em administração para começar a usar."
         }
     ];
 
@@ -42,7 +42,7 @@ const FAQSection = () => {
                     <Accordion type="single" collapsible className="space-y-4">
                         {faqs.map((faq, index) => (
                             <RevealOnScroll key={index} delay={index * 0.05}>
-                                <AccordionItem value={`item-${index}`} className="bg-white/80 backdrop-blur-sm shadow-sm rounded-lg px-6 border border-border/50">
+                                <AccordionItem value={`item-${index}`} className="bg-card/60 backdrop-blur-sm shadow-sm rounded-lg px-6 border border-border/50">
                                     <AccordionTrigger className="text-left font-semibold text-foreground hover:text-primary hover:no-underline py-6 text-lg">
                                         {faq.question}
                                     </AccordionTrigger>

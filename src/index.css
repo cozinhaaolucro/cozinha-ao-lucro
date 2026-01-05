@@ -7,97 +7,89 @@
 
 @layer base {
   :root {
-    /* Base Colors - Warm & Premium (Lighter for better contrast) */
-    --background: 40 15% 98%;
-    /* Cleaner, more white background */
-    --foreground: 40 10% 8%;
-    /* Deeper warm black */
+    /* 
+      Palette Refined:
+      Primary (Bordeaux): #8F3D43 -> 356 40% 40%
+      Secondary (Creme): #F2EBE6 -> 30 27% 93%
+      Accent (Bronze): #B36B4E -> 17 40% 50%
+      Background (Dark): #212429 -> 218 11% 15%
+    */
 
-    --card: 0 0% 100%;
-    --card-foreground: 40 10% 8%;
+    --background: 218 11% 15%;
+    /* #212429 */
+    --foreground: 30 27% 93%;
+    /* #F2EBE6 */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 40 10% 8%;
+    --card: 220 10% 18%;
+    /* Slightly lighter than bg */
+    --card-foreground: 30 27% 93%;
 
-    /* Primary - Deeper Golden (More Sophisticated) */
-    --primary: 38 80% 42%;
-    /* Darker, richer gold */
-    --primary-foreground: 0 0% 100%;
-    /* White text for contrast */
-    --primary-glow: 40 85% 55%;
-    /* Lighter gold for glow */
+    --popover: 218 11% 15%;
+    --popover-foreground: 30 27% 93%;
 
-    /* Secondary - Olive Green (Organic & Growth) */
-    --secondary: 75 32% 32%;
-    /* Slightly deeper olive */
-    --secondary-foreground: 0 0% 100%;
-    /* White text */
-    --secondary-light: 75 22% 88%;
-    /* Light olive tint */
+    --primary: 356 40% 40%;
+    /* #8F3D43 */
+    --primary-foreground: 30 27% 93%;
+    --primary-glow: 356 40% 40%;
 
-    /* Muted - Warmer Greys */
-    --muted: 40 12% 94%;
-    --muted-foreground: 40 8% 38%;
+    --secondary: 30 27% 93%;
+    /* #F2EBE6 */
+    --secondary-foreground: 218 11% 15%;
+    /* Dark text on light secondary elements */
+    --secondary-light: 30 27% 98%;
 
-    /* Accent - Warm Cream */
-    --accent: 40 35% 90%;
-    --accent-foreground: 40 10% 12%;
+    --muted: 220 10% 25%;
+    --muted-foreground: 30 15% 70%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --accent: 17 40% 50%;
+    /* #B36B4E */
+    --accent-foreground: 30 27% 93%;
 
-    --border: 40 15% 85%;
-    --input: 40 18% 90%;
-    --ring: 38 80% 42%;
-    /* Matches primary */
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 30 27% 93%;
 
-    --radius: 0.625rem;
+    --border: 220 10% 25%;
+    --input: 220 10% 25%;
+    --ring: 356 40% 40%;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(38, 80%, 42%), hsl(40, 85%, 55%));
-    --gradient-hero: linear-gradient(135deg, hsl(40, 18%, 96%), hsl(40, 30%, 92%));
-    --gradient-gold: linear-gradient(135deg, #B8860B, #DAA520, #B8860B);
+    --radius: 0.75rem;
 
-    /* Shadows - Enhanced depth */
-    --shadow-elegant: 0 8px 24px -8px rgba(184, 134, 11, 0.2);
-    --shadow-glow: 0 0 20px rgba(184, 134, 11, 0.4);
-    --shadow-card: 0 2px 12px -2px rgba(0, 0, 0, 0.08);
-    --shadow-floating: 0 16px 32px -8px rgba(0, 0, 0, 0.15);
-    --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-
-    /* Transitions */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Custom Shadows for Dark Mode Depth */
+    --shadow-elegant: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 20px rgba(143, 61, 67, 0.3);
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --shadow-floating: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
   }
 
   .dark {
-    --background: 45 10% 8%;
-    /* Deep warm dark */
-    --foreground: 45 20% 95%;
+    /* Same as root since we are forcing dark theme */
+    --background: 218 11% 15%;
+    --foreground: 30 27% 93%;
 
-    --card: 45 10% 10%;
-    --card-foreground: 45 20% 95%;
+    --card: 220 10% 18%;
+    --card-foreground: 30 27% 93%;
 
-    --popover: 45 10% 10%;
-    --popover-foreground: 45 20% 95%;
+    --popover: 218 11% 15%;
+    --popover-foreground: 30 27% 93%;
 
-    --primary: 45 85% 50%;
-    --primary-foreground: 45 10% 10%;
+    --primary: 356 40% 40%;
+    --primary-foreground: 30 27% 93%;
 
-    --secondary: 80 30% 28%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 30 27% 93%;
+    --secondary-foreground: 218 11% 15%;
 
-    --muted: 45 10% 15%;
-    --muted-foreground: 45 15% 60%;
+    --muted: 220 10% 25%;
+    --muted-foreground: 30 15% 70%;
 
-    --accent: 45 10% 18%;
-    --accent-foreground: 45 20% 95%;
+    --accent: 17 40% 50%;
+    --accent-foreground: 30 27% 93%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 30 27% 93%;
 
-    --border: 45 10% 18%;
-    --input: 45 10% 18%;
-    --ring: 45 85% 50%;
+    --border: 220 10% 25%;
+    --input: 220 10% 25%;
+    --ring: 356 40% 40%;
   }
 }
 
@@ -160,7 +152,7 @@
   }
 
   .container-max {
-    @apply max-w-7xl mx-auto;
+    @apply max-w-[1600px] mx-auto px-6 md:px-12 w-full;
   }
 }
 

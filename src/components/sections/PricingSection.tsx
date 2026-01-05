@@ -25,7 +25,7 @@ const PricingSection = () => {
 
                 <div className="max-w-lg mx-auto">
                     <RevealOnScroll delay={0.2}>
-                        <Card className="relative overflow-hidden border-2 border-primary shadow-2xl transform hover:scale-[1.02] transition-transform duration-300">
+                        <Card className="relative overflow-hidden border border-primary/20 shadow-elegant bg-card/40 backdrop-blur-md transform hover:scale-[1.02] transition-transform duration-300">
                             {/* Popular Badge */}
                             <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg z-20">
                                 MAIS ESCOLHIDO
@@ -87,7 +87,7 @@ const PricingSection = () => {
                     </RevealOnScroll>
                 </div>
             </div>
-        </section>
+        </section >
     );
 };
 
