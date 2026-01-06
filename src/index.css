@@ -32,8 +32,8 @@
     --primary-foreground: 0 0% 100%;
     --primary-glow: 356 75% 26%;
 
-    --footer: 350 79% 17%;
-    /* #500914 - Footer Dark Red */
+    --footer: 351 76% 17%;
+    /* Rodapé (Bordeaux Dark) */
     --footer-foreground: 0 0% 100%;
 
     --secondary: 220 14% 90%;
@@ -44,20 +44,20 @@
     --muted: 220 10% 90%;
     --muted-foreground: 220 10% 40%;
 
-    --accent: 9 92% 79%;
-    /* #faa798 - Pink Details */
-    --accent-foreground: 350 79% 17%;
+    --accent: 10 76% 82%;
+    /* Detalhes Rosa */
+    --accent-foreground: 351 76% 17%;
 
-    --warning: 40 90% 67%;
-    /* #f6c45d - Money/Yellow */
-    --warning-foreground: 350 79% 17%;
+    --warning: 52 78% 58%;
+    /* Detalhes Amarelo */
+    --warning-foreground: 351 76% 17%;
 
-    --success: 96 44% 53%;
-    /* #7ebb54 - Green Details */
+    --success: 101 44% 46%;
+    /* Detalhes Verde */
     --success-foreground: 0 0% 100%;
 
-    --info: 160 48% 53%;
-    /* #4ec29b - Blue Details */
+    --info: 194 47% 59%;
+    /* Detalhes Azul */
     --info-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
