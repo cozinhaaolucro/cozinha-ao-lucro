@@ -97,7 +97,7 @@ const ProfitCalculator = () => {
 
             <CardContent className="p-4 space-y-3">
                 {/* Inputs */}
-                <div className="space-y-4">
+                <div className="space-y-2">
                     <div className="space-y-1.5">
                         <Label className="text-foreground/80 text-sm font-medium">Escolha um produto:</Label>
                         <Select value={selectedPreset} onValueChange={handlePresetChange}>
@@ -114,14 +114,12 @@ const ProfitCalculator = () => {
                         </Select>
                     </div>
 
-                    <div className="min-h-[44px] relative">
-                        {selectedPreset === 'Personalizado' && (
-                            <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 absolute w-full top-0 left-0 z-10">
-                                <Label htmlFor="product" className="text-sm font-medium">Nome do Produto</Label>
-                                <Input id="product" value={productName} onChange={(e) => setProductName(e.target.value)}
-                                    className="h-10 text-sm border-white/10 focus:border-primary bg-white/5 text-foreground rounded-lg" />
-                            </div>
-                        )}
+                    <div className={`transition-all duration-300 ease-in-out overflow-hidden ${selectedPreset === 'Personalizado' ? 'max-h-[80px] opacity-100 pt-1' : 'max-h-0 opacity-0'}`}>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="product" className="text-sm font-medium">Nome do Produto</Label>
+                            <Input id="product" value={productName} onChange={(e) => setProductName(e.target.value)}
+                                className="h-10 text-sm border-white/10 focus:border-primary bg-white/5 text-foreground rounded-lg" />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
