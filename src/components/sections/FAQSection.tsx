@@ -55,7 +55,8 @@ const FAQSection = () => {
     }, []);
 
     return (
-        <section id="faq" className="section-padding bg-muted/10 scroll-mt-20">
+        <section id="faq" className="section-padding bg-background scroll-mt-20 relative overflow-hidden section-separator-top">
+            <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none"></div>
             <div className="container-max">
                 <RevealOnScroll>
                     <div className="text-center mb-16">

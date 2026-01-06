@@ -3,8 +3,9 @@ import { Target } from 'lucide-react';
 
 const AuthoritySection = () => {
     return (
-        <section className="section-padding bg-white border-y border-border/40 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/pattern-grid.svg')] opacity-[0.03]"></div>
+        <section className="section-padding bg-background relative overflow-hidden section-separator-top">
+            <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/pattern-grid.svg')] opacity-[0.02]"></div>
             <div className="container-max">
                 <RevealOnScroll>
                     <div className="max-w-3xl mx-auto text-center space-y-6">

@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Shield, Zap } from 'lucide-react';
 import { RevealOnScroll } from '@/components/RevealOnScroll';
 import { useNavigate } from 'react-router-dom';
+import { LeadFormDialog } from '@/components/LeadFormDialog';
 
 const PricingSection = () => {
     const navigate = useNavigate();
     return (
-        <section id="precos" className="section-padding bg-background relative overflow-hidden">
+        <section id="precos" className="section-padding bg-background relative overflow-hidden section-separator-top">
+            <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none"></div>
             <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/pattern-grid.svg')] opacity-[0.02]"></div>
 
             <div className="container-max relative z-10">
@@ -22,9 +24,10 @@ const PricingSection = () => {
                     </div>
                 </RevealOnScroll>
 
-                <div className="max-w-lg mx-auto">
-                    <RevealOnScroll delay={0.2}>
-                        <Card className="relative overflow-hidden premium-card rounded-2xl transform hover:scale-[1.02] transition-transform duration-300">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    {/* Pro Plan */}
+                    <RevealOnScroll delay={0.2} className="h-full">
+                        <Card className="h-full relative overflow-hidden premium-card rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col">
                             {/* Popular Badge */}
                             <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-bl-xl z-20 shadow-md">
                                 MAIS ESCOLHIDO
@@ -42,8 +45,8 @@ const PricingSection = () => {
                                 </p>
                             </CardHeader>
 
-                            <CardContent className="p-8">
-                                <ul className="space-y-4 mb-10">
+                            <CardContent className="p-8 flex-1 flex flex-col">
+                                <ul className="space-y-4 mb-10 flex-1">
                                     {[
                                         "Precificação Automática Ilimitada",
                                         "Gestão de Pedidos e Clientes",
@@ -75,6 +78,60 @@ const PricingSection = () => {
                                     <p className="text-xs text-muted-foreground/70 flex items-center justify-center gap-1.5">
                                         <Shield className="w-3.5 h-3.5" />
                                         Cancelamento fácil a qualquer momento
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </RevealOnScroll>
+
+                    {/* Business Plan */}
+                    <RevealOnScroll delay={0.3} className="h-full">
+                        <Card className="h-full relative overflow-hidden bg-background border-border/60 shadow-lg rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col border-2 hover:border-primary/20">
+                            <CardHeader className="text-center pt-12 pb-4">
+                                <CardTitle className="text-2xl font-bold text-foreground font-heading">Plano Business</CardTitle>
+                                <div className="mt-5 flex items-baseline justify-center gap-2">
+                                    <span className="text-5xl font-bold text-foreground font-heading">Sob Consulta</span>
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-3 font-medium">
+                                    Para quem busca escala e alta performance
+                                </p>
+                            </CardHeader>
+
+                            <CardContent className="p-8 flex-1 flex flex-col">
+                                <ul className="space-y-4 mb-10 flex-1">
+                                    {[
+                                        "Todos os recursos do Plano Pro",
+                                        "Múltiplos Usuários e Perfis",
+                                        "Dashboards de BI Avançados",
+                                        "Relatórios de Performance por Unidade",
+                                        "Gestor de Conta Dedicado",
+                                        "Treinamento para Equipe",
+                                        "Integração via API (Opcional)"
+                                    ].map((feature, i) => (
+                                        <li key={i} className="flex items-center gap-3 text-foreground/85">
+                                            <CheckCircle className="w-5 h-5 text-primary/60 flex-shrink-0" />
+                                            <span>{feature}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <LeadFormDialog>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full text-lg py-7 mb-5 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-300 group rounded-xl"
+                                    >
+                                        Solicitar Contato
+                                        <Zap className="w-5 h-5 ml-2 group-hover:fill-current" />
+                                    </Button>
+                                </LeadFormDialog>
+
+                                <div className="text-center space-y-3">
+                                    <p className="text-sm text-muted-foreground">
+                                        Solução ideal para <strong>Franquias e Dark Kitchens</strong>
+                                    </p>
+                                    <p className="text-xs text-muted-foreground/70 flex items-center justify-center gap-1.5">
+                                        <Shield className="w-3.5 h-3.5" />
+                                        Contrato corporativo com faturamento
                                     </p>
                                 </div>
                             </CardContent>

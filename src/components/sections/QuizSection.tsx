@@ -14,8 +14,9 @@ const QuizSection = () => {
     const allCompleted = simpleQuizResult && detailedQuizResult;
 
     return (
-        <section className="section-padding bg-white relative overflow-hidden border-y border-border/40">
-            <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-primary/5 blur-[120px] rounded-full"></div>
+        <section className="section-padding bg-background relative overflow-hidden section-separator-top">
+            <div className="absolute inset-0 bg-noise opacity-40 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-primary/5 blur-[120px] rounded-full mix-blend-multiply"></div>
 
             <div className="container-max relative z-10">
                 <RevealOnScroll>
