@@ -8,78 +8,93 @@
 @layer base {
   :root {
     /* 
-      Palette Refined:
+      Palette Refined (Light Mode):
       Primary (Bordeaux): #8F3D43 -> 356 40% 40%
       Secondary (Creme): #F2EBE6 -> 30 27% 93%
       Accent (Bronze): #B36B4E -> 17 40% 50%
-      Background (Dark): #212429 -> 218 11% 15%
+      Background (Light): #F3F4F6 -> 220 14% 96%
     */
 
-    --background: 218 11% 15%;
+    --background: 228 14% 95%;
+    /* #f0f1f5 */
+    --foreground: 218 11% 15%;
     /* #212429 */
-    --foreground: 30 27% 93%;
-    /* #F2EBE6 */
 
-    --card: 220 10% 18%;
-    /* Slightly lighter than bg */
-    --card-foreground: 30 27% 93%;
+    --card: 0 0% 100%;
+    /* White */
+    --card-foreground: 218 11% 15%;
 
-    --popover: 218 11% 15%;
-    --popover-foreground: 30 27% 93%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 218 11% 15%;
 
-    --primary: 356 40% 40%;
-    /* #8F3D43 */
-    --primary-foreground: 30 27% 93%;
-    --primary-glow: 356 40% 40%;
+    --primary: 356 75% 26%;
+    /* #761118 - Highlight/Button */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 356 75% 26%;
 
-    --secondary: 30 27% 93%;
-    /* #F2EBE6 */
+    --footer: 350 79% 17%;
+    /* #500914 - Footer Dark Red */
+    --footer-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 90%;
+    /* Light Grey for secondary elements */
     --secondary-foreground: 218 11% 15%;
-    /* Dark text on light secondary elements */
-    --secondary-light: 30 27% 98%;
+    --secondary-light: 220 14% 95%;
 
-    --muted: 220 10% 25%;
-    --muted-foreground: 30 15% 70%;
+    --muted: 220 10% 90%;
+    --muted-foreground: 220 10% 40%;
 
-    --accent: 17 40% 50%;
-    /* #B36B4E */
-    --accent-foreground: 30 27% 93%;
+    --accent: 9 92% 79%;
+    /* #faa798 - Pink Details */
+    --accent-foreground: 350 79% 17%;
+
+    --warning: 40 90% 67%;
+    /* #f6c45d - Money/Yellow */
+    --warning-foreground: 350 79% 17%;
+
+    --success: 96 44% 53%;
+    /* #7ebb54 - Green Details */
+    --success-foreground: 0 0% 100%;
+
+    --info: 160 48% 53%;
+    /* #4ec29b - Blue Details */
+    --info-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 30 27% 93%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 10% 25%;
-    --input: 220 10% 25%;
+    --border: 220 13% 90%;
+    --input: 220 13% 90%;
     --ring: 356 40% 40%;
 
     --radius: 0.75rem;
 
-    /* Custom Shadows for Dark Mode Depth */
-    --shadow-elegant: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 20px rgba(143, 61, 67, 0.3);
-    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    --shadow-floating: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+    /* Shadows adapted for Light Mode */
+    --shadow-elegant: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+    --shadow-glow: 0 0 20px rgba(143, 61, 67, 0.15);
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    --shadow-floating: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
   }
 
   .dark {
-    /* Same as root since we are forcing dark theme */
-    --background: 218 11% 15%;
-    --foreground: 30 27% 93%;
+    /* Forcing Light Mode look as requested, so .dark mirrors root */
+    --background: 220 14% 96%;
+    --foreground: 218 11% 15%;
 
-    --card: 220 10% 18%;
-    --card-foreground: 30 27% 93%;
+    --card: 0 0% 100%;
+    --card-foreground: 218 11% 15%;
 
-    --popover: 218 11% 15%;
-    --popover-foreground: 30 27% 93%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 218 11% 15%;
 
     --primary: 356 40% 40%;
     --primary-foreground: 30 27% 93%;
 
-    --secondary: 30 27% 93%;
+    --secondary: 220 14% 90%;
     --secondary-foreground: 218 11% 15%;
 
-    --muted: 220 10% 25%;
-    --muted-foreground: 30 15% 70%;
+    --muted: 220 10% 90%;
+    --muted-foreground: 220 10% 40%;
 
     --accent: 17 40% 50%;
     --accent-foreground: 30 27% 93%;
@@ -87,8 +102,8 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 30 27% 93%;
 
-    --border: 220 10% 25%;
-    --input: 220 10% 25%;
+    --border: 220 13% 90%;
+    --input: 220 13% 90%;
     --ring: 356 40% 40%;
   }
 }
@@ -129,7 +144,7 @@
   }
 
   .dark .glass-panel {
-    @apply bg-black/40 backdrop-blur-xl border border-white/10;
+    @apply bg-white/90 backdrop-blur-xl border border-white/60;
   }
 
   /* Typography Utilities */
@@ -218,6 +233,8 @@
 /* Smooth scrolling for the entire app */
 html {
   scroll-behavior: smooth;
+  overflow-y: scroll;
+  /* Fix navbar jitter */
 }
 
 /* Better focus states for accessibility */
@@ -259,15 +276,15 @@ html {
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.4);
 }

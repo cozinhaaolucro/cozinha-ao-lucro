@@ -160,11 +160,11 @@ const ProfitCalculator = () => {
                     <div className="relative z-10 w-full">
                         <div className="mb-3 relative inline-block">
                             <TrendingUp className="w-10 h-10 text-primary" />
-                            {monthlyProfit > 5000 && <Sparkles className="w-5 h-5 text-yellow-500 absolute -top-1 -right-1 animate-pulse" />}
+                            {monthlyProfit > 5000 && <Sparkles className="w-5 h-5 text-warning absolute -top-1 -right-1 animate-pulse" />}
                         </div>
 
                         <h3 className="text-sm font-medium text-muted-foreground mb-1">Seu Potencial de Lucro Mensal</h3>
-                        <div className="text-3xl md:text-4xl font-bold text-foreground mb-4 tracking-tight font-heading">
+                        <div className="text-3xl md:text-4xl font-bold text-warning mb-4 tracking-tight font-heading">
                             {formatCurrency(monthlyProfit)}
                         </div>
 
