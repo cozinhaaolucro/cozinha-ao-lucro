@@ -231,10 +231,20 @@
 }
 
 /* Smooth scrolling for the entire app */
+/* Smooth scrolling and Jitter Fix - Strict Force */
 html {
   scroll-behavior: smooth;
-  overflow-y: scroll;
-  /* Fix navbar jitter */
+  overflow-y: scroll !important;
+  /* Force scrollbar always visible to prevent jumping */
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  /* Prevent horizontal scroll causing jitter */
+  width: 100%;
+  position: relative;
+  /* Ensure stacking context */
 }
 
 /* Better focus states for accessibility */
@@ -283,6 +293,16 @@ html {
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
+}
+
+/* 3D Transform Utilities for Jitter Fix */
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {

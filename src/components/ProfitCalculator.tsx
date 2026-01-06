@@ -80,7 +80,7 @@ const ProfitCalculator = () => {
     };
 
     return (
-        <Card className="w-full max-w-lg mx-auto bg-card/50 backdrop-blur-lg border-primary/20 overflow-hidden relative shadow-2xl rounded-2xl">
+        <Card className="w-full max-w-lg mx-auto bg-card/50 backdrop-blur-lg border-primary/20 overflow-hidden relative shadow-2xl rounded-2xl transform-gpu backface-hidden will-change-transform">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-secondary"></div>
 
             <CardHeader className="text-center pb-2 pt-4">
@@ -114,13 +114,15 @@ const ProfitCalculator = () => {
                         </Select>
                     </div>
 
-                    {selectedPreset === 'Personalizado' && (
-                        <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
-                            <Label htmlFor="product" className="text-sm font-medium">Nome do Produto</Label>
-                            <Input id="product" value={productName} onChange={(e) => setProductName(e.target.value)}
-                                className="h-10 text-sm border-white/10 focus:border-primary bg-white/5 text-foreground rounded-lg" />
-                        </div>
-                    )}
+                    <div className="min-h-[44px] relative">
+                        {selectedPreset === 'Personalizado' && (
+                            <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 absolute w-full top-0 left-0 z-10">
+                                <Label htmlFor="product" className="text-sm font-medium">Nome do Produto</Label>
+                                <Input id="product" value={productName} onChange={(e) => setProductName(e.target.value)}
+                                    className="h-10 text-sm border-white/10 focus:border-primary bg-white/5 text-foreground rounded-lg" />
+                            </div>
+                        )}
+                    </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">

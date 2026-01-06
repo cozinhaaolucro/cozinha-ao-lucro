@@ -12,7 +12,7 @@ const HeroSection = () => {
                     {/* Left Column: Copy */}
                     <div className="text-center lg:text-left space-y-8">
                         <div>
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground [text-wrap:balance] font-heading">
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground [text-wrap:balance] font-heading transform-gpu antialiased">
                                 Transforme sua cozinha em um negócio
                                 <span className="block text-primary mt-2">
                                     realmente lucrativo
@@ -50,7 +50,7 @@ const HeroSection = () => {
                     </div>
 
                     {/* Right Column: Calculator */}
-                    <div className="relative animate-in slide-in-from-right-8 duration-700 fade-in">
+                    <div className="relative animate-in slide-in-from-right-8 duration-700 fade-in transform-gpu perspective-1000">
                         <div className="text-center mb-4">
                             <Button onClick={() => navigate('/register')} variant="ghost" size="sm" className="gap-2 hover:bg-primary/10 text-muted-foreground hover:text-primary">
                                 <BarChart3 className="w-4 h-4" />
