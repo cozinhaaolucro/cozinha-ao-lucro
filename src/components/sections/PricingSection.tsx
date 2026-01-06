@@ -24,7 +24,7 @@ const PricingSection = () => {
 
                 <div className="max-w-lg mx-auto">
                     <RevealOnScroll delay={0.2}>
-                        <Card className="relative overflow-hidden border border-primary/20 shadow-2xl bg-card/50 backdrop-blur-xl rounded-2xl transform hover:scale-[1.02] transition-transform duration-300">
+                        <Card className="relative overflow-hidden premium-card rounded-2xl transform hover:scale-[1.02] transition-transform duration-300">
                             {/* Popular Badge */}
                             <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-bl-xl z-20 shadow-md">
                                 MAIS ESCOLHIDO

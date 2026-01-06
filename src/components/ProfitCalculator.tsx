@@ -80,7 +80,7 @@ const ProfitCalculator = () => {
     };
 
     return (
-        <Card className="w-full max-w-lg mx-auto bg-card/50 backdrop-blur-lg border-primary/20 overflow-hidden relative shadow-2xl rounded-2xl transform-gpu backface-hidden will-change-transform">
+        <Card className="w-full max-w-lg mx-auto premium-card transform-gpu backface-hidden will-change-transform rounded-2xl">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-secondary"></div>
 
             <CardHeader className="text-center pb-2 pt-4">
@@ -101,7 +101,7 @@ const ProfitCalculator = () => {
                     <div className="space-y-1.5">
                         <Label className="text-foreground/80 text-sm font-medium">Escolha um produto:</Label>
                         <Select value={selectedPreset} onValueChange={handlePresetChange}>
-                            <SelectTrigger className="h-10 text-sm border-white/10 bg-white/5 backdrop-blur-sm focus:ring-primary/20 text-foreground rounded-lg">
+                            <SelectTrigger className="h-10 text-sm border-white/20 bg-white/40 backdrop-blur-sm focus:ring-primary/20 text-foreground rounded-lg inner-depth">
                                 <SelectValue placeholder="Selecione..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -140,7 +140,7 @@ const ProfitCalculator = () => {
                                 <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input id="price" type="number" step="0.10" value={salePrice}
                                     onChange={(e) => { setSalePrice(Number(e.target.value)); setSelectedPreset('Personalizado'); }}
-                                    className="h-10 pl-8 text-sm font-bold text-primary border-white/10 bg-white/5 rounded-lg" />
+                                    className="h-10 pl-8 text-sm font-bold text-primary border-white/20 bg-white/40 inner-depth rounded-lg" />
                             </div>
                         </div>
                     </div>

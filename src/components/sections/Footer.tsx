@@ -5,7 +5,8 @@ const Footer = () => {
         <footer className="bg-footer text-footer-foreground py-12 border-t border-white/10">
             <div className="container-max text-center">
                 <div className="flex items-center justify-center gap-3 mb-6">
-                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-glow overflow-hidden border-4 border-white/20">
+                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-glow overflow-hidden border-4 border-white/20 relative group">
+                        <div className="absolute inset-0 bg-white/20 blur-xl group-hover:bg-white/40 transition-colors duration-500"></div>
                         <img src="/images/logo-icon.png" alt="Cozinha ao Lucro" className="w-full h-full object-cover" />
                     </div>
                 </div>

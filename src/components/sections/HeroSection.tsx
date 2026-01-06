@@ -7,14 +7,19 @@ const HeroSection = () => {
     const navigate = useNavigate();
     return (
         <section className="relative pt-32 pb-20 md:pt-40 md:pb-28">
-            <div className="container-max">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] spotlight-warm opacity-60 blur-3xl rounded-full mix-blend-screen animate-float"></div>
+                <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] spotlight opacity-40 blur-3xl rounded-full mix-blend-overlay"></div>
+            </div>
+
+            <div className="container-max relative z-10">
                 <div className="grid lg:grid-cols-2 gap-16 items-start">
                     {/* Left Column: Copy */}
                     <div className="text-center lg:text-left space-y-8">
                         <div>
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground [text-wrap:balance] font-heading transform-gpu antialiased">
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground [text-wrap:balance] font-heading transform-gpu antialiased drop-shadow-sm">
                                 Transforme sua cozinha em um negócio
-                                <span className="block text-primary mt-2">
+                                <span className="block text-primary mt-2 text-glow relative inline-block">
                                     realmente lucrativo
                                 </span>
                             </h1>
