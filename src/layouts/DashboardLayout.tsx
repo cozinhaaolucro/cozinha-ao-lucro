@@ -231,12 +231,12 @@ const DashboardLayout = () => {
     );
 
     return (
-        <div className="min-h-screen bg-background flex flex-col md:flex-row">
+        <div className="h-screen overflow-hidden bg-background flex flex-col md:flex-row">
             {/* Desktop Sidebar */}
 
             <OnboardingModal />
-            <aside className="hidden md:flex w-64 flex-col border-r bg-card h-screen sticky top-0">
-                <div className="p-6 border-b flex items-center gap-3">
+            <aside className="hidden md:flex w-64 flex-col border-r bg-card h-full overflow-y-auto">
+                <div className="p-6 border-b flex items-center gap-3 shrink-0">
                     <UserAvatar size="md" clickable />
                     <div className="flex-1 min-w-0">
                         <span className="font-bold text-lg truncate block">{firstName}</span>
@@ -274,7 +274,7 @@ const DashboardLayout = () => {
                     })}
                 </nav>
 
-                <div className="p-4 border-t">
+                <div className="p-4 border-t shrink-0">
                     <div className="mb-4 px-4">
                         <p className="text-sm font-medium truncate">{user?.email}</p>
                     </div>
@@ -343,7 +343,7 @@ const DashboardLayout = () => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 animate-in fade-in-0 duration-300 relative">
+            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 animate-in fade-in-0 duration-300 relative h-full">
                 <div className="hidden md:flex absolute top-6 right-8 z-10">
                     <NotificationBell />
                 </div>
