@@ -14,7 +14,7 @@ const AuthoritySection = () => {
                         </div>
 
                         <h2 className="text-3xl md:text-4xl font-bold text-foreground font-heading">
-                            Criado para quem vive a <span className="text-primary text-glow">realidade da cozinha</span>
+                            Criado para quem vive a <span className="text-primary relative inline-block effect-shine shine-slow px-2 -mx-2 align-bottom">realidade da cozinha</span>
                         </h2>
 
                         <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">

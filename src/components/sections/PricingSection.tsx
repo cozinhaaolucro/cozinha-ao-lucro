@@ -16,7 +16,7 @@ const PricingSection = () => {
                 <RevealOnScroll>
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground font-heading">
-                            Investimento que se paga na <span className="text-primary">primeira venda</span>
+                            Investimento que se paga na <span className="text-primary relative inline-block effect-shine shine-fast px-1 -mx-1 align-bottom">primeira venda</span>
                         </h2>
                         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                             Tenha acesso completo à plataforma de gestão por menos de uma pizza por mês.
@@ -37,7 +37,7 @@ const PricingSection = () => {
                                 <CardTitle className="text-2xl font-bold text-foreground font-heading">Assinatura Pro</CardTitle>
                                 <div className="mt-5 flex items-baseline justify-center gap-2">
                                     <span className="text-lg text-muted-foreground line-through">R$ 97,00</span>
-                                    <span className="text-5xl font-bold text-primary font-heading">R$ 39,90</span>
+                                    <span className="text-5xl font-bold text-primary font-heading relative inline-block effect-shine shine-4s overflow-hidden px-2 -mx-2">R$ 39,90</span>
                                     <span className="text-muted-foreground">/mês</span>
                                 </div>
                                 <p className="text-sm text-green-400 font-semibold mt-3 bg-green-500/10 inline-block px-4 py-1.5 rounded-full border border-green-500/20 shadow-sm">

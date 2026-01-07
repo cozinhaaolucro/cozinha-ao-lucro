@@ -21,7 +21,7 @@ const QuizSection = () => {
             <div className="container-max relative z-10">
                 <RevealOnScroll>
                     <div className="text-center mb-12">
-                        <Badge className="bg-primary/10 text-yellow-900 mb-4 hover:bg-primary/20 border-primary/20 px-4 py-1 text-sm font-bold">
+                        <Badge className="bg-primary/10 text-yellow-900 mb-4 hover:bg-primary/20 border-primary/20 px-4 py-1 text-sm font-bold relative overflow-hidden effect-shine shine-slow">
                             DESCUBRA SEU POTENCIAL
                         </Badge>
                         <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">

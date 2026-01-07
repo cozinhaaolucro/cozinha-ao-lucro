@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle, BarChart3 } from 'lucide-react';
+import { ArrowRight, CheckCircle, BarChart3, MessageCircle } from 'lucide-react';
 import ProfitCalculator from '@/components/ProfitCalculator';
 import { useNavigate } from 'react-router-dom';
 import { RevealOnScroll } from '@/components/RevealOnScroll';
+import { LeadFormDialog } from '@/components/LeadFormDialog';
 
 const HeroSection = () => {
     const navigate = useNavigate();
@@ -20,7 +21,7 @@ const HeroSection = () => {
                         <RevealOnScroll delay={0}>
                             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground [text-wrap:balance] font-heading transform-gpu antialiased drop-shadow-sm">
                                 Transforme sua cozinha em um negócio
-                                <span className="block text-primary mt-2 text-glow relative inline-block">
+                                <span className="block text-primary mt-2 relative inline-block effect-shine shine-medium px-4 py-1 -mx-4 leading-tight">
                                     realmente lucrativo
                                 </span>
                             </h1>
@@ -43,6 +44,17 @@ const HeroSection = () => {
                                     <span className="hidden md:inline">Começar a Lucrar Agora</span>
                                     <ArrowRight className="ml-2 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
                                 </Button>
+
+                                <LeadFormDialog>
+                                    <Button
+                                        size="icon"
+                                        variant="secondary"
+                                        className="h-14 w-14 rounded-full bg-white text-primary hover:bg-white/90 shadow-lg hover:shadow-glow hover:scale-105 active:scale-95 transition-all duration-300 border border-white/40"
+                                        title="Fale Conosco"
+                                    >
+                                        <MessageCircle className="w-6 h-6" />
+                                    </Button>
+                                </LeadFormDialog>
                             </div>
                         </RevealOnScroll>
 

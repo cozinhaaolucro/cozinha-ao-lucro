@@ -196,6 +196,13 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-[#B8860B] via-[#FFD700] to-[#B8860B] bg-[length:200%_auto] animate-shimmer;
   }
 
+  .text-gradient-primary {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    background-image: linear-gradient(to bottom, hsl(186, 35%, 32%), hsl(186, 35%, 24%));
+  }
+
   /* Button Styles */
   .btn-primary {
     @apply bg-primary text-primary-foreground font-semibold px-8 py-4 rounded-full shadow-lg hover:shadow-glow hover:scale-105 active:scale-95 transition-all duration-300;
@@ -236,9 +243,9 @@
     opacity: 0.5;
   }
 
-  20% {
+  40% {
     left: 100%;
-    opacity: 0.5;
+    opacity: 0;
   }
 
   100% {
@@ -247,12 +254,12 @@
   }
 }
 
-.btn-shine {
+.effect-shine {
   position: relative;
   overflow: hidden;
 }
 
-.btn-shine::after {
+.effect-shine::after {
   content: '';
   position: absolute;
   top: 0;
@@ -264,8 +271,34 @@
       rgba(255, 255, 255, 0.4) 50%,
       transparent 100%);
   transform: skewX(-20deg);
-  animation: shine 6s infinite ease-in-out;
+  animation: shine var(--shine-duration, 6s) infinite ease-in-out;
   pointer-events: none;
+  z-index: 10;
+}
+
+.shine-3s {
+  --shine-duration: 3s;
+}
+
+.shine-4s {
+  --shine-duration: 4s;
+}
+
+.shine-fast {
+  @apply shine-3s;
+}
+
+.shine-medium {
+  --shine-duration: 6s;
+}
+
+.shine-slow {
+  --shine-duration: 8s;
+}
+
+/* Backward compatibility */
+.btn-shine {
+  @apply effect-shine shine-medium;
 }
 
 @keyframes float {
