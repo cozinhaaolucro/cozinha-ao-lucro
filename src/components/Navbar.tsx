@@ -31,18 +31,15 @@ const Navbar = () => {
             <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between pointer-events-none">
                 {/* Logo Transformation */}
                 <div
-                    className="flex items-center cursor-pointer relative transition-all duration-500 z-10 pointer-events-auto"
-                    style={{
-                        height: isScrolled ? '3rem' : '6rem',
-                        width: isScrolled ? '3rem' : '12rem'
-                    }}
+                    className={`flex items-center cursor-pointer relative transition-all duration-500 z-10 pointer-events-auto effect-logo-shine ${isScrolled ? 'h-12 w-12' : 'h-16 w-32 md:h-24 md:w-48'
+                        }`}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
                     {/* Full Logo */}
                     <img
                         src="/images/logo-full.png"
                         alt="Cozinha ao Lucro"
-                        className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 object-contain w-full h-full backface-hidden will-change-transform ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100 md:scale-[1.3]'
+                        className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 object-contain w-full h-full ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100 md:scale-[1.3]'
                             }`}
                     />
 
@@ -50,7 +47,7 @@ const Navbar = () => {
                     <img
                         src="/images/logo-icon.png"
                         alt="Icone"
-                        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] backface-hidden will-change-transform ${isScrolled ? 'opacity-100 scale-100 md:scale-[1.3] hover:scale-110 md:hover:scale-[1.5] active:scale-95' : 'opacity-0 scale-50 pointer-events-none'
+                        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] ${isScrolled ? 'opacity-100 scale-100 md:scale-[1.3]' : 'opacity-0 scale-50 pointer-events-none'
                             }`}
                     />
                 </div>
