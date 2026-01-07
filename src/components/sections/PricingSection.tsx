@@ -29,7 +29,7 @@ const PricingSection = () => {
                     <RevealOnScroll delay={0.2} className="h-full">
                         <Card className="h-full relative overflow-hidden bg-white/95 border border-white/50 shadow-elegant rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col hover:shadow-floating hover:border-primary/10 backface-hidden will-change-transform">
                             {/* Popular Badge */}
-                            <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-bl-xl z-20 shadow-md relative overflow-hidden effect-shine shine-delay-2">
+                            <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-bl-xl z-20 shadow-md overflow-hidden effect-shine shine-delay-2">
                                 MAIS ESCOLHIDO
                             </div>
 
@@ -87,11 +87,11 @@ const PricingSection = () => {
 
                     {/* Business Plan */}
                     <RevealOnScroll delay={0.3} className="h-full">
-                        <Card className="h-full relative overflow-hidden bg-background border-border/60 shadow-lg rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col border-2 hover:border-primary/20 backface-hidden will-change-transform">
+                        <Card className="h-full relative overflow-hidden bg-background border-border/60 shadow-lg rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col border-2 hover:border-primary/20 backface-hidden will-change-transform effect-shine shine-delay-1">
                             <CardHeader className="text-center pt-12 pb-4">
                                 <CardTitle className="text-2xl font-bold text-foreground font-heading">Plano Business</CardTitle>
                                 <div className="mt-5 flex items-baseline justify-center gap-2">
-                                    <span className="text-5xl font-bold text-foreground font-heading relative inline-block effect-shine shine-delay-1 overflow-hidden px-2 -mx-2">Sob Consulta</span>
+                                    <span className="text-5xl font-bold text-foreground font-heading">Sob Consulta</span>
                                 </div>
                                 <p className="text-sm text-muted-foreground mt-3 font-medium">
                                     Para quem busca escala e alta performance

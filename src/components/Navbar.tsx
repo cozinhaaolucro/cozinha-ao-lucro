@@ -47,7 +47,7 @@ const Navbar = () => {
                     <img
                         src="/images/logo-icon.png"
                         alt="Icone"
-                        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] ${isScrolled ? 'opacity-100 scale-100 md:scale-[1.3]' : 'opacity-0 scale-50 pointer-events-none'
+                        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto ${isScrolled ? 'opacity-100 scale-100 md:scale-[1.3]' : 'opacity-0 scale-50 pointer-events-none'
                             }`}
                     />
                 </div>
@@ -92,13 +92,23 @@ const Navbar = () => {
                     </div>
                 </div>
 
-                {/* Mobile Menu Button */}
-                <button
-                    className="md:hidden p-2 text-foreground"
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                >
-                    {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
+                {/* Mobile Menu Actions */}
+                <div className="md:hidden flex items-center gap-2 pointer-events-auto">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate('/login')}
+                        className="text-foreground/80 hover:text-primary font-medium"
+                    >
+                        Entrar
+                    </Button>
+                    <button
+                        className="p-2 text-foreground"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    >
+                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                </div>
 
                 {/* Mobile Menu Overlay */}
                 {isMobileMenuOpen && (
