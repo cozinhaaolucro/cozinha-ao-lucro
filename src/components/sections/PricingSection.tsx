@@ -29,7 +29,7 @@ const PricingSection = () => {
                     <RevealOnScroll delay={0.2} className="h-full">
                         <Card className="h-full relative overflow-hidden bg-white/95 border border-white/50 shadow-elegant rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col hover:shadow-floating hover:border-primary/10 backface-hidden will-change-transform">
                             {/* Popular Badge */}
-                            <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-bl-xl z-20 shadow-md overflow-hidden effect-shine shine-delay-2">
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-b-xl z-20 shadow-md overflow-hidden effect-shine shine-delay-2 whitespace-nowrap flex items-center justify-center min-w-[140px]">
                                 MAIS ESCOLHIDO
                             </div>
 
@@ -40,7 +40,7 @@ const PricingSection = () => {
                                     <span className="text-5xl font-bold text-primary font-heading relative inline-block effect-shine shine-delay-1 overflow-hidden px-2 -mx-2">R$ 39,90</span>
                                     <span className="text-muted-foreground">/mês</span>
                                 </div>
-                                <p className="text-sm text-green-400 font-semibold mt-3 bg-green-500/10 inline-block px-4 py-1.5 rounded-full border border-green-500/20 shadow-sm">
+                                <p className="text-sm text-emerald-600 font-bold mt-3 bg-emerald-600/10 inline-block px-4 py-1.5 rounded-full border border-emerald-600/20 shadow-sm animate-pulse-slow">
                                     7 Dias Grátis para Testar
                                 </p>
                             </CardHeader>

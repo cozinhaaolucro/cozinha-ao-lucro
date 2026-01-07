@@ -22,7 +22,7 @@ const HeroSection = () => {
                             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground [text-wrap:balance] font-heading transform-gpu antialiased drop-shadow-sm">
                                 Transforme sua cozinha em um negócio
                                 <span className="block text-primary mt-2 relative inline-block effect-shine px-4 py-1 -mx-4 leading-tight">
-                                    realmente lucrativo
+                                    Realmente Lucrativo
                                 </span>
                             </h1>
                         </RevealOnScroll>

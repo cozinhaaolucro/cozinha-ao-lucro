@@ -164,7 +164,7 @@ const ProfitCalculator = () => {
                         </div>
 
                         <h3 className="text-sm font-medium text-muted-foreground mb-1">Seu Potencial de Lucro Mensal</h3>
-                        <div className="text-3xl md:text-4xl font-bold text-warning mb-4 tracking-tight font-heading">
+                        <div className="text-3xl md:text-4xl font-bold mb-4 tracking-tight font-heading text-gold-gradient effect-shine-vertical shine-slow">
                             {formatCurrency(monthlyProfit)}
                         </div>
 
@@ -173,11 +173,21 @@ const ProfitCalculator = () => {
                                 style={{ width: `${Math.min((monthlyProfit / 8000) * 100, 100)}%` }}></div>
                         </div>
 
-                        <p className={`text-sm font-medium transition-colors ${monthlyProfit > 3000 ? 'text-green-400' : monthlyProfit < 0 ? 'text-red-400' : 'text-muted-foreground'}`}>
-                            {monthlyProfit > 5000 ? '🚀 Você lucra mais que muito gerente!' :
-                                monthlyProfit > 2000 ? '✨ Um ótimo começo para sua liberdade!' :
-                                    monthlyProfit < 0 ? '⚠️ Custo maior que a venda!' : 'Comece pequeno e cresça rápido!'}
-                        </p>
+                        <div className={`text-sm font-medium transition-colors`}>
+                            {monthlyProfit > 5000 ? (
+                                <span className="inline-block px-3 py-1 rounded-full bg-emerald-600/10 border border-emerald-600/20 text-emerald-600 animate-pulse-slow">
+                                    🚀 Você lucra mais que muito gerente!
+                                </span>
+                            ) : monthlyProfit > 2000 ? (
+                                <span className="inline-block px-3 py-1 rounded-full bg-emerald-600/10 border border-emerald-600/20 text-emerald-600 animate-pulse-slow">
+                                    ✨ Um ótimo começo para sua liberdade!
+                                </span>
+                            ) : monthlyProfit < 0 ? (
+                                <span className="text-red-400">⚠️ Custo maior que a venda!</span>
+                            ) : (
+                                <span className="text-muted-foreground">Comece pequeno e cresça rápido!</span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -189,7 +199,7 @@ const ProfitCalculator = () => {
                     <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
                         O Cozinha ao Lucro te mostra exatamente como chegar nesse resultado todos os dias, com precificação correta, controle de pedidos e margem real.
                     </p>
-                    <Button onClick={() => navigate('/register')} className="btn-primary w-full text-base py-5 shadow-lg group">
+                    <Button onClick={() => navigate('/register')} className="btn-primary w-full text-base py-5 shadow-lg group btn-shine shine-delay-2">
                         Começar a Controlar Meu Lucro
                         <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
