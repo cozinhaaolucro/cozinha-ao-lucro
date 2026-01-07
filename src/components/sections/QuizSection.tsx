@@ -63,7 +63,8 @@ const QuizSection = () => {
                                     onClick={() => window.location.href = '/auth'}
                                     className="btn-primary px-8 py-6 text-lg shadow-xl hover:scale-105 transition-transform"
                                 >
-                                    CRIAR MINHA CONTA GRÁTIS
+                                    <span className="md:hidden">Criar Conta Grátis</span>
+                                    <span className="hidden md:inline">CRIAR MINHA CONTA GRÁTIS</span>
                                     <ArrowRight className="ml-2 w-5 h-5" />
                                 </Button>
                             </div>

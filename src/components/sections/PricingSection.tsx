@@ -67,7 +67,8 @@ const PricingSection = () => {
                                     onClick={() => navigate('/register')}
                                     className="btn-primary w-full text-lg py-7 mb-5 shadow-xl group rounded-xl"
                                 >
-                                    Quero Lucrar com Organização
+                                    <span className="md:hidden">Assinar Agora</span>
+                                    <span className="hidden md:inline">Quero Lucrar com Organização</span>
                                     <Zap className="w-5 h-5 ml-2 group-hover:fill-current" />
                                 </Button>
 

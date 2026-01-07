@@ -35,7 +35,8 @@ const HeroSection = () => {
                                 size="lg"
                                 className="btn-primary text-lg px-8 py-7 h-auto w-full sm:w-auto shadow-lg hover:shadow-glow animate-in fade-in slide-in-from-bottom-4 duration-500"
                             >
-                                Começar a Lucrar Agora
+                                <span className="md:hidden">Começar Agora</span>
+                                <span className="hidden md:inline">Começar a Lucrar Agora</span>
                                 <ArrowRight className="ml-2 w-5 h-5" />
                             </Button>
                         </div>
