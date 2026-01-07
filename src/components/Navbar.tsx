@@ -98,7 +98,7 @@ const Navbar = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => navigate('/login')}
-                        className="text-foreground/80 hover:text-primary font-medium"
+                        className="text-muted-foreground hover:text-primary font-medium"
                     >
                         Entrar
                     </Button>

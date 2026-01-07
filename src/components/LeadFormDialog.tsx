@@ -79,45 +79,42 @@ export function LeadFormDialog({ children }: LeadFormDialogProps) {
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] sm:h-auto bg-white border border-white/20 shadow-elegant p-5">
-                <DialogHeader className="mb-2">
-                    <DialogTitle className="text-xl font-heading text-center text-primary">Solicitar Contato Business</DialogTitle>
-                    <DialogDescription className="text-center text-sm">
-                        Preencha os dados abaixo para receber uma proposta personalizada.
-                    </DialogDescription>
+            <DialogContent className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-[90vw] max-w-[500px] h-auto bg-white border border-white/20 shadow-elegant p-3 rounded-xl gap-2">
+                <DialogHeader className="mb-0 space-y-0 p-0 text-left sm:text-center">
+                    <DialogTitle className="text-base sm:text-xl font-bold text-primary leading-tight">Solicitar Contato</DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label htmlFor="name" className="text-xs font-semibold">Nome Completo *</Label>
+                <form onSubmit={handleSubmit} className="space-y-2 mt-1">
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="name" className="text-[10px] sm:text-xs font-semibold uppercase text-muted-foreground">Nome</Label>
                             <Input
                                 id="name"
                                 name="name"
                                 required
                                 value={formData.name}
                                 onChange={handleChange}
-                                placeholder="Seu nome"
-                                className="h-9 bg-muted/5 border-muted-foreground/20 text-sm"
+                                placeholder="Nome"
+                                className="h-8 bg-muted/10 border-muted-foreground/10 text-xs px-2"
                             />
                         </div>
-                        <div className="space-y-1.5">
-                            <Label htmlFor="company" className="text-xs font-semibold">Nome da Empresa *</Label>
+                        <div className="space-y-0.5">
+                            <Label htmlFor="company" className="text-[10px] sm:text-xs font-semibold uppercase text-muted-foreground">Empresa</Label>
                             <Input
                                 id="company"
                                 name="company"
                                 required
                                 value={formData.company}
                                 onChange={handleChange}
-                                placeholder="Sua empresa"
-                                className="h-9 bg-muted/5 border-muted-foreground/20 text-sm"
+                                placeholder="Empresa"
+                                className="h-8 bg-muted/10 border-muted-foreground/10 text-xs px-2"
                             />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label htmlFor="email" className="text-xs font-semibold">Email Corporativo *</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="email" className="text-[10px] sm:text-xs font-semibold uppercase text-muted-foreground">Email</Label>
                             <Input
                                 id="email"
                                 name="email"
@@ -125,46 +122,46 @@ export function LeadFormDialog({ children }: LeadFormDialogProps) {
                                 required
                                 value={formData.email}
                                 onChange={handleChange}
-                                placeholder="voce@empresa.com"
-                                className="h-9 bg-muted/5 border-muted-foreground/20 text-sm"
+                                placeholder="Email"
+                                className="h-8 bg-muted/10 border-muted-foreground/10 text-xs px-2"
                             />
                         </div>
-                        <div className="space-y-1.5">
-                            <Label htmlFor="phone" className="text-xs font-semibold">Telefone / WhatsApp *</Label>
+                        <div className="space-y-0.5">
+                            <Label htmlFor="phone" className="text-[10px] sm:text-xs font-semibold uppercase text-muted-foreground">Whats</Label>
                             <Input
                                 id="phone"
                                 name="phone"
                                 required
                                 value={formData.phone}
                                 onChange={handleChange}
-                                placeholder="(11) 99999-9999"
-                                className="h-9 bg-muted/5 border-muted-foreground/20 text-sm"
+                                placeholder="Whats"
+                                className="h-8 bg-muted/10 border-muted-foreground/10 text-xs px-2"
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                        <Label htmlFor="message" className="text-xs font-semibold">Mensagem (Opcional)</Label>
+                    <div className="space-y-0.5">
+                        <Label htmlFor="message" className="text-[10px] sm:text-xs font-semibold uppercase text-muted-foreground">Mensagem</Label>
                         <Textarea
                             id="message"
                             name="message"
                             value={formData.message}
                             onChange={handleChange}
-                            placeholder="Descreva sua necessidade..."
-                            className="bg-muted/5 border-muted-foreground/20 min-h-[80px] resize-none text-sm"
+                            placeholder="Sua mensagem..."
+                            className="bg-muted/10 border-muted-foreground/10 min-h-[50px] resize-none text-xs px-2 py-1.5"
                         />
                     </div>
 
-                    <Button type="submit" className="w-full btn-primary h-10 text-base mt-2" disabled={loading}>
+                    <Button type="submit" className="w-full btn-primary h-9 text-sm font-semibold mt-1" disabled={loading}>
                         {loading ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                                 Enviando...
                             </>
                         ) : (
                             <>
-                                Enviar Solicitação
-                                <Send className="ml-2 h-4 w-4" />
+                                Enviar
+                                <Send className="ml-2 h-3 w-3" />
                             </>
                         )}
                     </Button>
