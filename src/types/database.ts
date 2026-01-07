@@ -42,8 +42,9 @@ export type Product = {
     selling_price: number;
     image_url: string | null;
     active?: boolean;
-    is_highlight?: boolean; // Added new field
-    preparation_time_minutes?: number; // Added new field
+    is_highlight?: boolean;
+    category?: string | null; // Added new field
+    preparation_time_minutes?: number;
     created_at: string;
     updated_at: string;
     product_ingredients?: ProductIngredient[];

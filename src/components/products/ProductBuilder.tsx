@@ -76,6 +76,8 @@ const convertQuantity = (qty: number, fromUnit: string, toUnit: string): number 
     return qty;
 };
 
+const CATEGORY_PRESETS = ['Lanches', 'Bebidas', 'Sobremesas', 'Porções', 'Combos', 'Pizzas', 'Açaí'];
+
 const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: ProductBuilderProps) => {
     const isMobile = useIsMobile();
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -83,11 +85,16 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         name: '',
         description: '',
         selling_price: 0,
+        category: '',
         preparation_time_minutes: 0,
         is_highlight: false
     });
     const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
     const [openCombobox, setOpenCombobox] = useState(false);
+
+    // Category Combobox State
+    const [openCategoryCombobox, setOpenCategoryCombobox] = useState(false);
+    const [categorySearch, setCategorySearch] = useState('');
 
     // Image Upload State
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -107,6 +114,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     name: productToEdit.name,
                     description: productToEdit.description || '',
                     selling_price: productToEdit.selling_price || 0,
+                    category: productToEdit.category || '',
                     preparation_time_minutes: productToEdit.preparation_time_minutes || 0,
                     is_highlight: productToEdit.is_highlight || false,
                 });
@@ -357,6 +365,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     active: true,
                     // Only update image if new one uploaded, else keep existing
                     ...(imageUrl ? { image_url: imageUrl } : {}),
+                    category: formData.category || null,
                     preparation_time_minutes: formData.preparation_time_minutes,
                     is_highlight: formData.is_highlight,
                 },
@@ -384,6 +393,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     selling_price: formData.selling_price,
                     active: true,
                     image_url: imageUrl,
+                    category: formData.category || null,
                     preparation_time_minutes: formData.preparation_time_minutes,
                     is_highlight: formData.is_highlight,
                 },
@@ -403,7 +413,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
     };
 
     const resetFields = () => {
-        setFormData({ name: '', description: '', selling_price: 0, preparation_time_minutes: 0, is_highlight: false });
+        setFormData({ name: '', description: '', selling_price: 0, category: '', preparation_time_minutes: 0, is_highlight: false });
         setSelectedIngredients([]);
         setImageFile(null);
         setImagePreview(null);
@@ -415,7 +425,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
     };
 
     const clearForm = () => {
-        setFormData({ name: '', description: '', selling_price: 0, preparation_time_minutes: 0, is_highlight: false });
+        setFormData({ name: '', description: '', selling_price: 0, category: '', preparation_time_minutes: 0, is_highlight: false });
         setSelectedIngredients([]);
         setImageFile(null);
         setImagePreview(null);
@@ -435,6 +445,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
             name: preset.name,
             description: preset.description,
             selling_price: preset.selling_price,
+            category: 'Lanches', // Default preset category
             preparation_time_minutes: 0,
             is_highlight: false
         });
@@ -548,6 +559,66 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                                         Exibe este produto na vitrine de cima do cardápio digital (Modo Vitrine).
                                     </p>
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="category">Categoria</Label>
+                                <Popover open={openCategoryCombobox} onOpenChange={setOpenCategoryCombobox}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={openCategoryCombobox}
+                                            className="w-full justify-between font-normal"
+                                        >
+                                            {formData.category || "Selecione ou digite uma categoria..."}
+                                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[300px] p-0" align="start">
+                                        <Command>
+                                            <CommandInput placeholder="Buscar ou criar categoria..." onValueChange={setCategorySearch} />
+                                            <CommandList>
+                                                <CommandEmpty>
+                                                    <div className="p-2 text-sm text-center">
+                                                        <p className="text-muted-foreground mb-2">Nenhuma categoria encontrada.</p>
+                                                        <Button
+                                                            variant="secondary"
+                                                            size="sm"
+                                                            className="w-full"
+                                                            onClick={() => {
+                                                                setFormData({ ...formData, category: categorySearch });
+                                                                setOpenCategoryCombobox(false);
+                                                            }}
+                                                        >
+                                                            Criar "{categorySearch}"
+                                                        </Button>
+                                                    </div>
+                                                </CommandEmpty>
+                                                <CommandGroup heading="Sugestões">
+                                                    {CATEGORY_PRESETS.map((category) => (
+                                                        <CommandItem
+                                                            key={category}
+                                                            value={category}
+                                                            onSelect={(currentValue) => {
+                                                                setFormData({ ...formData, category: currentValue === formData.category ? "" : currentValue })
+                                                                setOpenCategoryCombobox(false)
+                                                            }}
+                                                        >
+                                                            <Check
+                                                                className={cn(
+                                                                    "mr-2 h-4 w-4",
+                                                                    formData.category === category ? "opacity-100" : "opacity-0"
+                                                                )}
+                                                            />
+                                                            {category}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -788,7 +859,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     </Button>
                 </div>
             </div>
-        </form>
+        </form >
     );
 
     if (isMobile) {
