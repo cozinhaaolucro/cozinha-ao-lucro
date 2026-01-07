@@ -355,18 +355,51 @@ body {
   background: rgba(0, 0, 0, 0.4);
 }
 
-/* HARDWARE ACCELERATION & JITTER FIXES */
+/* COMPREHENSIVE JITTER ELIMINATION */
+/* Using translate3d for stronger GPU offloading than translateZ */
+
+/* Base jitter-fix utility */
+.jitter-fix {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  perspective: 1000px;
+  will-change: transform, opacity;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Apply to all interactive/transforming elements */
 .btn-primary,
 .btn-secondary,
 .glass-card,
 .premium-card,
-.card-hover {
+.card-hover,
+button,
+[class*="hover:scale"] {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0) scale(0.9999);
+  perspective: 1000px;
   will-change: transform;
   -webkit-font-smoothing: subpixel-antialiased;
   -moz-osx-font-smoothing: grayscale;
+  isolation: isolate;
+}
+
+/* Links and images - softer treatment */
+a,
+img {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Transitioning elements need special care */
+[class*="transition"] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Stabilize text during transforms */

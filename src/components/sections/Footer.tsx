@@ -19,7 +19,7 @@ const Footer = () => {
                     <img
                         src="/images/logo-full.png"
                         alt="Cozinha ao Lucro"
-                        className="h-20 w-auto mb-6 opacity-90"
+                        className="h-20 w-auto mb-6 opacity-90 brightness-[0.8]"
                     />
 
                     <p className="text-primary-foreground/90 text-sm mb-8 max-w-md mx-auto leading-relaxed">

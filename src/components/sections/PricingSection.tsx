@@ -27,7 +27,7 @@ const PricingSection = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
                     {/* Pro Plan */}
                     <RevealOnScroll delay={0.2} className="h-full">
-                        <Card className="h-full relative overflow-hidden premium-card rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col">
+                        <Card className="h-full relative overflow-hidden bg-white/95 border border-white/50 shadow-elegant rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col hover:shadow-floating hover:border-primary/10 backface-hidden will-change-transform">
                             {/* Popular Badge */}
                             <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-bl-xl z-20 shadow-md">
                                 MAIS ESCOLHIDO
