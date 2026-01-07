@@ -26,23 +26,23 @@ const Navbar = () => {
 
     return (
         <nav
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
-                ? 'bg-background/90 backdrop-blur-md shadow-glow py-2 border-b border-white/5'
-                : 'bg-transparent py-6'
-                }`}
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'py-4' : 'py-6'}`}
         >
-            <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between">
+            <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between pointer-events-none">
                 {/* Logo Transformation */}
                 <div
-                    className="flex items-center cursor-pointer relative h-20 md:h-24 w-48 transition-all duration-500"
-                    style={{ height: isScrolled ? '3rem' : '6rem', width: isScrolled ? '3rem' : '12rem' }}
+                    className="flex items-center cursor-pointer relative transition-all duration-500 z-10 pointer-events-auto"
+                    style={{
+                        height: isScrolled ? '3rem' : '6rem',
+                        width: isScrolled ? '3rem' : '12rem'
+                    }}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
                     {/* Full Logo */}
                     <img
                         src="/images/logo-full.png"
                         alt="Cozinha ao Lucro"
-                        className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 object-contain w-full h-full ${isScrolled ? 'opacity-0 scale-75 invisible' : 'opacity-100 scale-100 md:scale-[1.3] visible'
+                        className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 object-contain w-full h-full ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100 md:scale-[1.3]'
                             }`}
                     />
 
@@ -50,13 +50,19 @@ const Navbar = () => {
                     <img
                         src="/images/logo-icon.png"
                         alt="Icone"
-                        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] ${isScrolled ? 'opacity-100 scale-100 md:scale-[1.3] visible' : 'opacity-0 scale-50 invisible'
+                        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] ${isScrolled ? 'opacity-100 scale-100 md:scale-[1.3]' : 'opacity-0 scale-50 pointer-events-none'
                             }`}
                     />
                 </div>
 
-                {/* Desktop Menu - Minimal */}
-                <div className="hidden md:flex items-center gap-8">
+                {/* Desktop Menu - Minimal / Minibar */}
+                <div
+                    className={`hidden md:flex items-center gap-8 transition-all duration-500 pointer-events-auto
+                    ${isScrolled
+                            ? 'bg-white/80 backdrop-blur-md shadow-lg rounded-full px-8 py-3 border border-white/20'
+                            : 'bg-transparent p-0 border-transparent'
+                        }`}
+                >
                     <div className="flex items-center gap-6">
                         {[
                             { label: 'Preços', id: 'precos' },

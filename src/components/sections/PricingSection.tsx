@@ -87,7 +87,7 @@ const PricingSection = () => {
 
                     {/* Business Plan */}
                     <RevealOnScroll delay={0.3} className="h-full">
-                        <Card className="h-full relative overflow-hidden bg-background border-border/60 shadow-lg rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col border-2 hover:border-primary/20">
+                        <Card className="h-full relative overflow-hidden bg-background border-border/60 shadow-lg rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col border-2 hover:border-primary/20 backface-hidden will-change-transform">
                             <CardHeader className="text-center pt-12 pb-4">
                                 <CardTitle className="text-2xl font-bold text-foreground font-heading">Plano Business</CardTitle>
                                 <div className="mt-5 flex items-baseline justify-center gap-2">
