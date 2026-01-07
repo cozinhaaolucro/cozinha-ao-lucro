@@ -50,7 +50,7 @@ const Navbar = () => {
                     <img
                         src="/images/logo-icon.png"
                         alt="Icone"
-                        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] backface-hidden will-change-transform ${isScrolled ? 'opacity-100 scale-100 md:scale-[1.3]' : 'opacity-0 scale-50 pointer-events-none'
+                        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto brightness-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] backface-hidden will-change-transform ${isScrolled ? 'opacity-100 scale-100 md:scale-[1.3] hover:scale-110 md:hover:scale-[1.5] active:scale-95' : 'opacity-0 scale-50 pointer-events-none'
                             }`}
                     />
                 </div>
