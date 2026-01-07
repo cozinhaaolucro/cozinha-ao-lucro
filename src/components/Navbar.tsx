@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, X, ChefHat } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
@@ -32,7 +32,6 @@ const Navbar = () => {
                 }`}
         >
             <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between">
-                {/* Logo Transformation */}
                 {/* Logo Transformation */}
                 <div
                     className="flex items-center cursor-pointer relative h-20 md:h-24 w-48 transition-all duration-500"
