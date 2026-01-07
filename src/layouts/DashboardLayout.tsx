@@ -67,18 +67,7 @@ const DashboardLayout = () => {
     const [isIngredientOpen, setIsIngredientOpen] = useState(false);
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
-    // Global keyboard shortcut for Command Palette (Cmd+K / Ctrl+K)
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                e.preventDefault();
-                setIsCommandPaletteOpen(true);
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+    // Global keyboard shortcut for Command Palette removed as per user request
 
     // Trial Logic
     const created = user?.created_at ? new Date(user.created_at) : new Date();
@@ -255,17 +244,7 @@ const DashboardLayout = () => {
                     </div>
                 </div>
 
-                {/* Linear-inspired search button */}
-                <div className="px-4 pt-4">
-                    <Button
-                        variant="outline"
-                        className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
-                        onClick={() => setIsCommandPaletteOpen(true)}
-                    >
-                        <Search className="w-4 h-4" />
-                        <span className="flex-1 text-left">Buscar...</span>
-                    </Button>
-                </div>
+                {/* Search Bar Removed as per user request */}
 
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                     {navItems.map((item) => {
@@ -510,11 +489,7 @@ const DashboardLayout = () => {
                 </DialogContent>
             </Dialog>
 
-            {/* Command Palette (Linear-inspired) */}
-            <CommandPalette
-                isOpen={isCommandPaletteOpen}
-                onClose={() => setIsCommandPaletteOpen(false)}
-            />
+            {/* Command Palette Removed */}
         </div >
     );
 };
