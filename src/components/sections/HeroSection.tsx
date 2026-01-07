@@ -21,7 +21,7 @@ const HeroSection = () => {
                         <RevealOnScroll delay={0}>
                             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground [text-wrap:balance] font-heading transform-gpu antialiased drop-shadow-sm">
                                 Transforme sua cozinha em um negócio
-                                <span className="block text-primary mt-2 relative inline-block effect-shine shine-medium px-4 py-1 -mx-4 leading-tight">
+                                <span className="block text-primary mt-2 relative inline-block effect-shine px-4 py-1 -mx-4 leading-tight">
                                     realmente lucrativo
                                 </span>
                             </h1>
@@ -38,7 +38,7 @@ const HeroSection = () => {
                                 <Button
                                     onClick={() => navigate('/register')}
                                     size="lg"
-                                    className="btn-primary btn-shine text-lg px-8 py-7 h-auto w-full sm:w-auto shadow-lg hover:shadow-glow group"
+                                    className="btn-primary btn-shine shine-delay-1 text-lg px-8 py-7 h-auto w-full sm:w-auto shadow-lg hover:shadow-glow group"
                                 >
                                     <span className="md:hidden">Começar Agora</span>
                                     <span className="hidden md:inline">Começar a Lucrar Agora</span>

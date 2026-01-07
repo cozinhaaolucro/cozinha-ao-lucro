@@ -257,6 +257,8 @@
 .effect-shine {
   position: relative;
   overflow: hidden;
+  /* Standard duration for chain synchronization */
+  --shine-duration: 5s;
 }
 
 .effect-shine::after {
@@ -268,37 +270,36 @@
   height: 100%;
   background: linear-gradient(to right,
       transparent 0%,
-      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0.8) 50%,
       transparent 100%);
   transform: skewX(-20deg);
-  animation: shine var(--shine-duration, 6s) infinite ease-in-out;
+  animation: shine var(--shine-duration) infinite ease-in-out;
   pointer-events: none;
   z-index: 10;
 }
 
-.shine-3s {
-  --shine-duration: 3s;
+/* Chain Sequence Delays */
+.shine-delay-1 {
+  animation-delay: 1.5s !important;
+  /* Force delay override */
 }
 
-.shine-4s {
-  --shine-duration: 4s;
+.shine-delay-2 {
+  animation-delay: 3s !important;
 }
 
-.shine-fast {
-  @apply shine-3s;
+.shine-delay-3 {
+  animation-delay: 4.5s !important;
 }
 
-.shine-medium {
-  --shine-duration: 6s;
-}
-
+/* Specific slow override for Authority/Quiz if needed, but keeping synced is better */
 .shine-slow {
-  --shine-duration: 8s;
+  --shine-duration: 7s;
 }
 
 /* Backward compatibility */
 .btn-shine {
-  @apply effect-shine shine-medium;
+  @apply effect-shine;
 }
 
 @keyframes float {
