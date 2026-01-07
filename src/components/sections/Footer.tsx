@@ -2,19 +2,26 @@ import { Instagram, Facebook, Youtube } from 'lucide-react';
 
 const Footer = () => {
     return (
-        <footer className="bg-footer text-footer-foreground pb-12 pt-20 relative mt-20">
+        <footer className="bg-footer text-footer-foreground pb-12 pt-24 relative mt-24">
             {/* Top Separator */}
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
 
-            <div className="container-max text-center relative">
-                {/* Super Icon Bridge */}
-                <div className="absolute -top-36 left-1/2 -translate-x-1/2 z-20">
-                    <div className="w-36 h-36 bg-footer rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(46,92,107,0.6)] relative group transform hover:scale-110 transition-all duration-500 backface-hidden">
-                        <img src="/images/logo-icon.png" alt="Cozinha ao Lucro" className="w-full h-full object-cover relative z-10" />
-                    </div>
+            {/* Super Icon Bridge - Perfectly Centered on Footer Edge (Direct Child) */}
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                <div className="w-40 h-40 bg-transparent rounded-full flex items-center justify-center relative group transform hover:scale-110 transition-all duration-500 backface-hidden">
+                    <img src="/images/logo-icon.png" alt="Cozinha ao Lucro" className="w-full h-full object-cover drop-shadow-2xl relative z-10" />
                 </div>
+            </div>
 
-                <div className="pt-6">
+            <div className="container-max text-center relative">
+                <div className="pt-0 flex flex-col items-center">
+                    {/* Brand Name / Logo Text */}
+                    <img
+                        src="/images/logo-full.png"
+                        alt="Cozinha ao Lucro"
+                        className="h-20 w-auto mb-6 opacity-90"
+                    />
+
                     <p className="text-primary-foreground/90 text-sm mb-8 max-w-md mx-auto leading-relaxed">
                         Transformando cozinhas em negócios lucrativos. O conteúdo mais completo para quem quer empreender com gastronomia.
                     </p>
