@@ -37,7 +37,7 @@ const HeroSection = () => {
                                 <Button
                                     onClick={() => navigate('/register')}
                                     size="lg"
-                                    className="btn-primary text-lg px-8 py-7 h-auto w-full sm:w-auto shadow-lg hover:shadow-glow group"
+                                    className="btn-primary btn-shine text-lg px-8 py-7 h-auto w-full sm:w-auto shadow-lg hover:shadow-glow group"
                                 >
                                     <span className="md:hidden">Começar Agora</span>
                                     <span className="hidden md:inline">Começar a Lucrar Agora</span>
