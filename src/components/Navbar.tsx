@@ -31,7 +31,7 @@ const Navbar = () => {
             <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between pointer-events-none">
                 {/* Logo Transformation */}
                 <div
-                    className={`flex items-center cursor-pointer relative transition-all duration-500 z-10 pointer-events-auto effect-logo-shine ${isScrolled ? 'h-12 w-12' : 'h-16 w-32 md:h-24 md:w-48'
+                    className={`flex items-center cursor-pointer relative transition-all duration-500 z-10 pointer-events-auto effect-logo-shine ${isScrolled ? 'h-12 w-12' : 'h-20 w-48 md:h-28 md:w-64'
                         }`}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
@@ -39,7 +39,7 @@ const Navbar = () => {
                     <img
                         src="/images/logo-full.png"
                         alt="Cozinha ao Lucro"
-                        className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 object-contain w-full h-full ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100 md:scale-[1.3]'
+                        className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 object-contain w-full h-full ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-110 md:scale-[1.5]'
                             }`}
                     />
 

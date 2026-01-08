@@ -164,7 +164,7 @@ const ProfitCalculator = () => {
                         </div>
 
                         <h3 className="text-sm font-medium text-muted-foreground mb-1">Seu Potencial de Lucro Mensal</h3>
-                        <div className="text-3xl md:text-4xl font-bold mb-4 tracking-tight font-heading text-gold-gradient effect-shine-vertical shine-slow">
+                        <div className="text-3xl md:text-4xl font-bold mb-4 tracking-tight font-heading text-gold-gradient">
                             {formatCurrency(monthlyProfit)}
                         </div>
 

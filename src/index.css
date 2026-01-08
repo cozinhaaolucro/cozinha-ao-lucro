@@ -35,8 +35,8 @@
     --primary-foreground: 0 0% 100%;
     --primary-glow: 186 35% 28%;
 
-    --footer: 58 2% 54%;
-    /* Grey */
+    --footer: 58 2% 61%;
+    /* Grey - 1.13x lighter */
     --footer-foreground: 0 0% 100%;
 
     --secondary: 182 16% 55%;
@@ -494,7 +494,7 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 1px 3px rgba(160, 116, 20, 0.5));
+  filter: drop-shadow(0 1px 3px rgba(160, 116, 20, 0.25));
 }
 
 /* COMPREHENSIVE JITTER ELIMINATION */
