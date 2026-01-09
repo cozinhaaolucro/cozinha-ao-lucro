@@ -19,7 +19,8 @@ import {
     Monitor,
     Search,
     Command,
-    Store
+    Store,
+    FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -159,6 +160,7 @@ const DashboardLayout = () => {
         { path: '/app/clientes', label: 'Clientes', shortLabel: 'Clientes', icon: Users, id: 'nav-clientes' },
         { path: '/app/produtos', label: 'Produtos', shortLabel: 'Produtos', icon: ShoppingBag, id: 'nav-produtos' },
         { path: '/app/agenda', label: 'Agenda', shortLabel: 'Agenda', icon: Calendar, id: 'nav-agenda' },
+        { path: '/app/smart-list', label: 'Lista Inteligente', shortLabel: 'Lista', icon: FileText, id: 'nav-smart-list' },
         { path: '/app/menu-config', label: 'Cardápio Digital', shortLabel: 'Cardápio', icon: Store, id: 'nav-public-menu' },
         { path: '/app/aprender', label: 'Aprender', shortLabel: 'Aprender', icon: BookOpen, id: 'nav-aprender' },
         { path: '/app/settings', label: 'Configurações', shortLabel: 'Config', icon: Settings, id: 'nav-settings' },

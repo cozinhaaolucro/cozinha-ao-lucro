@@ -18,7 +18,9 @@ import {
     CheckCircle,
     XCircle,
     AlertCircle,
-    Calendar
+    Calendar,
+    Wallet,
+    CreditCard
 } from 'lucide-react';
 import {
     AreaChart,
@@ -344,51 +346,41 @@ const Dashboard = () => {
                     <Card className="border-l-4 border-l-green-500">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-                            <DollarSign className="h-4 w-4 text-green-600" />
+                            <DollarSign className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-green-600">R$ {totalRevenue.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">{filteredOrders.length} pedidos</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="border-l-4 border-l-red-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
-                            <TrendingDown className="h-4 w-4 text-red-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-red-600">R$ {totalCost.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">Ingredientes e produção</p>
+                            <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">+20.1% em relação ao mês anterior</p>
                         </CardContent>
                     </Card>
                     <Card className="border-l-4 border-l-blue-500">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Lucro Líquido</CardTitle>
-                            <TrendingUp className="h-4 w-4 text-blue-600" />
+                            <Wallet className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>R$ {totalProfit.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">Receita - Custos</p>
+                            <div className="text-2xl font-bold">R$ {totalProfit.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">+10.5% em relação ao mês anterior</p>
                         </CardContent>
                     </Card>
-                    <Card className="border-l-4 border-l-purple-500">
+                    <Card className="border-l-4 border-l-red-500">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Margem de Lucro</CardTitle>
-                            <Percent className="h-4 w-4 text-purple-600" />
+                            <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
+                            <CreditCard className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className={`text-2xl font-bold ${profitMargin >= 0 ? 'text-purple-600' : 'text-red-600'}`}>{profitMargin.toFixed(1)}%</div>
-                            <p className="text-xs text-muted-foreground">Lucro sobre receita</p>
+                            <div className="text-2xl font-bold">R$ {totalCost.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">+5% em relação ao mês anterior</p>
                         </CardContent>
                     </Card>
                     <Card className="border-l-4 border-l-orange-500">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Receita Entregues</CardTitle>
-                            <CheckCircle className="h-4 w-4 text-orange-600" />
+                            <Package className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-orange-600">R$ {deliveredRevenue.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">{deliveredOrders.length} pedidos entregues</p>
+                            <div className="text-2xl font-bold">R$ {deliveredRevenue.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">Pedidos finalizados</p>
                         </CardContent>
                     </Card>
                 </div>

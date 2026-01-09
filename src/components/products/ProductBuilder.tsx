@@ -13,6 +13,14 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerFooter,
+    DrawerClose
+} from '@/components/ui/drawer';
+import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -527,379 +535,393 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         toast({ title: 'Modelo carregado!', description: 'Receita preenchida com sucesso.' });
     };
 
-    const FormContent = (
-        <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
-            <div className="flex-1 overflow-y-auto px-6">
-                <div className="space-y-6 py-4">
-                    {/* 1. Basic Info Section */}
-                    <Card className="border-none shadow-none sm:border sm:shadow-sm">
-                        <CardContent className="p-0 sm:p-4 space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="name" className="text-base font-semibold">Nome do Produto</Label>
-                                <Input
-                                    id="name"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder="Ex: Brigadeiro Gourmet"
-                                    className="h-11 text-lg"
-                                    required
-                                />
-                            </div>
+    const ActionButtons = () => (
+        <div className="flex gap-3">
+            <Button type="button" variant="outline" onClick={resetForm} className="flex-1 h-12">
+                Cancelar
+            </Button>
+            <Button type="submit" form="product-form" className="flex-[2] h-12 text-base" disabled={uploading}>
+                {uploading ? 'Salvando...' : (productToEdit ? 'Salvar Alterações' : 'Criar Produto')}
+            </Button>
+        </div>
+    );
 
-                            <div className="space-y-2">
-                                <Label htmlFor="description">Descrição</Label>
-                                <Textarea
-                                    id="description"
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder="Detalhes sobre o produto..."
-                                    className="resize-none"
-                                    rows={2}
-                                />
-                            </div>
+    const FormFields = (
+        <div className="space-y-6 py-4 pb-24 sm:pb-4">
+            {/* 1. Basic Info Section */}
+            <Card className="border-none shadow-none sm:border sm:shadow-sm">
+                <CardContent className="p-0 sm:p-4 space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="name" className="text-base font-semibold">Nome do Produto</Label>
+                        <Input
+                            id="name"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            placeholder="Ex: Brigadeiro Gourmet"
+                            className="h-11 text-lg"
+                            required
+                        />
+                    </div>
 
-                            <div className="flex items-center space-x-2 border p-3 rounded-md bg-muted/50">
-                                <Switch
-                                    id="is_highlight"
-                                    checked={formData.is_highlight}
-                                    onCheckedChange={(checked) => setFormData({ ...formData, is_highlight: checked })}
-                                />
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="is_highlight" className="text-base cursor-pointer">
-                                        Destaque no Cardápio (Sugestão)
-                                    </Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Exibe este produto na vitrine de cima do cardápio digital (Modo Vitrine).
-                                    </p>
-                                </div>
-                            </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Descrição</Label>
+                        <Textarea
+                            id="description"
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            placeholder="Detalhes sobre o produto..."
+                            className="resize-none"
+                            rows={2}
+                        />
+                    </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="category">Categoria</Label>
-                                <Popover open={openCategoryCombobox} onOpenChange={setOpenCategoryCombobox}>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            role="combobox"
-                                            aria-expanded={openCategoryCombobox}
-                                            className="w-full justify-between font-normal"
-                                        >
-                                            {formData.category || "Selecione ou digite uma categoria..."}
-                                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[300px] p-0" align="start">
-                                        <Command>
-                                            <CommandInput placeholder="Buscar ou criar categoria..." onValueChange={setCategorySearch} />
-                                            <CommandList>
-                                                <CommandEmpty>
-                                                    <div className="p-2 text-sm text-center">
-                                                        <p className="text-muted-foreground mb-2">Nenhuma categoria encontrada.</p>
-                                                        <Button
-                                                            variant="secondary"
-                                                            size="sm"
-                                                            className="w-full"
-                                                            onClick={() => {
-                                                                setFormData({ ...formData, category: categorySearch });
-                                                                setOpenCategoryCombobox(false);
-                                                            }}
-                                                        >
-                                                            Criar "{categorySearch}"
-                                                        </Button>
-                                                    </div>
-                                                </CommandEmpty>
-                                                <CommandGroup heading="Sugestões">
-                                                    {CATEGORY_PRESETS.map((category) => (
-                                                        <CommandItem
-                                                            key={category}
-                                                            value={category}
-                                                            onSelect={(currentValue) => {
-                                                                setFormData({ ...formData, category: currentValue === formData.category ? "" : currentValue })
-                                                                setOpenCategoryCombobox(false)
-                                                            }}
-                                                        >
-                                                            <Check
-                                                                className={cn(
-                                                                    "mr-2 h-4 w-4",
-                                                                    formData.category === category ? "opacity-100" : "opacity-0"
-                                                                )}
-                                                            />
-                                                            {category}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="prep_time">Tempo de Preparo</Label>
-                                    <div className="relative">
-                                        <Input
-                                            id="prep_time"
-                                            type="number"
-                                            min="0"
-                                            value={formData.preparation_time_minutes}
-                                            onChange={(e) => setFormData({ ...formData, preparation_time_minutes: parseInt(e.target.value) || 0 })}
-                                            className="h-10 pr-10"
-                                        />
-                                        <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">Min</span>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="hourly_rate">Valor da Hora (R$)</Label>
-                                    <Input
-                                        id="hourly_rate"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={formData.hourly_rate}
-                                        onChange={(e) => setFormData({ ...formData, hourly_rate: parseFloat(e.target.value) || 0 })}
-                                        placeholder="0.00"
-                                        className="h-10"
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Imagem</Label>
-                                    <label
-                                        htmlFor="product-image"
-                                        className="flex h-10 w-full cursor-pointer items-center justify-center rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-                                    >
-                                        <span className="flex items-center gap-2 truncate">
-                                            {imagePreview ? (
-                                                <>
-                                                    <img src={imagePreview} alt="Preview" className="h-6 w-6 rounded object-cover" />
-                                                    <span className="text-muted-foreground">Alterar</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <ImageIcon className="h-4 w-4" />
-                                                    <span>Adicionar Foto</span>
-                                                </>
-                                            )}
-                                        </span>
-                                        <input
-                                            type="file"
-                                            id="product-image"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={handleImageSelect}
-                                        />
-                                    </label>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* 2. Ingredients Section */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <Label className="text-base font-semibold">Ingredientes</Label>
-
-                            {/* Presets Menu */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button type="button" variant="outline" size="sm" className="h-8 gap-1">
-                                        <Calculator className="w-3.5 h-3.5" />
-                                        <span className="sr-only sm:not-sr-only">Carregar Modelo</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56">
-                                    <DropdownMenuItem onClick={clearForm} className="text-destructive">
-                                        Limpar Tudo
-                                    </DropdownMenuItem>
-                                    {PRESET_PRODUCTS.map((preset) => (
-                                        <DropdownMenuItem key={preset.name} onClick={() => loadProductPreset(preset.name)}>
-                                            {preset.name}
-                                        </DropdownMenuItem>
-                                    ))}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                    <div className="flex items-center space-x-2 border p-3 rounded-md bg-muted/50">
+                        <Switch
+                            id="is_highlight"
+                            checked={formData.is_highlight}
+                            onCheckedChange={(checked) => setFormData({ ...formData, is_highlight: checked })}
+                        />
+                        <div className="space-y-0.5">
+                            <Label htmlFor="is_highlight" className="text-base cursor-pointer">
+                                Destaque no Cardápio (Sugestão)
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                                Exibe este produto na vitrine de cima do cardápio digital (Modo Vitrine).
+                            </p>
                         </div>
+                    </div>
 
-                        {selectedIngredients.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl bg-muted/20 gap-3 text-center">
-                                <PackageCheck className="w-10 h-10 text-muted-foreground/50" />
-                                <div className="space-y-1">
-                                    <p className="font-medium">Nenhum ingrediente</p>
-                                    <p className="text-sm text-muted-foreground">Adicione ingredientes para calcular o custo.</p>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {selectedIngredients.map((si, index) => (
-                                    <Card key={index} className="overflow-hidden border shadow-sm">
-                                        <div className="p-3 flex flex-col gap-3">
-                                            <div className="flex items-center justify-between gap-2">
-                                                {/* Ingredient Selector on Mobile can be a modal or just text if locked. 
-                                                    Currently implementation allows changing ingredient in place.
-                                                    For simplicity in this overhaul, let's keep it robust.
-                                                */}
-                                                {si.is_virtual ? (
-                                                    <div className="flex items-center gap-2 font-medium">
-                                                        <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wide">Novo</span>
-                                                        {si.name}
-                                                    </div>
-                                                ) : (
-                                                    <Select
-                                                        value={si.ingredient_id}
-                                                        onValueChange={(value) => updateIngredientSelection(index, value)}
-                                                    >
-                                                        <SelectTrigger className="h-8 border-none shadow-none p-0 font-medium bg-transparent hover:bg-transparent w-auto gap-2 focus:ring-0">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {ingredients.map((ing) => (
-                                                                <SelectItem key={ing.id} value={ing.id}>{ing.name}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                )}
-
+                    <div className="space-y-2">
+                        <Label htmlFor="category">Categoria</Label>
+                        <Popover open={openCategoryCombobox} onOpenChange={setOpenCategoryCombobox}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={openCategoryCombobox}
+                                    className="w-full justify-between font-normal"
+                                >
+                                    {formData.category || "Selecione ou digite uma categoria..."}
+                                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[300px] p-0" align="start">
+                                <Command>
+                                    <CommandInput placeholder="Buscar ou criar categoria..." onValueChange={setCategorySearch} />
+                                    <CommandList>
+                                        <CommandEmpty>
+                                            <div className="p-2 text-sm text-center">
+                                                <p className="text-muted-foreground mb-2">Nenhuma categoria encontrada.</p>
                                                 <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-muted-foreground hover:text-destructive -mr-2"
-                                                    onClick={() => removeIngredient(index)}
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    className="w-full"
+                                                    onClick={() => {
+                                                        setFormData({ ...formData, category: categorySearch });
+                                                        setOpenCategoryCombobox(false);
+                                                    }}
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    Criar "{categorySearch}"
                                                 </Button>
                                             </div>
-
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center">
-                                                        <Input
-                                                            type="number"
-                                                            step="0.001"
-                                                            value={si.display_quantity}
-                                                            onChange={(e) => updateIngredientDisplayQuantity(index, parseFloat(e.target.value) || 0)}
-                                                            className="h-10 rounded-r-none border-r-0 text-center text-lg font-medium"
-                                                        />
-                                                        {getUnitOptions(si.unit).length > 1 ? (
-                                                            <Select
-                                                                value={si.display_unit}
-                                                                onValueChange={(val) => updateIngredientDisplayUnit(index, val)}
-                                                            >
-                                                                <SelectTrigger className="h-10 w-20 rounded-l-none border-l-0 bg-muted/50">
-                                                                    <SelectValue />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    {getUnitOptions(si.unit).map(u => (
-                                                                        <SelectItem key={u} value={u}>{u}</SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        ) : (
-                                                            <div className="h-10 w-16 flex items-center justify-center bg-muted/50 border border-l-0 rounded-r-md text-sm font-medium text-muted-foreground">
-                                                                {si.display_unit}
-                                                            </div>
+                                        </CommandEmpty>
+                                        <CommandGroup heading="Sugestões">
+                                            {CATEGORY_PRESETS.map((category) => (
+                                                <CommandItem
+                                                    key={category}
+                                                    value={category}
+                                                    onSelect={(currentValue) => {
+                                                        setFormData({ ...formData, category: currentValue === formData.category ? "" : currentValue })
+                                                        setOpenCategoryCombobox(false)
+                                                    }}
+                                                >
+                                                    <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4",
+                                                            formData.category === category ? "opacity-100" : "opacity-0"
                                                         )}
-                                                    </div>
-                                                </div>
-                                                <div className="text-right min-w-[30%]">
-                                                    <p className="text-xs text-muted-foreground">Custo</p>
-                                                    <p className="font-semibold">R$ {(si.cost * si.quantity).toFixed(2)}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </Card>
-                                ))}
+                                                    />
+                                                    {category}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="prep_time">Tempo de Preparo</Label>
+                            <div className="relative">
+                                <Input
+                                    id="prep_time"
+                                    type="number"
+                                    min="0"
+                                    value={formData.preparation_time_minutes}
+                                    onChange={(e) => setFormData({ ...formData, preparation_time_minutes: parseInt(e.target.value) || 0 })}
+                                    className="h-10 pr-10"
+                                />
+                                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">Min</span>
                             </div>
-                        )}
-
-                        {/* Add Buttons */}
-                        {/* Add Buttons */}
-                        <div className="flex gap-2">
-                            <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        className="h-12 flex-1 border-dashed border-2 hover:border-primary hover:bg-primary/5 text-muted-foreground hover:text-primary gap-2"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                        Adicionar Ingrediente
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[280px] p-0" align="start">
-                                    <Command>
-                                        <CommandInput placeholder="Buscar ingrediente..." />
-                                        <CommandList>
-                                            <CommandEmpty>Nenhum ingrediente encontrado.</CommandEmpty>
-                                            <CommandGroup>
-                                                {ingredients.map((ingredient) => (
-                                                    <CommandItem
-                                                        key={ingredient.id}
-                                                        value={ingredient.name}
-                                                        onSelect={() => addExistingIngredient(ingredient)}
-                                                    >
-                                                        <Check
-                                                            className={cn(
-                                                                "mr-2 h-4 w-4",
-                                                                selectedIngredients.some(si => si.ingredient_id === ingredient.id) ? "opacity-100" : "opacity-0"
-                                                            )}
-                                                        />
-                                                        {ingredient.name}
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Sticky Footer for Pricing and Action */}
-            <div className="shrink-0 border-t bg-background p-6 space-y-4">
-                <div className="flex items-center justify-between bg-muted/40 p-3 rounded-lg">
-                    <div>
-                        <p className="text-xs text-muted-foreground">Custo Total</p>
-                        <p className="font-bold text-lg">R$ {totalCost.toFixed(2)}</p>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Preço (Margem {margin.toFixed(0)}%)</p>
-                        <div className="flex items-center gap-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="hourly_rate">Valor da Hora (R$)</Label>
                             <Input
+                                id="hourly_rate"
                                 type="number"
-                                value={formData.selling_price}
-                                onChange={(e) => setFormData({ ...formData, selling_price: parseFloat(e.target.value) || 0 })}
-                                className="h-8 w-24 text-right font-bold bg-background"
+                                min="0"
+                                step="0.01"
+                                value={formData.hourly_rate}
+                                onChange={(e) => setFormData({ ...formData, hourly_rate: parseFloat(e.target.value) || 0 })}
+                                placeholder="0.00"
+                                className="h-10"
                             />
                         </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Imagem</Label>
+                            <label
+                                htmlFor="product-image"
+                                className="flex h-10 w-full cursor-pointer items-center justify-center rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                            >
+                                <span className="flex items-center gap-2 truncate">
+                                    {imagePreview ? (
+                                        <>
+                                            <img src={imagePreview} alt="Preview" className="h-6 w-6 rounded object-cover" />
+                                            <span className="text-muted-foreground">Alterar</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <ImageIcon className="h-4 w-4" />
+                                            <span>Adicionar Foto</span>
+                                        </>
+                                    )}
+                                </span>
+                                <input
+                                    type="file"
+                                    id="product-image"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageSelect}
+                                />
+                            </label>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* 2. Ingredients Section */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <Label className="text-base font-semibold">Ingredientes</Label>
+
+                    {/* Presets Menu */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button type="button" variant="outline" size="sm" className="h-8 gap-1">
+                                <Calculator className="w-3.5 h-3.5" />
+                                <span className="sr-only sm:not-sr-only">Carregar Modelo</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuItem onClick={clearForm} className="text-destructive">
+                                Limpar Tudo
+                            </DropdownMenuItem>
+                            {PRESET_PRODUCTS.map((preset) => (
+                                <DropdownMenuItem key={preset.name} onClick={() => loadProductPreset(preset.name)}>
+                                    {preset.name}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
-                <div className="flex gap-3">
-                    <Button type="button" variant="outline" onClick={resetForm} className="flex-1 h-12">
-                        Cancelar
-                    </Button>
-                    <Button type="submit" className="flex-[2] h-12 text-base" disabled={uploading}>
-                        {uploading ? 'Salvando...' : (productToEdit ? 'Salvar Alterações' : 'Criar Produto')}
-                    </Button>
+                {selectedIngredients.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl bg-muted/20 gap-3 text-center">
+                        <PackageCheck className="w-10 h-10 text-muted-foreground/50" />
+                        <div className="space-y-1">
+                            <p className="font-medium">Nenhum ingrediente</p>
+                            <p className="text-sm text-muted-foreground">Adicione ingredientes para calcular o custo.</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {selectedIngredients.map((si, index) => (
+                            <Card key={index} className="overflow-hidden border shadow-sm">
+                                <div className="p-3 flex flex-col gap-3">
+                                    <div className="flex items-center justify-between gap-2">
+                                        {/* Ingredient Selector on Mobile can be a modal or just text if locked. 
+                                            Currently implementation allows changing ingredient in place.
+                                            For simplicity in this overhaul, let's keep it robust.
+                                        */}
+                                        {si.is_virtual ? (
+                                            <div className="flex items-center gap-2 font-medium">
+                                                <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wide">Novo</span>
+                                                {si.name}
+                                            </div>
+                                        ) : (
+                                            <Select
+                                                value={si.ingredient_id}
+                                                onValueChange={(val) => {
+                                                    const newArr = [...selectedIngredients];
+                                                    const ing = ingredients.find(i => i.id === val);
+                                                    if (ing) {
+                                                        newArr[index] = {
+                                                            ...si,
+                                                            ingredient_id: ing.id,
+                                                            name: ing.name,
+                                                            unit: ing.unit,
+                                                            cost: ing.cost_per_unit
+                                                        };
+                                                        setSelectedIngredients(newArr);
+                                                    }
+                                                }}
+                                            >
+                                                <SelectTrigger className="h-8 flex-1">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {ingredients.map(i => (
+                                                        <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                            onClick={() => removeIngredient(index)}
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+
+                                    <div className="flex items-end justify-between gap-4">
+                                        <div className="flex-1 space-y-1">
+                                            <p className="text-xs text-muted-foreground">Quantidade</p>
+                                            <div className="flex">
+                                                <Input
+                                                    type="number"
+                                                    value={si.display_quantity || ''}
+                                                    onChange={(e) => updateIngredientQuantity(index, parseFloat(e.target.value) || 0)}
+                                                    className="h-10 rounded-r-none border-r-0"
+                                                />
+                                                {si.is_virtual ? (
+                                                    <Select
+                                                        value={si.display_unit}
+                                                        onValueChange={(val) => updateIngredientUnit(index, val)}
+                                                    >
+                                                        <SelectTrigger className="h-10 w-20 rounded-l-none bg-muted/50">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {getUnitOptions(si.unit).map(u => (
+                                                                <SelectItem key={u} value={u}>{u}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                ) : (
+                                                    <div className="h-10 w-16 flex items-center justify-center bg-muted/50 border border-l-0 rounded-r-md text-sm font-medium text-muted-foreground">
+                                                        {si.display_unit}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="text-right min-w-[30%]">
+                                            <p className="text-xs text-muted-foreground">Custo</p>
+                                            <p className="font-semibold">R$ {(si.cost * si.quantity).toFixed(2)}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                )}
+
+                {/* Add Buttons */}
+                <div className="flex gap-2">
+                    <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className="h-12 flex-1 border-dashed border-2 hover:border-primary hover:bg-primary/5 text-muted-foreground hover:text-primary gap-2"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Adicionar Ingrediente
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[280px] p-0" align="start">
+                            <Command>
+                                <CommandInput placeholder="Buscar ingrediente..." />
+                                <CommandList>
+                                    <CommandEmpty>Nenhum ingrediente encontrado.</CommandEmpty>
+                                    <CommandGroup>
+                                        {ingredients.map((ingredient) => (
+                                            <CommandItem
+                                                key={ingredient.id}
+                                                value={ingredient.name}
+                                                onSelect={() => addExistingIngredient(ingredient)}
+                                            >
+                                                <Check
+                                                    className={cn(
+                                                        "mr-2 h-4 w-4",
+                                                        selectedIngredients.some(si => si.ingredient_id === ingredient.id) ? "opacity-100" : "opacity-0"
+                                                    )}
+                                                />
+                                                {ingredient.name}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
                 </div>
             </div>
-        </form >
+        </div>
+    );
+
+    const PricingSummary = () => (
+        <div className="flex items-center justify-between bg-muted/40 p-3 rounded-lg mb-4">
+            <div>
+                <p className="text-xs text-muted-foreground">Custo Total</p>
+                <p className="font-bold text-lg">R$ {totalCost.toFixed(2)}</p>
+            </div>
+            <div className="text-right">
+                <p className="text-xs text-muted-foreground">Preço (Margem {margin.toFixed(0)}%)</p>
+                <div className="flex items-center gap-2">
+                    <Input
+                        type="number"
+                        value={formData.selling_price}
+                        onChange={(e) => setFormData({ ...formData, selling_price: parseFloat(e.target.value) || 0 })}
+                        className="h-8 w-24 text-right font-bold bg-background"
+                    />
+                </div>
+            </div>
+        </div>
     );
 
     if (isMobile) {
         return (
             <Drawer open={open} onOpenChange={onOpenChange}>
-                <DrawerContent className="h-[95vh]">
+                <DrawerContent className="max-h-[95vh]">
                     <DrawerHeader className="text-left">
                         <DrawerTitle>{productToEdit ? 'Editar Produto' : 'Novo Produto'}</DrawerTitle>
                     </DrawerHeader>
-                    <div className="px-4 h-full pb-4">
-                        {FormContent}
-                    </div>
+                    <ScrollArea className="h-full overflow-y-auto px-4">
+                        <form id="product-form" onSubmit={handleSubmit}>
+                            {FormFields}
+                        </form>
+                    </ScrollArea>
+                    <DrawerFooter className="pt-2 border-t bg-background z-50">
+                        <PricingSummary />
+                        <ActionButtons />
+                    </DrawerFooter>
                 </DrawerContent>
             </Drawer>
         );
@@ -907,12 +929,20 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-2xl h-[80vh] flex flex-col p-0 gap-0 overflow-hidden">
+            <DialogContent className="sm:max-w-2xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
                 <DialogHeader className="p-6 pb-2 shrink-0">
                     <DialogTitle>{productToEdit ? 'Editar Produto' : 'Novo Produto'}</DialogTitle>
                 </DialogHeader>
-                <div className="flex-1 min-h-0 overflow-hidden">
-                    {FormContent}
+                <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                    <ScrollArea className="flex-1">
+                        <form id="product-form" onSubmit={handleSubmit} className="px-6">
+                            {FormFields}
+                        </form>
+                    </ScrollArea>
+                    <div className="shrink-0 border-t bg-background p-6 space-y-4">
+                        <PricingSummary />
+                        <ActionButtons />
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

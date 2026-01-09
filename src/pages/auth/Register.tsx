@@ -34,6 +34,7 @@ const Register = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const { toast } = useToast();
 
     const handleGoogleLogin = async () => {
         try {
@@ -81,7 +82,7 @@ const Register = () => {
                 if (usePresets) {
                     await seedAccount();
                 }
-                // User requested redirect to login section instead of dashboard
+                toast({ title: 'Cadastro realizado com sucesso! Faça login para continuar.' });
                 navigate('/login');
             }
         } catch (err: unknown) {

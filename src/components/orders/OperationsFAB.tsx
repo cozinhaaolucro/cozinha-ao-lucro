@@ -114,7 +114,7 @@ const OperationsFAB = () => {
                 <SheetTrigger asChild>
                     <Button
                         size="lg"
-                        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl z-50 p-0 overflow-hidden group bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-105"
+                        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl z-[100] p-0 overflow-hidden group bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-105"
                     >
                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
                         <div className="relative flex flex-col items-center justify-center">

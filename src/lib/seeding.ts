@@ -10,10 +10,35 @@ export const seedAccount = async () => {
     for (const ing of PRESET_INGREDIENTS) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await createIngredient({ ...ing, stock_quantity: 0 } as any);
+
         if (data && !error) {
             ingredientMap.set(ing.name, data.id);
         } else {
-            console.error(`Failed to seed ingredient ${ing.name}:`, error);
+            // If failed, try to find existing to use its ID (Get or Create pattern)
+            // We need to fetch by name. valid strategy for seeding.
+            console.warn(`Could not create ${ing.name}, attempting to find existing...`);
+            // We don't have a direct "getByName" but we can list all or rely on error message. 
+            // Better to just fetch all ingredients once at start of seeding to match? 
+            // Or just fetch specific one? getIngredients returns all. 
+            // Let's rely on the fact that if we are seeding, it's a new account usually, 
+            // but if we are re-seeding or if 'createIngredient' is strict.
+        }
+    }
+
+    // Better approach: Fetch all ingredients FIRST, populating the map.
+    // Then create only missing ones.
+    const { data: existingIngredients } = await import('./database').then(m => m.getIngredients());
+    if (existingIngredients) {
+        existingIngredients.forEach(i => ingredientMap.set(i.name, i.id));
+    }
+
+    for (const ing of PRESET_INGREDIENTS) {
+        if (!ingredientMap.has(ing.name)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data, error } = await createIngredient({ ...ing, stock_quantity: 0 } as any);
+            if (data && !error) {
+                ingredientMap.set(ing.name, data.id);
+            }
         }
     }
 

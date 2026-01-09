@@ -415,9 +415,13 @@ const Pedidos = () => {
                         {Object.entries(STATUS_COLUMNS).map(([status, config]) => {
                             const count = filteredOrders.filter((o) => o.status === status).length;
                             return (
-                                <TabsTrigger key={status} value={status} className="text-xs px-1 h-10 flex flex-col items-center justify-center gap-0.5 sm:flex-row font-medium">
-                                    <span className="truncate w-full text-center">{config.label.split(' ')[0]}</span>
-                                    {count > 0 && <span className="bg-primary/10 text-primary rounded-full px-1.5 py-0.5 text-[10px] font-bold">{count}</span>}
+                                <TabsTrigger key={status} value={status} className="text-xs px-1 h-10 flex flex-row items-center justify-center gap-1 font-medium bg-muted/50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-1">
+                                    <span>{config.label.split(' ')[0]}</span>
+                                    {count > 0 && (
+                                        <span className="bg-primary/10 text-primary data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-full px-1.5 py-0.5 text-[10px] font-bold">
+                                            {count}
+                                        </span>
+                                    )}
                                 </TabsTrigger>
                             )
                         })}

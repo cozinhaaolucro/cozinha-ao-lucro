@@ -23,7 +23,7 @@ const Pedidos = lazy(() => import("./pages/app/Pedidos"));
 const Clientes = lazy(() => import("./pages/app/Clientes"));
 const Produtos = lazy(() => import("./pages/app/Produtos"));
 const Agenda = lazy(() => import("./pages/app/Agenda"));
-const ShoppingList = lazy(() => import("./pages/app/ShoppingList"));
+const SmartList = lazy(() => import("./pages/app/SmartList"));
 const PublicMenu = lazy(() => import("./pages/public/PublicMenu"));
 const Aprender = lazy(() => import("./pages/app/Aprender"));
 const Settings = lazy(() => import("./pages/app/Settings"));
@@ -80,7 +80,7 @@ const App = () => {
                     <Route path="clientes" element={<Clientes />} />
                     <Route path="produtos" element={<Produtos />} />
                     <Route path="agenda" element={<Agenda />} />
-                    <Route path="shopping-list" element={<ShoppingList />} />
+                    <Route path="smart-list" element={<SmartList />} />
                     <Route path="aprender" element={<Aprender />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="menu-config" element={<PublicMenuConfig />} />

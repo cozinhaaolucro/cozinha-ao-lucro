@@ -11,6 +11,17 @@ import { getCustomers, getProducts } from '@/lib/database';
 import { supabase } from '@/lib/supabase';
 import type { Customer, Product, OrderWithDetails, OrderStatus } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+} from "@/components/ui/drawer"
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type EditOrderDialogProps = {
     order: OrderWithDetails | null;
@@ -32,6 +43,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
     });
     const [items, setItems] = useState<Array<{ id?: string; product_id: string; product_name: string; quantity: number; unit_price: number }>>([]);
     const { toast } = useToast();
+    const isMobile = useIsMobile();
 
     useEffect(() => {
         if (open) {
@@ -222,6 +234,204 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
 
     if (!order) return null;
 
+    const FormFields = (
+        <div className="space-y-6 py-4">
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <Label htmlFor="customer">Cliente</Label>
+                    <Select value={formData.customer_id} onValueChange={(value) => setFormData({ ...formData, customer_id: value })}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Selecione ou deixe em branco" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {customers.map((c) => (
+                                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={formData.status} onValueChange={(value: string) => setFormData({ ...formData, status: value as OrderStatus })}>
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="pending">A Fazer</SelectItem>
+                            <SelectItem value="preparing">Em Produção</SelectItem>
+                            <SelectItem value="ready">Pronto</SelectItem>
+                            <SelectItem value="delivered">Entregue</SelectItem>
+                            <SelectItem value="cancelled">Cancelado</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            {/* Quick Status Updates */}
+            <div className="bg-muted/30 p-3 rounded-lg border space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Ações Rápidas (WhatsApp)</Label>
+                <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-green-700 border-green-200 bg-green-50 hover:bg-green-100" onClick={() => sendWhatsAppUpdate('confirm')}>
+                        <MessageCircle className="w-3.5 h-3.5" /> Confirmar
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100" onClick={() => sendWhatsAppUpdate('dispatch')}>
+                        <MessageCircle className="w-3.5 h-3.5" /> Saiu p/ Entrega
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-orange-700 border-orange-200 bg-orange-50 hover:bg-orange-100" onClick={() => sendWhatsAppUpdate('ready')}>
+                        <MessageCircle className="w-3.5 h-3.5" /> Pronto p/ Retirada
+                    </Button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <Label htmlFor="delivery_date">Data de Entrega</Label>
+                    <Input
+                        id="delivery_date"
+                        type="date"
+                        value={formData.delivery_date}
+                        onChange={(e) => setFormData({ ...formData, delivery_date: e.target.value })}
+                    />
+                </div>
+                <div>
+                    <Label htmlFor="delivery_time">Horário</Label>
+                    <Input
+                        id="delivery_time"
+                        type="time"
+                        value={formData.delivery_time}
+                        onChange={(e) => setFormData({ ...formData, delivery_time: e.target.value })}
+                    />
+                </div>
+            </div>
+            <div className="grid grid-cols-1">
+                <div className="space-y-2">
+                    <Label htmlFor="start_date">Data de Produção / Início</Label>
+                    <Input
+                        id="start_date"
+                        type="date"
+                        value={formData.start_date}
+                        onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                    />
+                    <p className="text-[10px] text-muted-foreground">Pedido aparecerá na fila "A Fazer" nesta data.</p>
+                </div>
+            </div>
+
+            <div>
+                <Label htmlFor="notes">Observações</Label>
+                <Textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                />
+            </div>
+
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <Label>Itens do Pedido</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={addItem} className="gap-2">
+                        <Plus className="w-4 h-4" />
+                        Adicionar Item
+                    </Button>
+                </div>
+
+                <div className="space-y-2">
+                    {items.map((item, index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 border rounded bg-background">
+                            <Select
+                                value={item.product_id}
+                                onValueChange={(value) => updateItem(index, 'product_id', value)}
+                            >
+                                <SelectTrigger className="flex-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {products.map((p) => (
+                                        <SelectItem key={p.id} value={p.id}>
+                                            {p.name} - R$ {(p.selling_price || 0).toFixed(2)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Input
+                                type="number"
+                                min="1"
+                                value={item.quantity}
+                                onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                                className="w-20"
+                            />
+                            <span className="text-sm font-medium w-24 text-right">
+                                R$ {(item.unit_price * item.quantity).toFixed(2)}
+                            </span>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeItem(index)}
+                            >
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    ))}
+                    {items.length > 0 && (
+                        <div className="flex justify-end font-bold text-lg pt-2 border-t">
+                            Total: R$ {calculateTotal().toFixed(2)}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+
+    const ActionButtons = () => (
+        <div className="space-y-4">
+            <div className="flex gap-2">
+                <Button type="submit" form="edit-order-form" className="flex-1 h-10">Salvar Alterações</Button>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-10">
+                    Cancelar
+                </Button>
+                {order.status !== 'cancelled' && (
+                    <Button type="button" variant="ghost" onClick={handleCancel} className="gap-2 text-destructive hover:bg-destructive/10 h-10">
+                        <Trash2 className="w-4 h-4" />
+                        Cancelar
+                    </Button>
+
+                )}
+            </div>
+            <div className="flex justify-end">
+                <Button type="button" variant="link" onClick={handleDelete} className="text-muted-foreground hover:text-destructive text-xs h-auto p-0">
+                    Excluir permanentemente
+                </Button>
+            </div>
+        </div>
+    );
+
+    if (isMobile) {
+        return (
+            <Drawer open={open} onOpenChange={onOpenChange}>
+                <DrawerContent className="max-h-[95vh]">
+                    <DrawerHeader>
+                        <DrawerTitle className="flex items-center justify-between">
+                            <span>Editar Pedido {order.display_id ? `#${String(order.display_id).padStart(4, '0')}` : ''}</span>
+                            <Badge variant={order.status === 'cancelled' ? 'destructive' : 'default'}>
+                                {order.status}
+                            </Badge>
+                        </DrawerTitle>
+                        <DrawerDescription>Edite as informações do pedido.</DrawerDescription>
+                    </DrawerHeader>
+                    <ScrollArea className="h-full overflow-y-auto px-4">
+                        <form id="edit-order-form" onSubmit={handleSubmit}>
+                            {FormFields}
+                        </form>
+                    </ScrollArea>
+                    <DrawerFooter className="pt-2 border-t bg-background z-50">
+                        <ActionButtons />
+                    </DrawerFooter>
+                </DrawerContent>
+            </Drawer>
+        )
+    }
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0 sm:overflow-hidden">
@@ -235,178 +445,16 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                 </DialogHeader>
 
                 <div className="flex-1 overflow-hidden flex flex-col">
-                    <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
-                        <div className="flex-1 overflow-y-auto px-6">
-                            <div className="space-y-6 py-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Label htmlFor="customer">Cliente</Label>
-                                        <Select value={formData.customer_id} onValueChange={(value) => setFormData({ ...formData, customer_id: value })}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Selecione ou deixe em branco" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {customers.map((c) => (
-                                                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div>
-                                        <Label htmlFor="status">Status</Label>
-                                        <Select value={formData.status} onValueChange={(value: string) => setFormData({ ...formData, status: value as OrderStatus })}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="pending">A Fazer</SelectItem>
-                                                <SelectItem value="preparing">Em Produção</SelectItem>
-                                                <SelectItem value="ready">Pronto</SelectItem>
-                                                <SelectItem value="delivered">Entregue</SelectItem>
-                                                <SelectItem value="cancelled">Cancelado</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                {/* Quick Status Updates */}
-                                <div className="bg-muted/30 p-3 rounded-lg border space-y-2">
-                                    <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Ações Rápidas (WhatsApp)</Label>
-                                    <div className="flex flex-wrap gap-2">
-                                        <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-green-700 border-green-200 bg-green-50 hover:bg-green-100" onClick={() => sendWhatsAppUpdate('confirm')}>
-                                            <MessageCircle className="w-3.5 h-3.5" /> Confirmar
-                                        </Button>
-                                        <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100" onClick={() => sendWhatsAppUpdate('dispatch')}>
-                                            <MessageCircle className="w-3.5 h-3.5" /> Saiu p/ Entrega
-                                        </Button>
-                                        <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-orange-700 border-orange-200 bg-orange-50 hover:bg-orange-100" onClick={() => sendWhatsAppUpdate('ready')}>
-                                            <MessageCircle className="w-3.5 h-3.5" /> Pronto p/ Retirada
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Label htmlFor="delivery_date">Data de Entrega</Label>
-                                        <Input
-                                            id="delivery_date"
-                                            type="date"
-                                            value={formData.delivery_date}
-                                            onChange={(e) => setFormData({ ...formData, delivery_date: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="delivery_time">Horário</Label>
-                                        <Input
-                                            id="delivery_time"
-                                            type="time"
-                                            value={formData.delivery_time}
-                                            onChange={(e) => setFormData({ ...formData, delivery_time: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="start_date">Data de Produção / Início</Label>
-                                        <Input
-                                            id="start_date"
-                                            type="date"
-                                            value={formData.start_date}
-                                            onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                                        />
-                                        <p className="text-[10px] text-muted-foreground">Pedido aparecerá na fila "A Fazer" nesta data.</p>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <Label htmlFor="notes">Observações</Label>
-                                    <Textarea
-                                        id="notes"
-                                        value={formData.notes}
-                                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <Label>Itens do Pedido</Label>
-                                        <Button type="button" variant="outline" size="sm" onClick={addItem} className="gap-2">
-                                            <Plus className="w-4 h-4" />
-                                            Adicionar Item
-                                        </Button>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        {items.map((item, index) => (
-                                            <div key={index} className="flex items-center gap-2 p-2 border rounded bg-background">
-                                                <Select
-                                                    value={item.product_id}
-                                                    onValueChange={(value) => updateItem(index, 'product_id', value)}
-                                                >
-                                                    <SelectTrigger className="flex-1">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {products.map((p) => (
-                                                            <SelectItem key={p.id} value={p.id}>
-                                                                {p.name} - R$ {(p.selling_price || 0).toFixed(2)}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <Input
-                                                    type="number"
-                                                    min="1"
-                                                    value={item.quantity}
-                                                    onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                                                    className="w-20"
-                                                />
-                                                <span className="text-sm font-medium w-24 text-right">
-                                                    R$ {(item.unit_price * item.quantity).toFixed(2)}
-                                                </span>
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => removeItem(index)}
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                        ))}
-                                        {items.length > 0 && (
-                                            <div className="flex justify-end font-bold text-lg pt-2 border-t">
-                                                Total: R$ {calculateTotal().toFixed(2)}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                    <ScrollArea className="flex-1">
+                        <form id="edit-order-form" onSubmit={handleSubmit}>
+                            <div className="px-6">
+                                {FormFields}
                             </div>
-                        </div>
-
-                        {/* Sticky Footer */}
-                        <div className="shrink-0 border-t bg-background p-6 space-y-4">
-                            <div className="flex gap-2">
-                                <Button type="submit" className="flex-1 h-10">Salvar Alterações</Button>
-                                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-10">
-                                    Cancelar
-                                </Button>
-                                {order.status !== 'cancelled' && (
-                                    <Button type="button" variant="ghost" onClick={handleCancel} className="gap-2 text-destructive hover:bg-destructive/10 h-10">
-                                        <Trash2 className="w-4 h-4" />
-                                        Cancelar
-                                    </Button>
-
-                                )}
-                            </div>
-                            <div className="flex justify-end">
-                                <Button type="button" variant="link" onClick={handleDelete} className="text-muted-foreground hover:text-destructive text-xs h-auto p-0">
-                                    Excluir permanentemente
-                                </Button>
-                            </div>
-                        </div>
-                    </form>
+                        </form>
+                    </ScrollArea>
+                    <div className="shrink-0 border-t bg-background p-6">
+                        <ActionButtons />
+                    </div>
                 </div>
             </DialogContent>
         </Dialog >
