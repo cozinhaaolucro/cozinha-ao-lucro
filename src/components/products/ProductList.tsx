@@ -1,15 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, TrendingUp, Pencil, Download, Trash2, Copy } from 'lucide-react';
-import { getProducts, deleteProduct, updateProduct, createProduct } from '@/lib/database';
-import { exportToExcel } from '@/lib/excel';
+import { getProducts, deleteProduct, updateProduct, createProduct, getIngredients } from '@/lib/database';
+import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
+import { PRESET_PRODUCTS } from '@/data/presets';
 import type { Product, Ingredient } from '@/types/database';
-// import EditProductDialog from './EditProductDialog'; // Removed
 import ProductBuilder from './ProductBuilder';
 import { useToast } from '@/hooks/use-toast';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Upload, Image as ImageIcon, FileSpreadsheet, FileText } from 'lucide-react';
 
 type ProductWithIngredients = Product & {
     product_ingredients: Array<{
@@ -22,7 +31,9 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     const [products, setProducts] = useState<ProductWithIngredients[]>([]);
     const [editingProduct, setEditingProduct] = useState<ProductWithIngredients | null>(null);
     const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+
     const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const loadProducts = async () => {
         const { data, error } = await getProducts();
@@ -115,8 +126,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
         }
     };
 
-    const handleExport = () => {
-        // ... existing export logic ...
+    const handleExport = (format: 'excel' | 'csv') => {
         const dataToExport = products.map(p => {
             const totalCost = calculateTotalCost(p);
             const profit = (p.selling_price || 0) - totalCost;
@@ -129,7 +139,126 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                 'Ingredientes': p.product_ingredients.map(pi => `${pi.ingredient.name} (${pi.quantity}${pi.ingredient.unit})`).join(', ')
             };
         });
-        exportToExcel(dataToExport, 'produtos_cozinha_ao_lucro');
+
+        if (format === 'excel') {
+            exportToExcel(dataToExport, 'produtos_cozinha_ao_lucro');
+        } else {
+            exportToCSV(dataToExport, 'produtos_cozinha_ao_lucro');
+        }
+    };
+
+    const handleFixImages = async () => {
+        const productsWithoutImage = products.filter(p => !p.image_url);
+        if (productsWithoutImage.length === 0) {
+            toast({ title: 'Todos os produtos já possuem imagem.' });
+            return;
+        }
+
+        let updatedCount = 0;
+        for (const product of productsWithoutImage) {
+            // Find a matching preset based on name similarity or exact match
+            const preset = PRESET_PRODUCTS.find(p =>
+                p.name.toLowerCase() === product.name.toLowerCase() ||
+                product.name.toLowerCase().includes(p.name.toLowerCase()) ||
+                p.name.toLowerCase().includes(product.name.toLowerCase())
+            );
+
+            if (preset && preset.image_url) {
+                const { error } = await updateProduct(product.id, { image_url: preset.image_url }, null);
+                if (!error) updatedCount++;
+            }
+        }
+
+        if (updatedCount > 0) {
+            toast({ title: `${updatedCount} imagens recuperadas de produtos padrão.` });
+            loadProducts();
+        } else {
+            toast({ title: 'Não foi possível encontrar imagens compatíveis nos produtos padrão.' });
+        }
+    };
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            const data = await importFromExcel(file);
+            const { data: allIngredients } = await getIngredients(); // Pre-load ingredients
+
+            let importedCount = 0;
+            let errorCount = 0;
+
+            for (const row of data) {
+                // Basic validation and mapping
+                const name = row['Nome'] || row['name'] || row['Name'];
+                if (!name) continue;
+
+                // Parse Ingredients if present
+                // Format matches export: "Leite (2litro), Ovo (12unidade)"
+                const ingredientsPayload: any[] = [];
+                const ingredientsStr = row['Ingredientes'] || row['ingredients'] || '';
+
+                if (ingredientsStr && allIngredients) {
+                    const parts = ingredientsStr.split(',').map((s: string) => s.trim());
+                    for (const part of parts) {
+                        try {
+                            // Regex to capture Name and Quantity+Unit inside parens
+                            // Example: "Leite Condensado (2kg)" -> Name: "Leite Condensado", QtyUnit: "2kg"
+                            // We need to be careful with regex.
+                            // Let's try matching the last parenthesis group
+                            const match = part.match(/^(.*)\s\(([\d\.]+)(.*)\)$/);
+                            if (match) {
+                                const iName = match[1].trim();
+                                const qty = parseFloat(match[2]);
+                                // unit is match[3] but we rely on the ingredient's default unit usually, 
+                                // or we can check if it matches. For now, we trust the ingredient name mapping.
+
+                                const ingredient = allIngredients.find(i => i.name.toLowerCase() === iName.toLowerCase());
+                                if (ingredient) {
+                                    ingredientsPayload.push({
+                                        ingredient_id: ingredient.id,
+                                        quantity: qty
+                                    });
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("Failed to parse ingredient part:", part);
+                        }
+                    }
+                }
+
+                const productData = {
+                    name: name,
+                    description: row['Descrição'] || row['description'] || row['Description'] || '',
+                    selling_price: parseFloat(row['Preço Venda'] || row['selling_price'] || row['Price'] || '0'),
+                    preparation_time_minutes: 30, // Default
+                    active: true,
+                    image_url: null
+                };
+
+                const { error } = await createProduct(productData, ingredientsPayload);
+                if (error) {
+                    console.error("Error importing row", row, error);
+                    errorCount++;
+                } else {
+                    importedCount++;
+                }
+            }
+
+            toast({
+                title: 'Importação concluída',
+                description: `${importedCount} produtos importados. ${errorCount} erros.`,
+                variant: errorCount > 0 ? 'destructive' : 'default'
+            });
+            loadProducts();
+
+        } catch (error) {
+            console.error("Import error", error);
+            toast({ title: 'Erro ao ler arquivo Excel', variant: 'destructive' });
+        }
+
+        // Reset input
+        e.target.value = '';
     };
 
     return (
@@ -170,9 +299,59 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                 </div>
 
                 <div className="flex gap-2 ml-auto">
-                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={handleExport} title="Exportar Excel">
-                        <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="hidden sm:flex gap-2">
+                                <Download className="w-4 h-4" />
+                                Exportar
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Formato</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleExport('excel')}>
+                                <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (.xlsx)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExport('csv')}>
+                                <FileText className="w-4 h-4 mr-2" /> CSV (.csv)
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Mobile Export Icon Only */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon" className="flex sm:hidden h-8 w-8">
+                                <Download className="w-3 h-3" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleExport('excel')}>Excel</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExport('csv')}>CSV</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".xlsx, .xls"
+                        className="hidden"
+                        onChange={handleImport}
+                    />
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 sm:h-9 sm:w-9"
+                        title="Importar Excel"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
+
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={handleFixImages} title="Corrigir Imagens">
+                        <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                    </Button>
+
                     <Button className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-4" onClick={onNewProduct}>
                         <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="hidden xs:inline">Novo</span> Produto
@@ -335,7 +514,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                     setEditingProduct(null);
                 }}
             />
-        </div >
+        </div>
     );
 };
 

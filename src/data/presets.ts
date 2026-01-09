@@ -37,7 +37,7 @@ export const PRESET_PRODUCTS = [
         description: 'Receita completa para um cento de festa (aprox. 50 unidades de 12g).',
         selling_price: 120.00, // ~R$ 2.40/unidade se vendida solta, mas aqui é o cento/batch
         active: true,
-        image_url: 'https://images.unsplash.com/photo-1579372786145-39934c287905?w=800&q=80',
+        image_url: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=800&q=80',
         ingredients: [
             { name: 'Leite Condensado', quantity: 0.395 }, // 1 lata (395g)
             { name: 'Creme de Leite', quantity: 0.200 }, // 1 caixa (200g)
@@ -121,7 +121,7 @@ export const PRESET_PRODUCTS = [
         description: 'Receita para produção de 30 trufas médias (~40g cada).',
         selling_price: 90.00, // ~R$ 3.00/unidade nesse lote
         active: true,
-        image_url: 'https://images.unsplash.com/photo-1605692676830-f6d9004d6325?w=800&q=80',
+        image_url: 'https://images.unsplash.com/photo-1510323334810-67df768f56fa?w=800&q=80',
         ingredients: [
             { name: 'Chocolate Nobre Barra', quantity: 0.500 }, // 500g (casca + ganache)
             { name: 'Creme de Leite', quantity: 0.200 }, // 200g (ganache)

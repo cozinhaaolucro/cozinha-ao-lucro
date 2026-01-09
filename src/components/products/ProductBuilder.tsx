@@ -12,14 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-    Drawer,
-    DrawerContent,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerFooter,
-    DrawerClose
-} from '@/components/ui/drawer';
+
 import {
     DropdownMenu,
     DropdownMenuContent,

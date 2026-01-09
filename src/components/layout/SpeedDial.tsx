@@ -31,7 +31,7 @@ export const SpeedDial = ({ onNewOrder, onNewClient, onNewProduct, onNewIngredie
     };
 
     return (
-        <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end gap-2 md:bottom-8 md:right-8">
+        <div className="fixed bottom-20 right-4 z-40 flex flex-col items-end gap-2 md:bottom-8 md:right-8">
             <AnimatePresence>
                 {open && (
                     <div className="flex flex-col items-end gap-3 mb-2">

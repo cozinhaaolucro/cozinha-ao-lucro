@@ -289,7 +289,7 @@ const DashboardLayout = () => {
             </aside>
 
             {/* Mobile Header */}
-            <header className="md:hidden h-16 border-b bg-card flex items-center justify-between px-4 sticky top-0 z-50">
+            <header className="md:hidden h-16 border-b bg-card flex items-center justify-between px-4 sticky top-0 z-30">
                 <div className="flex items-center gap-3">
                     <UserAvatar size="sm" clickable />
                     <span className="font-bold text-lg">{firstName}</span>
@@ -346,7 +346,7 @@ const DashboardLayout = () => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 animate-in fade-in-0 duration-300 relative h-full">
+            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-40 md:pb-8 animate-in fade-in-0 duration-300 relative h-full">
                 <div className="hidden md:flex absolute top-6 right-8 z-10">
                     <NotificationBell />
                 </div>
@@ -400,7 +400,7 @@ const DashboardLayout = () => {
 
 
             {/* Mobile Bottom Nav */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t h-16 flex items-center justify-around z-50 px-2">
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t h-16 flex items-center justify-around z-30 px-2">
                 {navItems.slice(0, 5).map((item) => (
                     <Link
                         key={item.path}

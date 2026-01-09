@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Added Tabs
 import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2, PackageCheck, ChevronRight } from 'lucide-react';
-import { getOrders, deductStockFromOrder, updateOrderStatus, deleteOrder } from '@/lib/database'; // Added updateOrderStatus, deleteOrder
+import { getOrders, deductStockFromOrder, updateOrderStatus, deleteOrder, createOrder, createCustomer, getProducts, getCustomers } from '@/lib/database'; // Added createOrder, createCustomer, getProducts, getCustomers
 import { exportToExcel, importFromExcel } from '@/lib/excel';
 import { supabase } from '@/lib/supabase';
 import type { OrderWithDetails } from '@/types/database';
@@ -357,7 +357,115 @@ const Pedidos = () => {
                             onChange={async (e) => {
                                 const file = e.target.files?.[0];
                                 if (!file) return;
-                                toast({ title: 'Importação', description: 'Em breve: Importação inteligente de pedidos.' });
+
+                                try {
+                                    const data: any[] = await importFromExcel(file);
+
+                                    // Pre-load data for lookups
+                                    const { data: existingCustomers } = await getCustomers();
+                                    const { data: existingProducts } = await getProducts();
+
+                                    let successCount = 0;
+                                    let errorCount = 0;
+
+                                    for (const row of data) {
+                                        // 1. Resolve Customer
+                                        const customerName = getValue(row, ['Cliente', 'name', 'Customer', 'cliente', 'Nome']);
+                                        if (!customerName || customerName === 'Não informado') continue;
+
+                                        let customerId = existingCustomers?.find(c => c.name.toLowerCase() === customerName.toLowerCase())?.id;
+
+                                        if (!customerId) {
+                                            // Create new customer if not found
+                                            const { data: newCust, error: custError } = await createCustomer({
+                                                name: customerName,
+                                                email: null,
+                                                phone: null,
+                                                address: null,
+                                                notes: null
+                                            });
+                                            if (newCust && !custError) {
+                                                customerId = newCust.id;
+                                                // Update local cache
+                                                existingCustomers?.push(newCust);
+                                            } else {
+                                                console.error("Failed to create customer", customerName);
+                                                errorCount++;
+                                                continue;
+                                            }
+                                        }
+
+                                        // 2. Parse Status
+                                        const statusLabel = getValue(row, ['Status', 'status', 'Estado', 'Situacao']);
+                                        const statusKey = Object.keys(STATUS_COLUMNS).find(key =>
+                                            STATUS_COLUMNS[key as keyof typeof STATUS_COLUMNS].label === statusLabel ||
+                                            key === statusLabel?.toLowerCase()
+                                        ) || 'pending';
+
+                                        // 3. Parse Items
+                                        const itemsString = getValue(row, ['Items', 'items', 'Itens', 'Produtos', 'products']) || '';
+                                        const items: any[] = [];
+
+                                        if (itemsString) {
+                                            // Format: "Product A (2), Product B (1)"
+                                            const itemParts = itemsString.split(',').map((s: string) => s.trim());
+
+                                            for (const part of itemParts) {
+                                                // Robust regex for "Name (Qty)" or just "Name"
+                                                const match = part.match(/^(.*)\s\((\d+)\)$/);
+                                                const pName = match ? match[1].trim() : part;
+                                                const qty = match ? parseInt(match[2]) : 1;
+
+                                                const product = existingProducts?.find(p => p.name.toLowerCase() === pName.toLowerCase());
+
+                                                if (product) {
+                                                    items.push({
+                                                        product_id: product.id,
+                                                        product_name: product.name,
+                                                        quantity: qty,
+                                                        unit_price: product.selling_price,
+                                                        subtotal: product.selling_price * qty
+                                                    });
+                                                }
+                                            }
+                                        }
+
+                                        // 4. Create Order
+                                        const deliveryDateVal = getValue(row, ['Data Entrega', 'delivery_date', 'Data', 'Date', 'Entrega']);
+                                        const deliveryDate = deliveryDateVal ? new Date(deliveryDateVal).toISOString() : null;
+
+                                        const orderData = {
+                                            customer_id: customerId,
+                                            status: statusKey as OrderStatus,
+                                            delivery_date: deliveryDate,
+                                            delivery_time: null,
+                                            total_value: items.reduce((acc, item) => acc + item.subtotal, 0),
+                                            notes: 'Importado via Excel',
+                                            order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}` // Simple random ID
+                                        };
+
+                                        if (items.length > 0) {
+                                            const { error } = await createOrder(orderData, items);
+                                            if (!error) successCount++;
+                                            else errorCount++;
+                                        } else {
+                                            console.warn("Skipping order with no valid items");
+                                            errorCount++;
+                                        }
+                                    }
+
+                                    toast({
+                                        title: 'Importação Concluída',
+                                        description: `${successCount} pedidos criados. ${errorCount} erros/ignorados.`,
+                                        variant: successCount > 0 ? 'default' : 'destructive'
+                                    });
+                                    loadOrders();
+
+                                } catch (err) {
+                                    console.error("Import error", err);
+                                    toast({ title: 'Erro na importação', description: 'Falha ao ler arquivo', variant: 'destructive' });
+                                }
+
                                 e.target.value = '';
                             }}
                         />
