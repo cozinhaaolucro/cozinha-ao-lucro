@@ -87,6 +87,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         selling_price: 0,
         category: '',
         preparation_time_minutes: 0,
+        hourly_rate: 0,
         is_highlight: false
     });
     const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
@@ -116,6 +117,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     selling_price: productToEdit.selling_price || 0,
                     category: productToEdit.category || '',
                     preparation_time_minutes: productToEdit.preparation_time_minutes || 0,
+                    hourly_rate: productToEdit.hourly_rate || 0,
                     is_highlight: productToEdit.is_highlight || false,
                 });
                 setImagePreview(productToEdit.image_url || null);
@@ -148,6 +150,11 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
     };
 
     const addExistingIngredient = (ingredient: Ingredient) => {
+        if (selectedIngredients.some(si => si.ingredient_id === ingredient.id)) {
+            toast({ title: 'Ingrediente já adicionado!', variant: 'destructive' });
+            return;
+        }
+
         setSelectedIngredients([
             ...selectedIngredients,
             {
@@ -265,9 +272,12 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
     };
 
     const calculateTotalCost = () => {
-        return selectedIngredients.reduce((total, si) => {
+        const ingredientsCost = selectedIngredients.reduce((total, si) => {
             return total + (si.cost * si.quantity);
         }, 0);
+
+        const laborCost = (formData.preparation_time_minutes / 60) * formData.hourly_rate;
+        return ingredientsCost + laborCost;
     };
 
     const calculateMargin = () => {
@@ -367,6 +377,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     ...(imageUrl ? { image_url: imageUrl } : {}),
                     category: formData.category || null,
                     preparation_time_minutes: formData.preparation_time_minutes,
+                    hourly_rate: formData.hourly_rate,
                     is_highlight: formData.is_highlight,
                 },
                 // For update, we pass ingredients to be replaced
@@ -395,6 +406,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     image_url: imageUrl,
                     category: formData.category || null,
                     preparation_time_minutes: formData.preparation_time_minutes,
+                    hourly_rate: formData.hourly_rate,
                     is_highlight: formData.is_highlight,
                 },
                 finalIngredients
@@ -413,7 +425,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
     };
 
     const resetFields = () => {
-        setFormData({ name: '', description: '', selling_price: 0, category: '', preparation_time_minutes: 0, is_highlight: false });
+        setFormData({ name: '', description: '', selling_price: 0, category: '', preparation_time_minutes: 0, hourly_rate: 0, is_highlight: false });
         setSelectedIngredients([]);
         setImageFile(null);
         setImagePreview(null);
@@ -425,7 +437,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
     };
 
     const clearForm = () => {
-        setFormData({ name: '', description: '', selling_price: 0, category: '', preparation_time_minutes: 0, is_highlight: false });
+        setFormData({ name: '', description: '', selling_price: 0, category: '', preparation_time_minutes: 0, hourly_rate: 0, is_highlight: false });
         setSelectedIngredients([]);
         setImageFile(null);
         setImagePreview(null);
@@ -447,6 +459,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
             selling_price: preset.selling_price,
             category: 'Lanches', // Default preset category
             preparation_time_minutes: 0,
+            hourly_rate: 0,
             is_highlight: false
         });
 
@@ -636,6 +649,21 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                                         <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">Min</span>
                                     </div>
                                 </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="hourly_rate">Valor da Hora (R$)</Label>
+                                    <Input
+                                        id="hourly_rate"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={formData.hourly_rate}
+                                        onChange={(e) => setFormData({ ...formData, hourly_rate: parseFloat(e.target.value) || 0 })}
+                                        placeholder="0.00"
+                                        className="h-10"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Imagem</Label>
                                     <label

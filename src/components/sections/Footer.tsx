@@ -2,7 +2,7 @@ import { Instagram, Facebook, Youtube } from 'lucide-react';
 
 const Footer = () => {
     return (
-        <footer className="bg-footer text-footer-foreground pb-6 pt-8 relative mt-12">
+        <footer className="bg-footer text-footer-foreground pb-6 pt-8 relative mt-4">
             {/* Top Separator */}
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
 
@@ -17,7 +17,7 @@ const Footer = () => {
                     <img
                         src="/images/logo-full.png"
                         alt="Cozinha ao Lucro"
-                        className="h-64 w-auto -mt-32 mb-2"
+                        className="h-40 w-auto -mt-20 mb-2"
                     />
 
                     <p className="text-primary-foreground/90 text-sm mb-4 max-w-md mx-auto leading-relaxed">

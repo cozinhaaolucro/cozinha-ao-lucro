@@ -106,6 +106,16 @@ const Pedidos = () => {
 
     const filteredOrders = orders.filter((order) => {
         if (order.status === 'cancelled') return false;
+
+        // Scheduling Logic: Hide future pending orders from "To Do" unless explicitly filtered
+        if (order.status === 'pending' && order.start_date && !dateFilter.start && !dateFilter.end) {
+            const startDate = parseLocalDate(order.start_date);
+            startDate.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (startDate > today) return false;
+        }
+
         if (!dateFilter.start && !dateFilter.end) return true;
 
         if (!order.delivery_date) return false;
@@ -405,9 +415,9 @@ const Pedidos = () => {
                         {Object.entries(STATUS_COLUMNS).map(([status, config]) => {
                             const count = filteredOrders.filter((o) => o.status === status).length;
                             return (
-                                <TabsTrigger key={status} value={status} className="text-[10px] px-1 h-9 flex flex-col items-center justify-center gap-0.5 sm:flex-row">
+                                <TabsTrigger key={status} value={status} className="text-xs px-1 h-10 flex flex-col items-center justify-center gap-0.5 sm:flex-row font-medium">
                                     <span className="truncate w-full text-center">{config.label.split(' ')[0]}</span>
-                                    {count > 0 && <span className="bg-primary/10 text-primary rounded-full px-1 py-0 text-[9px] font-bold">{count}</span>}
+                                    {count > 0 && <span className="bg-primary/10 text-primary rounded-full px-1.5 py-0.5 text-[10px] font-bold">{count}</span>}
                                 </TabsTrigger>
                             )
                         })}

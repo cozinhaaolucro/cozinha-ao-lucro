@@ -18,7 +18,8 @@ import {
     ShoppingCart,
     Monitor,
     Search,
-    Command
+    Command,
+    Store
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -154,11 +155,11 @@ const DashboardLayout = () => {
 
     const navItems = [
         { path: '/app/dashboard', label: 'Visão Geral', shortLabel: 'Visão', icon: LayoutDashboard, id: 'nav-dashboard' },
-        { path: '/app/painel', label: 'Painel de Operações', shortLabel: 'Painel', icon: Monitor, id: 'nav-painel' },
         { path: '/app/pedidos', label: 'Pedidos', shortLabel: 'Pedidos', icon: ShoppingBag, id: 'nav-pedidos' },
         { path: '/app/clientes', label: 'Clientes', shortLabel: 'Clientes', icon: Users, id: 'nav-clientes' },
         { path: '/app/produtos', label: 'Produtos', shortLabel: 'Produtos', icon: ShoppingBag, id: 'nav-produtos' },
         { path: '/app/agenda', label: 'Agenda', shortLabel: 'Agenda', icon: Calendar, id: 'nav-agenda' },
+        { path: '/app/menu-config', label: 'Cardápio Digital', shortLabel: 'Cardápio', icon: Store, id: 'nav-public-menu' },
         { path: '/app/aprender', label: 'Aprender', shortLabel: 'Aprender', icon: BookOpen, id: 'nav-aprender' },
         { path: '/app/settings', label: 'Configurações', shortLabel: 'Config', icon: Settings, id: 'nav-settings' },
     ];

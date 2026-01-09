@@ -534,7 +534,17 @@ const Dashboard = () => {
                                         topProfitableProducts.map((p, idx) => (
                                             <div key={idx} className="flex items-center justify-between border-b pb-2">
                                                 <div className="flex items-center gap-2">
-                                                    <Badge variant="outline" className="font-bold">{idx + 1}º</Badge>
+                                                    {products.find(prod => prod.name === p.name)?.image_url ? (
+                                                        <div className="w-8 h-8 rounded overflow-hidden bg-muted">
+                                                            <img
+                                                                src={products.find(prod => prod.name === p.name)?.image_url}
+                                                                alt={p.name}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <Badge variant="outline" className="font-bold">{idx + 1}º</Badge>
+                                                    )}
                                                     <div>
                                                         <p className="font-medium text-sm">{p.name}</p>
                                                         <p className="text-xs text-muted-foreground">

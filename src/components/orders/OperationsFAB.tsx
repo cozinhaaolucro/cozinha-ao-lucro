@@ -1,72 +1,63 @@
-
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ChefHat, ShoppingBag, ArrowRight, Pause, CheckCircle, Flame, Clock, Play } from 'lucide-react';
-import { getOrders, updateOrderStatus } from '@/lib/database';
-import type { OrderWithDetails } from '@/types/database';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent } from '@/components/ui/card';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ChefHat, Clock, Play, Pause, CheckCircle, Flame, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { OrderWithDetails } from '@/types/database';
+import { getOrders, updateOrderStatus } from '@/lib/database';
+import { format, differenceInMinutes } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
 
-const ProductionStatusWidget = () => {
-    const [isHovered, setIsHovered] = useState(false);
+const OperationsFAB = () => {
+    const [open, setOpen] = useState(false);
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
-    const [activeOrders, setActiveOrders] = useState<OrderWithDetails[]>([]);
-    const [pendingCount, setPendingCount] = useState(0);
-    const [visible, setVisible] = useState(false);
-    const [sheetOpen, setSheetOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    // Fetch and subscribe
+    // Fetch orders on mount and when open
     useEffect(() => {
-        fetchData();
+        if (open) {
+            fetchOrders();
+        }
 
+        // Real-time subscription
         const subscription = supabase
-            .channel('production_widget_orders')
+            .channel('operations_orders')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-                fetchData();
+                fetchOrders();
             })
             .subscribe();
 
         return () => {
             subscription.unsubscribe();
         };
-    }, []);
+    }, [open]);
 
-    const fetchData = async () => {
+    const fetchOrders = async () => {
+        setLoading(true);
         const { data } = await getOrders();
         if (data) {
-            setOrders(data);
-            const preparing = data.filter(o => o.status === 'preparing');
-
-            // Pending Logic considering Start Date
+            // Filter only relevant orders (pending, preparing, ready)
+            // And also check start_date for pending orders
             const today = new Date().toISOString().split('T')[0];
-            const pending = data.filter(o => {
-                if (o.status !== 'pending') return false;
-                if (o.start_date && o.start_date > today) return false;
+
+            const activeOrders = data.filter(o => {
+                if (['cancelled', 'delivered'].includes(o.status)) return false;
+
+                // If pending, check start_date
+                if (o.status === 'pending') {
+                    if (o.start_date && o.start_date > today) return false; // Future orders
+                    // If no start_date, show it (as asap) or maybe hiding? Assuming show.
+                }
                 return true;
             });
-
-            setActiveOrders(preparing);
-            setPendingCount(pending.length);
-            setVisible(preparing.length > 0 || pending.length > 0);
+            setOrders(activeOrders);
         }
+        setLoading(false);
     };
-
-    // Derived lists for Sheet
-    const todoOrders = orders.filter(o => {
-        if (o.status !== 'pending') return false;
-        const today = new Date().toISOString().split('T')[0];
-        if (o.start_date && o.start_date > today) return false;
-        return true;
-    });
-    const inProgressOrders = orders.filter(o => o.status === 'preparing');
-    const readyOrders = orders.filter(o => o.status === 'ready');
-
 
     const handleStatusUpdate = async (orderId: string, newStatus: string, currentStatus: string) => {
         const { error } = await updateOrderStatus(orderId, newStatus, currentStatus);
@@ -75,22 +66,16 @@ const ProductionStatusWidget = () => {
             toast.error('Erro ao atualizar status');
         } else {
             toast.success('Status atualizado!');
-            fetchData();
+            fetchOrders();
         }
     };
 
-    // Hover logic
-    const hoverTimeout = useState<NodeJS.Timeout | null>(null);
-    const handleMouseEnter = () => {
-        if (hoverTimeout[0]) clearTimeout(hoverTimeout[0]);
-        if (!sheetOpen) hoverTimeout[1](setTimeout(() => setIsHovered(true), 150));
-    };
-    const handleMouseLeave = () => {
-        if (hoverTimeout[0]) clearTimeout(hoverTimeout[0]);
-        hoverTimeout[1](setTimeout(() => setIsHovered(false), 300));
-    };
+    // Derived lists
+    const todoOrders = orders.filter(o => o.status === 'pending');
+    const inProgressOrders = orders.filter(o => o.status === 'preparing');
+    const readyOrders = orders.filter(o => o.status === 'ready');
 
-    // Timer Component
+    // Timer Component for In Progress
     const ProductionTimer = ({ startDate }: { startDate?: string | null }) => {
         const [elapsed, setElapsed] = useState(0);
 
@@ -101,8 +86,9 @@ const ProductionStatusWidget = () => {
             const timer = setInterval(() => {
                 const now = new Date().getTime();
                 setElapsed(Math.floor((now - start) / 1000 / 60)); // minutes
-            }, 60000);
+            }, 60000); // update every minute
 
+            // Initial set
             const now = new Date().getTime();
             setElapsed(Math.floor((now - start) / 1000 / 60));
 
@@ -110,110 +96,38 @@ const ProductionStatusWidget = () => {
         }, [startDate]);
 
         return (
-            <div className="flex items-center gap-1 text-orange-500 font-mono font-bold text-sm">
-                <Flame className="w-3 h-3 animate-pulse" />
+            <div className="flex items-center gap-1 text-orange-500 font-mono font-bold">
+                <Flame className="w-4 h-4 animate-pulse" />
                 {elapsed} min
             </div>
         );
     };
 
-    // Stats for widget display
-    const totalEstimatedTime = activeOrders.reduce((acc, order) => {
-        const orderPrepTime = order.items.reduce((iAcc, item) => iAcc + (item.product?.preparation_time_minutes || 0) * item.quantity, 0);
-        return acc + orderPrepTime;
-    }, 0);
+    // Calculate total items
+    const totalActive = todoOrders.length + inProgressOrders.length + readyOrders.length;
 
-    const formatHours = (minutes: number) => {
-        const h = Math.floor(minutes / 60);
-        const m = minutes % 60;
-        return `${h}h ${m}m`;
-    };
+    if (totalActive === 0 && !open) return null; // Hide if nothing to do? Or show empty state? Better show always or bubble?
 
     return (
         <>
-            <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-40 md:left-auto md:top-auto md:bottom-24 md:right-6 md:translate-x-0 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                <motion.div
-                    layout
-                    initial={{ width: 60, height: 60, borderRadius: 30 }}
-                    animate={{
-                        width: isHovered && !sheetOpen ? 300 : (activeOrders.length > 0 ? 70 : 60),
-                        height: isHovered && !sheetOpen ? 400 : (activeOrders.length > 0 ? 70 : 60),
-                        borderRadius: isHovered && !sheetOpen ? 16 : 35,
-                    }}
-                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    className={`bg-neutral-900 border border-neutral-800 shadow-2xl overflow-hidden relative cursor-pointer`}
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => {
-                        if (!isHovered) setIsHovered(true);
-                    }}
-                >
-                    {/* Collapsed State */}
-                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-blue-500 blur-lg opacity-10"></div>
-                            <div className="bg-gradient-to-br from-blue-600 to-purple-600 w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-blue-900/20 relative z-10 p-0">
-                                <ChefHat className="text-white w-6 h-6" />
-                                {activeOrders.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-neutral-900">
-                                        {activeOrders.length}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Expanded Widget State (Mini View) */}
-                    <div className={`p-4 h-full flex flex-col transition-opacity duration-300 ${isHovered && !sheetOpen ? 'opacity-100 delay-100' : 'opacity-0 pointer-events-none'}`}>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-white font-bold text-base flex items-center gap-2">
-                                <ChefHat className="text-blue-400 w-4 h-4" />
-                                Produção
-                            </h3>
-                            <div className="text-[10px] text-neutral-400 bg-neutral-800 px-2 py-0.5 rounded">
-                                {formatHours(totalEstimatedTime)} est.
-                            </div>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                            {activeOrders.length > 0 ? (
-                                activeOrders.slice(0, 3).map(order => (
-                                    <div key={order.id} className="bg-neutral-800/40 p-2 rounded border border-white/5">
-                                        <div className="flex justify-between items-center text-xs text-white mb-1">
-                                            <span className="font-bold">#{order.order_number || order.id.slice(0, 4)}</span>
-                                            <ProductionTimer startDate={order.production_started_at} />
-                                        </div>
-                                        <p className="text-[10px] text-neutral-400 truncate">{order.items?.map(i => i.product_name).join(', ')}</p>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="text-center text-neutral-500 text-xs py-4">Sem pedidos ativos</div>
-                            )}
-                            {pendingCount > 0 && (
-                                <div className="text-xs text-center text-neutral-400 border-t border-neutral-800 pt-2">
-                                    + {pendingCount} na fila
-                                </div>
+            <Sheet open={open} onOpenChange={setOpen}>
+                <SheetTrigger asChild>
+                    <Button
+                        size="lg"
+                        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl z-50 p-0 overflow-hidden group bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-105"
+                    >
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                        <div className="relative flex flex-col items-center justify-center">
+                            <ChefHat className="w-8 h-8" />
+                            {totalActive > 0 && (
+                                <Badge className="absolute -top-1 -right-1 h-6 w-6 rounded-full p-0 flex items-center justify-center bg-red-500 border-2 border-white">
+                                    {totalActive}
+                                </Badge>
                             )}
                         </div>
-
-                        <Button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setIsHovered(false);
-                                setSheetOpen(true);
-                            }}
-                            size="sm"
-                            className="mt-3 w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
-                        >
-                            Abrir Painel Completo
-                        </Button>
-                    </div>
-                </motion.div>
-            </div>
-
-            {/* Full Operations Sheet */}
-            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetContent side="right" className="w-full sm:w-[450px] p-0 flex flex-col bg-slate-50 dark:bg-slate-900 border-l z-[60]">
+                    </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:w-[450px] p-0 flex flex-col bg-slate-50 dark:bg-slate-900 border-l">
                     <SheetHeader className="p-6 pb-2 bg-white dark:bg-slate-950 border-b">
                         <SheetTitle className="flex items-center gap-2">
                             <ChefHat className="w-6 h-6 text-primary" />
@@ -231,7 +145,7 @@ const ProductionStatusWidget = () => {
                     <ScrollArea className="flex-1 p-6">
                         <div className="space-y-8 pb-10">
 
-                            {/* IN PROGRESS SECTION */}
+                            {/* IN PROGRESS SECTION - HIGHLIGHTED */}
                             {inProgressOrders.length > 0 && (
                                 <div className="space-y-4">
                                     <h3 className="text-sm font-bold uppercase tracking-wider text-orange-500 flex items-center gap-2">
@@ -240,7 +154,9 @@ const ProductionStatusWidget = () => {
                                     </h3>
                                     {inProgressOrders.map(order => (
                                         <Card key={order.id} className="border-orange-200 bg-orange-50/50 dark:bg-orange-950/20 overflow-hidden relative">
+                                            {/* Progress Bar Animation */}
                                             <div className="absolute top-0 left-0 h-1 bg-orange-500 w-full animate-progress-indeterminate"></div>
+
                                             <CardContent className="p-4 space-y-3">
                                                 <div className="flex justify-between items-start">
                                                     <div>
@@ -251,6 +167,7 @@ const ProductionStatusWidget = () => {
                                                     </div>
                                                     <ProductionTimer startDate={order.production_started_at} />
                                                 </div>
+
                                                 <div className="space-y-1">
                                                     {order.items?.map((item, i) => (
                                                         <div key={i} className="flex justify-between text-sm">
@@ -258,6 +175,7 @@ const ProductionStatusWidget = () => {
                                                         </div>
                                                     ))}
                                                 </div>
+
                                                 <div className="flex gap-2 pt-2">
                                                     <Button
                                                         size="sm"
@@ -360,4 +278,4 @@ const ProductionStatusWidget = () => {
     );
 };
 
-export default ProductionStatusWidget;
+export default OperationsFAB;

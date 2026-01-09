@@ -27,7 +27,7 @@ const ShoppingList = lazy(() => import("./pages/app/ShoppingList"));
 const PublicMenu = lazy(() => import("./pages/public/PublicMenu"));
 const Aprender = lazy(() => import("./pages/app/Aprender"));
 const Settings = lazy(() => import("./pages/app/Settings"));
-const OperationsPanel = lazy(() => import("./pages/app/OperationsPanel"));
+const PublicMenuConfig = lazy(() => import("./pages/app/PublicMenuConfig"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 
@@ -83,7 +83,7 @@ const App = () => {
                     <Route path="shopping-list" element={<ShoppingList />} />
                     <Route path="aprender" element={<Aprender />} />
                     <Route path="settings" element={<Settings />} />
-                    <Route path="painel" element={<OperationsPanel />} />
+                    <Route path="menu-config" element={<PublicMenuConfig />} />
                     <Route path="perfil" element={<Navigate to="settings" replace />} />
                   </Route>
 

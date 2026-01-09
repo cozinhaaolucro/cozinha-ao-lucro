@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, TrendingUp, Pencil, Download, Trash2, Copy } from 'lucide-react';
-import { getProducts, deleteProduct, updateProduct } from '@/lib/database';
+import { getProducts, deleteProduct, updateProduct, createProduct } from '@/lib/database';
 import { exportToExcel } from '@/lib/excel';
 import type { Product, Ingredient } from '@/types/database';
 // import EditProductDialog from './EditProductDialog'; // Removed
@@ -204,7 +204,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                 onClick={(e) => e.stopPropagation()}
                                             />
                                             {product.image_url ? (
-                                                <div className="w-12 h-12 rounded-md overflow-hidden bg-muted">
+                                                <div className="w-16 h-16 rounded-md overflow-hidden bg-muted shadow-sm border border-gray-100">
                                                     <img
                                                         src={product.image_url}
                                                         alt={product.name}
@@ -212,7 +212,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                     />
                                                 </div>
                                             ) : (
-                                                <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground font-medium">
+                                                <div className="w-16 h-16 rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground font-medium border border-gray-100">
                                                     Foto
                                                 </div>
                                             )}
@@ -335,7 +335,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                     setEditingProduct(null);
                 }}
             />
-        </div>
+        </div >
     );
 };
 

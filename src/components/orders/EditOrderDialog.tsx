@@ -28,6 +28,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
         delivery_time: '',
         notes: '',
         status: 'pending' as OrderStatus,
+        start_date: '',
     });
     const [items, setItems] = useState<Array<{ id?: string; product_id: string; product_name: string; quantity: number; unit_price: number }>>([]);
     const { toast } = useToast();
@@ -42,6 +43,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                     delivery_time: order.delivery_time || '',
                     notes: order.notes || '',
                     status: order.status,
+                    start_date: order.start_date || '',
                 });
                 setItems(order.items?.map(item => ({
                     id: item.id,
@@ -115,6 +117,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                 customer_id: formData.customer_id || null,
                 delivery_date: formData.delivery_date || null,
                 delivery_time: formData.delivery_time || null,
+                start_date: formData.start_date || null,
                 notes: formData.notes || null,
                 status: formData.status,
                 total_value: totalValue,
@@ -301,6 +304,18 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                                             value={formData.delivery_time}
                                             onChange={(e) => setFormData({ ...formData, delivery_time: e.target.value })}
                                         />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="start_date">Data de Produção / Início</Label>
+                                        <Input
+                                            id="start_date"
+                                            type="date"
+                                            value={formData.start_date}
+                                            onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                                        />
+                                        <p className="text-[10px] text-muted-foreground">Pedido aparecerá na fila "A Fazer" nesta data.</p>
                                     </div>
                                 </div>
 

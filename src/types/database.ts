@@ -45,6 +45,7 @@ export type Product = {
     is_highlight?: boolean;
     category?: string | null; // Added new field
     preparation_time_minutes?: number;
+    hourly_rate?: number;
     created_at: string;
     updated_at: string;
     product_ingredients?: ProductIngredient[];
@@ -99,6 +100,7 @@ export type Order = {
     production_started_at?: string | null;
     production_completed_at?: string | null;
     production_duration_minutes?: number | null;
+    start_date?: string | null;
 };
 
 export type OrderStatusLog = {
