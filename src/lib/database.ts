@@ -10,7 +10,11 @@ import type {
     OrderWithDetails,
     ProductWithCost,
     MessageTemplate,
-    InteractionLog
+    InteractionLog,
+    Notification,
+    StockMovement,
+    PaymentHistory,
+    OrderStatusLog
 } from '@/types/database';
 
 // Profiles
@@ -543,4 +547,174 @@ export const getInteractionLogs = async (customerId?: string, orderId?: string) 
 
     const { data, error } = await query;
     return { data, error };
+};
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+export const getNotifications = async (unreadOnly = false) => {
+    let query = supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (unreadOnly) {
+        query = query.eq('read', false);
+    }
+
+    const { data, error } = await query;
+    return { data: data as Notification[] | null, error };
+};
+
+export const markNotificationAsRead = async (id: string) => {
+    const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id);
+    return { error };
+};
+
+export const markAllNotificationsAsRead = async () => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { error: new Error('Usuário não autenticado') };
+
+    const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+    return { error };
+};
+
+export const getUnreadNotificationCount = async () => {
+    const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('read', false);
+    return { count: count ?? 0, error };
+};
+
+// ============================================================================
+// STOCK MOVEMENTS
+// ============================================================================
+
+export const getStockMovements = async (ingredientId?: string, limit = 50) => {
+    let query = supabase
+        .from('stock_movements')
+        .select(`
+            *,
+            ingredient:ingredients(id, name, unit)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+    if (ingredientId) {
+        query = query.eq('ingredient_id', ingredientId);
+    }
+
+    const { data, error } = await query;
+    return { data: data as StockMovement[] | null, error };
+};
+
+export const createStockMovement = async (movement: {
+    ingredient_id: string;
+    type: 'in' | 'out' | 'adjustment' | 'loss';
+    quantity: number;
+    reason?: string;
+}) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: null, error: new Error('Usuário não autenticado') };
+
+    const { data, error } = await supabase
+        .from('stock_movements')
+        .insert({ ...movement, user_id: user.id })
+        .select()
+        .single();
+
+    if (!error && movement.type === 'in') {
+        // Adicionar ao estoque
+        await supabase.rpc('increment_stock', {
+            p_ingredient_id: movement.ingredient_id,
+            p_quantity: movement.quantity
+        }).catch(() => {
+            // Fallback se RPC não existir
+            updateIngredientStock(movement.ingredient_id, movement.quantity);
+        });
+    } else if (!error && (movement.type === 'out' || movement.type === 'loss')) {
+        // Subtrair do estoque
+        await supabase.rpc('decrement_stock', {
+            p_ingredient_id: movement.ingredient_id,
+            p_quantity: movement.quantity
+        }).catch(() => {
+            // Fallback
+            updateIngredientStock(movement.ingredient_id, -movement.quantity);
+        });
+    }
+
+    return { data, error };
+};
+
+const updateIngredientStock = async (ingredientId: string, quantityDelta: number) => {
+    const { data: ingredient } = await supabase
+        .from('ingredients')
+        .select('stock_quantity')
+        .eq('id', ingredientId)
+        .single();
+
+    if (ingredient) {
+        const newStock = Math.max(0, ingredient.stock_quantity + quantityDelta);
+        await supabase
+            .from('ingredients')
+            .update({ stock_quantity: newStock, updated_at: new Date().toISOString() })
+            .eq('id', ingredientId);
+    }
+};
+
+// ============================================================================
+// ORDER STATUS LOGS
+// ============================================================================
+
+export const getOrderStatusLogs = async (orderId: string) => {
+    const { data, error } = await supabase
+        .from('order_status_logs')
+        .select('*')
+        .eq('order_id', orderId)
+        .order('created_at', { ascending: true });
+    return { data: data as OrderStatusLog[] | null, error };
+};
+
+// ============================================================================
+// PAYMENT HISTORY
+// ============================================================================
+
+export const getPaymentHistory = async () => {
+    const { data, error } = await supabase
+        .from('payment_history')
+        .select('*')
+        .order('created_at', { ascending: false });
+    return { data: data as PaymentHistory[] | null, error };
+};
+
+// ============================================================================
+// LOW STOCK ALERTS
+// ============================================================================
+
+export const getLowStockIngredients = async () => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: null, error: new Error('Usuário não autenticado') };
+
+    const { data, error } = await supabase
+        .from('ingredients')
+        .select('*')
+        .eq('user_id', user.id)
+        .lt('stock_quantity', supabase.rpc ?
+            supabase.raw('min_stock_threshold') :
+            5
+        );
+
+    // Fallback: filter client-side if raw comparison doesn't work
+    const filtered = data?.filter(i => i.stock_quantity < (i.min_stock_threshold ?? 5));
+
+    return { data: filtered as Ingredient[] | null, error };
 };

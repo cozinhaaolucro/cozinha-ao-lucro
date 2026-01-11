@@ -88,18 +88,8 @@ const DashboardLayout = () => {
         }
     }, [user, loading, navigate]);
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-background">
-                <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    <span className="text-sm text-muted-foreground">Carregando...</span>
-                </div>
-            </div>
-        );
-    }
-
-    if (!user) {
+    // Redirecionar se não autenticado (após loading completo)
+    if (!loading && !user) {
         return (
             <div className="flex items-center justify-center h-screen bg-background">
                 <div className="flex flex-col items-center gap-3">
@@ -346,7 +336,16 @@ const DashboardLayout = () => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-40 md:pb-8 animate-in fade-in-0 duration-300 relative h-full">
+            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-40 md:pb-8 relative h-full">
+                {/* Loading State - apenas no conteúdo, não na sidebar */}
+                {loading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
+                        <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                            <span className="text-sm text-muted-foreground">Carregando...</span>
+                        </div>
+                    </div>
+                )}
                 <div className="hidden md:flex absolute top-6 right-8 z-10">
                     <NotificationBell />
                 </div>
