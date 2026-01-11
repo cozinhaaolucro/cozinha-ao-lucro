@@ -15,9 +15,7 @@ const Footer = () => {
                         className="h-24 w-auto mb-6"
                     />
 
-                    <p className="text-primary-foreground/90 text-sm mb-4 max-w-md mx-auto leading-relaxed">
-                        Transformando cozinhas em negócios lucrativos. O conteúdo mais completo para quem quer empreender com gastronomia.
-                    </p>
+
                     <div className="flex justify-center gap-6 mb-4">
                         <a
                             href="https://www.instagram.com/cozinhaaolucro/"
