@@ -9,16 +9,21 @@
   :root {
 
     /* 
-      Palette Rebrand (2026) - STRICT:
+      Palette Rebrand (2026) - STRICT IMPLEMENTATION:
       Primary: 188 34% 28%
       Secondary: 182 16% 55%
       Financial Highlight: 38 65% 55%
       Background: 38 33% 95%
       Surface/Card: 38 20% 98%
-      Footer: 190 38% 22%
-      Icons: 155 35% 72%
       Text/Neutral Dark: 210 9% 32%
-      Error: 8 48% 58%
+      Text/Auxiliary: 210 9% 45%
+      
+      Functional Colors:
+      Success: 155 35% 72%
+      Info/Production: 210 60% 65% (New)
+      Warning/Attention: 38 65% 55% (Same as Financial)
+      Error/Critical: 8 48% 58%
+      Neutral/Inactive: 210 9% 75%
     */
 
     --background: 38 33% 95%;
@@ -33,15 +38,15 @@
     --primary: 188 34% 28%;
     --primary-foreground: 38 33% 95%;
     --primary-glow: 188 34% 34%;
-    /* Lighter for shine/glow */
 
     --secondary: 182 16% 55%;
     --secondary-foreground: 38 33% 95%;
     --secondary-light: 182 16% 65%;
 
-    --muted: 38 20% 90%;
-    /* Slightly warmer muted */
-    --muted-foreground: 210 9% 32%;
+    --muted: 210 9% 75%;
+    /* Neutral/Inactive Data */
+    --muted-foreground: 210 9% 45%;
+    /* Text Auxiliary */
 
     --accent: 38 65% 55%;
     --accent-foreground: 210 9% 32%;
@@ -54,32 +59,48 @@
     --success: 155 35% 72%;
     --success-foreground: 210 9% 32%;
 
-    --icon-color: 155 35% 72%;
-
-    --info: 182 16% 55%;
+    --info: 210 60% 65%;
+    /* New Info/Production Color */
     --info-foreground: 38 33% 95%;
 
     --destructive: 8 48% 58%;
+    /* Error/Critical */
     --destructive-foreground: 38 33% 95%;
+
+    --icon-color: 155 35% 72%;
+    /* Standard Icon Color */
 
     --footer: 190 38% 22%;
     --footer-foreground: 38 33% 95%;
 
     --border: 210 9% 75%;
-    /* Updated to HSL 210, 9%, 75% as requested for Inputs */
     --input: 210 9% 75%;
     --ring: 182 16% 55%;
-    /* Active focus color */
 
     --radius: 0.75rem;
+    /* 12px */
 
-    /* Shadows */
+    /* Shadows - Refined */
     --shadow-elegant: 0 4px 12px rgba(0, 0, 0, 0.1);
+    /* Opacity ~10% */
+    --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.12);
+    /* Slightly stronger for hover */
     --shadow-glow: 0 0 20px rgba(47, 96, 107, 0.3);
     --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 10px 15px -3px rgba(0, 0, 0, 0.02);
-    --shadow-floating: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 
     --inner-glow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+
+    /* Sidebar Variables - Reinstated & Branded */
+    --sidebar-background: 38 20% 98%;
+    /* Light Surface Match */
+    --sidebar-foreground: 210 9% 32%;
+    --sidebar-primary: 188 34% 28%;
+    --sidebar-primary-foreground: 38 33% 95%;
+    --sidebar-accent: 188 34% 92%;
+    /* Soft Hover */
+    --sidebar-accent-foreground: 188 34% 28%;
+    --sidebar-border: 210 9% 75%;
+    --sidebar-ring: 182 16% 55%;
   }
 
   .dark {
@@ -92,8 +113,8 @@
     --primary-foreground: 38 33% 95%;
     --secondary: 182 16% 55%;
     --secondary-foreground: 38 33% 95%;
-    --muted: 38 20% 90%;
-    --muted-foreground: 210 9% 32%;
+    --muted: 210 9% 75%;
+    --muted-foreground: 210 9% 45%;
     --accent: 38 65% 55%;
     --accent-foreground: 210 9% 32%;
     --financial: 38 65% 55%;
@@ -103,6 +124,16 @@
     --ring: 182 16% 55%;
     --footer: 190 38% 22%;
     --footer-foreground: 38 33% 95%;
+
+    /* Sidebar Dark Mode (Matching Light for now as requested) */
+    --sidebar-background: 38 20% 98%;
+    --sidebar-foreground: 210 9% 32%;
+    --sidebar-primary: 188 34% 28%;
+    --sidebar-primary-foreground: 38 33% 95%;
+    --sidebar-accent: 188 34% 92%;
+    --sidebar-accent-foreground: 188 34% 28%;
+    --sidebar-border: 210 9% 75%;
+    --sidebar-ring: 182 16% 55%;
   }
 }
 
