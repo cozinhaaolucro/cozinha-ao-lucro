@@ -81,7 +81,7 @@ const Register = () => {
 
             if (data.user) {
                 if (usePresets) {
-                    await seedAccount();
+                    localStorage.setItem('should_seed_account', 'true');
                 }
                 toast({ title: 'Cadastro realizado com sucesso! Faça login para continuar.' });
                 navigate('/login');

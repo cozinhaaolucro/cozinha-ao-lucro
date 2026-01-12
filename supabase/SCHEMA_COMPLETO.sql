@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     color_theme TEXT DEFAULT 'orange',
     slug TEXT UNIQUE,
     facebook_pixel_id TEXT,
+    -- Seeding control
+    has_seeded BOOLEAN DEFAULT false,
     -- Assinatura
     subscription_status TEXT DEFAULT 'trial' CHECK (subscription_status IN ('trial', 'active', 'past_due', 'cancelled')),
     subscription_plan TEXT DEFAULT 'pro',
@@ -53,7 +55,8 @@ CREATE TABLE IF NOT EXISTS public.ingredients (
     stock_quantity NUMERIC(10, 2) DEFAULT 0,
     min_stock_threshold NUMERIC(10, 2) DEFAULT 5,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, name)
 );
 
 -- 1.3 Produtos
@@ -547,6 +550,41 @@ DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.orders; EXCEPTI
 DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.ingredients; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.order_items; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ============================================================================
+-- 7. MIGRAÇÕES E CORREÇÕES
+-- ============================================================================
+
+-- 7.1 Limpar ingredientes duplicados (mantém o mais antigo por user_id + name)
+DELETE FROM ingredients a
+USING ingredients b
+WHERE a.id > b.id 
+  AND a.user_id = b.user_id 
+  AND a.name = b.name;
+
+-- 7.2 Adicionar constraint UNIQUE para prevenir duplicatas de ingredientes
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'ingredients_user_name_unique'
+    ) THEN
+        ALTER TABLE ingredients ADD CONSTRAINT ingredients_user_name_unique UNIQUE (user_id, name);
+    END IF;
+EXCEPTION WHEN duplicate_object THEN
+    NULL;
+END $$;
+
+-- 7.3 Adicionar coluna has_seeded ao profiles (se não existir)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'has_seeded'
+    ) THEN
+        ALTER TABLE profiles ADD COLUMN has_seeded BOOLEAN DEFAULT false;
+    END IF;
+END $$;
+
 
 -- ============================================================================
 -- FIM DO SCHEMA CONSOLIDADO

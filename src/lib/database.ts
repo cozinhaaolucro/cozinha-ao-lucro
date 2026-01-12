@@ -38,9 +38,15 @@ export const updateProfile = async (updates: Partial<Profile>) => {
 
 // Ingredients
 export const getIngredients = async () => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) {
+        return { data: [], error: new Error('User not authenticated') };
+    }
+
     const { data, error } = await supabase
         .from('ingredients')
         .select('*')
+        .eq('user_id', user.id)
         .order('name');
     return { data, error };
 };
@@ -204,9 +210,13 @@ export const deleteProduct = async (id: string) => {
 
 // Customers
 export const getCustomers = async () => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: [], error: new Error('User not authenticated') };
+
     const { data, error } = await supabase
         .from('customers')
         .select('*')
+        .eq('user_id', user.id)
         .order('name');
     return { data, error };
 };
@@ -225,6 +235,9 @@ export const createCustomer = async (customer: Omit<Customer, 'id' | 'user_id' |
 
 // Orders
 export const getOrders = async (status?: string) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: [], error: new Error('User not authenticated') };
+
     let query = supabase
         .from('orders')
         .select(`
@@ -241,6 +254,7 @@ export const getOrders = async (status?: string) => {
         )
       )
     `)
+        .eq('user_id', user.id)
         .order('delivery_date', { ascending: true });
 
     if (status) {
@@ -490,9 +504,13 @@ export const restoreStockFromOrder = async (orderId: string) => {
 
 // Message Templates
 export const getMessageTemplates = async () => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: [], error: new Error('User not authenticated') };
+
     const { data, error } = await supabase
         .from('message_templates')
         .select('*')
+        .eq('user_id', user.id)
         .order('title');
     return { data, error };
 };
@@ -537,9 +555,13 @@ export const createInteractionLog = async (log: Omit<InteractionLog, 'id' | 'use
 };
 
 export const getInteractionLogs = async (customerId?: string, orderId?: string) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: [], error: new Error('User not authenticated') };
+
     let query = supabase
         .from('interaction_logs')
         .select('*')
+        .eq('user_id', user.id)
         .order('sent_at', { ascending: false });
 
     if (customerId) query = query.eq('customer_id', customerId);
@@ -554,9 +576,13 @@ export const getInteractionLogs = async (customerId?: string, orderId?: string) 
 // ============================================================================
 
 export const getNotifications = async (unreadOnly = false) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: [], error: new Error('User not authenticated') };
+
     let query = supabase
         .from('notifications')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
     if (unreadOnly) {
@@ -600,12 +626,16 @@ export const getUnreadNotificationCount = async () => {
 // ============================================================================
 
 export const getStockMovements = async (ingredientId?: string, limit = 50) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: [], error: new Error('User not authenticated') };
+
     let query = supabase
         .from('stock_movements')
         .select(`
             *,
             ingredient:ingredients(id, name, unit)
         `)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(limit);
 

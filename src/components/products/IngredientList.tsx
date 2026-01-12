@@ -55,7 +55,19 @@ const IngredientList = () => {
     const loadIngredients = async () => {
         const { data, error } = await getIngredients();
         if (!error && data) {
-            setIngredients(data);
+            // Auto-fix negative stock
+            const negativeStock = data.filter(i => (i.stock_quantity || 0) < 0);
+            if (negativeStock.length > 0) {
+                console.log('Detectado estoque negativo. Corrigindo...', negativeStock);
+                await Promise.all(negativeStock.map(ing =>
+                    updateIngredient(ing.id, { stock_quantity: 0 })
+                ));
+                // Reflect change in local state logic by overriding the fetches
+                const fixedData = data.map(i => (i.stock_quantity || 0) < 0 ? { ...i, stock_quantity: 0 } : i);
+                setIngredients(fixedData);
+            } else {
+                setIngredients(data);
+            }
         }
     };
 
@@ -329,7 +341,8 @@ const IngredientList = () => {
             <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {ingredients.map((ingredient) => {
                     const demand = getDemand(ingredient.id);
-                    const statusClass = getStatusColor(ingredient.stock_quantity || 0, demand);
+                    const stock = Math.max(0, ingredient.stock_quantity || 0);
+                    const statusClass = getStatusColor(stock, demand);
 
                     return (
                         <Card key={ingredient.id} className={`border-l-4 ${statusClass} group`}>
@@ -349,7 +362,7 @@ const IngredientList = () => {
                                     R$ {ingredient.cost_per_unit.toFixed(2)}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    {ingredient.stock_quantity} {ingredient.unit}
+                                    {stock} {ingredient.unit}
                                 </p>
                                 {demand > 0 && (
                                     <p className="text-[10px] text-orange-600 mt-1">
