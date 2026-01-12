@@ -30,6 +30,7 @@ import {
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
+import { supabase } from '@/lib/supabase';
 import { getOrders, getCustomers, getProducts, getIngredients } from '@/lib/database';
 import type { OrderWithDetails, Customer, Product, Ingredient, ProductWithIngredients, ProductIngredientWithDetails } from '@/types/database';
 
@@ -67,11 +68,24 @@ const Dashboard = () => {
                 await seedAccount();
             }
         };
-        // Only load data once when component mounts
-        if (!dataLoaded) {
-            checkSeeding().then(() => loadData());
-        }
-    }, [dataLoaded]);
+
+        checkSeeding().then(() => loadData());
+
+        // Real-time synchronization
+        const channel = supabase
+            .channel('dashboard_updates')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+                loadData();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ingredients' }, () => {
+                loadData();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [dataLoaded, period, dateFilter]);
 
     const loadData = async () => {
         setIsLoading(true);
@@ -100,12 +114,14 @@ const Dashboard = () => {
 
         if (dateFilter.start && dateFilter.end) {
             start = new Date(dateFilter.start);
+            start.setHours(0, 0, 0, 0); // Include full start day
             end = new Date(dateFilter.end);
             end.setHours(23, 59, 59, 999);
         } else {
             const daysAgo = parseInt(period);
             start = new Date();
             start.setDate(start.getDate() - daysAgo);
+            start.setHours(0, 0, 0, 0); // Include full first day of period
         }
 
         return orders.filter(o => {
@@ -126,12 +142,18 @@ const Dashboard = () => {
 
     // Calculate total cost of an order
     const getOrderCost = (order: OrderWithDetails): number => {
+        // Use historical cost if available (Bulletproof integrity)
+        if (order.total_cost && Number(order.total_cost) > 0) {
+            return Number(order.total_cost);
+        }
+
+        // Fallback for very old orders or orders not yet processed by trigger
         if (!order.items) return 0;
         return order.items.reduce((sum, item) => {
             const prod = products.find(p => p.id === item.product_id);
             if (!prod) return sum;
-            const cost = getProductCost(prod);
-            return sum + cost * item.quantity;
+            const fallbackCost = getProductCost(prod);
+            return sum + fallbackCost * item.quantity;
         }, 0);
     };
 
@@ -205,9 +227,12 @@ const Dashboard = () => {
         order.items?.forEach(item => {
             const prod = products.find(p => p.id === item.product_id);
             if (!prod) return;
-            const cost = getProductCost(prod);
+
+            // Use historical unit_cost from item if available, otherwise fallback
+            const unitCost = (item as any).unit_cost > 0 ? (item as any).unit_cost : getProductCost(prod);
             const revenue = item.subtotal;
-            const profit = revenue - cost * item.quantity;
+            const profit = revenue - unitCost * item.quantity;
+
             const entry = productSales.get(item.product_name) || {
                 name: item.product_name,
                 quantity: 0,
@@ -218,7 +243,7 @@ const Dashboard = () => {
             };
             entry.quantity += item.quantity;
             entry.revenue += revenue;
-            entry.cost += cost * item.quantity;
+            entry.cost += unitCost * item.quantity;
             entry.profit += profit;
             entry.margin = entry.revenue > 0 ? (entry.profit / entry.revenue) * 100 : 0;
             productSales.set(item.product_name, entry);

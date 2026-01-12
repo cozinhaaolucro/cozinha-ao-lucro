@@ -111,6 +111,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
     display_id SERIAL,
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'preparing', 'ready', 'delivered', 'cancelled')),
     total_value NUMERIC(10, 2) DEFAULT 0,
+    total_cost NUMERIC(10, 2) DEFAULT 0,
     -- Entrega
     delivery_date DATE,
     delivery_time TEXT,
@@ -139,6 +140,7 @@ CREATE TABLE IF NOT EXISTS public.order_items (
     product_name TEXT NOT NULL,
     quantity INTEGER NOT NULL,
     unit_price NUMERIC(10, 2) NOT NULL,
+    unit_cost NUMERIC(10, 2) DEFAULT 0,
     subtotal NUMERIC(10, 2) NOT NULL
 );
 
@@ -257,13 +259,23 @@ BEGIN
     DROP POLICY IF EXISTS "ingredients_all_own" ON public.ingredients;
     DROP POLICY IF EXISTS "ingredients_public_read" ON public.ingredients;
     CREATE POLICY "ingredients_all_own" ON public.ingredients FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-    CREATE POLICY "ingredients_public_read" ON public.ingredients FOR SELECT USING (true);
 
     -- Products
     DROP POLICY IF EXISTS "products_all_own" ON public.products;
     DROP POLICY IF EXISTS "products_public_read" ON public.products;
     CREATE POLICY "products_all_own" ON public.products FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-    CREATE POLICY "products_public_read" ON public.products FOR SELECT USING (active = true);
+    
+    -- Public visibility for products (Menu)
+    DROP POLICY IF EXISTS "products_public_read_via_profile" ON public.products;
+    CREATE POLICY "products_public_read_via_profile" ON public.products 
+        FOR SELECT 
+        USING (
+            EXISTS (
+                SELECT 1 FROM public.profiles 
+                WHERE profiles.id = products.user_id 
+                AND products.active = true
+            )
+        );
 
     -- Product Ingredients
     DROP POLICY IF EXISTS "product_ingredients_all_own" ON public.product_ingredients;
@@ -271,7 +283,18 @@ BEGIN
     CREATE POLICY "product_ingredients_all_own" ON public.product_ingredients FOR ALL 
         USING (EXISTS (SELECT 1 FROM public.products WHERE products.id = product_ingredients.product_id AND products.user_id = auth.uid()))
         WITH CHECK (EXISTS (SELECT 1 FROM public.products WHERE products.id = product_ingredients.product_id AND products.user_id = auth.uid()));
-    CREATE POLICY "product_ingredients_public_read" ON public.product_ingredients FOR SELECT USING (true);
+
+    -- Public visibility for recipe ingredients (needed for cost calculation in menu if shown, or just basic display)
+    DROP POLICY IF EXISTS "product_ingredients_public_read_via_product" ON public.product_ingredients;
+    CREATE POLICY "product_ingredients_public_read_via_product" ON public.product_ingredients 
+        FOR SELECT 
+        USING (
+            EXISTS (
+                SELECT 1 FROM public.products 
+                WHERE products.id = product_ingredients.product_id 
+                AND products.active = true
+            )
+        );
 
     -- Customers
     DROP POLICY IF EXISTS "customers_all_own" ON public.customers;
@@ -587,7 +610,242 @@ END $$;
 
 
 -- ============================================================================
+-- 8. AUTOMAÇÃO DE NEGÓCIO (TRIGGERS)
+-- ============================================================================
+
+-- 8.1 GARANTIR COLUNAS (MIGRAÇÃO)
+-- Adiciona colunas necessárias se o banco já existir sem elas
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='order_items' AND column_name='unit_cost') THEN
+        ALTER TABLE public.order_items ADD COLUMN unit_cost NUMERIC(10, 2) DEFAULT 0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='total_cost') THEN
+        ALTER TABLE public.orders ADD COLUMN total_cost NUMERIC(10, 2) DEFAULT 0;
+    END IF;
+END $$;
+
+-- 8.2 Função: Gerenciar estoque na mudança de status do pedido
+CREATE OR REPLACE FUNCTION public.fn_handle_stock_on_status_change()
+RETURNS TRIGGER AS $$
+DECLARE
+    item RECORD;
+    pi RECORD;
+    target_id UUID;
+    target_status TEXT;
+    prev_status TEXT;
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        target_id := OLD.id;
+        target_status := 'cancelled'; -- Forçamos estorno ao deletar se estava em produção
+        prev_status := OLD.status;
+    ELSE
+        target_id := NEW.id;
+        target_status := NEW.status;
+        prev_status := OLD.status;
+    END IF;
+
+    -- GATILHO: BAIXA DE ESTOQUE
+    -- Ocorre quando o pedido vai para 'preparing' (vindo de pending ou novo)
+    IF (target_status = 'preparing' AND (prev_status = 'pending' OR prev_status IS NULL)) THEN
+        FOR item IN SELECT * FROM public.order_items WHERE order_id = target_id LOOP
+            FOR pi IN SELECT * FROM public.product_ingredients WHERE product_id = item.product_id LOOP
+                UPDATE public.ingredients 
+                SET stock_quantity = GREATEST(0, stock_quantity - (pi.quantity * item.quantity)),
+                    updated_at = now()
+                WHERE id = pi.ingredient_id;
+            END LOOP;
+        END LOOP;
+
+    -- GATILHO: ESTORNO DE ESTOQUE
+    -- Ocorre quando o pedido sai de produção e volta para pending ou é cancelado/excluído
+    ELSIF (
+        (target_status IN ('pending', 'cancelled')) AND 
+        (prev_status IN ('preparing', 'ready', 'delivered'))
+    ) THEN
+        FOR item IN SELECT * FROM public.order_items WHERE order_id = target_id LOOP
+            FOR pi IN SELECT * FROM public.product_ingredients WHERE product_id = item.product_id LOOP
+                UPDATE public.ingredients 
+                SET stock_quantity = stock_quantity + (pi.quantity * item.quantity),
+                    updated_at = now()
+                WHERE id = pi.ingredient_id;
+            END LOOP;
+        END LOOP;
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 8.2 Função: Gerenciar estatísticas do cliente
+CREATE OR REPLACE FUNCTION public.fn_handle_customer_stats()
+RETURNS TRIGGER AS $$
+DECLARE
+    target_customer_id UUID;
+BEGIN
+    target_customer_id := COALESCE(NEW.customer_id, OLD.customer_id);
+
+    IF target_customer_id IS NOT NULL THEN
+        UPDATE public.customers
+        SET 
+            total_orders = (SELECT count(*) FROM public.orders WHERE customer_id = target_customer_id AND status != 'cancelled'),
+            total_spent = (SELECT COALESCE(sum(total_value), 0) FROM public.orders WHERE customer_id = target_customer_id AND status = 'delivered'),
+            last_order_date = (SELECT max(created_at) FROM public.orders WHERE customer_id = target_customer_id),
+            updated_at = now()
+        WHERE id = target_customer_id;
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 8.3 Função: Gerenciar estoque ao ADICIONAR item em pedido já em produção
+CREATE OR REPLACE FUNCTION public.fn_handle_item_stock_direct()
+RETURNS TRIGGER AS $$
+DECLARE
+    parent_status TEXT;
+    pi RECORD;
+BEGIN
+    SELECT status INTO parent_status FROM public.orders WHERE id = NEW.order_id;
+    
+    IF (parent_status IN ('preparing', 'ready', 'delivered')) THEN
+        FOR pi IN SELECT * FROM public.product_ingredients WHERE product_id = NEW.product_id LOOP
+            UPDATE public.ingredients 
+            SET stock_quantity = GREATEST(0, stock_quantity - (pi.quantity * NEW.quantity)),
+                updated_at = now()
+            WHERE id = pi.ingredient_id;
+        END LOOP;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 8.4 Função: Estornar estoque ao EXCLUIR item de pedido em produção
+CREATE OR REPLACE FUNCTION public.fn_handle_item_stock_delete()
+RETURNS TRIGGER AS $$
+DECLARE
+    parent_status TEXT;
+    pi RECORD;
+BEGIN
+    SELECT status INTO parent_status FROM public.orders WHERE id = OLD.order_id;
+    
+    IF (parent_status IN ('preparing', 'ready', 'delivered')) THEN
+        FOR pi IN SELECT * FROM public.product_ingredients WHERE product_id = OLD.product_id LOOP
+            UPDATE public.ingredients 
+            SET stock_quantity = stock_quantity + (pi.quantity * OLD.quantity),
+                updated_at = now()
+            WHERE id = pi.ingredient_id;
+        END LOOP;
+    END IF;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- GATILHOS NA TABELA ORDERS
+DROP TRIGGER IF EXISTS tr_order_stock_automation ON public.orders;
+CREATE TRIGGER tr_order_stock_automation
+    AFTER INSERT OR UPDATE OF status OR DELETE ON public.orders
+    FOR EACH ROW
+    EXECUTE FUNCTION public.fn_handle_stock_on_status_change();
+
+DROP TRIGGER IF EXISTS tr_order_customer_stats_automation ON public.orders;
+CREATE TRIGGER tr_order_customer_stats_automation
+    AFTER INSERT OR UPDATE OF status, total_value OR DELETE ON public.orders
+    FOR EACH ROW
+    EXECUTE FUNCTION public.fn_handle_customer_stats();
+
+-- GATILHOS NA TABELA ORDER_ITEMS
+DROP TRIGGER IF EXISTS tr_order_item_stock_insert ON public.order_items;
+CREATE TRIGGER tr_order_item_stock_insert
+    AFTER INSERT ON public.order_items
+    FOR EACH ROW
+    EXECUTE FUNCTION public.fn_handle_item_stock_direct();
+
+DROP TRIGGER IF EXISTS tr_order_item_stock_delete ON public.order_items;
+CREATE TRIGGER tr_order_item_stock_delete
+    AFTER DELETE ON public.order_items
+    FOR EACH ROW
+    EXECUTE FUNCTION public.fn_handle_item_stock_delete();
+
+
+-- 8.5 Função: Capturar custo histórico do produto no momento da venda
+CREATE OR REPLACE FUNCTION public.fn_capture_order_costs()
+RETURNS TRIGGER AS $$
+DECLARE
+    current_cost NUMERIC(10, 2);
+BEGIN
+    -- Calcula o custo atual do produto baseado na soma dos custos de seus ingredientes
+    SELECT COALESCE(SUM(pi.quantity * i.cost_per_unit), 0)
+    INTO current_cost
+    FROM public.product_ingredients pi
+    JOIN public.ingredients i ON pi.ingredient_id = i.id
+    WHERE pi.product_id = NEW.product_id;
+
+    -- Salva o custo unitário no item do pedido
+    NEW.unit_cost := current_cost;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 8.6 Função: Atualizar o total_cost do pedido quando os itens mudam
+CREATE OR REPLACE FUNCTION public.fn_sync_order_total_cost()
+RETURNS TRIGGER AS $$
+DECLARE
+    oid UUID;
+BEGIN
+    oid := COALESCE(NEW.order_id, OLD.order_id);
+    
+    UPDATE public.orders
+    SET total_cost = (
+        SELECT COALESCE(SUM(unit_cost * quantity), 0)
+        FROM public.order_items
+        WHERE order_id = oid
+    )
+    WHERE id = oid;
+
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- GATILHOS DE CUSTO HISTÓRICO
+DROP TRIGGER IF EXISTS tr_order_item_capture_cost ON public.order_items;
+CREATE TRIGGER tr_order_item_capture_cost
+    BEFORE INSERT ON public.order_items
+    FOR EACH ROW
+    EXECUTE FUNCTION public.fn_capture_order_costs();
+
+DROP TRIGGER IF EXISTS tr_order_item_sync_total_cost ON public.order_items;
+CREATE TRIGGER tr_order_item_sync_total_cost
+    AFTER INSERT OR UPDATE OF unit_cost, quantity OR DELETE ON public.order_items
+    FOR EACH ROW
+    EXECUTE FUNCTION public.fn_sync_order_total_cost();
+
+-- ============================================================================
+-- 9. MIGRAÇÕES FINAIS (DADOS)
+-- ============================================================================
+
+-- 9.1 Migrar custos existentes (Snapshot dos custos atuais para pedidos antigos)
+UPDATE public.order_items oi
+SET unit_cost = (
+    SELECT COALESCE(SUM(pi.quantity * i.cost_per_unit), 0)
+    FROM public.product_ingredients pi
+    JOIN public.ingredients i ON pi.ingredient_id = i.id
+    WHERE pi.product_id = oi.product_id
+)
+WHERE unit_cost = 0 OR unit_cost IS NULL;
+
+UPDATE public.orders o
+SET total_cost = (
+    SELECT COALESCE(SUM(unit_cost * quantity), 0)
+    FROM public.order_items
+    WHERE order_id = o.id
+);
+
 -- FIM DO SCHEMA CONSOLIDADO
 -- ============================================================================
--- Executado com sucesso! Seu banco está pronto.
+-- Executado com sucesso! Seu banco está pronto com Blindagem Financeira.
 -- ============================================================================

@@ -87,7 +87,19 @@ const Pedidos = () => {
 
         // Use createOrder but we need to import it properly or check if its available in scope
         // It is imported as createOrder from '@/lib/database'
-        const { error } = await import('@/lib/database').then(mod => mod.createOrder(orderData, items));
+        const { error } = await import('@/lib/database').then(mod => mod.createOrder({
+            ...orderData,
+            display_id: 0,
+            delivery_method: 'pickup',
+            delivery_fee: 0,
+            payment_method: 'pix',
+            google_event_id: null,
+            production_started_at: null,
+            production_completed_at: null,
+            production_duration_minutes: null,
+            delivered_at: null,
+            start_date: null
+        }, items));
 
         if (!error) {
             toast({ title: 'Pedido duplicado com sucesso!' });
@@ -102,6 +114,14 @@ const Pedidos = () => {
             setSelectedCustomer(customer);
             setIsDrawerOpen(true);
         }
+    };
+
+    // Helper for Excel Import
+    const getValue = (row: any, keys: string[]) => {
+        for (const key of keys) {
+            if (row[key] !== undefined && row[key] !== null) return row[key];
+        }
+        return null;
     };
 
     const filteredOrders = orders.filter((order) => {
@@ -122,17 +142,11 @@ const Pedidos = () => {
         const orderDate = parseLocalDate(order.delivery_date);
         orderDate.setHours(0, 0, 0, 0);
 
-        const start = dateFilter.start ? new Date(dateFilter.start) : null;
-        const end = dateFilter.end ? new Date(dateFilter.end) : null;
+        const start = dateFilter.start ? new Date(dateFilter.start + 'T00:00:00') : null;
+        const end = dateFilter.end ? new Date(dateFilter.end + 'T23:59:59.999') : null;
 
-        if (start) {
-            start.setHours(0, 0, 0, 0);
-            if (orderDate < start) return false;
-        }
-        if (end) {
-            end.setHours(23, 59, 59, 999);
-            if (orderDate > end) return false;
-        }
+        if (start && orderDate < start) return false;
+        if (end && orderDate > end) return false;
         return true;
     });
 
@@ -382,7 +396,8 @@ const Pedidos = () => {
                                                 email: null,
                                                 phone: null,
                                                 address: null,
-                                                notes: null
+                                                notes: null,
+                                                last_order_date: null
                                             });
                                             if (newCust && !custError) {
                                                 customerId = newCust.id;
@@ -445,7 +460,19 @@ const Pedidos = () => {
                                         };
 
                                         if (items.length > 0) {
-                                            const { error } = await createOrder(orderData, items);
+                                            const { error } = await createOrder({
+                                                ...orderData,
+                                                display_id: 0,
+                                                delivery_method: 'pickup',
+                                                delivery_fee: 0,
+                                                payment_method: 'pix',
+                                                google_event_id: null,
+                                                production_started_at: null,
+                                                production_completed_at: null,
+                                                production_duration_minutes: null,
+                                                delivered_at: null,
+                                                start_date: null
+                                            }, items);
                                             if (!error) successCount++;
                                             else errorCount++;
                                         } else {

@@ -133,6 +133,7 @@ export type Order = {
     display_id: number;
     status: OrderStatus;
     total_value: number;
+    total_cost: number;
     // Entrega
     delivery_date: string | null;
     delivery_time: string | null;
@@ -165,6 +166,7 @@ export type OrderItem = {
     product_name: string;
     quantity: number;
     unit_price: number;
+    unit_cost: number;
     subtotal: number;
     // Relacionamento
     product?: Product | null;

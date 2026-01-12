@@ -234,7 +234,7 @@ export const createCustomer = async (customer: Omit<Customer, 'id' | 'user_id' |
 };
 
 // Orders
-export const getOrders = async (status?: string) => {
+export const getOrders = async (status?: string, startDate?: string, endDate?: string) => {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return { data: [], error: new Error('User not authenticated') };
 
@@ -259,6 +259,14 @@ export const getOrders = async (status?: string) => {
 
     if (status) {
         query = query.eq('status', status);
+    }
+
+    if (startDate) {
+        query = query.gte('delivery_date', startDate);
+    }
+
+    if (endDate) {
+        query = query.lte('delivery_date', endDate);
     }
 
     const { data, error } = await query;
@@ -286,20 +294,6 @@ export const updateOrderStatus = async (orderId: string, newStatus: string, prev
         updates.delivered_at = new Date().toISOString();
     }
 
-    // STOCK LOGIC INTEGRATION
-    // 1. Deduct Stock if moving to 'preparing' (from pending)
-    if (newStatus === 'preparing' && previousStatus === 'pending') {
-        await deductStockFromOrder(orderId);
-    }
-    // 2. Restore Stock if moving BACK to 'pending' (from preparing/ready/delivered)
-    else if (newStatus === 'pending' && previousStatus !== 'pending' && previousStatus !== 'cancelled') {
-        await restoreStockFromOrder(orderId);
-    }
-    // 3. Restore Stock if cancelling (from preparing/ready/delivered)
-    else if (newStatus === 'cancelled' && ['preparing', 'ready', 'delivered'].includes(previousStatus || '')) {
-        await restoreStockFromOrder(orderId);
-    }
-
     // 1. Update Order
     const { error: updateError } = await supabase
         .from('orders')
@@ -308,7 +302,7 @@ export const updateOrderStatus = async (orderId: string, newStatus: string, prev
 
     if (updateError) return { error: updateError };
 
-    // 2. Insert Log
+    // 2. Insert Log (Customer stats and stock are now handled by DB triggers)
     const { error: logError } = await supabase
         .from('order_status_logs')
         .insert({
@@ -319,6 +313,31 @@ export const updateOrderStatus = async (orderId: string, newStatus: string, prev
         });
 
     return { error: logError };
+};
+
+export const updateCustomerStats = async (customerId: string) => {
+    const { data: orders, error } = await supabase
+        .from('orders')
+        .select('total_value, status')
+        .eq('customer_id', customerId)
+        .neq('status', 'cancelled');
+
+    if (error || !orders) return { error };
+
+    const deliveredOrders = orders.filter(o => o.status === 'delivered');
+    const totalOrders = orders.length;
+    const totalSpent = deliveredOrders.reduce((sum, o) => sum + (o.total_value || 0), 0);
+    const lastOrderDate = orders.length > 0 ? new Date().toISOString() : null; // Simplificando por enquanto
+
+    return await supabase
+        .from('customers')
+        .update({
+            total_orders: totalOrders,
+            total_spent: totalSpent,
+            last_order_date: lastOrderDate,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', customerId);
 };
 
 export const createOrder = async (
@@ -351,11 +370,6 @@ export const createOrder = async (
         );
 
     if (itemsError) return { data: null, error: itemsError };
-
-    // If order is created directly as 'preparing' or 'ready', deduct stock immediately
-    if (order.status === 'preparing' || order.status === 'ready' || order.status === 'delivered') {
-        await deductStockFromOrder(orderData.id);
-    }
 
     return { data: orderData, error: null };
 };
@@ -396,21 +410,25 @@ export const deleteCustomer = async (id: string) => {
 // Stock Management
 export const deductStockFromOrder = async (orderId: string) => {
     console.log('Deducting stock for order:', orderId);
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { error: new Error('Usuário não autenticado') };
 
-    // 1. Get Order Items with product ingredients
+    // 1. Get Order Items with product ingredients (Ensuring it belongs to user via order query)
     const { data: orderitems, error: orderError } = await supabase
         .from('order_items')
         .select(`
             quantity,
             product:products (
                 id,
+                user_id,
                 product_ingredients (
                     quantity,
                     ingredient_id
                 )
             )
         `)
-        .eq('order_id', orderId);
+        .eq('order_id', orderId)
+        .filter('product.user_id', 'eq', user.id); // Add extra safety check
 
     if (orderError || !orderitems) {
         console.error('Error fetching order items for stock deduction:', orderError);
@@ -431,14 +449,20 @@ export const deductStockFromOrder = async (orderId: string) => {
 
     // 3. Update stock for each ingredient
     const updates = Array.from(ingredientUsage.entries()).map(async ([ingredientId, quantityUsed]) => {
-        const { data: ingredient } = await supabase.from('ingredients').select('stock_quantity').eq('id', ingredientId).single();
+        const { data: ingredient } = await supabase
+            .from('ingredients')
+            .select('stock_quantity')
+            .eq('id', ingredientId)
+            .eq('user_id', user.id) // Ensure ingredient belongs to user
+            .single();
 
         if (ingredient) {
             const newStock = Math.max(0, ingredient.stock_quantity - quantityUsed);
             return supabase
                 .from('ingredients')
                 .update({ stock_quantity: newStock })
-                .eq('id', ingredientId);
+                .eq('id', ingredientId)
+                .eq('user_id', user.id);
         }
         return Promise.resolve({ error: null });
     });
@@ -450,6 +474,8 @@ export const deductStockFromOrder = async (orderId: string) => {
 
 export const restoreStockFromOrder = async (orderId: string) => {
     console.log('Restoring stock from order:', orderId);
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { error: new Error('Usuário não autenticado') };
 
     // 1. Get Order Items with product ingredients
     const { data: orderitems, error: orderError } = await supabase
@@ -458,13 +484,15 @@ export const restoreStockFromOrder = async (orderId: string) => {
             quantity,
             product:products (
                 id,
+                user_id,
                 product_ingredients (
                     quantity,
                     ingredient_id
                 )
             )
         `)
-        .eq('order_id', orderId);
+        .eq('order_id', orderId)
+        .filter('product.user_id', 'eq', user.id);
 
     if (orderError || !orderitems) {
         console.error('Error fetching order items for stock restoration:', orderError);
@@ -485,14 +513,20 @@ export const restoreStockFromOrder = async (orderId: string) => {
 
     // 3. Update stock for each ingredient (Add back)
     const updates = Array.from(ingredientUsage.entries()).map(async ([ingredientId, quantityRestored]) => {
-        const { data: ingredient } = await supabase.from('ingredients').select('stock_quantity').eq('id', ingredientId).single();
+        const { data: ingredient } = await supabase
+            .from('ingredients')
+            .select('stock_quantity')
+            .eq('id', ingredientId)
+            .eq('user_id', user.id)
+            .single();
 
         if (ingredient) {
             const newStock = ingredient.stock_quantity + quantityRestored;
             return supabase
                 .from('ingredients')
                 .update({ stock_quantity: newStock })
-                .eq('id', ingredientId);
+                .eq('id', ingredientId)
+                .eq('user_id', user.id);
         }
         return Promise.resolve({ error: null });
     });
@@ -664,22 +698,26 @@ export const createStockMovement = async (movement: {
 
     if (!error && movement.type === 'in') {
         // Adicionar ao estoque
-        await supabase.rpc('increment_stock', {
+        const { error: rpcError } = await supabase.rpc('increment_stock', {
             p_ingredient_id: movement.ingredient_id,
             p_quantity: movement.quantity
-        }).catch(() => {
+        });
+
+        if (rpcError) {
             // Fallback se RPC não existir
             updateIngredientStock(movement.ingredient_id, movement.quantity);
-        });
+        }
     } else if (!error && (movement.type === 'out' || movement.type === 'loss')) {
         // Subtrair do estoque
-        await supabase.rpc('decrement_stock', {
+        const { error: rpcError } = await supabase.rpc('decrement_stock', {
             p_ingredient_id: movement.ingredient_id,
             p_quantity: movement.quantity
-        }).catch(() => {
+        });
+
+        if (rpcError) {
             // Fallback
             updateIngredientStock(movement.ingredient_id, -movement.quantity);
-        });
+        }
     }
 
     return { data, error };
@@ -737,11 +775,9 @@ export const getLowStockIngredients = async () => {
     const { data, error } = await supabase
         .from('ingredients')
         .select('*')
-        .eq('user_id', user.id)
-        .lt('stock_quantity', supabase.rpc ?
-            supabase.raw('min_stock_threshold') :
-            5
-        );
+        .eq('user_id', user.id);
+
+    if (error) return { data: null, error };
 
     // Fallback: filter client-side if raw comparison doesn't work
     const filtered = data?.filter(i => i.stock_quantity < (i.min_stock_threshold ?? 5));
