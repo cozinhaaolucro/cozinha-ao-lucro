@@ -216,6 +216,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                 notes: formData.notes || null,
                 status: formData.status,
                 total_value: calculateTotal(),
+                start_date: formData.start_date || null,
                 order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
             } as any,
             orderItems as any

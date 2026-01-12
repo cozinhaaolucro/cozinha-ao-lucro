@@ -89,11 +89,16 @@ const Agenda = () => {
         return days;
     };
 
+    const getOrderDate = (order: OrderWithDetails) => {
+        if (order.start_date) return parseLocalDate(order.start_date);
+        if (order.delivery_date) return parseLocalDate(order.delivery_date);
+        return new Date(order.created_at);
+    };
+
     const getOrdersForDate = (date: Date) => {
         return orders.filter(order => {
-            if (!order.delivery_date) return false;
-            const deliveryDate = parseLocalDate(order.delivery_date);
-            return deliveryDate.toDateString() === date.toDateString();
+            const orderDate = getOrderDate(order);
+            return orderDate.toDateString() === date.toDateString();
         });
     };
 
@@ -159,20 +164,19 @@ const Agenda = () => {
 
         if (dateFilter.start || dateFilter.end) {
             filtered = filtered.filter(order => {
-                if (!order.delivery_date) return false;
-                const deliveryDate = parseLocalDate(order.delivery_date);
-                deliveryDate.setHours(0, 0, 0, 0);
+                const orderDate = getOrderDate(order);
+                orderDate.setHours(0, 0, 0, 0);
 
                 const start = dateFilter.start ? parseLocalDate(dateFilter.start + 'T00:00:00') : null;
                 const end = dateFilter.end ? parseLocalDate(dateFilter.end + 'T00:00:00') : null;
 
                 if (start) {
                     start.setHours(0, 0, 0, 0);
-                    if (deliveryDate < start) return false;
+                    if (orderDate < start) return false;
                 }
                 if (end) {
                     end.setHours(23, 59, 59, 999);
-                    if (deliveryDate > end) return false;
+                    if (orderDate > end) return false;
                 }
                 return true;
             });
@@ -182,17 +186,17 @@ const Agenda = () => {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             filtered = filtered.filter(order => {
-                if (!order.delivery_date || order.status === 'delivered') return false;
-                const deliveryDate = parseLocalDate(order.delivery_date);
-                return deliveryDate < today;
+                if (order.status === 'delivered' || order.status === 'cancelled') return false;
+                const orderDate = getOrderDate(order);
+                return orderDate < today;
             });
         } else if (selectedStatus) {
             filtered = filtered.filter(order => order.status === selectedStatus);
         }
 
         return filtered.sort((a, b) => {
-            const dateA = a.delivery_date ? parseLocalDate(a.delivery_date).getTime() : 0;
-            const dateB = b.delivery_date ? parseLocalDate(b.delivery_date).getTime() : 0;
+            const dateA = getOrderDate(a).getTime();
+            const dateB = getOrderDate(b).getTime();
             if (dateA !== dateB) return dateA - dateB;
 
             if (!a.delivery_time) return 1;

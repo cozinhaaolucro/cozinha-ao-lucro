@@ -129,14 +129,14 @@ const Pedidos = () => {
     const filteredOrders = orders.filter((order) => {
         if (order.status === 'cancelled') return false;
 
-        // Scheduling Logic: Hide future pending orders from "To Do" unless explicitly filtered
-        if (order.status === 'pending' && order.start_date && !dateFilter.start && !dateFilter.end) {
-            const startDate = parseLocalDate(order.start_date);
-            startDate.setHours(0, 0, 0, 0);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (startDate > today) return false;
-        }
+        // Scheduling Logic disabled to prevent confusion
+        // if (order.status === 'pending' && order.start_date && !dateFilter.start && !dateFilter.end) {
+        //     const startDate = parseLocalDate(order.start_date);
+        //     startDate.setHours(0, 0, 0, 0);
+        //     const today = new Date();
+        //     today.setHours(0, 0, 0, 0);
+        //     if (startDate > today) return false;
+        // }
 
         if (!dateFilter.start && !dateFilter.end) return true;
 

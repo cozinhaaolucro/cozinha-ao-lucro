@@ -47,6 +47,9 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
 
     useEffect(() => {
         if (open) {
+            if (order?.customer) {
+                setCustomers([order.customer]);
+            }
             loadData();
             if (order) {
                 setFormData({
@@ -73,7 +76,16 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
             getCustomers(),
             getProducts(),
         ]);
-        if (customersRes.data) setCustomers(customersRes.data);
+
+        if (customersRes.data) {
+            // Ensure the current order's customer is included in the list
+            let allCustomers = customersRes.data;
+            if (order?.customer && !allCustomers.find(c => c.id === order.customer_id)) {
+                allCustomers = [order.customer, ...allCustomers];
+            }
+            setCustomers(allCustomers);
+        }
+
         if (productsRes.data) setProducts(productsRes.data);
     };
 
@@ -241,7 +253,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                     <Label htmlFor="customer">Cliente</Label>
                     <Select value={formData.customer_id} onValueChange={(value) => setFormData({ ...formData, customer_id: value })}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Selecione ou deixe em branco" />
+                            <SelectValue placeholder={order?.customer?.name || "Selecione o cliente"} />
                         </SelectTrigger>
                         <SelectContent>
                             {customers.map((c) => (
@@ -380,7 +392,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 
     const ActionButtons = () => (
