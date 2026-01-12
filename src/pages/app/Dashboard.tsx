@@ -20,7 +20,8 @@ import {
     AlertCircle,
     Calendar,
     Wallet,
-    CreditCard
+    CreditCard,
+    Lightbulb
 } from 'lucide-react';
 import {
     AreaChart,
@@ -42,7 +43,7 @@ interface StockDemandAnalysis {
     status: 'sufficient' | 'low' | 'critical' | 'unused';
 }
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import { CostBreakdownChart } from '@/components/dashboard/CostBreakdownChart';
@@ -370,31 +371,53 @@ const Dashboard = () => {
 
             {/* Premium Goal Progress */}
             <FadeIn delay={75}>
-                <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-                    <CardContent className="p-6">
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                            <div className="space-y-1 text-center md:text-left">
-                                <h3 className="text-lg font-semibold flex items-center gap-2 justify-center md:justify-start">
-                                    Meta de Vendas do Mês 🎯
-                                </h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Você atingiu <span className="font-bold text-foreground">R$ {totalRevenue.toFixed(2)}</span> de uma meta de <span className="font-bold">R$ 10.000,00</span>
-                                </p>
-                            </div>
-                            <div className="flex-1 w-full max-w-md space-y-2">
-                                <div className="flex justify-between text-xs font-medium">
-                                    <span>{((totalRevenue / 10000) * 100).toFixed(1)}%</span>
-                                    <span>R$ 10.000,00</span>
+                <div className="grid gap-6 md:grid-cols-3">
+                    <Card className="md:col-span-2 overflow-hidden border-none shadow-lg bg-gradient-to-r from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+                        <CardContent className="p-6">
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                                <div className="space-y-1 text-center md:text-left">
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 justify-center md:justify-start">
+                                        Meta de Vendas do Mês 🎯
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Você atingiu <span className="font-bold text-foreground">R$ {totalRevenue.toFixed(2)}</span> de uma meta de <span className="font-bold">R$ 10.000,00</span>
+                                    </p>
                                 </div>
-                                <Progress value={(totalRevenue / 10000) * 100} className="h-3 shadow-inner" />
+                                <div className="flex-1 w-full max-w-md space-y-2">
+                                    <div className="flex justify-between text-xs font-medium">
+                                        <span>{((totalRevenue / 10000) * 100).toFixed(1)}%</span>
+                                        <span>R$ 10.000,00</span>
+                                    </div>
+                                    <Progress value={(totalRevenue / 10000) * 100} className="h-3 shadow-inner" />
+                                </div>
+                                <div className="hidden lg:block text-right">
+                                    <p className="text-sm font-medium">Faltam apenas</p>
+                                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">R$ {Math.max(0, 10000 - totalRevenue).toFixed(2)}</p>
+                                </div>
                             </div>
-                            <div className="hidden lg:block text-right">
-                                <p className="text-sm font-medium">Faltam apenas</p>
-                                <p className="text-2xl font-bold text-green-600 dark:text-green-400">R$ {Math.max(0, 10000 - totalRevenue).toFixed(2)}</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="overflow-hidden border-none shadow-lg bg-amber-50 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900">
+                        <CardContent className="p-6 flex flex-col justify-center h-full space-y-2">
+                            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                                <Lightbulb className="w-5 h-5 animate-pulse" />
+                                <h3 className="font-bold">Dica do Especialista</h3>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                            <p className="text-sm text-amber-800/80 dark:text-amber-200/80 leading-relaxed">
+                                {totalProfit > 0 && profitMargin < 30 ? (
+                                    "Sua margem está abaixo de 30%. Avalie se é possível reduzir o desperdício de insumos ou ajustar o preço de seus pratos principais."
+                                ) : totalRevenue > 5000 ? (
+                                    "Excelente volume de vendas! Considere criar combos com seus produtos mais lucrativos para aumentar ainda mais o ticket médio."
+                                ) : ingredients.some(i => (i.stock_quantity ?? 0) <= (i.min_stock_threshold ?? 5)) ? (
+                                    "Atenção ao estoque! Alguns itens críticos estão acabando. Reponha agora para não perder vendas."
+                                ) : (
+                                    "Mantenha seus clientes por perto! O CRM mostra quem não compra há mais de 30 dias. Que tal enviar um cupom hoje?"
+                                )}
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
             </FadeIn>
 
             {/* Financial cards */}
@@ -405,7 +428,7 @@ const Dashboard = () => {
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <div className="flex items-center gap-2">
                                     <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-                                    <Tooltip>
+                                    <UITooltip>
                                         <TooltipTrigger>
                                             <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                                         </TooltipTrigger>
@@ -414,7 +437,7 @@ const Dashboard = () => {
                                                 Soma de todos os pedidos finalizados (Entregues) e em produção no período selecionado.
                                             </p>
                                         </TooltipContent>
-                                    </Tooltip>
+                                    </UITooltip>
                                 </div>
                                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
@@ -428,7 +451,7 @@ const Dashboard = () => {
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <div className="flex items-center gap-2">
                                     <CardTitle className="text-sm font-medium">Lucro Líquido</CardTitle>
-                                    <Tooltip>
+                                    <UITooltip>
                                         <TooltipTrigger>
                                             <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                                         </TooltipTrigger>
@@ -437,7 +460,7 @@ const Dashboard = () => {
                                                 Quanto sobrou no seu bolso após descontar o custo dos ingredientes de cada venda.
                                             </p>
                                         </TooltipContent>
-                                    </Tooltip>
+                                    </UITooltip>
                                 </div>
                                 <Wallet className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
@@ -451,7 +474,7 @@ const Dashboard = () => {
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <div className="flex items-center gap-2">
                                     <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
-                                    <Tooltip>
+                                    <UITooltip>
                                         <TooltipTrigger>
                                             <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                                         </TooltipTrigger>
@@ -460,7 +483,7 @@ const Dashboard = () => {
                                                 Total gasto em insumos e ingredientes para produzir as vendas do período.
                                             </p>
                                         </TooltipContent>
-                                    </Tooltip>
+                                    </UITooltip>
                                 </div>
                                 <CreditCard className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
@@ -474,7 +497,7 @@ const Dashboard = () => {
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <div className="flex items-center gap-2">
                                     <CardTitle className="text-sm font-medium">Margem Bruta</CardTitle>
-                                    <Tooltip>
+                                    <UITooltip>
                                         <TooltipTrigger>
                                             <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                                         </TooltipTrigger>
@@ -483,7 +506,7 @@ const Dashboard = () => {
                                                 A porcentagem do seu faturamento que é lucro. Maiores margens indicam maior eficiência.
                                             </p>
                                         </TooltipContent>
-                                    </Tooltip>
+                                    </UITooltip>
                                 </div>
                                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>

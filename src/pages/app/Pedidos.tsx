@@ -15,6 +15,7 @@ import EditOrderDialog from '@/components/orders/EditOrderDialog';
 import { useToast } from '@/hooks/use-toast';
 import { parseLocalDate, formatLocalDate } from '@/lib/dateUtils';
 import confetti from 'canvas-confetti';
+import { motion, AnimatePresence } from 'framer-motion';
 import ClientProfileDrawer from '@/components/crm/ClientProfileDrawer';
 import SendMessageDialog from '@/components/crm/SendMessageDialog';
 import { Customer, OrderStatus } from '@/types/database';
@@ -183,6 +184,14 @@ const Pedidos = () => {
             loadOrders();
         } else {
             toast({ title: 'Status atualizado!' });
+            if (newStatus === 'delivered') {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#22c55e', '#3b82f6', '#f59e0b']
+                });
+            }
         }
 
         setDraggedOrder(null);
@@ -231,114 +240,132 @@ const Pedidos = () => {
 
                 <div className={isMobile ? "space-y-3 pb-20" : "space-y-2 min-h-[400px]"}>
                     {isEmpty ? (
-                        <Card className={`${config.color} border-2 border-dashed h-full min-h-[150px]`}>
-                            <CardContent className="p-6 text-center text-sm text-muted-foreground flex items-center justify-center h-full">
-                                {isMobile ? "Nenhuem pedido" : "Arraste pedidos aqui"}
-                            </CardContent>
+                        <Card className={`${config.color} border-2 border-dashed h-full min-h-[150px] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-300`}>
+                            <div className="w-12 h-12 rounded-full bg-white/50 flex items-center justify-center mb-3">
+                                <PackageCheck className="w-6 h-6 text-muted-foreground/40" />
+                            </div>
+                            <p className="text-sm font-medium text-muted-foreground/60 leading-tight">
+                                {status === 'pending' && "Tudo limpo por aqui!\nNovos pedidos aparecerão aqui."}
+                                {status === 'preparing' && "Mão na massa!\nArraste pedidos para iniciar."}
+                                {status === 'ready' && "Nada pronto ainda?\nFinalize uma produção."}
+                                {status === 'delivered' && "Nenhuma entrega hoje?\nVá em frente!"}
+                            </p>
+                            {!isMobile && <p className="text-[10px] text-muted-foreground/40 mt-2 italic">Solte aqui para mover</p>}
                         </Card>
                     ) : (
-                        statusOrders.map((order) => (
-                            <Card
-                                key={order.id}
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, order.id)}
-                                onTouchStart={() => {
-                                    longPressTimerRef.current = setTimeout(() => {
-                                        setLongPressOrder(order);
-                                    }, 500);
-                                }}
-                                onTouchEnd={() => {
-                                    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-                                }}
-                                onTouchMove={() => {
-                                    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-                                }}
-                                className={`${config.color} border-2 hover:shadow-md transition-all cursor-move group ${draggedOrder === order.id ? 'opacity-50' : ''}`}
-                            >
-                                <CardHeader className="pb-3">
-                                    <div className="text-sm flex items-center justify-between">
-                                        <div className="font-semibold" onClick={() => handleCustomerClick(order.customer)}>
-                                            <span className="hover:underline cursor-pointer text-primary">
-                                                {order.customer?.name || 'Cliente não informado'}
-                                            </span>
-                                            <div className="text-xs text-muted-foreground font-normal">
-                                                #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
-                                            </div>
-                                        </div>
+                        <AnimatePresence mode="popLayout">
+                            {statusOrders.map((order) => (
+                                <motion.div
+                                    key={order.id}
+                                    layout
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="mb-2"
+                                >
+                                    <Card
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, order.id)}
+                                        onTouchStart={() => {
+                                            longPressTimerRef.current = setTimeout(() => {
+                                                setLongPressOrder(order);
+                                            }, 500);
+                                        }}
+                                        onTouchEnd={() => {
+                                            if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+                                        }}
+                                        onTouchMove={() => {
+                                            if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+                                        }}
+                                        className={`${config.color} border-2 hover:shadow-md transition-all cursor-move group ${draggedOrder === order.id ? 'opacity-50 ring-2 ring-primary ring-offset-2' : ''}`}
+                                    >
+                                        <CardHeader className="pb-3">
+                                            <div className="text-sm flex items-center justify-between">
+                                                <div className="font-semibold" onClick={() => handleCustomerClick(order.customer)}>
+                                                    <span className="hover:underline cursor-pointer text-primary">
+                                                        {order.customer?.name || 'Cliente não informado'}
+                                                    </span>
+                                                    <div className="text-xs text-muted-foreground font-normal">
+                                                        #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
+                                                    </div>
+                                                </div>
 
-                                        <div className={isMobile ? "flex gap-1" : "flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"}>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDuplicate(order);
-                                                }}
-                                                title="Duplicar Pedido"
-                                            >
-                                                <Copy className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setEditingOrder(order);
-                                                }}
-                                            >
-                                                <Pencil className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 text-destructive hover:text-red-600 hover:bg-red-50"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (confirm('Excluir este pedido?')) {
-                                                        handleDeleteOrder(order.id);
-                                                    }
-                                                }}
-                                                title="Excluir"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                            {order.customer?.phone && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleWhatsApp(order);
-                                                    }}
-                                                >
-                                                    <Phone className="w-4 h-4" />
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-2">
-                                    <div className="text-xs space-y-1">
-                                        <div className="flex justify-between">
-                                            <span><strong>Entrega:</strong> {formatDate(order.delivery_date)}</span>
-                                            <span className="font-bold text-base">R$ {order.total_value.toFixed(2)}</span>
-                                        </div>
-
-                                        {order.items && order.items.length > 0 && (
-                                            <div className="text-xs text-muted-foreground mt-2 pt-2 border-t text-left">
-                                                {order.items.slice(0, 2).map((item, idx) => (
-                                                    <p key={idx} className="line-clamp-1">• {item.product_name} (x{item.quantity})</p>
-                                                ))}
-                                                {order.items.length > 2 && <p className="text-[10px] italic">+ {order.items.length - 2} itens...</p>}
+                                                <div className={isMobile ? "flex gap-1" : "flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"}>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDuplicate(order);
+                                                        }}
+                                                        title="Duplicar Pedido"
+                                                    >
+                                                        <Copy className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingOrder(order);
+                                                        }}
+                                                    >
+                                                        <Pencil className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-destructive hover:text-red-600 hover:bg-red-50"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (confirm('Excluir este pedido?')) {
+                                                                handleDeleteOrder(order.id);
+                                                            }
+                                                        }}
+                                                        title="Excluir"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                    {order.customer?.phone && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleWhatsApp(order);
+                                                            }}
+                                                        >
+                                                            <Phone className="w-4 h-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))
+                                        </CardHeader>
+                                        <CardContent className="space-y-2">
+                                            <div className="text-xs space-y-1">
+                                                <div className="flex justify-between">
+                                                    <span><strong>Entrega:</strong> {formatDate(order.delivery_date)}</span>
+                                                    <span className="font-bold text-base">R$ {order.total_value.toFixed(2)}</span>
+                                                </div>
+
+                                                {order.items && order.items.length > 0 && (
+                                                    <div className="text-xs text-muted-foreground mt-2 pt-2 border-t text-left">
+                                                        {order.items.slice(0, 2).map((item, idx) => (
+                                                            <p key={idx} className="line-clamp-1">• {item.product_name} (x{item.quantity})</p>
+                                                        ))}
+                                                        {order.items.length > 2 && <p className="text-[10px] italic">+ {order.items.length - 2} itens...</p>}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
                     )}
                 </div>
             </div>

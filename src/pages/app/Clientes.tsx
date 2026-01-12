@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Phone, Plus, Search, MessageCircle, Filter, Pencil, Trash2, X, Mail, Download, Upload } from 'lucide-react';
+import { Phone, Plus, Search, MessageCircle, Filter, Pencil, Trash2, X, Mail, Download, Upload, Users } from 'lucide-react';
 import { getCustomers, deleteCustomer, createCustomer } from '@/lib/database';
 import { exportToExcel, importFromExcel, getValue } from '@/lib/excel';
 import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/types/database';
 import NewCustomerDialog from '@/components/customers/NewCustomerDialog';
 import EditCustomerDialog from '@/components/customers/EditCustomerDialog';
+import { Star, Clock, UserPlus } from 'lucide-react';
 
 const Clientes = () => {
     const { toast } = useToast();
@@ -307,9 +308,22 @@ const Clientes = () => {
 
             <div className="grid gap-3">
                 {filteredCustomers.length === 0 ? (
-                    <Card>
-                        <CardContent className="p-8 text-center text-muted-foreground">
-                            {search ? 'Nenhum cliente encontrado.' : 'Nenhum cliente cadastrado.'}
+                    <Card className="border-dashed">
+                        <CardContent className="p-12 text-center">
+                            <div className="flex flex-col items-center gap-2">
+                                <Users className="w-12 h-12 text-muted-foreground/20" />
+                                <h3 className="font-bold text-lg">{search ? 'Nenhum cliente encontrado' : 'Sua lista de clientes está vazia'}</h3>
+                                <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                                    {search
+                                        ? 'Tente buscar por um nome ou telefone diferente.'
+                                        : 'Comece cadastrando seus clientes para acompanhar o histórico de compras e fidelidade.'}
+                                </p>
+                                {!search && (
+                                    <Button variant="outline" className="mt-4 gap-2" onClick={() => setIsDialogOpen(true)}>
+                                        <Plus className="w-4 h-4" /> Cadastrar Meu Primeiro Cliente
+                                    </Button>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
                 ) : (
@@ -329,10 +343,21 @@ const Clientes = () => {
                                             onCheckedChange={() => toggleSelect(customer.id)}
                                         />
                                         <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
+                                            <div className="flex flex-wrap items-center gap-2 mb-1">
                                                 <h4 className="font-medium">{customer.name}</h4>
+                                                {customer.total_orders >= 10 || customer.total_spent >= 500 ? (
+                                                    <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200 gap-1">
+                                                        <Star className="w-3 h-3 fill-amber-500" /> VIP
+                                                    </Badge>
+                                                ) : customer.total_orders === 0 ? (
+                                                    <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50 gap-1">
+                                                        <UserPlus className="w-3 h-3" /> Novo
+                                                    </Badge>
+                                                ) : null}
                                                 {inactive && (
-                                                    <Badge variant="destructive" className="text-xs">Inativo</Badge>
+                                                    <Badge variant="destructive" className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200 gap-1">
+                                                        <Clock className="w-3 h-3" /> Sumido
+                                                    </Badge>
                                                 )}
                                             </div>
                                             <div className="text-sm text-muted-foreground space-y-0.5">

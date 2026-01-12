@@ -375,9 +375,18 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {products.length === 0 ? (
-                    <Card className="col-span-full">
-                        <CardContent className="p-8 text-center text-muted-foreground">
-                            Nenhum produto cadastrado. Crie seu primeiro produto!
+                    <Card className="col-span-full border-dashed">
+                        <CardContent className="p-12 text-center">
+                            <div className="flex flex-col items-center gap-2">
+                                <TrendingUp className="w-12 h-12 text-muted-foreground/20" />
+                                <h3 className="font-bold text-lg">Nenhum produto cadastrado</h3>
+                                <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                                    Crie seu primeiro produto para começar a calcular seus lucros e gerenciar suas vendas com precisão.
+                                </p>
+                                <Button className="mt-4 gap-2" onClick={onNewProduct}>
+                                    <Plus className="w-4 h-4" /> Criar Meu Primeiro Produto
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
                 ) : (
