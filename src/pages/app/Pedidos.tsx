@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Added Tabs
-import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2, PackageCheck, ChevronRight } from 'lucide-react';
+import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2, PackageCheck, ChevronRight, ChefHat } from 'lucide-react';
 import { getOrders, updateOrderStatus, deleteOrder, createOrder, createCustomer, getProducts, getCustomers } from '@/lib/database'; // Added createOrder, createCustomer, getProducts, getCustomers
 import { exportToExcel, importFromExcel } from '@/lib/excel';
 import { supabase } from '@/lib/supabase';
@@ -351,6 +351,12 @@ const Pedidos = () => {
                                                     <span><strong>Entrega:</strong> {formatDate(order.delivery_date)}</span>
                                                     <span className="font-bold text-base">R$ {order.total_value.toFixed(2)}</span>
                                                 </div>
+                                                {order.start_date && (
+                                                    <div className="flex items-center gap-1 text-muted-foreground" title="Data de Produção">
+                                                        <ChefHat className="w-3 h-3" />
+                                                        <span>{formatDate(order.start_date)}</span>
+                                                    </div>
+                                                )}
 
                                                 {order.items && order.items.length > 0 && (
                                                     <div className="text-xs text-muted-foreground mt-2 pt-2 border-t text-left">
