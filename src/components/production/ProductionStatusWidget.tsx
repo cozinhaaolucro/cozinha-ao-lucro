@@ -180,7 +180,7 @@ const ProductionStatusWidget = () => {
                                 activeOrders.slice(0, 3).map(order => (
                                     <div key={order.id} className="bg-neutral-800/40 p-2 rounded border border-white/5">
                                         <div className="flex justify-between items-center text-xs text-white mb-1">
-                                            <span className="font-bold">#{order.order_number || order.id.slice(0, 4)}</span>
+                                            <span className="font-bold">#{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}</span>
                                             <ProductionTimer startDate={order.production_started_at} />
                                         </div>
                                         <p className="text-[10px] text-neutral-400 truncate">{order.items?.map(i => i.product_name).join(', ')}</p>
@@ -245,7 +245,7 @@ const ProductionStatusWidget = () => {
                                                 <div className="flex justify-between items-start">
                                                     <div>
                                                         <span className="font-bold text-lg">
-                                                            #{order.display_id || order.id.slice(0, 4)}
+                                                            #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
                                                         </span>
                                                         <p className="text-sm font-medium">{order.customer?.name || 'Cliente Balcão'}</p>
                                                     </div>
@@ -298,7 +298,7 @@ const ProductionStatusWidget = () => {
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <span className="font-bold text-base">
-                                                            #{order.display_id || order.id.slice(0, 4)}
+                                                            #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
                                                         </span>
                                                         <span className="text-xs text-muted-foreground">
                                                             {format(new Date(order.created_at), 'HH:mm')}
@@ -333,7 +333,7 @@ const ProductionStatusWidget = () => {
                                             <CardContent className="p-4 flex items-center justify-between">
                                                 <div>
                                                     <span className="font-bold text-green-900">
-                                                        #{order.display_id || order.id.slice(0, 4)}
+                                                        #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
                                                     </span>
                                                     <p className="text-sm text-green-700">{order.customer?.name}</p>
                                                 </div>
