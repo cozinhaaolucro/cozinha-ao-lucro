@@ -49,7 +49,6 @@ import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import NewOrderDialog from '@/components/orders/NewOrderDialog';
 import NewCustomerDialog from '@/components/customers/NewCustomerDialog';
 import ProductBuilder from '@/components/products/ProductBuilder';
-import NewIngredientDialog from '@/components/products/NewIngredientDialog';
 import ProductionStatusWidget from '@/components/production/ProductionStatusWidget'; // New Widget
 
 const DashboardLayout = () => {
@@ -66,7 +65,6 @@ const DashboardLayout = () => {
     const [isOrderOpen, setIsOrderOpen] = useState(false);
     const [isClientOpen, setIsClientOpen] = useState(false);
     const [isProductOpen, setIsProductOpen] = useState(false);
-    const [isIngredientOpen, setIsIngredientOpen] = useState(false);
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
     // Global keyboard shortcut for Command Palette removed as per user request
@@ -418,7 +416,7 @@ const DashboardLayout = () => {
                 onNewOrder={() => setIsOrderOpen(true)}
                 onNewClient={() => setIsClientOpen(true)}
                 onNewProduct={() => setIsProductOpen(true)}
-                onNewIngredient={() => setIsIngredientOpen(true)}
+                onNewIngredient={() => navigate('/app/produtos?tab=ingredients&action=new')}
             />
 
             <ProductionStatusWidget />
@@ -444,14 +442,6 @@ const DashboardLayout = () => {
                 onOpenChange={setIsProductOpen}
                 onSuccess={() => {
                     setIsProductOpen(false);
-                    if (location.pathname.includes('produtos')) window.location.reload();
-                }}
-            />
-            <NewIngredientDialog
-                open={isIngredientOpen}
-                onOpenChange={setIsIngredientOpen}
-                onSuccess={() => {
-                    setIsIngredientOpen(false);
                     if (location.pathname.includes('produtos')) window.location.reload();
                 }}
             />

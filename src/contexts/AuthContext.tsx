@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
+import { seedAccount } from '@/lib/seeding';
 
 type AuthContextType = {
     session: Session | null;
@@ -41,6 +42,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 console.error('Error fetching profile:', error);
             } else {
                 setProfile(data);
+                // Trigger seeding if profile exists
+                seedAccount().catch(console.error);
             }
         } catch (err) {
             console.error('Unexpected error fetching profile:', err);

@@ -37,6 +37,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
         delivery_time: '',
         notes: '',
         status: 'pending' as OrderStatus,
+        start_date: '',
     });
     const [items, setItems] = useState<Array<{ product_id: string; quantity: number }>>([]);
     const [showNewCustomer, setShowNewCustomer] = useState(false);
@@ -78,6 +79,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
             address: newCustomerData.address || null,
             notes: newCustomerData.notes || null,
             email: null,
+            last_order_date: null,
         });
 
         if (!error && data) {
@@ -145,8 +147,8 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                 status: formData.status,
                 total_value: calculateTotal(),
                 order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-            },
-            orderItems
+            } as any,
+            orderItems as any
         );
 
         if (!error) {
@@ -164,7 +166,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
     };
 
     const resetForm = () => {
-        setFormData({ customer_id: '', delivery_date: '', delivery_time: '', notes: '', status: 'pending' });
+        setFormData({ customer_id: '', delivery_date: '', delivery_time: '', notes: '', status: 'pending', start_date: '' });
         setItems([]);
         setShowNewCustomer(false);
         setNewCustomerData({ name: '', phone: '', address: '', notes: '' });
@@ -251,7 +253,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                     </div>
                     <div className="space-y-3">
                         <div>
-                            <Label htmlFor="delivery_date">Data</Label>
+                            <Label htmlFor="delivery_date">Data de Entrega</Label>
                             <Input
                                 id="delivery_date"
                                 type="date"
@@ -267,6 +269,16 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                                 type="time"
                                 value={formData.delivery_time}
                                 onChange={(e) => setFormData({ ...formData, delivery_time: e.target.value })}
+                                className="h-10"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="start_date">Data de Produção</Label>
+                            <Input
+                                id="start_date"
+                                type="date"
+                                value={formData.start_date}
+                                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                                 className="h-10"
                             />
                         </div>

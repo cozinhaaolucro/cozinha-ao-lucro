@@ -1,32 +1,38 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Download, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download, Upload, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerDescription,
+} from "@/components/ui/drawer";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox'; // Added
+import { Checkbox } from '@/components/ui/checkbox';
 import { getIngredients, createIngredient, updateIngredient, deleteIngredient, getOrders } from '@/lib/database';
 import { exportToExcel, importFromExcel } from '@/lib/excel';
 import { Badge } from '@/components/ui/badge';
 import type { Ingredient } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
-import BulkEditIngredientsDialog from './BulkEditIngredientsDialog'; // Added
+import BulkEditIngredientsDialog from './BulkEditIngredientsDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { presetIngredients } from '@/data/presetIngredients';
-
-
 
 const IngredientList = () => {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const isMobile = useIsMobile();
 
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // Check for 'new' action ONLY if we are on the ingredients tab (checked implicitly by parent or URL context)
-    // Actually simpler: if this component is mounted and action=new matches requirements
     useEffect(() => {
         if (searchParams.get('action') === 'new' && searchParams.get('tab') === 'ingredients') {
             setIsDialogOpen(true);
@@ -34,13 +40,13 @@ const IngredientList = () => {
             setSearchParams(searchParams, { replace: true });
         }
     }, [searchParams, setSearchParams]);
+
     const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
     const [formData, setFormData] = useState({
         name: '',
         unit: 'kg' as 'kg' | 'litro' | 'unidade' | 'grama' | 'ml',
         cost_per_unit: 0,
         stock_quantity: 0,
-        min_stock_threshold: 0,
     });
     const { toast } = useToast();
 
@@ -48,23 +54,15 @@ const IngredientList = () => {
     const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
     const [isBulkEditDialogOpen, setIsBulkEditDialogOpen] = useState(false);
 
-
-
-
-
-
-
     const loadIngredients = async () => {
         const { data, error } = await getIngredients();
         if (!error && data) {
-            // Auto-fix negative stock
             const negativeStock = data.filter(i => (i.stock_quantity || 0) < 0);
             if (negativeStock.length > 0) {
                 console.log('Detectado estoque negativo. Corrigindo...', negativeStock);
                 await Promise.all(negativeStock.map(ing =>
                     updateIngredient(ing.id, { stock_quantity: 0 })
                 ));
-                // Reflect change in local state logic by overriding the fetches
                 const fixedData = data.map(i => (i.stock_quantity || 0) < 0 ? { ...i, stock_quantity: 0 } : i);
                 setIngredients(fixedData);
             } else {
@@ -89,8 +87,8 @@ const IngredientList = () => {
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
 
         if (editingIngredient) {
             const { error } = await updateIngredient(editingIngredient.id, formData);
@@ -104,7 +102,6 @@ const IngredientList = () => {
                     description: error.message,
                     variant: 'destructive'
                 });
-                console.error('Erro:', error);
             }
         } else {
             const { error } = await createIngredient(formData);
@@ -118,7 +115,6 @@ const IngredientList = () => {
                     description: error.message,
                     variant: 'destructive'
                 });
-                console.error('Erro:', error);
             }
         }
     };
@@ -134,7 +130,7 @@ const IngredientList = () => {
     };
 
     const resetForm = () => {
-        setFormData({ name: '', unit: 'kg', cost_per_unit: 0, stock_quantity: 0, min_stock_threshold: 0 });
+        setFormData({ name: '', unit: 'kg', cost_per_unit: 0, stock_quantity: 0 });
         setEditingIngredient(null);
         setIsDialogOpen(false);
     };
@@ -146,7 +142,6 @@ const IngredientList = () => {
             unit: ingredient.unit as any,
             cost_per_unit: ingredient.cost_per_unit,
             stock_quantity: ingredient.stock_quantity || 0,
-            min_stock_threshold: ingredient.min_stock_threshold || 0,
         });
         setIsDialogOpen(true);
     };
@@ -202,7 +197,7 @@ const IngredientList = () => {
         }
     };
 
-    // ... existing export/import ...
+    // ... Export/Import logic ...
     const handleExport = () => {
         const dataToExport = ingredients.map(i => ({
             Nome: i.name,
@@ -225,8 +220,6 @@ const IngredientList = () => {
             for (const row of data) {
                 const name = row['Nome'] || row['name'] || row['Name'];
                 if (!name) continue;
-
-                // Simple handling of unit/cost - defaulting if missing/invalid
                 const unit = (['kg', 'litro', 'unidade', 'grama', 'ml'].includes(row['Unidade']?.toLowerCase()) ? row['Unidade'].toLowerCase() : 'unidade') as Ingredient['unit'];
 
                 const { error } = await createIngredient({
@@ -234,35 +227,25 @@ const IngredientList = () => {
                     unit: unit,
                     cost_per_unit: Number(row['Custo/Unidade'] || row['cost_per_unit'] || 0),
                     stock_quantity: Number(row['Estoque'] || row['stock_quantity'] || 0),
-                    min_stock_threshold: Number(row['Estoque Mínimo'] || row['min_stock_threshold'] || 0)
-                });
+                } as any);
 
                 if (error) errorCount++;
                 else successCount++;
             }
-
-            toast({
-                title: 'Importação concluída',
-                description: `${successCount} ingredientes importados. ${errorCount > 0 ? `${errorCount} falhas.` : ''}`
-            });
+            toast({ title: 'Importação concluída', description: `${successCount} sucesso, ${errorCount} erros.` });
             loadIngredients();
         } catch (error) {
-            console.error(error);
-            toast({ title: 'Erro na importação', description: 'Verifique o formato do arquivo.', variant: 'destructive' });
+            toast({ title: 'Erro na importação', variant: 'destructive' });
         }
-
         e.target.value = '';
     };
-
 
     const [activeOrders, setActiveOrders] = useState<any[]>([]);
 
     useEffect(() => {
         const loadActiveOrders = async () => {
             const { data } = await getOrders();
-            if (data) {
-                setActiveOrders(data.filter(o => ['pending', 'preparing'].includes(o.status)));
-            }
+            if (data) setActiveOrders(data.filter(o => ['pending', 'preparing'].includes(o.status)));
         };
         loadActiveOrders();
     }, []);
@@ -271,11 +254,8 @@ const IngredientList = () => {
         let demand = 0;
         activeOrders.forEach(order => {
             order.items?.forEach((item: any) => {
-                // Check if product has ingredients (needs to be fetched with product details in getOrders, which it is)
                 item.product?.product_ingredients?.forEach((pi: any) => {
-                    if (pi.ingredient_id === ingredientId) {
-                        demand += pi.quantity * item.quantity;
-                    }
+                    if (pi.ingredient_id === ingredientId) demand += pi.quantity * item.quantity;
                 });
             });
         });
@@ -283,18 +263,133 @@ const IngredientList = () => {
     };
 
     const getStatusColor = (stock: number, demand: number) => {
-        if (demand === 0) return stock > 0 ? 'bg-green-500/5 border-l-green-500' : 'bg-gray-100 border-l-gray-300'; // No demand: Green if stock exists, else Grey
-
+        if (demand === 0) return stock > 0 ? 'bg-green-500/5 border-l-green-500' : 'bg-gray-100 border-l-gray-300';
         const ratio = stock / demand;
-        if (ratio >= 1) return 'bg-green-500/10 border-l-green-500'; // Sufficient stock
-        if (ratio >= 0.5) return 'bg-yellow-500/10 border-l-yellow-500'; // Low/Tight stock
-        return 'bg-red-500/10 border-l-red-500'; // Critical shortage
+        if (ratio >= 1) return 'bg-green-500/10 border-l-green-500';
+        if (ratio >= 0.5) return 'bg-yellow-500/10 border-l-yellow-500';
+        return 'bg-red-500/10 border-l-red-500';
     };
 
+    // --- FORM CONTENT ---
+    const FormContent = (
+        <div className="space-y-6 pb-20 sm:pb-0">
+            <div className="space-y-4">
+                <div className="flex items-center gap-2 text-lg font-semibold border-b pb-2">
+                    <Package className="w-5 h-5 text-primary" />
+                    <h3>Detalhes do Ingrediente</h3>
+                </div>
+
+                {!editingIngredient && (
+                    <div className="space-y-2">
+                        <Label>Preencher com modelo (Opcional)</Label>
+                        <Select onValueChange={handlePresetSelect}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione um ingrediente padrão..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {presetIngredients.map((preset) => (
+                                    <SelectItem key={preset.name} value={preset.name}>
+                                        {preset.name} - R$ {(preset.price * 1.15).toFixed(2)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+
+                <div>
+                    <Label htmlFor="name">Nome</Label>
+                    <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="Ex: Leite Condensado"
+                        required
+                        className="h-10"
+                    />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label htmlFor="unit">Unidade</Label>
+                        <Select
+                            value={formData.unit}
+                            onValueChange={(value) => setFormData({ ...formData, unit: value as any })}
+                        >
+                            <SelectTrigger className="h-10">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="kg">Kg</SelectItem>
+                                <SelectItem value="litro">Litro</SelectItem>
+                                <SelectItem value="grama">Grama</SelectItem>
+                                <SelectItem value="ml">ML</SelectItem>
+                                <SelectItem value="unidade">Unidade</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <Label htmlFor="cost">Custo / Unidade (R$)</Label>
+                        <Input
+                            id="cost"
+                            type="number"
+                            step="0.01"
+                            value={formData.cost_per_unit}
+                            onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) })}
+                            required
+                            className="h-10"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <Label htmlFor="stock">Quantidade em Estoque</Label>
+                    <Input
+                        id="stock"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.stock_quantity}
+                        onChange={(e) => setFormData({ ...formData, stock_quantity: parseFloat(e.target.value) || 0 })}
+                        placeholder="Ex: 5.5"
+                        className="h-10"
+                    />
+                </div>
+
+                <p className="text-[10px] text-muted-foreground p-2 bg-muted/20 rounded border">
+                    Unidade de medida atual: <strong>{formData.unit}</strong>
+                </p>
+            </div>
+        </div>
+    );
+
+    const FooterButtons = (
+        <div className="flex items-center justify-between w-full gap-4 pt-2 border-t mt-auto bg-background/95 backdrop-blur">
+            <div className="flex gap-2 w-full justify-end">
+                <Button type="button" variant="ghost" onClick={resetForm}>
+                    Cancelar
+                </Button>
+                {editingIngredient && (
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        variant="outline"
+                        className="text-destructive hover:text-destructive border-destructive/20 hover:bg-destructive/10"
+                        onClick={() => handleDelete(editingIngredient.id)}
+                    >
+                        Excluir
+                    </Button>
+                )}
+                <Button onClick={() => handleSubmit()} className={editingIngredient ? "px-6" : "px-6 flex-1 sm:flex-none"}>
+                    {editingIngredient ? 'Salvar Alterações' : 'Criar Ingrediente'}
+                </Button>
+            </div>
+        </div>
+    );
+
+    // --- RENDER ---
     return (
         <div className="space-y-4">
-            {/* Toolbar */}
-            {/* ... toolbar ... */}
             <div className="flex flex-wrap items-center justify-between gap-3 bg-card p-3 sm:p-4 rounded-lg border shadow-sm">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                     <div className="flex items-center gap-2">
@@ -385,11 +480,6 @@ const IngredientList = () => {
                                         <p className="text-xs text-muted-foreground">
                                             {stock} {ingredient.unit}
                                         </p>
-                                        {stock <= (ingredient.min_stock_threshold || 0) && stock > 0 && (
-                                            <Badge variant="outline" className="text-[10px] h-4 bg-yellow-50 text-yellow-700 border-yellow-200 animate-pulse">
-                                                Baixo
-                                            </Badge>
-                                        )}
                                         {stock === 0 && (
                                             <Badge variant="destructive" className="text-[10px] h-4 animate-bounce">
                                                 Esgotado
@@ -401,7 +491,6 @@ const IngredientList = () => {
                                             Demanda: {demand.toFixed(1)} {ingredient.unit}
                                         </p>
                                     )}
-                                    {/* Desktop: hover-only */}
                                     <div className="mt-2 hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Button
                                             variant="outline"
@@ -421,7 +510,6 @@ const IngredientList = () => {
                                             <Trash2 className="w-3 h-3" />
                                         </Button>
                                     </div>
-                                    {/* Mobile: always visible */}
                                     <div className="mt-2 flex md:hidden">
                                         <Button
                                             variant="outline"
@@ -435,128 +523,51 @@ const IngredientList = () => {
                                     </div>
                                 </CardContent>
                             </Card>
-                        )
+                        );
                     })}
                 </div>
             )}
 
-            <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                if (!open) resetForm();
-                setIsDialogOpen(open);
-            }}>
-
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{editingIngredient ? 'Editar' : 'Novo'} Ingrediente</DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {!editingIngredient && (
-                            <div>
-                                <Label>Preencher com modelo</Label>
-                                <Select onValueChange={handlePresetSelect}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Selecione um ingrediente padrão..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {presetIngredients.map((preset) => (
-                                            <SelectItem key={preset.name} value={preset.name}>
-                                                {preset.name} - R$ {(preset.price * 1.15).toFixed(2)}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+            {isMobile ? (
+                <Drawer open={isDialogOpen} onOpenChange={(open) => {
+                    if (!open) resetForm();
+                    setIsDialogOpen(open);
+                }}>
+                    <DrawerContent className="h-[90vh] flex flex-col">
+                        <DrawerHeader className="border-b pb-4">
+                            <DrawerTitle>{editingIngredient ? 'Editar Ingrediente' : 'Novo Ingrediente'}</DrawerTitle>
+                            <DrawerDescription>
+                                {editingIngredient ? 'Faça alterações no ingrediente existente' : 'Cadastre um novo ingrediente para seu estoque'}
+                            </DrawerDescription>
+                        </DrawerHeader>
+                        <ScrollArea className="flex-1 overflow-y-auto">
+                            <div className="px-4 py-4 w-full max-w-md mx-auto">
+                                {FormContent}
                             </div>
-                        )}
-                        <div>
-                            <Label htmlFor="name">Nome</Label>
-                            <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="Ex: Leite Condensado"
-                                required
-                            />
+                        </ScrollArea>
+                        <div className="p-4 border-t mt-auto">
+                            {FooterButtons}
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="unit">Unidade</Label>
-                                <Select
-                                    value={formData.unit}
-                                    onValueChange={(value) => setFormData({ ...formData, unit: value as any })}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="kg">Kg</SelectItem>
-                                        <SelectItem value="litro">Litro</SelectItem>
-                                        <SelectItem value="grama">Grama</SelectItem>
-                                        <SelectItem value="ml">ML</SelectItem>
-                                        <SelectItem value="unidade">Unidade</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label htmlFor="cost">Custo por Unidade (R$)</Label>
-                                <Input
-                                    id="cost"
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.cost_per_unit}
-                                    onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) })}
-                                    required
-                                />
-                            </div>
+                    </DrawerContent>
+                </Drawer>
+            ) : (
+                <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                    if (!open) resetForm();
+                    setIsDialogOpen(open);
+                }}>
+                    <DialogContent className="sm:max-w-[500px] flex flex-col p-0 max-h-[85vh]">
+                        <DialogHeader className="p-6 pb-2 border-b bg-background z-10 rounded-t-lg">
+                            <DialogTitle>{editingIngredient ? 'Editar Ingrediente' : 'Novo Ingrediente'}</DialogTitle>
+                        </DialogHeader>
+                        <ScrollArea className="flex-1 p-6 overflow-y-auto">
+                            {FormContent}
+                        </ScrollArea>
+                        <div className="p-4 border-t bg-muted/10 rounded-b-lg">
+                            {FooterButtons}
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="stock">Quantidade em Estoque</Label>
-                                <Input
-                                    id="stock"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={formData.stock_quantity}
-                                    onChange={(e) => setFormData({ ...formData, stock_quantity: parseFloat(e.target.value) || 0 })}
-                                    placeholder="Ex: 5.5"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="threshold">Estoque Mínimo</Label>
-                                <Input
-                                    id="threshold"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={formData.min_stock_threshold}
-                                    onChange={(e) => setFormData({ ...formData, min_stock_threshold: parseFloat(e.target.value) || 0 })}
-                                    placeholder="Aviso em:"
-                                />
-                            </div>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground -mt-2">
-                            Unidade de medida: {formData.unit}
-                        </p>
-                        <div className="flex gap-2">
-                            <Button type="submit" className="flex-1">
-                                {editingIngredient ? 'Atualizar' : 'Criar'}
-                            </Button>
-                            {editingIngredient && (
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    onClick={() => handleDelete(editingIngredient.id)}
-                                >
-                                    Excluir
-                                </Button>
-                            )}
-                            <Button type="button" variant="outline" onClick={resetForm}>
-                                Cancelar
-                            </Button>
-                        </div>
-                    </form>
-                </DialogContent>
-            </Dialog>
+                    </DialogContent>
+                </Dialog>
+            )}
 
             <BulkEditIngredientsDialog
                 open={isBulkEditDialogOpen}
