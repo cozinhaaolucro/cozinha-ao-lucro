@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'; // Added
 import { getIngredients, createIngredient, updateIngredient, deleteIngredient, getOrders } from '@/lib/database';
 import { exportToExcel, importFromExcel } from '@/lib/excel';
+import { Badge } from '@/components/ui/badge';
 import type { Ingredient } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import BulkEditIngredientsDialog from './BulkEditIngredientsDialog'; // Added
@@ -39,6 +40,7 @@ const IngredientList = () => {
         unit: 'kg' as 'kg' | 'litro' | 'unidade' | 'grama' | 'ml',
         cost_per_unit: 0,
         stock_quantity: 0,
+        min_stock_threshold: 0,
     });
     const { toast } = useToast();
 
@@ -81,7 +83,7 @@ const IngredientList = () => {
             setFormData({
                 ...formData,
                 name: preset.name,
-                unit: preset.unit as Ingredient['unit'],
+                unit: preset.unit as any,
                 cost_per_unit: Number((preset.price * 1.15).toFixed(2)),
             });
         }
@@ -132,7 +134,7 @@ const IngredientList = () => {
     };
 
     const resetForm = () => {
-        setFormData({ name: '', unit: 'kg', cost_per_unit: 0, stock_quantity: 0 });
+        setFormData({ name: '', unit: 'kg', cost_per_unit: 0, stock_quantity: 0, min_stock_threshold: 0 });
         setEditingIngredient(null);
         setIsDialogOpen(false);
     };
@@ -141,9 +143,10 @@ const IngredientList = () => {
         setEditingIngredient(ingredient);
         setFormData({
             name: ingredient.name,
-            unit: ingredient.unit,
+            unit: ingredient.unit as any,
             cost_per_unit: ingredient.cost_per_unit,
             stock_quantity: ingredient.stock_quantity || 0,
+            min_stock_threshold: ingredient.min_stock_threshold || 0,
         });
         setIsDialogOpen(true);
     };
@@ -230,7 +233,8 @@ const IngredientList = () => {
                     name: name,
                     unit: unit,
                     cost_per_unit: Number(row['Custo/Unidade'] || row['cost_per_unit'] || 0),
-                    stock_quantity: Number(row['Estoque'] || row['stock_quantity'] || 0)
+                    stock_quantity: Number(row['Estoque'] || row['stock_quantity'] || 0),
+                    min_stock_threshold: Number(row['Estoque Mínimo'] || row['min_stock_threshold'] || 0)
                 });
 
                 if (error) errorCount++;
@@ -361,9 +365,21 @@ const IngredientList = () => {
                                 <div className="text-lg font-bold text-primary">
                                     R$ {ingredient.cost_per_unit.toFixed(2)}
                                 </div>
-                                <p className="text-xs text-muted-foreground">
-                                    {stock} {ingredient.unit}
-                                </p>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-xs text-muted-foreground">
+                                        {stock} {ingredient.unit}
+                                    </p>
+                                    {stock <= (ingredient.min_stock_threshold || 0) && stock > 0 && (
+                                        <Badge variant="outline" className="text-[10px] h-4 bg-yellow-50 text-yellow-700 border-yellow-200 animate-pulse">
+                                            Baixo
+                                        </Badge>
+                                    )}
+                                    {stock === 0 && (
+                                        <Badge variant="destructive" className="text-[10px] h-4 animate-bounce">
+                                            Esgotado
+                                        </Badge>
+                                    )}
+                                </div>
                                 {demand > 0 && (
                                     <p className="text-[10px] text-orange-600 mt-1">
                                         Demanda: {demand.toFixed(1)} {ingredient.unit}
@@ -449,7 +465,7 @@ const IngredientList = () => {
                                 <Label htmlFor="unit">Unidade</Label>
                                 <Select
                                     value={formData.unit}
-                                    onValueChange={(value) => setFormData({ ...formData, unit: value as Ingredient['unit'] })}
+                                    onValueChange={(value) => setFormData({ ...formData, unit: value as any })}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -475,21 +491,35 @@ const IngredientList = () => {
                                 />
                             </div>
                         </div>
-                        <div>
-                            <Label htmlFor="stock">Quantidade em Estoque</Label>
-                            <Input
-                                id="stock"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={formData.stock_quantity}
-                                onChange={(e) => setFormData({ ...formData, stock_quantity: parseFloat(e.target.value) || 0 })}
-                                placeholder="Ex: 5.5"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Quantidade disponível na mesma unidade ({formData.unit})
-                            </p>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="stock">Quantidade em Estoque</Label>
+                                <Input
+                                    id="stock"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={formData.stock_quantity}
+                                    onChange={(e) => setFormData({ ...formData, stock_quantity: parseFloat(e.target.value) || 0 })}
+                                    placeholder="Ex: 5.5"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="threshold">Estoque Mínimo</Label>
+                                <Input
+                                    id="threshold"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={formData.min_stock_threshold}
+                                    onChange={(e) => setFormData({ ...formData, min_stock_threshold: parseFloat(e.target.value) || 0 })}
+                                    placeholder="Aviso em:"
+                                />
+                            </div>
                         </div>
+                        <p className="text-[10px] text-muted-foreground -mt-2">
+                            Unidade de medida: {formData.unit}
+                        </p>
                         <div className="flex gap-2">
                             <Button type="submit" className="flex-1">
                                 {editingIngredient ? 'Atualizar' : 'Criar'}

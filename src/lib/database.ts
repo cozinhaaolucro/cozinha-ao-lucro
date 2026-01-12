@@ -375,13 +375,6 @@ export const createOrder = async (
 };
 
 export const deleteOrder = async (id: string) => {
-    // Check order status first to see if we need to restore stock
-    const { data: order } = await supabase.from('orders').select('status').eq('id', id).single();
-
-    if (order && ['preparing', 'ready', 'delivered'].includes(order.status)) {
-        await restoreStockFromOrder(id);
-    }
-
     const { error } = await supabase
         .from('orders')
         .delete()
@@ -407,134 +400,9 @@ export const deleteCustomer = async (id: string) => {
     return { error };
 };
 
-// Stock Management
-export const deductStockFromOrder = async (orderId: string) => {
-    console.log('Deducting stock for order:', orderId);
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { error: new Error('Usuário não autenticado') };
+// Stock Management - Functions removed as they are now handled by database triggers (fn_handle_stock_on_status_change)
+// Manual stock deduction is no longer needed since SQL triggers manage this atomically on status change to 'preparing'.
 
-    // 1. Get Order Items with product ingredients (Ensuring it belongs to user via order query)
-    const { data: orderitems, error: orderError } = await supabase
-        .from('order_items')
-        .select(`
-            quantity,
-            product:products (
-                id,
-                user_id,
-                product_ingredients (
-                    quantity,
-                    ingredient_id
-                )
-            )
-        `)
-        .eq('order_id', orderId)
-        .filter('product.user_id', 'eq', user.id); // Add extra safety check
-
-    if (orderError || !orderitems) {
-        console.error('Error fetching order items for stock deduction:', orderError);
-        return { error: orderError };
-    }
-
-    // 2. Calculate total ingredient usage
-    const ingredientUsage = new Map<string, number>();
-
-    orderitems.forEach((item: any) => {
-        if (item.product && item.product.product_ingredients) {
-            item.product.product_ingredients.forEach((pi: any) => {
-                const current = ingredientUsage.get(pi.ingredient_id) || 0;
-                ingredientUsage.set(pi.ingredient_id, current + (pi.quantity * item.quantity));
-            });
-        }
-    });
-
-    // 3. Update stock for each ingredient
-    const updates = Array.from(ingredientUsage.entries()).map(async ([ingredientId, quantityUsed]) => {
-        const { data: ingredient } = await supabase
-            .from('ingredients')
-            .select('stock_quantity')
-            .eq('id', ingredientId)
-            .eq('user_id', user.id) // Ensure ingredient belongs to user
-            .single();
-
-        if (ingredient) {
-            const newStock = Math.max(0, ingredient.stock_quantity - quantityUsed);
-            return supabase
-                .from('ingredients')
-                .update({ stock_quantity: newStock })
-                .eq('id', ingredientId)
-                .eq('user_id', user.id);
-        }
-        return Promise.resolve({ error: null });
-    });
-
-    await Promise.all(updates);
-
-    return { error: null };
-};
-
-export const restoreStockFromOrder = async (orderId: string) => {
-    console.log('Restoring stock from order:', orderId);
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { error: new Error('Usuário não autenticado') };
-
-    // 1. Get Order Items with product ingredients
-    const { data: orderitems, error: orderError } = await supabase
-        .from('order_items')
-        .select(`
-            quantity,
-            product:products (
-                id,
-                user_id,
-                product_ingredients (
-                    quantity,
-                    ingredient_id
-                )
-            )
-        `)
-        .eq('order_id', orderId)
-        .filter('product.user_id', 'eq', user.id);
-
-    if (orderError || !orderitems) {
-        console.error('Error fetching order items for stock restoration:', orderError);
-        return { error: orderError };
-    }
-
-    // 2. Calculate total ingredient usage to restore
-    const ingredientUsage = new Map<string, number>();
-
-    orderitems.forEach((item: any) => {
-        if (item.product && item.product.product_ingredients) {
-            item.product.product_ingredients.forEach((pi: any) => {
-                const current = ingredientUsage.get(pi.ingredient_id) || 0;
-                ingredientUsage.set(pi.ingredient_id, current + (pi.quantity * item.quantity));
-            });
-        }
-    });
-
-    // 3. Update stock for each ingredient (Add back)
-    const updates = Array.from(ingredientUsage.entries()).map(async ([ingredientId, quantityRestored]) => {
-        const { data: ingredient } = await supabase
-            .from('ingredients')
-            .select('stock_quantity')
-            .eq('id', ingredientId)
-            .eq('user_id', user.id)
-            .single();
-
-        if (ingredient) {
-            const newStock = ingredient.stock_quantity + quantityRestored;
-            return supabase
-                .from('ingredients')
-                .update({ stock_quantity: newStock })
-                .eq('id', ingredientId)
-                .eq('user_id', user.id);
-        }
-        return Promise.resolve({ error: null });
-    });
-
-    await Promise.all(updates);
-
-    return { error: null };
-};
 
 // Message Templates
 export const getMessageTemplates = async () => {

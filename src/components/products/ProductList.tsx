@@ -18,7 +18,13 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Upload, Image as ImageIcon, FileSpreadsheet, FileText } from 'lucide-react';
+import { Upload, Image as ImageIcon, FileSpreadsheet, FileText, Info } from 'lucide-react';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type ProductWithIngredients = Product & {
     product_ingredients: Array<{
@@ -108,7 +114,11 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
             selling_price: product.selling_price,
             preparation_time_minutes: product.preparation_time_minutes,
             image_url: product.image_url,
-            active: true
+            active: true,
+            selling_unit: product.selling_unit || 'unidade',
+            hourly_rate: product.hourly_rate || 0,
+            is_highlight: product.is_highlight || false,
+            category: product.category || 'Geral'
         };
 
         const ingredientsPayload = product.product_ingredients.map(pi => ({
@@ -233,7 +243,11 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                     selling_price: parseFloat(row['Preço Venda'] || row['selling_price'] || row['Price'] || '0'),
                     preparation_time_minutes: 30, // Default
                     active: true,
-                    image_url: null
+                    image_url: null,
+                    selling_unit: 'unidade',
+                    hourly_rate: 0,
+                    is_highlight: false,
+                    category: 'Importado'
                 };
 
                 const { error } = await createProduct(productData, ingredientsPayload);
@@ -466,25 +480,62 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                     )}
                                 </CardHeader>
                                 <CardContent className="space-y-3">
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-muted-foreground">Custo:</span>
-                                        <span className="font-medium">R$ {totalCost.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-muted-foreground">Preço de Venda:</span>
-                                        <span className="font-bold text-primary">
-                                            R$ {(product.selling_price || 0).toFixed(2)}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-sm border-t pt-2">
-                                        <span className="text-muted-foreground flex items-center gap-1">
-                                            <TrendingUp className="w-3 h-3" />
-                                            Lucro:
-                                        </span>
-                                        <span className={`font-bold ${profit > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                            R$ {profit.toFixed(2)}
-                                        </span>
-                                    </div>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div className="flex items-center justify-between text-sm cursor-help hover:bg-muted/30 p-1 -mx-1 rounded transition-colors">
+                                                    <span className="text-muted-foreground flex items-center gap-1">
+                                                        Custo
+                                                        <Info className="w-3 h-3 opacity-50" />
+                                                    </span>
+                                                    <span className="font-medium">R$ {totalCost.toFixed(2)}</span>
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-[250px]">
+                                                <p className="font-semibold text-xs mb-2">Composição do Custo:</p>
+                                                <div className="space-y-1">
+                                                    {product.product_ingredients.map((pi, idx) => (
+                                                        <div key={idx} className="flex justify-between text-[10px] gap-4">
+                                                            <span className="truncate">{pi.ingredient.name}</span>
+                                                            <span className="font-mono text-green-600">R$ {(pi.ingredient.cost_per_unit * pi.quantity).toFixed(2)}</span>
+                                                        </div>
+                                                    ))}
+                                                    <div className="border-t mt-1 pt-1 flex justify-between text-[11px] font-bold">
+                                                        <span>Total</span>
+                                                        <span>R$ {totalCost.toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                            </TooltipContent>
+                                        </Tooltip>
+
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-muted-foreground">Preço de Venda:</span>
+                                            <span className="font-bold text-primary">
+                                                R$ {(product.selling_price || 0).toFixed(2)}
+                                            </span>
+                                        </div>
+
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div className="flex items-center justify-between text-sm border-t pt-2 cursor-help hover:bg-muted/30 p-1 -mx-1 rounded transition-colors">
+                                                    <span className="text-muted-foreground flex items-center gap-1">
+                                                        <TrendingUp className="w-3 h-3" />
+                                                        Lucro:
+                                                    </span>
+                                                    <span className={`font-bold ${profit > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                        R$ {profit.toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p className="text-xs">
+                                                    {profit > 0
+                                                        ? `Você ganha R$ ${profit.toFixed(2)} por unidade vendida.`
+                                                        : 'Atenção! Este produto está dando prejuízo.'}
+                                                </p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
 
                                     {product.product_ingredients.length > 0 && (
                                         <div className="text-xs text-muted-foreground border-t pt-2">

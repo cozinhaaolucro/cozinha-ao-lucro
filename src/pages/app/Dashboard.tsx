@@ -27,7 +27,7 @@ import {
     Area,
     XAxis,
     YAxis,
-    Tooltip,
+    Tooltip as RechartsTooltip,
     ResponsiveContainer
 } from 'recharts';
 import { supabase } from '@/lib/supabase';
@@ -42,10 +42,13 @@ interface StockDemandAnalysis {
     status: 'sufficient' | 'low' | 'critical' | 'unused';
 }
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Progress } from '@/components/ui/progress';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import { CostBreakdownChart } from '@/components/dashboard/CostBreakdownChart';
 import { DashboardInsights } from '@/components/dashboard/DashboardInsights';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
+import { Info } from 'lucide-react';
 
 import { seedAccount } from '@/lib/seeding';
 
@@ -365,50 +368,132 @@ const Dashboard = () => {
                 hasStock={ingredients.some(i => (i.stock_quantity || 0) > 0)}
             />
 
+            {/* Premium Goal Progress */}
+            <FadeIn delay={75}>
+                <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+                    <CardContent className="p-6">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="space-y-1 text-center md:text-left">
+                                <h3 className="text-lg font-semibold flex items-center gap-2 justify-center md:justify-start">
+                                    Meta de Vendas do Mês 🎯
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Você atingiu <span className="font-bold text-foreground">R$ {totalRevenue.toFixed(2)}</span> de uma meta de <span className="font-bold">R$ 10.000,00</span>
+                                </p>
+                            </div>
+                            <div className="flex-1 w-full max-w-md space-y-2">
+                                <div className="flex justify-between text-xs font-medium">
+                                    <span>{((totalRevenue / 10000) * 100).toFixed(1)}%</span>
+                                    <span>R$ 10.000,00</span>
+                                </div>
+                                <Progress value={(totalRevenue / 10000) * 100} className="h-3 shadow-inner" />
+                            </div>
+                            <div className="hidden lg:block text-right">
+                                <p className="text-sm font-medium">Faltam apenas</p>
+                                <p className="text-2xl font-bold text-green-600 dark:text-green-400">R$ {Math.max(0, 10000 - totalRevenue).toFixed(2)}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </FadeIn>
+
             {/* Financial cards */}
-            <FadeIn delay={50}>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card className="border-l-4 border-l-green-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-                            <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">+20.1% em relação ao mês anterior</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="border-l-4 border-l-blue-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Lucro Líquido</CardTitle>
-                            <Wallet className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">R$ {totalProfit.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">+10.5% em relação ao mês anterior</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="border-l-4 border-l-red-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
-                            <CreditCard className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">R$ {totalCost.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">+5% em relação ao mês anterior</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="border-l-4 border-l-orange-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Receita Entregues</CardTitle>
-                            <Package className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">R$ {deliveredRevenue.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">Pedidos finalizados</p>
-                        </CardContent>
-                    </Card>
-                </div>
+            <FadeIn delay={100}>
+                <TooltipProvider>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <div className="flex items-center gap-2">
+                                    <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="w-64 text-xs">
+                                                Soma de todos os pedidos finalizados (Entregues) e em produção no período selecionado.
+                                            </p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
+                                <p className="text-xs text-muted-foreground">Vendas brutas totais</p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <div className="flex items-center gap-2">
+                                    <CardTitle className="text-sm font-medium">Lucro Líquido</CardTitle>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="w-64 text-xs">
+                                                Quanto sobrou no seu bolso após descontar o custo dos ingredientes de cada venda.
+                                            </p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <Wallet className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">R$ {totalProfit.toFixed(2)}</div>
+                                <p className="text-xs text-muted-foreground">O que sobra no bolso</p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <div className="flex items-center gap-2">
+                                    <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="w-64 text-xs">
+                                                Total gasto em insumos e ingredientes para produzir as vendas do período.
+                                            </p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <CreditCard className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">R$ {totalCost.toFixed(2)}</div>
+                                <p className="text-xs text-muted-foreground">Gasto com ingredientes</p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-l-4 border-l-orange-500 hover:shadow-md transition-shadow">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <div className="flex items-center gap-2">
+                                    <CardTitle className="text-sm font-medium">Margem Bruta</CardTitle>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="w-64 text-xs">
+                                                A porcentagem do seu faturamento que é lucro. Maiores margens indicam maior eficiência.
+                                            </p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{profitMargin.toFixed(1)}%</div>
+                                <p className="text-xs text-muted-foreground">Eficiência das vendas</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </TooltipProvider>
             </FadeIn>
 
             {/* Critical stock alerts */}

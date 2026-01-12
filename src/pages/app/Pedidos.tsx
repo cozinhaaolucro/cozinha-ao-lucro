@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Added Tabs
 import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2, PackageCheck, ChevronRight } from 'lucide-react';
-import { getOrders, deductStockFromOrder, updateOrderStatus, deleteOrder, createOrder, createCustomer, getProducts, getCustomers } from '@/lib/database'; // Added createOrder, createCustomer, getProducts, getCustomers
+import { getOrders, updateOrderStatus, deleteOrder, createOrder, createCustomer, getProducts, getCustomers } from '@/lib/database'; // Added createOrder, createCustomer, getProducts, getCustomers
 import { exportToExcel, importFromExcel } from '@/lib/excel';
 import { supabase } from '@/lib/supabase';
 import type { OrderWithDetails } from '@/types/database';
@@ -14,6 +14,7 @@ import NewOrderDialog from '@/components/orders/NewOrderDialog';
 import EditOrderDialog from '@/components/orders/EditOrderDialog';
 import { useToast } from '@/hooks/use-toast';
 import { parseLocalDate, formatLocalDate } from '@/lib/dateUtils';
+import confetti from 'canvas-confetti';
 import ClientProfileDrawer from '@/components/crm/ClientProfileDrawer';
 import SendMessageDialog from '@/components/crm/SendMessageDialog';
 import { Customer, OrderStatus } from '@/types/database';
@@ -83,12 +84,12 @@ const Pedidos = () => {
             quantity: item.quantity,
             unit_price: item.unit_price,
             subtotal: item.subtotal,
+            unit_cost: 0
         }));
 
-        // Use createOrder but we need to import it properly or check if its available in scope
-        // It is imported as createOrder from '@/lib/database'
-        const { error } = await import('@/lib/database').then(mod => mod.createOrder({
+        const { error } = await createOrder({
             ...orderData,
+            total_cost: 0,
             display_id: 0,
             delivery_method: 'pickup',
             delivery_fee: 0,
@@ -99,7 +100,7 @@ const Pedidos = () => {
             production_duration_minutes: null,
             delivered_at: null,
             start_date: null
-        }, items));
+        }, items);
 
         if (!error) {
             toast({ title: 'Pedido duplicado com sucesso!' });
@@ -182,17 +183,6 @@ const Pedidos = () => {
             loadOrders();
         } else {
             toast({ title: 'Status atualizado!' });
-
-            // Deduct stock if moving to preparing
-            if (newStatus === 'preparing') {
-                deductStockFromOrder(draggedOrder).then(({ error: stockError }) => {
-                    if (stockError) {
-                        toast({ title: 'Erro ao dar baixa no estoque', variant: 'destructive' });
-                    } else {
-                        toast({ title: 'Estoque atualizado com sucesso!' });
-                    }
-                });
-            }
         }
 
         setDraggedOrder(null);
@@ -462,6 +452,7 @@ const Pedidos = () => {
                                         if (items.length > 0) {
                                             const { error } = await createOrder({
                                                 ...orderData,
+                                                total_cost: 0,
                                                 display_id: 0,
                                                 delivery_method: 'pickup',
                                                 delivery_fee: 0,
