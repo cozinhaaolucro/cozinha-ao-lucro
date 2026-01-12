@@ -58,7 +58,7 @@ const Login = () => {
             <Card className="w-full max-w-md border-primary/20 shadow-xl">
                 <CardHeader className="space-y-1 text-center">
                     <div className="flex justify-center mb-4">
-                        <img src="/images/logo-full.png" alt="Cozinha ao Lucro" className="h-48 w-auto" />
+                        <img src="/images/logo-full.png" alt="Cozinha ao Lucro" className="h-24 w-auto" />
                     </div>
                     <CardDescription>
                         Entre para gerenciar seu negócio

@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
 import { seedAccount } from '@/lib/seeding';
 import { Capacitor } from '@capacitor/core';
+import { useToast } from '@/components/ui/use-toast';
 
 // Production URL for OAuth redirect (used as fallback)
 const PRODUCTION_URL = 'https://cozinha-ao-lucro.vercel.app';
@@ -98,7 +99,7 @@ const Register = () => {
             <Card className="w-full max-w-md border-primary/20 shadow-xl">
                 <CardHeader className="space-y-1 text-center">
                     <div className="flex justify-center mb-4">
-                        <img src="/images/logo-full.png" alt="Cozinha ao Lucro" className="h-48 w-auto" />
+                        <img src="/images/logo-full.png" alt="Cozinha ao Lucro" className="h-24 w-auto" />
                     </div>
                     <CardTitle className="text-2xl font-bold text-primary">Comece Agora</CardTitle>
                     <CardDescription>
