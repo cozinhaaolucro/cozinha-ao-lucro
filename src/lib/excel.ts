@@ -63,3 +63,20 @@ export const exportToCSV = (data: any[], fileName: string) => {
     const csvData = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
     saveAs(csvData, fileName + '.csv');
 };
+
+export const downloadTemplate = (headers: string[], fileName: string, exampleRow?: Record<string, any>) => {
+    // Create array-of-arrays format: first row is headers, second row is example data
+    const aoaData: any[][] = [headers];
+
+    if (exampleRow) {
+        // Map exampleRow values in the order of headers
+        const rowData = headers.map(h => exampleRow[h] ?? '');
+        aoaData.push(rowData);
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(aoaData);
+    const wb = { Sheets: { 'template': ws }, SheetNames: ['template'] };
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const dataBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    saveAs(dataBlob, fileName + '_modelo.xlsx');
+};

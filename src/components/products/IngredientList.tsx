@@ -1,9 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Download, Upload, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download, Upload, Package, FileSpreadsheet, FileDown, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
     Drawer,
     DrawerContent,
@@ -16,7 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getIngredients, createIngredient, updateIngredient, deleteIngredient, getOrders } from '@/lib/database';
-import { exportToExcel, importFromExcel } from '@/lib/excel';
+import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
 import { Badge } from '@/components/ui/badge';
 import type { Ingredient } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +38,7 @@ const IngredientList = () => {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const isMobile = useIsMobile();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -198,14 +207,18 @@ const IngredientList = () => {
     };
 
     // ... Export/Import logic ...
-    const handleExport = () => {
+    const handleExport = (format: 'excel' | 'csv') => {
         const dataToExport = ingredients.map(i => ({
             Nome: i.name,
             Unidade: i.unit,
             'Custo/Unidade': Number(i.cost_per_unit.toFixed(2)),
             Estoque: Number((i.stock_quantity || 0).toFixed(2))
         }));
-        exportToExcel(dataToExport, 'ingredientes_cozinha_ao_lucro');
+        if (format === 'csv') {
+            exportToCSV(dataToExport, 'ingredientes_cozinha_ao_lucro');
+        } else {
+            exportToExcel(dataToExport, 'ingredientes_cozinha_ao_lucro');
+        }
     };
 
     const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -372,7 +385,6 @@ const IngredientList = () => {
                 {editingIngredient && (
                     <Button
                         type="button"
-                        variant="destructive"
                         variant="outline"
                         className="text-destructive hover:text-destructive border-destructive/20 hover:bg-destructive/10"
                         onClick={() => handleDelete(editingIngredient.id)}
@@ -415,21 +427,43 @@ const IngredientList = () => {
                     )}
                 </div>
                 <div className="flex gap-2 ml-auto">
-                    <div className="relative">
-                        <input
-                            type="file"
-                            accept=".xlsx, .xls"
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            onChange={handleImport}
-                            title="Importar Excel"
-                        />
-                        <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" title="Importar Excel">
-                            <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
-                        </Button>
-                    </div>
-                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={handleExport} title="Exportar Excel">
-                        <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".xlsx, .xls"
+                        className="hidden"
+                        onChange={handleImport}
+                    />
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 sm:h-9 sm:w-9"
+                        title="Importar Excel"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" title="Exportar / Baixar Modelo">
+                                <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Planilha</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleExport('excel')}>
+                                <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (.xlsx)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExport('csv')}>
+                                <FileText className="w-4 h-4 mr-2" /> CSV (.csv)
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Template</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['Nome', 'Unidade', 'Custo/Unidade', 'Estoque'], 'ingredientes'))}>
+                                <FileDown className="w-4 h-4 mr-2" /> Modelo de Importação
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button onClick={() => setIsDialogOpen(true)} className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-4">
                         <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="hidden xs:inline">Novo</span> Ingrediente

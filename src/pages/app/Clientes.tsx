@@ -1,18 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Phone, Plus, Search, MessageCircle, Filter, Pencil, Trash2, X, Mail, Download, Upload, Users } from 'lucide-react';
+import { Phone, Plus, Search, MessageCircle, Filter, Pencil, Trash2, X, Mail, Download, Upload, Users, FileSpreadsheet, FileDown, FileText } from 'lucide-react';
 import { getCustomers, deleteCustomer, createCustomer } from '@/lib/database';
-import { exportToExcel, importFromExcel, getValue } from '@/lib/excel';
+import { exportToExcel, exportToCSV, importFromExcel, getValue } from '@/lib/excel';
 import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/types/database';
 import NewCustomerDialog from '@/components/customers/NewCustomerDialog';
 import EditCustomerDialog from '@/components/customers/EditCustomerDialog';
 import { Star, Clock, UserPlus } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Clientes = () => {
     const { toast } = useToast();
@@ -24,6 +32,7 @@ const Clientes = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
     const [loading, setLoading] = useState(true);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const loadCustomers = async () => {
         setLoading(true);
@@ -118,7 +127,7 @@ const Clientes = () => {
         loadCustomers();
     };
 
-    const handleExport = () => {
+    const handleExport = (format: 'excel' | 'csv') => {
         const dataToExport = customers.map((c) => ({
             Nome: c.name,
             Email: c.email || '',
@@ -129,7 +138,11 @@ const Clientes = () => {
             'Total Gasto': c.total_spent,
             'Último Pedido': c.last_order_date || ''
         }));
-        exportToExcel(dataToExport, 'clientes');
+        if (format === 'csv') {
+            exportToCSV(dataToExport, 'clientes');
+        } else {
+            exportToExcel(dataToExport, 'clientes');
+        }
     };
 
     const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -217,21 +230,42 @@ const Clientes = () => {
                     <p className="text-muted-foreground">Gerencie sua base de clientes</p>
                 </div>
                 <div className="flex gap-2">
-                    <div className="relative">
-                        <input
-                            type="file"
-                            accept=".xlsx, .xls"
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            onChange={handleImport}
-                            title="Importar Excel"
-                        />
-                        <Button variant="outline" size="icon" title="Importar Excel">
-                            <Upload className="w-4 h-4" />
-                        </Button>
-                    </div>
-                    <Button variant="outline" size="icon" onClick={handleExport} title="Exportar Excel">
-                        <Download className="w-4 h-4" />
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".xlsx, .xls"
+                        className="hidden"
+                        onChange={handleImport}
+                    />
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        title="Importar Excel"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <Upload className="w-4 h-4" />
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon" title="Exportar / Baixar Modelo">
+                                <Download className="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Planilha</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleExport('excel')}>
+                                <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (.xlsx)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExport('csv')}>
+                                <FileText className="w-4 h-4 mr-2" /> CSV (.csv)
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Template</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['Nome', 'Email', 'Telefone', 'Endereço', 'Observações'], 'clientes'))}>
+                                <FileDown className="w-4 h-4 mr-2" /> Modelo de Importação
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
                         <Plus className="w-4 h-4" />
                         Novo Cliente

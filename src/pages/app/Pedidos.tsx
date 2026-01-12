@@ -4,9 +4,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Added Tabs
-import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2, PackageCheck, ChevronRight, ChefHat } from 'lucide-react';
-import { getOrders, updateOrderStatus, deleteOrder, createOrder, createCustomer, getProducts, getCustomers } from '@/lib/database'; // Added createOrder, createCustomer, getProducts, getCustomers
-import { exportToExcel, importFromExcel } from '@/lib/excel';
+import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2, PackageCheck, ChevronRight, ChefHat, FileSpreadsheet, FileDown, FileText } from 'lucide-react';
+import { getOrders, updateOrderStatus, deleteOrder, createOrder, createCustomer, getProducts, getCustomers } from '@/lib/database';
+import { exportToExcel, exportToCSV, importFromExcel, getValue } from '@/lib/excel';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from '@/lib/supabase';
 import type { OrderWithDetails } from '@/types/database';
 import { useIsMobile } from '@/hooks/use-mobile'; // Added useIsMobile
@@ -207,7 +215,7 @@ const Pedidos = () => {
         }
     };
 
-    const handleExport = () => {
+    const handleExport = (format: 'excel' | 'csv') => {
         const dataToExport = filteredOrders.map(o => ({
             Status: STATUS_COLUMNS[o.status]?.label || o.status,
             Cliente: o.customer?.name || 'Não informado',
@@ -216,7 +224,11 @@ const Pedidos = () => {
             'Valor Total': Number(o.total_value.toFixed(2)),
             CriadoEm: new Date(o.created_at).toLocaleDateString('pt-BR')
         }));
-        exportToExcel(dataToExport, 'pedidos_cozinha_ao_lucro');
+        if (format === 'csv') {
+            exportToCSV(dataToExport, 'pedidos_cozinha_ao_lucro');
+        } else {
+            exportToExcel(dataToExport, 'pedidos_cozinha_ao_lucro');
+        }
     };
 
     const renderColumn = (status: string, config: typeof STATUS_COLUMNS[keyof typeof STATUS_COLUMNS]) => {
@@ -386,147 +398,170 @@ const Pedidos = () => {
                     <p className="text-sm text-muted-foreground">Visão Macro: Planejamento, Agendamento e Histórico de Todos os Pedidos.</p>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 sm:flex-none">
-                        <input
-                            type="file"
-                            accept=".xlsx, .xls"
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            onChange={async (e) => {
-                                const file = e.target.files?.[0];
-                                if (!file) return;
+                    <input
+                        type="file"
+                        id="pedidos-import-input"
+                        accept=".xlsx, .xls"
+                        className="hidden"
+                        onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
 
-                                try {
-                                    const data: any[] = await importFromExcel(file);
+                            try {
+                                const data: any[] = await importFromExcel(file);
 
-                                    // Pre-load data for lookups
-                                    const { data: existingCustomers } = await getCustomers();
-                                    const { data: existingProducts } = await getProducts();
+                                // Pre-load data for lookups
+                                const { data: existingCustomers } = await getCustomers();
+                                const { data: existingProducts } = await getProducts();
 
-                                    let successCount = 0;
-                                    let errorCount = 0;
+                                let successCount = 0;
+                                let errorCount = 0;
 
-                                    for (const row of data) {
-                                        // 1. Resolve Customer
-                                        const customerName = getValue(row, ['Cliente', 'name', 'Customer', 'cliente', 'Nome']);
-                                        if (!customerName || customerName === 'Não informado') continue;
+                                for (const row of data) {
+                                    // 1. Resolve Customer
+                                    const customerName = getValue(row, ['Cliente', 'name', 'Customer', 'cliente', 'Nome']);
+                                    if (!customerName || customerName === 'Não informado') continue;
 
-                                        let customerId = existingCustomers?.find(c => c.name.toLowerCase() === customerName.toLowerCase())?.id;
+                                    let customerId = existingCustomers?.find(c => c.name.toLowerCase() === customerName.toLowerCase())?.id;
 
-                                        if (!customerId) {
-                                            // Create new customer if not found
-                                            const { data: newCust, error: custError } = await createCustomer({
-                                                name: customerName,
-                                                email: null,
-                                                phone: null,
-                                                address: null,
-                                                notes: null,
-                                                last_order_date: null
-                                            });
-                                            if (newCust && !custError) {
-                                                customerId = newCust.id;
-                                                // Update local cache
-                                                existingCustomers?.push(newCust);
-                                            } else {
-                                                console.error("Failed to create customer", customerName);
-                                                errorCount++;
-                                                continue;
-                                            }
-                                        }
-
-                                        // 2. Parse Status
-                                        const statusLabel = getValue(row, ['Status', 'status', 'Estado', 'Situacao']);
-                                        const statusKey = Object.keys(STATUS_COLUMNS).find(key =>
-                                            STATUS_COLUMNS[key as keyof typeof STATUS_COLUMNS].label === statusLabel ||
-                                            key === statusLabel?.toLowerCase()
-                                        ) || 'pending';
-
-                                        // 3. Parse Items
-                                        const itemsString = getValue(row, ['Items', 'items', 'Itens', 'Produtos', 'products']) || '';
-                                        const items: any[] = [];
-
-                                        if (itemsString) {
-                                            // Format: "Product A (2), Product B (1)"
-                                            const itemParts = itemsString.split(',').map((s: string) => s.trim());
-
-                                            for (const part of itemParts) {
-                                                // Robust regex for "Name (Qty)" or just "Name"
-                                                const match = part.match(/^(.*)\s\((\d+)\)$/);
-                                                const pName = match ? match[1].trim() : part;
-                                                const qty = match ? parseInt(match[2]) : 1;
-
-                                                const product = existingProducts?.find(p => p.name.toLowerCase() === pName.toLowerCase());
-
-                                                if (product) {
-                                                    items.push({
-                                                        product_id: product.id,
-                                                        product_name: product.name,
-                                                        quantity: qty,
-                                                        unit_price: product.selling_price,
-                                                        subtotal: product.selling_price * qty
-                                                    });
-                                                }
-                                            }
-                                        }
-
-                                        // 4. Create Order
-                                        const deliveryDateVal = getValue(row, ['Data Entrega', 'delivery_date', 'Data', 'Date', 'Entrega']);
-                                        const deliveryDate = deliveryDateVal ? new Date(deliveryDateVal).toISOString() : null;
-
-                                        const orderData = {
-                                            customer_id: customerId,
-                                            status: statusKey as OrderStatus,
-                                            delivery_date: deliveryDate,
-                                            delivery_time: null,
-                                            total_value: items.reduce((acc, item) => acc + item.subtotal, 0),
-                                            notes: 'Importado via Excel',
-                                            order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}` // Simple random ID
-                                        };
-
-                                        if (items.length > 0) {
-                                            const { error } = await createOrder({
-                                                ...orderData,
-                                                total_cost: 0,
-                                                display_id: 0,
-                                                delivery_method: 'pickup',
-                                                delivery_fee: 0,
-                                                payment_method: 'pix',
-                                                google_event_id: null,
-                                                production_started_at: null,
-                                                production_completed_at: null,
-                                                production_duration_minutes: null,
-                                                delivered_at: null,
-                                                start_date: null
-                                            }, items);
-                                            if (!error) successCount++;
-                                            else errorCount++;
+                                    if (!customerId) {
+                                        // Create new customer if not found
+                                        const { data: newCust, error: custError } = await createCustomer({
+                                            name: customerName,
+                                            email: null,
+                                            phone: null,
+                                            address: null,
+                                            notes: null,
+                                            last_order_date: null
+                                        });
+                                        if (newCust && !custError) {
+                                            customerId = newCust.id;
+                                            // Update local cache
+                                            existingCustomers?.push(newCust);
                                         } else {
-                                            console.warn("Skipping order with no valid items");
+                                            console.error("Failed to create customer", customerName);
                                             errorCount++;
+                                            continue;
                                         }
                                     }
 
-                                    toast({
-                                        title: 'Importação Concluída',
-                                        description: `${successCount} pedidos criados. ${errorCount} erros/ignorados.`,
-                                        variant: successCount > 0 ? 'default' : 'destructive'
-                                    });
-                                    loadOrders();
+                                    // 2. Parse Status
+                                    const statusLabel = getValue(row, ['Status', 'status', 'Estado', 'Situacao']);
+                                    const statusKey = Object.keys(STATUS_COLUMNS).find(key =>
+                                        STATUS_COLUMNS[key as keyof typeof STATUS_COLUMNS].label === statusLabel ||
+                                        key === statusLabel?.toLowerCase()
+                                    ) || 'pending';
 
-                                } catch (err) {
-                                    console.error("Import error", err);
-                                    toast({ title: 'Erro na importação', description: 'Falha ao ler arquivo', variant: 'destructive' });
+                                    // 3. Parse Items
+                                    const itemsString = getValue(row, ['Items', 'items', 'Itens', 'Produtos', 'products']) || '';
+                                    const items: any[] = [];
+
+                                    if (itemsString) {
+                                        // Format: "Product A (2), Product B (1)"
+                                        const itemParts = itemsString.split(',').map((s: string) => s.trim());
+
+                                        for (const part of itemParts) {
+                                            // Robust regex for "Name (Qty)" or just "Name"
+                                            const match = part.match(/^(.*)\s\((\d+)\)$/);
+                                            const pName = match ? match[1].trim() : part;
+                                            const qty = match ? parseInt(match[2]) : 1;
+
+                                            const product = existingProducts?.find(p => p.name.toLowerCase() === pName.toLowerCase());
+
+                                            if (product) {
+                                                items.push({
+                                                    product_id: product.id,
+                                                    product_name: product.name,
+                                                    quantity: qty,
+                                                    unit_price: product.selling_price,
+                                                    subtotal: product.selling_price * qty
+                                                });
+                                            }
+                                        }
+                                    }
+
+                                    // 4. Create Order
+                                    const deliveryDateVal = getValue(row, ['Data Entrega', 'delivery_date', 'Data', 'Date', 'Entrega']);
+                                    const deliveryDate = deliveryDateVal ? new Date(deliveryDateVal).toISOString() : null;
+
+                                    const orderData = {
+                                        customer_id: customerId,
+                                        status: statusKey as OrderStatus,
+                                        delivery_date: deliveryDate,
+                                        delivery_time: null,
+                                        total_value: items.reduce((acc, item) => acc + item.subtotal, 0),
+                                        notes: 'Importado via Excel',
+                                        order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}` // Simple random ID
+                                    };
+
+                                    if (items.length > 0) {
+                                        const { error } = await createOrder({
+                                            ...orderData,
+                                            total_cost: 0,
+                                            display_id: 0,
+                                            delivery_method: 'pickup',
+                                            delivery_fee: 0,
+                                            payment_method: 'pix',
+                                            google_event_id: null,
+                                            production_started_at: null,
+                                            production_completed_at: null,
+                                            production_duration_minutes: null,
+                                            delivered_at: null,
+                                            start_date: null
+                                        }, items);
+                                        if (!error) successCount++;
+                                        else errorCount++;
+                                    } else {
+                                        console.warn("Skipping order with no valid items");
+                                        errorCount++;
+                                    }
                                 }
 
-                                e.target.value = '';
-                            }}
-                        />
-                        <Button variant="outline" size="icon" title="Importar Excel" className="w-full sm:w-10">
-                            <Upload className="w-4 h-4" />
-                        </Button>
-                    </div>
-                    <Button variant="outline" size="icon" onClick={handleExport} title="Exportar Excel" className="flex-1 sm:flex-none">
-                        <Download className="w-4 h-4" />
+                                toast({
+                                    title: 'Importação Concluída',
+                                    description: `${successCount} pedidos criados. ${errorCount} erros/ignorados.`,
+                                    variant: successCount > 0 ? 'default' : 'destructive'
+                                });
+                                loadOrders();
+
+                            } catch (err) {
+                                console.error("Import error", err);
+                                toast({ title: 'Erro na importação', description: 'Falha ao ler arquivo', variant: 'destructive' });
+                            }
+
+                            e.target.value = '';
+                        }}
+                    />
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        title="Importar Excel"
+                        className="flex-1 sm:flex-none sm:w-10"
+                        onClick={() => document.getElementById('pedidos-import-input')?.click()}
+                    >
+                        <Upload className="w-4 h-4" />
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon" className="flex-1 sm:flex-none" title="Exportar / Baixar Modelo">
+                                <Download className="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Planilha</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleExport('excel')}>
+                                <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (.xlsx)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExport('csv')}>
+                                <FileText className="w-4 h-4 mr-2" /> CSV (.csv)
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Template</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['Cliente', 'Status', 'Data Entrega', 'Items', 'Valor Total'], 'pedidos'))}>
+                                <FileDown className="w-4 h-4 mr-2" /> Modelo de Importação
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button className="gap-2 flex-[2] sm:flex-none" onClick={() => setIsDialogOpen(true)}>
                         <Plus className="w-4 h-4" />
                         Novo

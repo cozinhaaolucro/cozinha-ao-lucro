@@ -18,7 +18,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Upload, Image as ImageIcon, FileSpreadsheet, FileText, Info } from 'lucide-react';
+import { Upload, Image as ImageIcon, FileSpreadsheet, FileText, Info, FileDown } from 'lucide-react';
 import {
     Tooltip,
     TooltipContent,
@@ -321,13 +321,17 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Formato</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Planilha</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleExport('excel')}>
                                 <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (.xlsx)
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleExport('csv')}>
                                 <FileText className="w-4 h-4 mr-2" /> CSV (.csv)
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Template</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['Nome', 'Descrição', 'Preço Venda', 'Ingredientes'], 'produtos'))}>
+                                <FileDown className="w-4 h-4 mr-2" /> Modelo de Importação
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -340,8 +344,10 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleExport('excel')}>Excel</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('csv')}>CSV</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExport('excel')}>Planilha Excel</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExport('csv')}>Planilha CSV</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['Nome', 'Descrição', 'Preço Venda', 'Ingredientes'], 'produtos'))}>Template</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
 
