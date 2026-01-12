@@ -8,7 +8,8 @@ import { getOrders, getIngredients } from '@/lib/database';
 import type { OrderWithDetails, Ingredient } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { addPdfHeader, addPdfFooter, autoTable } from '@/lib/pdfUtils';
+
 
 type ShoppingItem = {
     ingredientId: string;
@@ -101,37 +102,48 @@ const SmartList = () => {
         }
     };
 
+
+
     const handleDownloadPDF = () => {
         const doc = new jsPDF();
 
-        doc.setFontSize(20);
-        doc.text('Lista de Compras Inteligente', 14, 22);
-
-        doc.setFontSize(11);
-        doc.text(`Gerada em: ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}`, 14, 30);
-        doc.text('Baseada nos pedidos: "A Fazer"', 14, 36);
+        addPdfHeader(doc, 'Lista Inteligente', 'Baseada nos pedidos "A Fazer"');
 
         const tableData = items
-            .filter(item => item.toBuy > 0) // Only export what needs to be bought? Or everything? Usually user wants shopping list.
+            .filter(item => item.toBuy > 0)
             .map(item => [
                 item.name,
-                `${item.toBuy.toFixed(3)} ${item.unit}`,
-                `${item.inStock.toFixed(3)} ${item.unit}`,
-                `${item.needed.toFixed(3)} ${item.unit}`
+                `${item.toBuy.toFixed(2)} ${item.unit}`,
+                `${item.inStock.toFixed(2)} ${item.unit}`,
+                `${item.needed.toFixed(2)} ${item.unit}`
             ]);
 
-        autoTable(doc, {
-            head: [['Ingrediente', 'Comprar', 'Em Estoque', 'Necessário']],
-            body: tableData,
-            startY: 44,
-            theme: 'striped',
-            headStyles: { fillColor: [22, 163, 74] } // Green-600-ish
-        });
-
         if (tableData.length === 0) {
-            doc.text('Nenhum item precisa ser comprado para os pedidos atuais!', 14, 50);
+            doc.setFontSize(12);
+            doc.setTextColor(100);
+            doc.text('Parabéns! Nenhuma compra necessária para os pedidos atuais.', 14, 50);
+        } else {
+            autoTable(doc, {
+                head: [['Ingrediente', 'Comprar', 'Em Estoque', 'Necessário']],
+                body: tableData,
+                startY: 40,
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [22, 163, 74], // Green-600
+                    textColor: 255,
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [240, 253, 244] // Green-50
+                },
+                styles: {
+                    fontSize: 10,
+                    cellPadding: 4
+                }
+            });
         }
 
+        addPdfFooter(doc);
         doc.save('lista-inteligente.pdf');
         toast({ title: 'PDF baixado com sucesso!' });
     };

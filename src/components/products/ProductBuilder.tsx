@@ -12,6 +12,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { addPdfHeader, addPdfFooter, autoTable } from '@/lib/pdfUtils';
+import jsPDF from 'jspdf';
+import { Printer } from 'lucide-react';
 
 import {
     DropdownMenu,
@@ -301,6 +304,55 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         }
     };
 
+    const handleGeneratePDF = () => {
+        const doc = new jsPDF();
+
+        // Header
+        addPdfHeader(doc, 'Ficha Técnica', formData.name);
+
+        // Product Info
+        doc.setFontSize(12);
+        doc.setTextColor(50);
+        doc.text(`Categoria: ${formData.category || 'Geral'}`, 14, 40);
+        doc.text(`Preço de Venda: R$ ${formData.selling_price.toFixed(2)}`, 14, 46);
+        doc.text(`Tempo de Preparo: ${formData.preparation_time_minutes} min`, 14, 52);
+
+        // Financials
+        const totalCost = selectedIngredients.reduce((acc, curr) => acc + (curr.cost * curr.quantity), 0);
+        const margin = formData.selling_price - totalCost;
+        const marginPercent = formData.selling_price > 0 ? (margin / formData.selling_price) * 100 : 0;
+
+        doc.text(`Custo Total: R$ ${totalCost.toFixed(2)}`, 100, 46);
+        doc.text(`Margem: ${marginPercent.toFixed(0)}% (R$ ${margin.toFixed(2)})`, 100, 52);
+
+        // Description
+        if (formData.description) {
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Descrição: ${formData.description}`, 14, 60);
+        }
+
+        // Ingredients Table
+        const tableData = selectedIngredients.map(ing => [
+            ing.name,
+            `${ing.display_quantity} ${ing.display_unit}`,
+            `R$ ${(ing.cost * ing.display_quantity).toFixed(2)}`
+        ]);
+
+        autoTable(doc, {
+            startY: formData.description ? 70 : 65,
+            head: [['Ingrediente', 'Quantidade', 'Custo']],
+            body: tableData,
+            theme: 'grid',
+            headStyles: { fillColor: [41, 37, 36] }, // Stone-800
+            styles: { fontSize: 10 }
+        });
+
+        addPdfFooter(doc);
+        doc.save(`ficha-tecnica-${formData.name.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+        toast({ title: 'Ficha Técnica gerada!' });
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setUploading(true);
@@ -534,11 +586,34 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
 
     const ActionButtons = () => (
         <div className="flex gap-3">
-            <Button type="button" variant="outline" onClick={resetForm} className="flex-1 h-12">
-                Cancelar
+            {productToEdit && (
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGeneratePDF}
+                    className="gap-2"
+                    title="Imprimir Ficha Técnica"
+                >
+                    <Printer className="w-4 h-4" />
+                    <span className="hidden sm:inline">Ficha</span>
+                </Button>
+            )}
+            <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={clearForm}
+                disabled={uploading}
+            >
+                Limpar
             </Button>
-            <Button type="submit" form="product-form" className="flex-[2] h-12 text-base" disabled={uploading}>
-                {uploading ? 'Salvando...' : (productToEdit ? 'Salvar Alterações' : 'Criar Produto')}
+            <Button
+                type="submit"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                disabled={uploading}
+                form="product-form"
+            >
+                {uploading ? 'Salvando...' : (productToEdit ? 'Atualizar' : 'Criar Produto')}
             </Button>
         </div>
     );

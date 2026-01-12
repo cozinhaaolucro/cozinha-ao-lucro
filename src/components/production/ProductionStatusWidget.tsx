@@ -131,7 +131,7 @@ const ProductionStatusWidget = () => {
 
     return (
         <>
-            <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-40 md:left-auto md:top-auto md:bottom-24 md:right-6 md:translate-x-0 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`fixed top-4 left-4 z-40 md:left-auto md:top-auto md:bottom-8 md:right-28 md:translate-x-0 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <motion.div
                     layout
                     initial={{ width: 60, height: 60, borderRadius: 30 }}
