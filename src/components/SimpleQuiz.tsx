@@ -99,13 +99,13 @@ const SimpleQuiz = ({ onComplete }: SimpleQuizProps) => {
     const ResultIcon = RESULTS[resultType].icon;
 
     return (
-        <Card className="w-full h-full glass-panel border-primary/20 overflow-hidden shadow-2xl relative flex flex-col">
+        <Card className="w-full h-full bg-card border-primary/20 overflow-hidden shadow-elegant relative flex flex-col">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
 
             <CardHeader className="text-center pb-2 pt-6 relative z-10">
-                <CardTitle className="text-lg md:text-xl font-bold text-foreground flex items-center justify-center gap-2">
-                    <div className="bg-primary/10 p-1.5 rounded-full">
-                        <Clock className="text-primary w-5 h-5" />
+                <CardTitle className="text-lg md:text-xl font-bold text-primary flex items-center justify-center gap-2 font-heading">
+                    <div className="bg-icon/10 p-1.5 rounded-full">
+                        <Clock className="text-icon w-5 h-5" />
                     </div>
                     Quiz Rápido: Viabilidade
                 </CardTitle>
@@ -131,7 +131,7 @@ const SimpleQuiz = ({ onComplete }: SimpleQuizProps) => {
                                         key={idx}
                                         whileHover={{ scale: 1.01, backgroundColor: "rgba(var(--primary), 0.05)" }}
                                         whileTap={{ scale: 0.99 }}
-                                        className="w-full py-3 px-4 text-left flex items-center gap-3 rounded-lg border border-border/50 bg-white/40 hover:border-primary/50 transition-all group"
+                                        className="w-full py-3 px-4 text-left flex items-center gap-3 rounded-lg border border-border/50 bg-white hover:border-primary/50 transition-all group"
                                         onClick={() => handleAnswer(option.type)}
                                     >
                                         <div className="w-4 h-4 rounded-full border border-muted-foreground/30 flex items-center justify-center group-hover:border-primary transition-colors">

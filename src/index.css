@@ -18,16 +18,10 @@
       Footer: 190 38% 22%
       Icons: 155 35% 72%
       Text/Neutral Dark: 210 9% 32%
+      Error: 8 48% 58%
     */
 
     --background: 38 33% 95%;
-    --foreground: 210 9% 32%;
-    /* Neutral Dark as default foreground to match "Textos do site" implication or keep typical dark */
-    /* Wait, user said "Restante do texto em Neutral Dark (hsl(210, 9%, 32%))". It is safer to use this as foreground or muted-foreground. 
-       Let's set a specific variable for Neutral Dark and keep foreground legible. 
-       Actually, standard text usually needs high contrast. 210 9% 32% is #4A525A which is readable. 
-       I will set --foreground to this value.
-    */
     --foreground: 210 9% 32%;
 
     --card: 38 20% 98%;
@@ -38,21 +32,18 @@
 
     --primary: 188 34% 28%;
     --primary-foreground: 38 33% 95%;
-    /* Off-white text on primary */
-    --primary-glow: 188 34% 28%;
+    --primary-glow: 188 34% 34%;
+    /* Lighter for shine/glow */
 
     --secondary: 182 16% 55%;
     --secondary-foreground: 38 33% 95%;
     --secondary-light: 182 16% 65%;
 
-    --muted: 60 5% 83%;
+    --muted: 38 20% 90%;
+    /* Slightly warmer muted */
     --muted-foreground: 210 9% 32%;
 
     --accent: 38 65% 55%;
-    /* Financial Highlight mapped to accent? Or create new? 
-                          User said "Cor de Destaque Financeiro... Usar exclusivamente para números". 
-                          I will create --financial variable. 
-                          I will keep accent as Gold/Financial for compatibility if needed. */
     --accent-foreground: 210 9% 32%;
 
     --financial: 38 65% 55%;
@@ -61,9 +52,6 @@
     --warning-foreground: 210 9% 32%;
 
     --success: 155 35% 72%;
-    /* Using the Icon Green for success? Or keep separate? 
-                            User said "Icon color: 155 35 72". 
-                            I'll set this as --success for now or --icon-color */
     --success-foreground: 210 9% 32%;
 
     --icon-color: 155 35% 72%;
@@ -71,57 +59,48 @@
     --info: 182 16% 55%;
     --info-foreground: 38 33% 95%;
 
-    --destructive: 359 88% 27%;
+    --destructive: 8 48% 58%;
     --destructive-foreground: 38 33% 95%;
 
     --footer: 190 38% 22%;
     --footer-foreground: 38 33% 95%;
 
-    --border: 60 5% 83%;
-    /* Kept as is or should match scheme? Light Grey lines 60 5% 83% was prev. User didn't specify border. */
-    --input: 60 5% 83%;
-    --ring: 188 34% 28%;
+    --border: 210 9% 75%;
+    /* Updated to HSL 210, 9%, 75% as requested for Inputs */
+    --input: 210 9% 75%;
+    --ring: 182 16% 55%;
+    /* Active focus color */
 
     --radius: 0.75rem;
 
     /* Shadows */
-    --shadow-elegant: 0 10px 40px -10px rgba(0, 0, 0, 0.08), 0 0 20px rgba(0, 0, 0, 0.02);
-    --shadow-glow: 0 0 30px rgba(47, 96, 107, 0.2);
-    /* Adjusted to primary hue approx */
+    --shadow-elegant: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-glow: 0 0 20px rgba(47, 96, 107, 0.3);
     --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 10px 15px -3px rgba(0, 0, 0, 0.02);
-    --shadow-floating: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 15px rgba(0, 0, 0, 0.03);
+    --shadow-floating: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 
     --inner-glow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
   }
 
   .dark {
-    /* Forcing Light Mode look as requested */
+    /* Forcing Light Mode look as requested, keeping identical */
     --background: 38 33% 95%;
     --foreground: 210 9% 32%;
-
     --card: 38 20% 98%;
     --card-foreground: 210 9% 32%;
-
     --primary: 188 34% 28%;
     --primary-foreground: 38 33% 95%;
-
     --secondary: 182 16% 55%;
     --secondary-foreground: 38 33% 95%;
-
-    --muted: 60 5% 83%;
+    --muted: 38 20% 90%;
     --muted-foreground: 210 9% 32%;
-
     --accent: 38 65% 55%;
     --accent-foreground: 210 9% 32%;
-
     --financial: 38 65% 55%;
-
     --icon-color: 155 35% 72%;
-
-    --border: 60 5% 83%;
-    --input: 60 5% 83%;
-    --ring: 188 34% 28%;
-
+    --border: 210 9% 75%;
+    --input: 210 9% 75%;
+    --ring: 182 16% 55%;
     --footer: 190 38% 22%;
     --footer-foreground: 38 33% 95%;
   }
@@ -145,8 +124,8 @@
   h4,
   h5,
   h6 {
-    /* Keep Poppins or switch to Manrope? User said Manrope is main. Inter is support. Let's use Manrope for headings too unless stated otherwise, user said "Recolta - Logo", "Manrope -> main", "Inter -> technical". Poppins was old headers. I will switch headers to Manrope for consistency or keep Poppins if they want emphasis. User said "Manrope -> fonte principal do site (Texts, SaaS, Botões, Formulários)". Headings are texts. I'll switch to Manrope for a cleaner modern look matching the "Off White" aesthetic. Or keep Poppins if defined as such? User list didn't mention Poppins. Recolta is logo. I'll use Manrope for everything. */
-    font-family: 'Manrope', system-ui, sans-serif;
+    font-family: 'Recoleta ALT SemiBold', 'Poppins', system-ui, sans-serif;
+    /* Explicitly restored Recoleta */
     letter-spacing: -0.02em;
     line-height: 1.25;
     font-weight: 700;
@@ -170,7 +149,7 @@
 
   /* Premium Lighting Utilities */
   .premium-card {
-    @apply bg-white/80 backdrop-blur-2xl border border-white/50 shadow-elegant transition-all duration-500 hover:shadow-floating hover:border-primary/10 relative overflow-hidden;
+    @apply bg-card border border-white/50 shadow-elegant transition-all duration-200 hover:shadow-floating hover:-translate-y-1 relative overflow-hidden;
   }
 
   .premium-card::before {
@@ -219,28 +198,85 @@
     background-image: linear-gradient(to bottom, hsl(186, 35%, 32%), hsl(186, 35%, 24%));
   }
 
-  /* Button Styles */
+  /* Button Styles - STRICT IMPLEMENTATION */
   .btn-primary {
-    @apply bg-primary text-primary-foreground font-semibold px-8 py-4 rounded-full shadow-lg hover:shadow-glow hover:scale-105 active:scale-95 transition-all duration-300;
+    @apply bg-primary text-primary-foreground font-semibold px-8 py-4 rounded-xl shadow-elegant transition-all duration-150 ease-out;
+    /* Hover: Lighten +6% (Visual approximation via bright filter or specific class, using brightness filter is reliable) */
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.06);
+    /* ~+6% lightness logic */
+    transform: translateY(-2px);
+    /* offset vertical 6px logic (start 4px + 2px) */
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    /* Increased elevation */
+  }
+
+  .btn-primary:active {
+    filter: brightness(0.94);
+    /* ~-6% lightness logic */
+    transform: translateY(0);
   }
 
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground font-semibold px-8 py-4 rounded-full shadow-md hover:bg-secondary/90 hover:scale-105 active:scale-95 transition-all duration-300;
+    @apply bg-secondary text-secondary-foreground font-semibold px-8 py-4 rounded-xl shadow-md transition-all duration-150 ease-out;
+  }
+
+  .btn-secondary:hover {
+    filter: brightness(1.06);
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary:active {
+    filter: brightness(0.94);
+    transform: translateY(0);
+  }
+
+  /* Link Styles */
+  a.link-standard {
+    color: hsl(182, 16%, 55%);
+    text-decoration: none;
+    transition: color 0.15s ease-out;
+  }
+
+  a.link-standard:hover {
+    color: hsl(182, 16%, 47%);
+    /* Darker by ~8% */
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+  }
+
+  /* Input Styles */
+  input,
+  textarea,
+  select {
+    @apply border-input transition-all duration-150 ease-out;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    @apply border-ring outline-none;
+    box-shadow: 0 0 0 3px rgba(100, 137, 138, 0.2);
+    /* Glow opacity moderate */
   }
 
   /* Layout Utilities */
   .section-padding {
-    @apply py-20 px-4 md:px-8 lg:px-12;
+    @apply py-24 px-4 md:px-8 lg:px-12;
+    /* Generous spacing */
   }
 
   .container-max {
-    @apply max-w-[1600px] mx-auto px-6 md:px-12 w-full;
+    @apply max-w-[1400px] mx-auto px-6 md:px-12 w-full;
   }
 
   .mobile-container {
     @apply w-[90%] mx-auto md:w-full max-w-none;
   }
 }
+
 
 /* Custom Animations */
 @keyframes shimmer {

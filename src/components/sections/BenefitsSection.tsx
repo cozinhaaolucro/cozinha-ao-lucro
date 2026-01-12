@@ -57,7 +57,7 @@ const BenefitsSection = () => {
                     {benefits.map((benefit, index) => (
                         <Tilt key={index} options={{ max: 10, scale: 1.02, speed: 400 }} className="h-full">
                             <RevealOnScroll delay={index * 0.1} className="h-full">
-                                <Card className="bg-card hover:shadow-elegant transition-all duration-300 text-center group cursor-pointer border-none hover:border-primary/20 h-full">
+                                <Card className="bg-card hover:shadow-elegant transition-all duration-300 text-center group cursor-pointer hover:border-primary/20 h-full">
                                     <CardContent className="p-8 flex flex-col items-center h-full">
                                         <div className="w-16 h-16 bg-icon/20 rounded-[4px] flex items-center justify-center mx-auto mb-6 transition-colors duration-300 transform shadow-sm">
                                             <benefit.icon className="w-8 h-8 text-icon stroke-[2]" />

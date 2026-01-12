@@ -80,13 +80,13 @@ const DetailedQuiz = ({ onComplete }: DetailedQuizProps) => {
     };
 
     return (
-        <Card className="w-full h-full glass-panel border-secondary/20 overflow-hidden shadow-2xl relative flex flex-col">
+        <Card className="w-full h-full bg-card border-secondary/20 overflow-hidden shadow-elegant relative flex flex-col">
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/5 rounded-full blur-3xl"></div>
 
             <CardHeader className="text-center pb-2 pt-6 relative z-10">
-                <CardTitle className="text-lg md:text-xl font-bold text-foreground flex items-center justify-center gap-2">
-                    <div className="bg-secondary/10 p-1.5 rounded-full">
-                        <Search className="text-secondary w-5 h-5" />
+                <CardTitle className="text-lg md:text-xl font-bold text-primary flex items-center justify-center gap-2 font-heading">
+                    <div className="bg-icon/10 p-1.5 rounded-full">
+                        <Search className="text-icon w-5 h-5" />
                     </div>
                     Quiz Detalhado: Seu Plano
                 </CardTitle>
@@ -112,7 +112,7 @@ const DetailedQuiz = ({ onComplete }: DetailedQuizProps) => {
                                         key={idx}
                                         whileHover={{ scale: 1.01, backgroundColor: "rgba(var(--secondary), 0.05)" }}
                                         whileTap={{ scale: 0.99 }}
-                                        className="w-full py-3 px-4 text-left flex items-center gap-3 rounded-lg border border-border/50 bg-white/40 hover:border-secondary/50 transition-all group"
+                                        className="w-full py-3 px-4 text-left flex items-center gap-3 rounded-lg border border-border/50 bg-white hover:border-secondary/50 transition-all group"
                                         onClick={() => handleAnswer(option.type)}
                                     >
                                         <div className="w-4 h-4 rounded-full border border-muted-foreground/30 flex items-center justify-center group-hover:border-secondary transition-colors">

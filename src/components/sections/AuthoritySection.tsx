@@ -13,7 +13,7 @@ const AuthoritySection = () => {
                             <Target className="w-8 h-8 text-primary" />
                         </div>
 
-                        <h2 className="text-3xl md:text-4xl font-bold text-foreground font-heading">
+                        <h2 className="text-3xl md:text-4xl font-bold text-primary font-heading">
                             Criado para quem vive a <span className="text-primary relative inline-block effect-shine shine-slow px-2 -mx-2 align-bottom">realidade da cozinha</span>
                         </h2>
 

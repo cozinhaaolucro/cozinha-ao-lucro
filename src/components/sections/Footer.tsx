@@ -24,7 +24,7 @@ const Footer = () => {
                             className="w-10 h-10 bg-footer-foreground/10 rounded-full flex items-center justify-center hover:bg-footer-foreground hover:text-footer transition-all duration-300 group"
                             aria-label="Instagram"
                         >
-                            <Instagram className="w-5 h-5 text-footer-foreground/90 group-hover:text-footer" />
+                            <Instagram className="w-5 h-5 text-icon group-hover:text-footer" />
                         </a>
                         <a
                             href="https://www.facebook.com/people/Cozinha-ao-Lucro/61583806174158/"
@@ -33,7 +33,7 @@ const Footer = () => {
                             className="w-10 h-10 bg-footer-foreground/10 rounded-full flex items-center justify-center hover:bg-footer-foreground hover:text-footer transition-all duration-300 group"
                             aria-label="Facebook"
                         >
-                            <Facebook className="w-5 h-5 text-footer-foreground/90 group-hover:text-footer" />
+                            <Facebook className="w-5 h-5 text-icon group-hover:text-footer" />
                         </a>
                         <a
                             href="https://www.youtube.com/channel/UCdOdbJ6g-hK7ktwB_sB1e0g"
@@ -42,7 +42,7 @@ const Footer = () => {
                             className="w-10 h-10 bg-footer-foreground/10 rounded-full flex items-center justify-center hover:bg-footer-foreground hover:text-footer transition-all duration-300 group"
                             aria-label="YouTube"
                         >
-                            <Youtube className="w-5 h-5 text-footer-foreground/90 group-hover:text-footer" />
+                            <Youtube className="w-5 h-5 text-icon group-hover:text-footer" />
                         </a>
                     </div>
 

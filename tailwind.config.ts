@@ -75,11 +75,11 @@ export default {
 					foreground: 'hsl(var(--info-foreground))'
 				},
 				financial: {
-					DEFAULT: 'hsl(var(--financial) / <alpha-value>)',
+					DEFAULT: 'hsl(var(--financial))',
 					foreground: 'hsl(var(--foreground))'
 				},
 				icon: {
-					DEFAULT: 'hsl(var(--icon-color) / <alpha-value>)',
+					DEFAULT: 'hsl(var(--icon-color))',
 					foreground: 'hsl(var(--foreground))'
 				},
 			},
@@ -118,10 +118,10 @@ export default {
 				'subtle-pulse': 'subtle-pulse 4s ease-in-out infinite'
 			},
 			boxShadow: {
-				'elegant': 'var(--shadow-elegant)',
-				'glow': 'var(--shadow-glow)',
-				'card': 'var(--shadow-card)',
-				'floating': 'var(--shadow-floating)'
+				'elegant': '0 4px 12px rgba(0, 0, 0, 0.1)', // Updated base elevation
+				'glow': '0 0 20px rgba(47, 96, 107, 0.3)',
+				'card': '0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 10px 15px -3px rgba(0, 0, 0, 0.02)',
+				'floating': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' // Slightly stronger for hover
 			}
 		}
 	},

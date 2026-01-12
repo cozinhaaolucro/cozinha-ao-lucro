@@ -26,18 +26,19 @@ const PricingSection = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
                     {/* Pro Plan */}
+                    {/* Pro Plan */}
                     <RevealOnScroll delay={0.2} className="h-full">
-                        <Card className="h-full relative overflow-hidden bg-white/95 border border-white/50 shadow-elegant rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col hover:shadow-floating hover:border-primary/10 backface-hidden will-change-transform">
+                        <Card className="h-full relative overflow-hidden bg-card border border-white/50 shadow-elegant rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col hover:shadow-floating hover:border-primary/10 backface-hidden will-change-transform">
                             {/* Popular Badge */}
                             <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-b-xl z-20 shadow-md overflow-hidden effect-shine shine-delay-2 whitespace-nowrap flex items-center justify-center min-w-[140px]">
                                 MAIS ESCOLHIDO
                             </div>
 
                             <CardHeader className="text-center pt-12 pb-4">
-                                <CardTitle className="text-2xl font-bold text-foreground font-heading">Assinatura Pro</CardTitle>
+                                <CardTitle className="text-2xl font-bold text-primary font-heading">Assinatura Pro</CardTitle>
                                 <div className="mt-5 flex items-baseline justify-center gap-2">
                                     <span className="text-lg text-muted-foreground line-through">R$ 97,00</span>
-                                    <span className="text-5xl font-bold text-primary font-heading relative inline-block effect-shine shine-delay-1 overflow-hidden px-2 -mx-2">R$ 39,90</span>
+                                    <span className="text-5xl font-bold text-financial font-heading relative inline-block effect-shine shine-delay-1 overflow-hidden px-2 -mx-2">R$ 39,90</span>
                                     <span className="text-muted-foreground">/mês</span>
                                 </div>
                                 <p className="text-sm text-emerald-600 font-bold mt-3 bg-emerald-600/10 inline-block px-4 py-1.5 rounded-full border border-emerald-600/20 shadow-sm animate-pulse-slow">
@@ -57,7 +58,7 @@ const PricingSection = () => {
                                         "Suporte Prioritário"
                                     ].map((feature, i) => (
                                         <li key={i} className="flex items-center gap-3 text-foreground/85">
-                                            <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
+                                            <CheckCircle className="w-5 h-5 text-icon flex-shrink-0" />
                                             <span>{feature}</span>
                                         </li>
                                     ))}
@@ -87,9 +88,9 @@ const PricingSection = () => {
 
                     {/* Business Plan */}
                     <RevealOnScroll delay={0.3} className="h-full">
-                        <Card className="h-full relative overflow-hidden bg-background border-border/60 shadow-lg rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col border-2 hover:border-primary/20 backface-hidden will-change-transform effect-shine shine-delay-1">
+                        <Card className="h-full relative overflow-hidden bg-card border-border/60 shadow-lg rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col border-2 hover:border-primary/20 backface-hidden will-change-transform effect-shine shine-delay-1">
                             <CardHeader className="text-center pt-12 pb-4">
-                                <CardTitle className="text-2xl font-bold text-foreground font-heading">Plano Business</CardTitle>
+                                <CardTitle className="text-2xl font-bold text-primary font-heading">Plano Business</CardTitle>
                                 <div className="mt-5 flex items-baseline justify-center gap-2">
                                     <span className="text-5xl font-bold text-foreground font-heading">Sob Consulta</span>
                                 </div>
@@ -110,7 +111,7 @@ const PricingSection = () => {
                                         "Integração via API (Opcional)"
                                     ].map((feature, i) => (
                                         <li key={i} className="flex items-center gap-3 text-foreground/85">
-                                            <CheckCircle className="w-5 h-5 text-primary/60 flex-shrink-0" />
+                                            <CheckCircle className="w-5 h-5 text-icon flex-shrink-0" />
                                             <span>{feature}</span>
                                         </li>
                                     ))}
