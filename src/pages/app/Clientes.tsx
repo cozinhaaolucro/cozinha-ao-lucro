@@ -233,7 +233,7 @@ const Clientes = () => {
                     <input
                         type="file"
                         ref={fileInputRef}
-                        accept=".xlsx, .xls"
+                        accept=".xlsx, .xls, .csv"
                         className="hidden"
                         onChange={handleImport}
                     />

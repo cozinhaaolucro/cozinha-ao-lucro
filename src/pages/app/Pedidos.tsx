@@ -401,7 +401,7 @@ const Pedidos = () => {
                     <input
                         type="file"
                         id="pedidos-import-input"
-                        accept=".xlsx, .xls"
+                        accept=".xlsx, .xls, .csv"
                         className="hidden"
                         onChange={async (e) => {
                             const file = e.target.files?.[0];
