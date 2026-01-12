@@ -17,6 +17,7 @@ const QuizSection = () => {
         <section className="section-padding bg-background relative overflow-hidden section-separator-top">
             <div className="absolute inset-0 bg-noise opacity-40 pointer-events-none"></div>
             <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-primary/5 blur-[120px] rounded-full mix-blend-multiply"></div>
+            <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-secondary/5 blur-[120px] rounded-full mix-blend-multiply"></div>
 
             <div className="container-max relative z-10">
                 <RevealOnScroll>

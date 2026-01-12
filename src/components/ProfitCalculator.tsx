@@ -80,8 +80,8 @@ const ProfitCalculator = () => {
     };
 
     return (
-        <Card className="w-full max-w-lg mx-auto premium-card transform-gpu backface-hidden will-change-transform rounded-2xl">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-secondary"></div>
+        <Card className="w-full max-w-lg mx-auto premium-card transform-gpu backface-hidden will-change-transform rounded-2xl border-white/10 shadow-xl">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
 
             <CardHeader className="text-center pb-2 pt-4">
                 <div className="mx-auto w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg flex items-center justify-center mb-2 shadow-inner border border-primary/10">
@@ -164,7 +164,7 @@ const ProfitCalculator = () => {
                         </div>
 
                         <h3 className="text-sm font-medium text-muted-foreground mb-1">Seu Potencial de Lucro Mensal</h3>
-                        <div className="text-3xl md:text-4xl font-bold mb-4 tracking-tight font-heading text-gold-gradient">
+                        <div className="text-3xl md:text-4xl font-bold mb-4 tracking-tight font-heading text-financial">
                             {formatCurrency(monthlyProfit)}
                         </div>
 

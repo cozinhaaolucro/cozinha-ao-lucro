@@ -19,8 +19,8 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Inter', 'system-ui', 'sans-serif'],
-				heading: ['Poppins', 'system-ui', 'sans-serif'],
+				sans: ['Manrope', 'system-ui', 'sans-serif'],
+				heading: ['Recoleta ALT SemiBold', 'Poppins', 'system-ui', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -73,6 +73,14 @@ export default {
 				info: {
 					DEFAULT: 'hsl(var(--info))',
 					foreground: 'hsl(var(--info-foreground))'
+				},
+				financial: {
+					DEFAULT: 'hsl(var(--financial) / <alpha-value>)',
+					foreground: 'hsl(var(--foreground))'
+				},
+				icon: {
+					DEFAULT: 'hsl(var(--icon-color) / <alpha-value>)',
+					foreground: 'hsl(var(--foreground))'
 				},
 			},
 			borderRadius: {

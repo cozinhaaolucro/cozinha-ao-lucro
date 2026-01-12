@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/sections/HeroSection';
+import BenefitsSection from '@/components/sections/BenefitsSection';
 import QuizSection from '@/components/sections/QuizSection';
 import PricingSection from '@/components/sections/PricingSection';
 import AuthoritySection from '@/components/sections/AuthoritySection';
@@ -13,6 +14,9 @@ const Index = () => {
 
       {/* Hero with Calculator */}
       <HeroSection />
+
+      {/* Benefits Section - Platform Preview */}
+      <BenefitsSection />
 
       {/* Interactive Quiz */}
       <QuizSection />
