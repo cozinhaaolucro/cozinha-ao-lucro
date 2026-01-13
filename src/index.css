@@ -155,8 +155,8 @@
   h4,
   h5,
   h6 {
-    font-family: 'Recoleta ALT SemiBold', 'Poppins', system-ui, sans-serif;
-    /* Explicitly restored Recoleta */
+    font-family: 'Poppins', system-ui, sans-serif;
+    /* Replaced missing Recoleta with Poppins for consistency */
     letter-spacing: -0.02em;
     line-height: 1.25;
     font-weight: 700;
