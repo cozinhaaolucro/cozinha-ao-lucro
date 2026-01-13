@@ -61,10 +61,10 @@ export type Product = {
     selling_price: number;
     selling_unit: string;
     preparation_time_minutes: number;
-    hourly_rate: number;
+    hourly_rate?: number;
     image_url: string | null;
     active: boolean;
-    is_highlight: boolean;
+    is_highlight?: boolean;
     category: string | null;
     created_at: string;
     updated_at: string;

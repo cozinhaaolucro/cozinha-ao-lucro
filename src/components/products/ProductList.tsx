@@ -9,6 +9,7 @@ import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
 import { PRESET_PRODUCTS } from '@/data/presets';
 import type { Product, Ingredient } from '@/types/database';
 import ProductBuilder from './ProductBuilder';
+import ProductTemplateDialog from './ProductTemplateDialog';
 import { useToast } from '@/hooks/use-toast';
 import {
     DropdownMenu,
@@ -158,35 +159,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
         }
     };
 
-    const handleFixImages = async () => {
-        const productsWithoutImage = products.filter(p => !p.image_url);
-        if (productsWithoutImage.length === 0) {
-            toast({ title: 'Todos os produtos já possuem imagem.' });
-            return;
-        }
-
-        let updatedCount = 0;
-        for (const product of productsWithoutImage) {
-            // Find a matching preset based on name similarity or exact match
-            const preset = PRESET_PRODUCTS.find(p =>
-                p.name.toLowerCase() === product.name.toLowerCase() ||
-                product.name.toLowerCase().includes(p.name.toLowerCase()) ||
-                p.name.toLowerCase().includes(product.name.toLowerCase())
-            );
-
-            if (preset && preset.image_url) {
-                const { error } = await updateProduct(product.id, { image_url: preset.image_url }, null);
-                if (!error) updatedCount++;
-            }
-        }
-
-        if (updatedCount > 0) {
-            toast({ title: `${updatedCount} imagens recuperadas de produtos padrão.` });
-            loadProducts();
-        } else {
-            toast({ title: 'Não foi possível encontrar imagens compatíveis nos produtos padrão.' });
-        }
-    };
+    const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
 
     const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -369,7 +342,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                         <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
 
-                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={handleFixImages} title="Corrigir Imagens">
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setIsTemplateDialogOpen(true)} title="Biblioteca de Modelos">
                         <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
 
@@ -586,6 +559,12 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                     loadProducts();
                     setEditingProduct(null);
                 }}
+            />
+
+            <ProductTemplateDialog
+                open={isTemplateDialogOpen}
+                onOpenChange={setIsTemplateDialogOpen}
+                onSuccess={loadProducts}
             />
         </div>
     );

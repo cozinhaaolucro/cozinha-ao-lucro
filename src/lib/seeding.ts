@@ -68,6 +68,8 @@ export const seedAccount = async () => {
         }
 
         // 6. Create ONLY missing products
+        // [DISABLED] Per user request, products should only be created via Template Library
+        /*
         for (const prod of PRESET_PRODUCTS) {
             if (existingProductNames.has(prod.name)) {
                 continue;
@@ -101,6 +103,7 @@ export const seedAccount = async () => {
                 console.error(`Failed to create product ${prod.name}:`, error.message);
             }
         }
+        */
 
         console.log('Account seeding completed successfully.');
     } catch (error) {

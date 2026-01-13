@@ -121,7 +121,7 @@ export const PRESET_PRODUCTS = [
         description: 'Receita para produção de 30 trufas médias (~40g cada).',
         selling_price: 90.00, // ~R$ 3.00/unidade nesse lote
         active: true,
-        image_url: 'https://images.unsplash.com/photo-1510323334810-67df768f56fa?w=800&q=80',
+        image_url: 'https://images.unsplash.com/photo-1511381939415-e44015466834?w=800&q=80', // Robust Truffles URL
         ingredients: [
             { name: 'Chocolate Nobre Barra', quantity: 0.500 }, // 500g (casca + ganache)
             { name: 'Creme de Leite', quantity: 0.200 }, // 200g (ganache)
