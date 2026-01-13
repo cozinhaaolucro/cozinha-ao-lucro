@@ -33,6 +33,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { presetIngredients } from '@/data/presetIngredients';
+import { getIngredientIcon } from '@/lib/ingredientIcons';
 
 const IngredientList = () => {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -492,6 +493,10 @@ const IngredientList = () => {
                                                 checked={selectedIngredients.includes(ingredient.id)}
                                                 onCheckedChange={() => toggleSelect(ingredient.id)}
                                             />
+                                            {(() => {
+                                                const Icon = getIngredientIcon(ingredient.name);
+                                                return <Icon className="w-4 h-4 text-muted-foreground" />;
+                                            })()}
                                             <CardTitle className="text-sm font-medium line-clamp-1">
                                                 {ingredient.name}
                                             </CardTitle>
