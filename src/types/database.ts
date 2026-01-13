@@ -44,7 +44,7 @@ export type Ingredient = {
     unit: string;
     cost_per_unit: number;
     stock_quantity: number;
-    min_stock_threshold: number;
+    min_stock_threshold?: number;
     created_at: string;
     updated_at: string;
 };
@@ -132,6 +132,7 @@ export type Order = {
     order_number: string | null;
     display_id: number;
     status: OrderStatus;
+    position?: number; // Kanban custom order
     total_value: number;
     total_cost: number;
     // Entrega

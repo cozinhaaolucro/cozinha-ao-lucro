@@ -66,17 +66,7 @@ const IngredientList = () => {
     const loadIngredients = async () => {
         const { data, error } = await getIngredients();
         if (!error && data) {
-            const negativeStock = data.filter(i => (i.stock_quantity || 0) < 0);
-            if (negativeStock.length > 0) {
-                console.log('Detectado estoque negativo. Corrigindo...', negativeStock);
-                await Promise.all(negativeStock.map(ing =>
-                    updateIngredient(ing.id, { stock_quantity: 0 })
-                ));
-                const fixedData = data.map(i => (i.stock_quantity || 0) < 0 ? { ...i, stock_quantity: 0 } : i);
-                setIngredients(fixedData);
-            } else {
-                setIngredients(data);
-            }
+            setIngredients(data);
         }
     };
 
@@ -490,7 +480,7 @@ const IngredientList = () => {
                 <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                     {ingredients.map((ingredient) => {
                         const demand = getDemand(ingredient.id);
-                        const stock = Math.max(0, ingredient.stock_quantity || 0);
+                        const stock = ingredient.stock_quantity || 0;
                         const statusClass = getStatusColor(stock, demand);
 
                         return (
@@ -511,11 +501,16 @@ const IngredientList = () => {
                                         R$ {ingredient.cost_per_unit.toFixed(2)}
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <p className="text-xs text-muted-foreground">
-                                            {stock} {ingredient.unit}
+                                        <p className={`text-xs ${stock < 0 ? 'text-red-600 font-bold' : 'text-muted-foreground'}`}>
+                                            {Number(stock.toFixed(2))} {ingredient.unit}
                                         </p>
+                                        {stock < 0 && (
+                                            <Badge variant="destructive" className="text-[10px] h-4">
+                                                Negativo
+                                            </Badge>
+                                        )}
                                         {stock === 0 && (
-                                            <Badge variant="destructive" className="text-[10px] h-4 animate-bounce">
+                                            <Badge variant="destructive" className="text-[10px] h-4 opacity-70">
                                                 Esgotado
                                             </Badge>
                                         )}

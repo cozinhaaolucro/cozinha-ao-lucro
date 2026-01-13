@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, X, UserPlus, ShoppingCart, Calendar, User as UserIcon, AlertCircle } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getCustomers, getProducts, createOrder, createCustomer, updateIngredient, createStockMovement } from '@/lib/database';
+import { supabase } from '@/lib/supabase';
 import type { Customer, Product, OrderStatus } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -51,7 +52,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
     const [creatingCustomer, setCreatingCustomer] = useState(false);
 
     // Stock Alert State
-    const [missingIngredients, setMissingIngredients] = useState<Array<{ id: string; name: string; missing: number; current: number; needed: number; unit: string }>>([]);
+    const [missingIngredients, setMissingIngredients] = useState<Array<{ id: string; name: string; missing: number; current: number; reserved: number; needed: number; unit: string }>>([]);
     const [showStockAlert, setShowStockAlert] = useState(false);
     const [isRestocking, setIsRestocking] = useState(false);
     const [pendingSubmit, setPendingSubmit] = useState(false);
@@ -126,8 +127,10 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
         }, 0);
     };
 
-    const calculateMissingStock = () => {
-        const needed = new Map<string, { name: string; qty: number; current: number; unit: string }>();
+    const calculateMissingStock = async () => {
+        // 1. Identificar todos os ingredientes necessários para este pedido
+        const needed = new Map<string, { name: string; qty: number; unit: string }>();
+        const ingredientIds = new Set<string>();
 
         items.forEach(item => {
             const product = products.find(p => p.id === item.product_id);
@@ -136,22 +139,42 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                     const ing = pi.ingredient;
                     if (ing) {
                         const total = (pi.quantity * item.quantity);
-                        const existing = needed.get(ing.id) || { name: ing.name, qty: 0, current: ing.stock_quantity, unit: ing.unit };
+                        const existing = needed.get(ing.id) || { name: ing.name, qty: 0, unit: ing.unit };
                         existing.qty += total;
                         needed.set(ing.id, existing);
+                        ingredientIds.add(ing.id);
                     }
                 });
             }
         });
 
+        if (ingredientIds.size === 0) return [];
+
+        // 2. Buscar dados FRESCOS de estoque do banco para esses ingredientes
+        // Isso evita problemas com cache local desatualizado
+        const { data: freshIngredients } = await supabase
+            .from('ingredients')
+            .select('id, stock_quantity, name, unit')
+            .in('id', Array.from(ingredientIds));
+
+        const stockMap = new Map<string, number>();
+        freshIngredients?.forEach((ing: any) => {
+            stockMap.set(ing.id, ing.stock_quantity);
+        });
+
+        // 3. Verificar falta comparando Necessidade vs Estoque Fresco
         const missing: any[] = [];
         needed.forEach((val, key) => {
-            if (val.qty > val.current) {
+            const currentStock = stockMap.get(key) || 0;
+
+            // Estoque atual já reflete deduções de pedidos em produção (via trigger SQL)
+            if (val.qty > currentStock) {
                 missing.push({
                     id: key,
                     name: val.name,
-                    missing: val.qty - val.current,
-                    current: val.current,
+                    missing: val.qty - currentStock,
+                    current: currentStock,
+                    reserved: 0,
                     needed: val.qty,
                     unit: val.unit
                 });
@@ -166,15 +189,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
         try {
             // Process all missing ingredients
             await Promise.all(missingIngredients.map(async (item) => {
-                // 1. Update Stock (Add missing amount + maybe a buffer? User said "auto add item", assuming just enough or specific logic. 
-                // Let's add exactly what's needed to reach the requirement, effectively making stock = needed (net 0 after order) or simply adding the deficit.
-                // Usually "add to stock" means create a movement IN.
-
-                // We add the missing amount.
-                await updateIngredient(item.id, {
-                    stock_quantity: item.current + item.missing
-                });
-
+                // 1. Create Stock Movement (Isso já atualiza o estoque via RPC 'increment_stock' dentro de createStockMovement em database.ts)
                 await createStockMovement({
                     ingredient_id: item.id,
                     type: 'in',
@@ -245,7 +260,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
         }
 
         // Check Stock First
-        const missing = calculateMissingStock();
+        const missing = await calculateMissingStock();
         if (missing.length > 0) {
             setMissingIngredients(missing);
             setShowStockAlert(true);
@@ -543,33 +558,58 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                             Os seguintes ingredientes não têm estoque suficiente para este pedido:
-                            <ul className="mt-2 text-sm space-y-1 bg-muted/50 p-2 rounded max-h-[150px] overflow-auto">
+                            <ul className="mt-2 text-sm space-y-2 bg-muted/50 p-3 rounded max-h-[200px] overflow-auto">
                                 {missingIngredients.map(item => (
-                                    <li key={item.id} className="flex justify-between">
-                                        <span>{item.name}</span>
-                                        <span className="font-medium text-red-500">
-                                            Falta: {item.missing.toFixed(2)} {item.unit}
-                                        </span>
+                                    <li key={item.id} className="space-y-1 pb-2 border-b border-muted last:border-0">
+                                        <div className="flex justify-between items-center">
+                                            <span className="font-medium">{item.name}</span>
+                                            <span className="font-bold text-red-500">
+                                                Falta: {item.missing.toFixed(2)} {item.unit}
+                                            </span>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground flex gap-4">
+                                            <span>Disponível: {Math.max(0, item.current).toFixed(2)}</span>
+                                            {item.reserved > 0 && (
+                                                <span className="text-amber-600">
+                                                    Reservado: {item.reserved.toFixed(2)}
+                                                </span>
+                                            )}
+                                            <span>Este pedido: {item.needed.toFixed(2)}</span>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
-                            <p className="mt-2 font-medium">
+                            <p className="mt-3 font-medium">
                                 Deseja adicionar a quantidade faltante ao estoque automaticamente e prosseguir?
                             </p>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isRestocking}>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handleAutoRestock();
+                    <AlertDialogFooter className="sm:justify-between">
+                        <Button
+                            variant="ghost"
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() => {
+                                setShowStockAlert(false);
+                                processOrderCreation();
                             }}
-                            className="bg-amber-600 hover:bg-amber-700"
                             disabled={isRestocking}
                         >
-                            {isRestocking ? 'Atualizando...' : 'Confirmar e Adicionar'}
-                        </AlertDialogAction>
+                            Desconsiderar e criar
+                        </Button>
+
+                        <div className="flex gap-2">
+                            <AlertDialogCancel disabled={isRestocking}>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    handleAutoRestock();
+                                }}
+                                className="bg-amber-600 hover:bg-amber-700"
+                                disabled={isRestocking}
+                            >
+                                {isRestocking ? 'Atualizando...' : 'Regularizar e Criar'}
+                            </AlertDialogAction>
+                        </div>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

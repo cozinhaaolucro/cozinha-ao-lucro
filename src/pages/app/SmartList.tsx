@@ -79,7 +79,7 @@ const SmartList = () => {
                 // Let's show everything that is needed for the current batch, 
                 // and highlight what needs to be bought.
 
-                if (needed > 0) {
+                if (needed > 0 || ing.stock_quantity < 0) {
                     const toBuy = Math.max(0, needed - ing.stock_quantity);
                     shoppingList.push({
                         ingredientId: ing.id,

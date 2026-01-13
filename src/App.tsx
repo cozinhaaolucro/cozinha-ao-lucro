@@ -80,10 +80,10 @@ const App = () => {
                     <Route path="clientes" element={<Clientes />} />
                     <Route path="produtos" element={<Produtos />} />
                     <Route path="agenda" element={<Agenda />} />
-                    <Route path="smart-list" element={<SmartList />} />
+                    <Route path="lista-inteligente" element={<SmartList />} />
                     <Route path="aprender" element={<Aprender />} />
                     <Route path="settings" element={<Settings />} />
-                    <Route path="menu-config" element={<PublicMenuConfig />} />
+                    <Route path="cardapio-digital" element={<PublicMenuConfig />} />
                     <Route path="perfil" element={<Navigate to="settings" replace />} />
                   </Route>
 

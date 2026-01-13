@@ -652,3 +652,15 @@ export const getLowStockIngredients = async () => {
 
     return { data: filtered as Ingredient[] | null, error };
 };
+
+export const updateOrderPositions = async (updates: { id: string, status: string, position: number }[]) => {
+    const promises = updates.map(update =>
+        supabase
+            .from('orders')
+            .update({ status: update.status, position: update.position, updated_at: new Date().toISOString() })
+            .eq('id', update.id)
+    );
+    const results = await Promise.all(promises);
+    const error = results.find(r => r.error)?.error || null;
+    return { error };
+};
