@@ -85,7 +85,7 @@ const SmartList = () => {
                         ingredientId: ing.id,
                         name: ing.name,
                         unit: ing.unit,
-                        needed: needed,
+                        needed: Math.max(needed, toBuy),
                         inStock: ing.stock_quantity,
                         toBuy: toBuy
                     });
@@ -103,6 +103,14 @@ const SmartList = () => {
     };
 
 
+    const formatUnit = (quantity: number, unit: string) => {
+        if (!unit) return '';
+        if (unit.toLowerCase() === 'unidade' && quantity !== 1) {
+            return 'unidades';
+        }
+        return unit;
+    };
+
 
     const handleDownloadPDF = () => {
         const doc = new jsPDF();
@@ -113,9 +121,9 @@ const SmartList = () => {
             .filter(item => item.toBuy > 0)
             .map(item => [
                 item.name,
-                `${item.toBuy.toFixed(2)} ${item.unit}`,
-                `${item.inStock.toFixed(2)} ${item.unit}`,
-                `${item.needed.toFixed(2)} ${item.unit}`
+                `${item.toBuy.toFixed(2)} ${formatUnit(item.toBuy, item.unit)}`,
+                `${item.inStock.toFixed(2)} ${formatUnit(item.inStock, item.unit)}`,
+                `${item.needed.toFixed(2)} ${formatUnit(item.needed, item.unit)}`
             ]);
 
         if (tableData.length === 0) {
@@ -202,14 +210,14 @@ const SmartList = () => {
                                             <div>
                                                 <p className="font-semibold">{item.name}</p>
                                                 <div className="flex gap-2 text-xs text-muted-foreground mt-1">
-                                                    <span>Estoque: {item.inStock} {item.unit}</span>
+                                                    <span>Estoque: {item.inStock} {formatUnit(item.inStock, item.unit)}</span>
                                                     <span>•</span>
-                                                    <span>Necessário: {item.needed.toFixed(2)} {item.unit}</span>
+                                                    <span>Necessário: {item.needed.toFixed(2)} {formatUnit(item.needed, item.unit)}</span>
                                                 </div>
                                             </div>
                                             <div className="text-right">
                                                 <Badge variant="destructive" className="text-lg py-1 px-3">
-                                                    {item.toBuy.toFixed(2)} {item.unit}
+                                                    {item.toBuy.toFixed(2)} {formatUnit(item.toBuy, item.unit)}
                                                 </Badge>
                                             </div>
                                         </div>
@@ -255,7 +263,7 @@ const SmartList = () => {
                                         <li key={item.ingredientId} className="flex justify-between items-center text-muted-foreground">
                                             <span className="truncate max-w-[150px]">{item.name}</span>
                                             <span className={item.toBuy > 0 ? "text-amber-500 font-medium" : "text-green-600"}>
-                                                {item.needed.toFixed(2)} {item.unit}
+                                                {item.needed.toFixed(2)} {formatUnit(item.needed, item.unit)}
                                             </span>
                                         </li>
                                     ))}

@@ -55,7 +55,8 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     // ... calculation helpers ...
     const calculateTotalCost = (product: ProductWithIngredients) => {
         return product.product_ingredients.reduce((total, pi) => {
-            return total + (pi.ingredient.cost_per_unit * pi.quantity);
+            if (!pi.ingredient) return total;
+            return total + ((pi.ingredient.cost_per_unit || 0) * pi.quantity);
         }, 0);
     };
 
@@ -509,12 +510,15 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                             <TooltipContent className="max-w-[250px]">
                                                 <p className="font-semibold text-xs mb-2">Composição do Custo:</p>
                                                 <div className="space-y-1">
-                                                    {product.product_ingredients.map((pi, idx) => (
-                                                        <div key={idx} className="flex justify-between text-[10px] gap-4">
-                                                            <span className="truncate">{pi.ingredient.name}</span>
-                                                            <span className="font-mono text-green-600">R$ {(pi.ingredient.cost_per_unit * pi.quantity).toFixed(2)}</span>
-                                                        </div>
-                                                    ))}
+                                                    {product.product_ingredients.map((pi, idx) => {
+                                                        if (!pi.ingredient) return null;
+                                                        return (
+                                                            <div key={idx} className="flex justify-between text-[10px] gap-4">
+                                                                <span className="truncate">{pi.ingredient.name}</span>
+                                                                <span className="font-mono text-green-600">R$ {((pi.ingredient.cost_per_unit || 0) * pi.quantity).toFixed(2)}</span>
+                                                            </div>
+                                                        );
+                                                    })}
                                                     <div className="border-t mt-1 pt-1 flex justify-between text-[11px] font-bold">
                                                         <span>Total</span>
                                                         <span>R$ {totalCost.toFixed(2)}</span>
@@ -556,11 +560,14 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                         <div className="text-xs text-muted-foreground border-t pt-2">
                                             <p className="font-medium mb-1">Ingredientes:</p>
                                             <ul className="space-y-0.5">
-                                                {product.product_ingredients.map((pi, idx) => (
-                                                    <li key={idx}>
-                                                        • {pi.ingredient.name} ({pi.quantity} {pi.ingredient.unit})
-                                                    </li>
-                                                ))}
+                                                {product.product_ingredients.map((pi, idx) => {
+                                                    if (!pi.ingredient) return null;
+                                                    return (
+                                                        <li key={idx}>
+                                                            • {pi.ingredient.name} ({pi.quantity} {pi.ingredient.unit})
+                                                        </li>
+                                                    );
+                                                })}
                                             </ul>
                                         </div>
                                     )}

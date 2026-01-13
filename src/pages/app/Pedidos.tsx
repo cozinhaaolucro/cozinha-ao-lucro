@@ -43,7 +43,12 @@ import {
     DragOverEvent,
     DragEndEvent,
     TouchSensor,
-    MouseSensor
+    MouseSensor,
+    useDroppable,
+    pointerWithin,
+    rectIntersection,
+    getFirstCollision,
+    CollisionDetection
 } from '@dnd-kit/core';
 import {
     arrayMove,
@@ -253,6 +258,23 @@ const Pedidos = () => {
         return true;
     });
 
+
+    // Custom Collision Detection Strategy
+    const customCollisionDetection: CollisionDetection = (args) => {
+        const pointerCollisions = pointerWithin(args);
+
+        // If we hit an item natively with pointer, that's our best bet
+        if (pointerCollisions.length > 0) {
+            return pointerCollisions;
+        }
+
+        // If not, check if we are intersecting with a container (Column)
+        // This is crucial for empty columns or sparse columns
+        const rectCollisions = rectIntersection(args);
+        return rectCollisions;
+    };
+
+
     // DND Handlers
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(event.active.id as string);
@@ -272,17 +294,29 @@ const Pedidos = () => {
         if (!activeOrder) return;
 
         const activeStatus = activeOrder.status;
-        // If over a container, status is the container key. If over an item, status is item.status
-        const overStatus = (overId in STATUS_COLUMNS)
-            ? overId as OrderStatus
-            : overOrder?.status;
+
+        // Determine status based on what we are over
+        let overStatus: OrderStatus | undefined;
+
+        if (overId in STATUS_COLUMNS) {
+            // We are strictly over a column container
+            overStatus = overId as OrderStatus;
+        } else if (overOrder) {
+            // We are over another order
+            overStatus = overOrder.status;
+        }
 
         if (!overStatus || activeStatus === overStatus) return;
 
         // Update local state immediately for visual feedback
         setOrders((prev) => {
+            const activeItem = prev.find(i => i.id === activeId);
+            if (!activeItem) return prev; // Safety
+
+            // We need to move the item to the new list conceptually
+            // We don't worry about exact index in DragOver mostly, just the ephemeral status change
             return prev.map(o =>
-                o.id === activeId ? { ...o, status: overStatus } : o
+                o.id === activeId ? { ...o, status: overStatus! } : o
             );
         });
     };
@@ -296,16 +330,13 @@ const Pedidos = () => {
         const activeId = active.id as string;
         const overId = over.id as string;
 
-        // Final Status check
         const activeOrder = orders.find(o => o.id === activeId);
-        if (!activeOrder) return; // Should not happen
+        if (!activeOrder) return;
 
-        // Calculate new order and positions
-        const currentStatus = activeOrder.status; // Updated in DragOver
+        const currentStatus = activeOrder.status; // This SHOULD be the new status from DragOver
 
-        // Get all items in this status, sorted by current position
-        // We use the state because arrayMove works on indices of the state array
-        // But here we filtered. so we need to be careful.
+        // We assume activeOrder.status is already correct because of DragOver state updates.
+        // However, we need to calculate the *exact position* (index) in the new list.
 
         const statusOrders = orders
             .filter(o => o.status === currentStatus)
@@ -315,49 +346,71 @@ const Pedidos = () => {
         let newIndex: number;
 
         if (overId in STATUS_COLUMNS) {
-            // Dropped on empty space/container
+            // We dropped on the container column itself.
+            // If it's the same column we started in (rare if we have items), go to end?
+            // Usually if we drop on container, we append to end.
             newIndex = statusOrders.length;
         } else {
-            // Dropped over an item
+            // We dropped on an item
             newIndex = statusOrders.findIndex(o => o.id === overId);
+
+            // If we are dropping "below" or "above" depends on direction, 
+            // but arrayMove handles index based logic. 
+            // Generally dnd-kit sortable strategy handles "swapping" indices.
+
+            // NOTE: If we just moved into this column, activeID might be at the end strictly in the array
+            // but visually we dropped over overId.
+
+            const isBelow = over && active.rect.current.translated && active.rect.current.translated.top > over.rect.top + over.rect.height;
+            const modifier = isBelow ? 1 : 0;
+            // Actually, arrayMove/findIndex is usually sufficient if the indices are consistent.
+            // But since we mutate state in DragOver, the indices might be transient.
+
+            // Simplification: Trust the overId index.
+            if (newIndex === -1) newIndex = statusOrders.length;
         }
 
-        // If index changed or filtering changed, we need to update positions
-        // re-sort based on arrayMove
-        if (newIndex === -1) newIndex = statusOrders.length; // Fallback
+        let reorderedList = statusOrders;
 
-        const reorderedList = arrayMove(statusOrders, oldIndex, newIndex);
+        // Correct the array move
+        if (oldIndex !== newIndex) {
+            reorderedList = arrayMove(statusOrders, oldIndex, newIndex);
+        }
 
-        // Update positions based on new index
+        // Generate updates for ALL items in this column to ensure consistency
         const updates = reorderedList.map((order, index) => ({
             id: order.id,
             status: currentStatus,
             position: index
         }));
 
-        // Optimize Update: Update local state fully with new positions
+        // Optimistic UI Update
         setOrders(prev => {
-            // We need to merge the reordered list back into the main list
+            // Remove all from this status
             const otherOrders = prev.filter(o => o.status !== currentStatus);
-            // We need to update the reordered items with their new position
+            // Add back reordered with new position
             const updatedReordered = reorderedList.map((o, idx) => ({ ...o, position: idx }));
             return [...otherOrders, ...updatedReordered];
         });
 
-        // Persist to DB
+        // Persist
         const { error } = await updateOrderPositions(updates);
         if (error) {
             toast({ title: 'Erro ao salvar ordem', variant: 'destructive' });
-            loadOrders();
-        } else {
-            // Check if delivered to show confetti
-            if (currentStatus === 'delivered' && activeOrder.status !== 'delivered') { // Should track prev status better but this is ok
-                // Actually activeOrder.status is already 'delivered' due to DragOver.
-            }
-            // We lost the 'became delivered' trigger because we updated state in Over. 
-            // We can check if 'updates' includes a status change implies logic.
-            // But let's skip confetti for now or re-add logic.
+            loadOrders(); // Revert
         }
+    };
+
+    const DroppableColumn = ({ status, children }: { status: string, children: React.ReactNode }) => {
+        const { setNodeRef } = useDroppable({
+            id: status,
+        });
+
+        return (
+            <div ref={setNodeRef} className="h-full w-full flex-1 min-h-[150px]">
+                {children}
+            </div>
+        );
     };
 
     const handleDeleteOrder = async (id: string) => {
@@ -394,156 +447,158 @@ const Pedidos = () => {
         const isEmpty = statusOrders.length === 0;
 
         return (
-            <div className="h-full flex flex-col space-y-3">
-                {!isMobile && (
-                    <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">{config.label}</h3>
-                        <Badge variant="secondary">{statusOrders.length}</Badge>
-                    </div>
-                )}
+            <DroppableColumn status={status}>
+                <div className="h-full flex flex-col space-y-3">
+                    {!isMobile && (
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-semibold">{config.label}</h3>
+                            <Badge variant="secondary">{statusOrders.length}</Badge>
+                        </div>
+                    )}
 
-                <SortableContext
-                    id={status}
-                    items={statusOrders.map(o => o.id)}
-                    strategy={verticalListSortingStrategy}
-                >
-                    <div className={isMobile ? "space-y-3 pb-20 min-h-[150px]" : "space-y-2 min-h-[400px]"} >
-                        {isEmpty && !activeId ? (
-                            <Card className={`${config.color} border-2 border-dashed h-full min-h-[150px] flex flex-col items-center justify-center p-6 text-center`}>
-                                <div className="w-12 h-12 rounded-full bg-white/50 flex items-center justify-center mb-3">
-                                    <PackageCheck className="w-6 h-6 text-muted-foreground/40" />
-                                </div>
-                                <p className="text-sm font-medium text-muted-foreground/60 leading-tight">
-                                    {status === 'pending' && "Tudo limpo por aqui!"}
-                                    {status === 'preparing' && "Arraste para produzir."}
-                                    {status === 'ready' && "Finalize a produção."}
-                                    {status === 'delivered' && "Entregas concluídas."}
-                                </p>
-                            </Card>
-                        ) : (
-                            statusOrders.map((order) => (
-                                <SortableOrderCard
-                                    key={order.id}
-                                    order={order}
-                                    config={config}
-                                    isMobile={isMobile}
-                                    draggedOrderId={activeId}
-                                >
-                                    <Card
-                                        className={`${config.color} border-2 hover:shadow-md transition-all cursor-move group relative ${activeId === order.id ? 'opacity-30' : ''}`}
-                                        onTouchStart={() => {
-                                            longPressTimerRef.current = setTimeout(() => {
-                                                setLongPressOrder(order);
-                                            }, 500);
-                                        }}
-                                        onTouchEnd={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); }}
-                                        onTouchMove={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); }}
+                    <SortableContext
+                        id={status}
+                        items={statusOrders.map(o => o.id)}
+                        strategy={verticalListSortingStrategy}
+                    >
+                        <div className={isMobile ? "space-y-3 pb-20 min-h-[150px]" : "space-y-2 min-h-[400px]"} >
+                            {isEmpty ? (
+                                <Card className={`${config.color} border-2 border-dashed h-full min-h-[150px] flex flex-col items-center justify-center p-6 text-center`}>
+                                    <div className="w-12 h-12 rounded-full bg-white/50 flex items-center justify-center mb-3">
+                                        <PackageCheck className="w-6 h-6 text-muted-foreground/40" />
+                                    </div>
+                                    <p className="text-sm font-medium text-muted-foreground/60 leading-tight">
+                                        {status === 'pending' && "Tudo limpo por aqui!"}
+                                        {status === 'preparing' && "Arraste para produzir."}
+                                        {status === 'ready' && "Finalize a produção."}
+                                        {status === 'delivered' && "Entregas concluídas."}
+                                    </p>
+                                </Card>
+                            ) : (
+                                statusOrders.map((order) => (
+                                    <SortableOrderCard
+                                        key={order.id}
+                                        order={order}
+                                        config={config}
+                                        isMobile={isMobile}
+                                        draggedOrderId={activeId}
                                     >
-                                        <StockAlertBadge
-                                            order={order}
-                                            products={products}
-                                            ingredients={ingredients}
-                                            onStockUpdate={loadOrders}
-                                        />
-                                        <CardHeader className="pb-3">
-                                            <div className="text-sm flex items-center justify-between">
-                                                <div className="font-semibold" onClick={() => handleCustomerClick(order.customer)}>
-                                                    <span className="hover:underline cursor-pointer text-primary">
-                                                        {order.customer?.name || 'Cliente não informado'}
-                                                    </span>
-                                                    <div className="text-xs text-muted-foreground font-normal">
-                                                        #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
+                                        <Card
+                                            className={`${config.color} border-2 hover:shadow-md transition-all cursor-move group relative ${activeId === order.id ? 'opacity-30' : ''}`}
+                                            onTouchStart={() => {
+                                                longPressTimerRef.current = setTimeout(() => {
+                                                    setLongPressOrder(order);
+                                                }, 500);
+                                            }}
+                                            onTouchEnd={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); }}
+                                            onTouchMove={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); }}
+                                        >
+                                            <StockAlertBadge
+                                                order={order}
+                                                products={products}
+                                                ingredients={ingredients}
+                                                onStockUpdate={loadOrders}
+                                            />
+                                            <CardHeader className="pb-3">
+                                                <div className="text-sm flex items-center justify-between">
+                                                    <div className="font-semibold" onClick={() => handleCustomerClick(order.customer)}>
+                                                        <span className="hover:underline cursor-pointer text-primary">
+                                                            {order.customer?.name || 'Cliente não informado'}
+                                                        </span>
+                                                        <div className="text-xs text-muted-foreground font-normal">
+                                                            #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
+                                                        </div>
                                                     </div>
-                                                </div>
 
-                                                <div className={isMobile ? "flex gap-1" : "flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"}>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8"
-                                                        onPointerDown={(e) => e.stopPropagation()} // Prevent drag start
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDuplicate(order);
-                                                        }}
-                                                        title="Duplicar Pedido"
-                                                    >
-                                                        <Copy className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8"
-                                                        onPointerDown={(e) => e.stopPropagation()}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setEditingOrder(order);
-                                                        }}
-                                                    >
-                                                        <Pencil className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-destructive hover:text-red-600 hover:bg-red-50"
-                                                        onPointerDown={(e) => e.stopPropagation()}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            if (confirm('Excluir este pedido?')) {
-                                                                handleDeleteOrder(order.id);
-                                                            }
-                                                        }}
-                                                        title="Excluir"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
-                                                    {order.customer?.phone && (
+                                                    <div className={isMobile ? "flex gap-1" : "flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"}>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                            className="h-8 w-8"
+                                                            onPointerDown={(e) => e.stopPropagation()} // Prevent drag start
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDuplicate(order);
+                                                            }}
+                                                            title="Duplicar Pedido"
+                                                        >
+                                                            <Copy className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8"
                                                             onPointerDown={(e) => e.stopPropagation()}
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                handleWhatsApp(order);
+                                                                setEditingOrder(order);
                                                             }}
                                                         >
-                                                            <Phone className="w-4 h-4" />
+                                                            <Pencil className="w-4 h-4" />
                                                         </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-destructive hover:text-red-600 hover:bg-red-50"
+                                                            onPointerDown={(e) => e.stopPropagation()}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (confirm('Excluir este pedido?')) {
+                                                                    handleDeleteOrder(order.id);
+                                                                }
+                                                            }}
+                                                            title="Excluir"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                        {order.customer?.phone && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                                onPointerDown={(e) => e.stopPropagation()}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleWhatsApp(order);
+                                                                }}
+                                                            >
+                                                                <Phone className="w-4 h-4" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="space-y-2">
+                                                <div className="text-xs space-y-1">
+                                                    <div className="flex justify-between">
+                                                        <span><strong>Entrega:</strong> {formatDate(order.delivery_date)}</span>
+                                                        <span className="font-bold text-base">R$ {order.total_value.toFixed(2)}</span>
+                                                    </div>
+                                                    {order.start_date && (
+                                                        <div className="flex items-center gap-1 text-muted-foreground" title="Data de Produção">
+                                                            <ChefHat className="w-3 h-3" />
+                                                            <span>{formatDate(order.start_date)}</span>
+                                                        </div>
+                                                    )}
+
+                                                    {order.items && order.items.length > 0 && (
+                                                        <div className="text-xs text-muted-foreground mt-2 pt-2 border-t text-left">
+                                                            {order.items.slice(0, 2).map((item, idx) => (
+                                                                <p key={idx} className="line-clamp-1">• {item.product_name} (x{item.quantity})</p>
+                                                            ))}
+                                                            {order.items.length > 2 && <p className="text-[10px] italic">+ {order.items.length - 2} itens...</p>}
+                                                        </div>
                                                     )}
                                                 </div>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="space-y-2">
-                                            <div className="text-xs space-y-1">
-                                                <div className="flex justify-between">
-                                                    <span><strong>Entrega:</strong> {formatDate(order.delivery_date)}</span>
-                                                    <span className="font-bold text-base">R$ {order.total_value.toFixed(2)}</span>
-                                                </div>
-                                                {order.start_date && (
-                                                    <div className="flex items-center gap-1 text-muted-foreground" title="Data de Produção">
-                                                        <ChefHat className="w-3 h-3" />
-                                                        <span>{formatDate(order.start_date)}</span>
-                                                    </div>
-                                                )}
-
-                                                {order.items && order.items.length > 0 && (
-                                                    <div className="text-xs text-muted-foreground mt-2 pt-2 border-t text-left">
-                                                        {order.items.slice(0, 2).map((item, idx) => (
-                                                            <p key={idx} className="line-clamp-1">• {item.product_name} (x{item.quantity})</p>
-                                                        ))}
-                                                        {order.items.length > 2 && <p className="text-[10px] italic">+ {order.items.length - 2} itens...</p>}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </SortableOrderCard>
-                            ))
-                        )}
-                    </div>
-                </SortableContext>
-            </div>
+                                            </CardContent>
+                                        </Card>
+                                    </SortableOrderCard>
+                                ))
+                            )}
+                        </div>
+                    </SortableContext>
+                </div>
+            </DroppableColumn>
         );
     };
 
@@ -552,7 +607,7 @@ const Pedidos = () => {
     return (
         <DndContext
             sensors={sensors}
-            collisionDetection={closestCorners}
+            collisionDetection={customCollisionDetection} // Changed from closestCorners
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
