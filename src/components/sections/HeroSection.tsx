@@ -21,6 +21,7 @@ const HeroSection = () => {
                         <RevealOnScroll delay={0}>
                             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground [text-wrap:balance] font-heading transform-gpu antialiased drop-shadow-sm">
                                 Transforme sua cozinha em um negócio
+                                <br />
                                 <span className="text-primary mt-2 relative inline-block effect-shine px-4 py-1 -mx-4 leading-tight">
                                     Realmente Lucrativo
                                 </span>
