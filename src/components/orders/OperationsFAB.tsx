@@ -180,7 +180,7 @@ const OperationsFAB = () => {
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        className="flex-1 bg-white border-orange-200 hover:bg-orange-100 text-orange-700"
+                                                        className="flex-1 bg-white border-orange-200 hover:bg-[hsl(182,16%,55%)] hover:text-white text-orange-700"
                                                         onClick={() => handleStatusUpdate(order.id, 'pending', 'preparing')}
                                                     >
                                                         <Pause className="w-4 h-4 mr-2" />
@@ -188,7 +188,7 @@ const OperationsFAB = () => {
                                                     </Button>
                                                     <Button
                                                         size="sm"
-                                                        className="flex-[2] bg-orange-500 hover:bg-orange-600 border-orange-600"
+                                                        className="flex-[2] bg-orange-500 hover:bg-[hsl(182,16%,55%)] hover:text-white border-orange-600"
                                                         onClick={() => handleStatusUpdate(order.id, 'ready', 'preparing')}
                                                     >
                                                         <CheckCircle className="w-4 h-4 mr-2" />

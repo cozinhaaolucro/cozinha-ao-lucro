@@ -18,8 +18,8 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
                         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                    <stop offset="5%" stopColor="#2f606b" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#2f606b" stopOpacity={0} />
                                 </linearGradient>
                                 <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
@@ -32,7 +32,7 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
                                 fontSize={12}
                                 tickLine={false}
                                 axisLine={false}
-                                tickFormatter={(value) => value.slice(0, 5)}
+                                tickFormatter={(value) => value}
                             />
                             <YAxis
                                 fontSize={12}
@@ -48,7 +48,7 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
                                 type="monotone"
                                 dataKey="revenue"
                                 name="Receita"
-                                stroke="#22c55e"
+                                stroke="#2f606b"
                                 strokeWidth={2}
                                 fillOpacity={1}
                                 fill="url(#colorRevenue)"

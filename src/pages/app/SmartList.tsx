@@ -50,13 +50,14 @@ const SwipeButton = ({ onConfirm, disabled }: { onConfirm: () => void, disabled:
                 onDrag={(_, info) => setDragX(info.offset.x)}
                 onDragEnd={handleDragEnd}
                 animate={controls}
-                className="absolute top-1 bottom-1 left-1 w-14 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing z-10 shadow-lg"
+                className="absolute top-1 bottom-1 left-1 w-14 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing z-10 shadow-lg"
+                style={{ background: 'hsl(186, 35%, 28%)' }}
             >
                 <CheckCircle2 className="text-white w-6 h-6" />
             </motion.div>
             <motion.div
-                className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500/20 to-orange-600/20 z-0"
-                style={{ width: dragX + 30 }}
+                className="absolute inset-y-0 left-0 z-0"
+                style={{ width: dragX + 30, background: 'hsla(186, 35%, 28%, 0.2)' }}
             />
         </div>
     );

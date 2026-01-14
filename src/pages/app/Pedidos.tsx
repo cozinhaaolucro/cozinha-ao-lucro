@@ -1093,7 +1093,7 @@ const Pedidos = () => {
                                         e.preventDefault();
                                         handleDuplicateAutoRestock();
                                     }}
-                                    className="bg-amber-600 hover:bg-amber-700"
+                                    className="bg-amber-600 hover:bg-[hsl(182,16%,55%)] hover:text-white"
                                     disabled={isDuplicateRestocking}
                                 >
                                     {isDuplicateRestocking ? 'Atualizando...' : 'Regularizar e Criar'}

@@ -380,7 +380,7 @@ const Clientes = () => {
                                             <div className="flex flex-wrap items-center gap-2 mb-1">
                                                 <h4 className="font-medium">{customer.name}</h4>
                                                 {customer.total_orders >= 10 || customer.total_spent >= 500 ? (
-                                                    <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200 gap-1">
+                                                    <Badge className="bg-amber-100 text-amber-800 hover:bg-[hsl(182,16%,55%)] hover:text-white border-amber-200 gap-1">
                                                         <Star className="w-3 h-3 fill-amber-500" /> VIP
                                                     </Badge>
                                                 ) : customer.total_orders === 0 ? (

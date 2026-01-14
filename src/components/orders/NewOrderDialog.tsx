@@ -453,14 +453,13 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                     </div>
                     <Button type="button" variant="outline" size="sm" onClick={addItem} className="gap-2 h-8">
                         <Plus className="w-4 h-4" />
-                        Add
+                        Adicionar
                     </Button>
                 </div>
 
                 {items.length === 0 ? (
                     <div className="text-center py-8 border-2 border-dashed rounded-xl text-muted-foreground bg-muted/10">
                         <p>Nenhum produto adicionado</p>
-                        <Button variant="link" onClick={addItem}>Adicionar agora</Button>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -637,7 +636,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                                     e.preventDefault();
                                     handleAutoRestock();
                                 }}
-                                className="bg-amber-600 hover:bg-amber-700"
+                                className="bg-amber-600 hover:bg-[hsl(182,16%,55%)] hover:text-white"
                                 disabled={isRestocking}
                             >
                                 {isRestocking ? 'Atualizando...' : 'Regularizar e Criar'}

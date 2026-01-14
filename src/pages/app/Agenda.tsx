@@ -468,7 +468,7 @@ const Agenda = () => {
                 <Button
                     variant={selectedStatus === 'pending' ? 'default' : 'outline'}
                     onClick={() => handleStatusClick('pending')}
-                    className="h-auto p-3 flex-col items-start border-l-4 border-l-yellow-500 hover:bg-yellow-50"
+                    className={`h-auto p-3 flex-col items-start border-l-4 border-l-yellow-500 hover:bg-[hsl(182,16%,55%)] hover:text-white ${selectedStatus === 'pending' ? 'bg-[hsl(182,16%,55%)] hover:bg-[hsl(182,16%,50%)] text-white border-[hsl(182,16%,55%)]' : ''}`}
                 >
                     <div className="text-2xl font-bold">
                         {orders.filter(o => o.status === 'pending').length}
@@ -478,7 +478,7 @@ const Agenda = () => {
                 <Button
                     variant={selectedStatus === 'preparing' ? 'default' : 'outline'}
                     onClick={() => handleStatusClick('preparing')}
-                    className="h-auto p-3 flex-col items-start border-l-4 border-l-blue-500 hover:bg-blue-50"
+                    className={`h-auto p-3 flex-col items-start border-l-4 border-l-blue-500 hover:bg-blue-50 ${selectedStatus === 'preparing' ? 'bg-[hsl(182,16%,55%)] hover:bg-[hsl(182,16%,50%)] text-white border-[hsl(182,16%,55%)]' : ''}`}
                 >
                     <div className="text-2xl font-bold">
                         {orders.filter(o => o.status === 'preparing').length}
@@ -488,7 +488,7 @@ const Agenda = () => {
                 <Button
                     variant={selectedStatus === 'ready' ? 'default' : 'outline'}
                     onClick={() => handleStatusClick('ready')}
-                    className="h-auto p-3 flex-col items-start border-l-4 border-l-green-500 hover:bg-green-50"
+                    className={`h-auto p-3 flex-col items-start border-l-4 border-l-green-500 hover:bg-green-50 ${selectedStatus === 'ready' ? 'bg-[hsl(182,16%,55%)] hover:bg-[hsl(182,16%,50%)] text-white border-[hsl(182,16%,55%)]' : ''}`}
                 >
                     <div className="text-2xl font-bold">
                         {orders.filter(o => o.status === 'ready').length}
@@ -498,7 +498,7 @@ const Agenda = () => {
                 <Button
                     variant={selectedStatus === 'late' ? 'default' : 'outline'}
                     onClick={() => handleStatusClick('late')}
-                    className="h-auto p-3 flex-col items-start border-l-4 border-l-red-500 hover:bg-red-50"
+                    className={`h-auto p-3 flex-col items-start border-l-4 border-l-red-500 hover:bg-red-50 ${selectedStatus === 'late' ? 'bg-[hsl(182,16%,55%)] hover:bg-[hsl(182,16%,50%)] text-white border-[hsl(182,16%,55%)]' : ''}`}
                 >
                     <div className="text-2xl font-bold">{getLateOrders()}</div>
                     <div className="text-xs">Atrasados</div>

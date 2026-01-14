@@ -325,7 +325,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                     <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100" onClick={() => sendWhatsAppUpdate('dispatch')}>
                         <MessageCircle className="w-3.5 h-3.5" /> Saiu p/ Entrega
                     </Button>
-                    <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-orange-700 border-orange-200 bg-orange-50 hover:bg-orange-100" onClick={() => sendWhatsAppUpdate('ready')}>
+                    <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-orange-700 border-orange-200 bg-orange-50 hover:bg-[hsl(182,16%,55%)] hover:text-white" onClick={() => sendWhatsAppUpdate('ready')}>
                         <MessageCircle className="w-3.5 h-3.5" /> Pronto p/ Retirada
                     </Button>
                 </div>

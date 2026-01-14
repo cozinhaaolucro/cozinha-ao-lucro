@@ -38,6 +38,7 @@
     --primary: 188 34% 28%;
     --primary-foreground: 38 33% 95%;
     --primary-glow: 188 34% 34%;
+    --primary-dark: 186 35% 28%;
 
     --secondary: 182 16% 55%;
     --secondary-foreground: 38 33% 95%;
@@ -48,12 +49,12 @@
     --muted-foreground: 210 9% 45%;
     /* Text Auxiliary */
 
-    --accent: 38 65% 55%;
-    --accent-foreground: 210 9% 32%;
+    --accent: 182 16% 55%;
+    --accent-foreground: 38 33% 95%;
 
-    --financial: 38 65% 55%;
+    --financial: 41 53% 55%;
 
-    --warning: 38 65% 55%;
+    --warning: 41 53% 55%;
     --warning-foreground: 210 9% 32%;
 
     --success: 155 35% 72%;
@@ -63,8 +64,8 @@
     /* New Info/Production Color */
     --info-foreground: 38 33% 95%;
 
-    --destructive: 8 48% 58%;
-    /* Error/Critical */
+    --destructive: 359 88% 27%;
+    /* Error/Critical - Updated to specified red */
     --destructive-foreground: 38 33% 95%;
 
     --icon-color: 155 35% 72%;
@@ -115,7 +116,7 @@
     --secondary-foreground: 38 33% 95%;
     --muted: 210 9% 75%;
     --muted-foreground: 210 9% 45%;
-    --accent: 38 65% 55%;
+    --accent: 182 16% 55%;
     --accent-foreground: 210 9% 32%;
     --financial: 38 65% 55%;
     --icon-color: 155 35% 72%;

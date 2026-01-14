@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FadeIn } from '@/components/ui/fade-in';
+import { cn } from "@/lib/utils";
 import {
     TrendingUp,
     DollarSign,
@@ -373,39 +374,39 @@ const Dashboard = () => {
             {/* Premium Goal Progress */}
             <FadeIn delay={75}>
                 <div className="grid gap-6 md:grid-cols-3">
-                    <Card className="md:col-span-2 overflow-hidden border-none shadow-lg bg-gradient-to-r from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+                    <Card className="md:col-span-2 overflow-hidden border-none shadow-lg" style={{ background: 'hsl(182, 16%, 55%)' }}>
                         <CardContent className="p-6">
                             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                                 <div className="space-y-1 text-center md:text-left">
-                                    <h3 className="text-lg font-semibold flex items-center gap-2 justify-center md:justify-start">
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 justify-center md:justify-start text-white">
                                         Meta de Vendas do Mês 🎯
                                     </h3>
-                                    <p className="text-sm text-muted-foreground">
-                                        Você atingiu <span className="font-bold text-foreground">R$ {totalRevenue.toFixed(2)}</span> de uma meta de <span className="font-bold">R$ 10.000,00</span>
+                                    <p className="text-sm text-white/80">
+                                        Você atingiu <span className="font-bold text-white">R$ {totalRevenue.toFixed(2)}</span> de uma meta de <span className="font-bold">R$ 10.000,00</span>
                                     </p>
                                 </div>
                                 <div className="flex-1 w-full max-w-md space-y-2">
-                                    <div className="flex justify-between text-xs font-medium">
+                                    <div className="flex justify-between text-xs font-medium text-white">
                                         <span>{((totalRevenue / 10000) * 100).toFixed(1)}%</span>
                                         <span>R$ 10.000,00</span>
                                     </div>
-                                    <Progress value={(totalRevenue / 10000) * 100} className="h-3 shadow-inner" />
+                                    <Progress value={(totalRevenue / 10000) * 100} className="h-3 shadow-inner bg-white/30 [&>div]:bg-[hsl(186,35%,28%)]" />
                                 </div>
-                                <div className="hidden lg:block text-right">
-                                    <p className="text-sm font-medium">Faltam apenas</p>
-                                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">R$ {Math.max(0, 10000 - totalRevenue).toFixed(2)}</p>
+                                <div className="hidden lg:block text-right bg-white/90 p-3 rounded-lg">
+                                    <p className="text-sm font-medium text-gray-600">Faltam apenas</p>
+                                    <p className="text-2xl font-bold" style={{ color: 'hsl(182, 16%, 45%)' }}>R$ {Math.max(0, 10000 - totalRevenue).toFixed(2)}</p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="overflow-hidden border-none shadow-lg bg-amber-50 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900">
+                    <Card className="overflow-hidden border-none shadow-lg" style={{ background: 'hsl(182, 16%, 55%)' }}>
                         <CardContent className="p-6 flex flex-col justify-center h-full space-y-2">
-                            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                            <div className="flex items-center gap-2 text-white">
                                 <Lightbulb className="w-5 h-5 animate-pulse" />
                                 <h3 className="font-bold">Dica do Especialista</h3>
                             </div>
-                            <p className="text-sm text-amber-800/80 dark:text-amber-200/80 leading-relaxed">
+                            <p className="text-sm text-white/90 leading-relaxed">
                                 {totalProfit > 0 && profitMargin < 30 ? (
                                     "Sua margem está abaixo de 30%. Avalie se é possível reduzir o desperdício de insumos ou ajustar o preço de seus pratos principais."
                                 ) : totalRevenue > 5000 ? (
@@ -577,16 +578,16 @@ const Dashboard = () => {
                     </div>
 
                     {/* Ticket médio - subtle indicator */}
-                    <Card className="bg-gradient-to-r from-purple-50 to-background border-purple-100">
+                    <Card className="bg-gradient-to-r from-[hsl(41,53%,95%)] to-background border-[hsl(41,53%,75%)]">
                         <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                                        <ShoppingCart className="w-5 h-5 text-purple-600" />
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'hsl(41, 53%, 85%)' }}>
+                                        <ShoppingCart className="w-5 h-5" style={{ color: 'hsl(41, 53%, 55%)' }} />
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Ticket Médio</p>
-                                        <p className="text-xl font-bold text-purple-600">R$ {averageOrderValue.toFixed(2)}</p>
+                                        <p className="text-xl font-bold" style={{ color: 'hsl(41, 53%, 55%)' }}>R$ {averageOrderValue.toFixed(2)}</p>
                                     </div>
                                 </div>
                                 <div className="text-right text-xs text-muted-foreground">
@@ -626,16 +627,14 @@ const Dashboard = () => {
                                                     </div>
                                                 </div>
                                                 <Badge
-                                                    variant={
-                                                        item.status === 'sufficient' ? 'default' :
-                                                            item.status === 'low' ? 'secondary' :
-                                                                item.status === 'critical' ? 'destructive' : 'outline'
-                                                    }
-                                                    className={
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "whitespace-nowrap",
                                                         item.status === 'sufficient' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
-                                                            item.status === 'low' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
-                                                                item.status === 'unused' ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : ''
-                                                    }
+                                                            item.status === 'low' ? 'bg-yellow-100 text-yellow-800 hover:bg-[hsl(182,16%,55%)] hover:text-white' :
+                                                                item.status === 'critical' ? 'bg-red-100 text-red-800 hover:bg-red-200' :
+                                                                    'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                    )}
                                                 >
                                                     {item.balance > 0 ? '+' : ''}{item.balance.toFixed(1)} {item.ingredient.unit}
                                                 </Badge>

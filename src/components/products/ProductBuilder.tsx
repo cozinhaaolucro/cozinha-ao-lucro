@@ -609,7 +609,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
             </Button>
             <Button
                 type="submit"
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                className="flex-1"
                 disabled={uploading}
                 form="product-form"
             >
