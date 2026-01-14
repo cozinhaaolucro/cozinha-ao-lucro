@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FadeIn } from '@/components/ui/fade-in';
 import { cn } from "@/lib/utils";
 import {
     TrendingUp,
@@ -23,7 +22,8 @@ import {
     Wallet,
     CreditCard,
     Lightbulb,
-    FileText
+    FileText,
+    Target
 } from 'lucide-react';
 import {
     AreaChart,
@@ -372,66 +372,94 @@ const Dashboard = () => {
             />
 
             {/* Premium Goal Progress */}
-            <FadeIn delay={75}>
+            <div className="mt-4">
                 <div className="grid gap-6 md:grid-cols-3">
-                    {/* Meta de Vendas - Angled, Illuminated & Translucent Glass */}
-                    <Card className="md:col-span-2 overflow-hidden border z-10 relative shadow-2xl group border-t-white/30 border-l-white/20 border-r-white/10 border-b-white/5 backdrop-blur-2xl"
-                        style={{
-                            background: 'linear-gradient(120deg, hsla(182, 16%, 62%, 0.55) 0%, hsla(182, 20%, 40%, 0.65) 100%)',
-                            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 40px rgba(94, 234, 212, 0.15)',
-                            transform: 'perspective(1000px)' // Adds a subtle 3D context
-                        }}>
-                        {/* Angled Light Sheen - Removed Hover Interaction */}
+                    {/* Meta de Vendas - Neo-Glass Aurora Design */}
+                    <Card className="md:col-span-2 relative overflow-hidden border-0 shadow-2xl group bg-slate-950">
+                        {/* Animated Aurora Background */}
+                        <div className="absolute inset-0 opacity-40">
+                            <div className="absolute top-[-50%] left-[-20%] w-[100%] h-[200%] bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 blur-[100px] animate-[pulse_8s_ease-in-out_infinite]" />
+                            <div className="absolute bottom-[-50%] right-[-20%] w-[100%] h-[200%] bg-gradient-to-tl from-cyan-600 via-emerald-600 to-indigo-600 blur-[100px] animate-[pulse_10s_ease-in-out_infinite]" style={{ animationDelay: '1s' }} />
+                        </div>
 
-                        {/* Static Angled Sheen */}
-                        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0)_40%,rgba(255,255,255,0.08)_50%,rgba(255,255,255,0)_60%)] pointer-events-none" />
+                        {/* Glass Overlay & Border */}
+                        <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px]" />
+                        <div className="absolute inset-0 border border-white/10 rounded-xl" />
 
-                        {/* Ambient Glow */}
-                        <div className="absolute -top-32 -right-32 w-80 h-80 bg-[radial-gradient(circle,rgba(255,255,255,0.2)_0%,rgba(0,0,0,0)_70%)] pointer-events-none blur-3xl opacity-60" />
+                        {/* Hover Effect: Glowing Border */}
+                        <div className="absolute inset-0 border-2 border-transparent group-hover:border-indigo-500/30 transition-colors duration-500 rounded-xl" />
 
-                        <CardContent className="p-6 relative">
-                            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                                <div className="space-y-1 text-center md:text-left">
-                                    <h3 className="text-lg font-semibold flex items-center gap-2 justify-center md:justify-start text-white drop-shadow-sm">
-                                        Meta de Vendas do Mês 🎯
-                                    </h3>
-                                    <p className="text-sm text-white/90">
-                                        Você atingiu <span className="font-bold text-white drop-shadow-sm">R$ {totalRevenue.toFixed(2)}</span> de uma meta de <span className="font-bold">R$ 10.000,00</span>
-                                    </p>
-                                </div>
-                                <div className="flex-1 w-full max-w-md space-y-2">
-                                    <div className="flex justify-between text-xs font-medium text-white/90">
-                                        <span>{((totalRevenue / 10000) * 100).toFixed(1)}%</span>
-                                        <span>R$ 10.000,00</span>
+                        <CardContent className="p-6 relative z-10 flex flex-col justify-center h-full">
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                                <div className="space-y-3 text-center md:text-left flex-1">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/5 backdrop-blur-md mb-2">
+                                        <Target className="w-3.5 h-3.5 text-cyan-300" />
+                                        <span className="text-xs font-bold text-cyan-100 uppercase tracking-wider">Meta Mensal</span>
                                     </div>
-                                    <Progress value={(totalRevenue / 10000) * 100} className="h-3 shadow-inner bg-black/20 [&>div]:bg-[hsl(186,35%,28%)] [&>div]:shadow-lg" />
+
+                                    <div className="space-y-1">
+                                        <h3 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-cyan-200 drop-shadow-sm">
+                                            R$ {totalRevenue.toFixed(2)}
+                                        </h3>
+                                        <p className="text-sm font-medium text-indigo-200/80">
+                                            de <span className="text-white font-bold">R$ 10.000,00</span> projetados
+                                        </p>
+                                    </div>
                                 </div>
-                                {/* Mini Block - No BG, Just White Text */}
-                                <div className="hidden lg:block text-right p-3">
-                                    <p className="text-sm font-medium text-white/80">Faltam apenas</p>
-                                    <p className="text-2xl font-bold text-white drop-shadow-sm">R$ {Math.max(0, 10000 - totalRevenue).toFixed(2)}</p>
+
+                                <div className="flex-1 w-full max-w-sm space-y-4">
+                                    <div className="flex justify-between items-end">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs text-indigo-200/70 font-medium">Progresso</span>
+                                            <span className="text-lg font-bold text-white">{((totalRevenue / 10000) * 100).toFixed(1)}%</span>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-xs text-indigo-200/70 font-medium">Restante</span>
+                                            <span className="text-sm font-bold text-white">R$ {Math.max(0, 10000 - totalRevenue).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="relative h-4 w-full bg-slate-900/50 rounded-full overflow-hidden border border-white/10 shadow-inner">
+                                        <div
+                                            className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out flex items-center justify-end pr-1"
+                                            style={{
+                                                width: `${Math.min(100, (totalRevenue / 10000) * 100)}%`,
+                                                background: 'linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%)',
+                                                boxShadow: '0 0 20px rgba(6, 182, 212, 0.5)'
+                                            }}
+                                        >
+                                            {/* Glow tip */}
+                                            <div className="w-1.5 h-full bg-white/50 blur-[2px]" />
+                                        </div>
+                                    </div>
+
+                                    <p className="text-center text-xs text-indigo-200/60 font-medium pt-1">
+                                        {totalRevenue >= 10000 ? "🎉 Meta atingida com sucesso!" : "Continue acelerando!"}
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Dica do Especialista - Gradient Teal (Primary based lightened) */}
-                    <Card className="overflow-hidden border z-10 relative shadow-xl border-white/20"
-                        style={{ background: 'linear-gradient(135deg, hsl(188, 30%, 45%) 0%, hsl(188, 34%, 35%) 100%)' }}>
-                        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+                    {/* Dica do Especialista - Gradient Teal (Darker & Richer - Button Color) */}
+                    <Card className="overflow-hidden border z-10 relative shadow-md border-white/10"
+                        style={{ background: 'linear-gradient(135deg, hsl(188, 50%, 40%) 0%, hsl(188, 40%, 30%) 100%)' }}>
 
-                        <CardContent className="p-6 flex flex-col justify-center h-full space-y-3 relative">
+                        {/* Soft Glows for Depth */}
+                        <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none mix-blend-overlay" />
+
+                        <CardContent className="p-5 flex flex-col justify-center h-full space-y-3 relative">
                             <div className="flex items-center gap-2 text-white">
-                                <div className="p-1.5 bg-white/20 rounded-full shadow-inner backdrop-blur-sm">
-                                    <Lightbulb className="w-4 h-4 text-yellow-300 animate-pulse" />
+                                <div className="p-1 bg-white/20 rounded-full shadow-inner backdrop-blur-sm">
+                                    <Lightbulb className="w-3.5 h-3.5 text-amber-200 animate-pulse" />
                                 </div>
-                                <h3 className="font-bold text-white drop-shadow-sm">Dica do Especialista</h3>
+                                <h3 className="font-semibold text-sm text-white drop-shadow-sm">Dica do Especialista</h3>
                             </div>
-                            <p className="text-sm text-white/90 leading-relaxed font-medium">
+                            <p className="text-xs text-white/95 leading-relaxed font-medium line-clamp-3">
                                 {totalProfit > 0 && profitMargin < 30 ? (
                                     "Sua margem está abaixo de 30%. Avalie se é possível reduzir o desperdício de insumos ou ajustar o preço de seus pratos principais."
                                 ) : totalRevenue > 5000 ? (
-                                    "Excelentes vendas! Crie combos com seus produtos mais lucrativos para aumentar o ticket médio e fidelizar clientes."
+                                    "Excelentes vendas! Crie combos com seus produtos mais lucrativos para aumentar o ticket médio."
                                 ) : ingredients.some(i => (i.stock_quantity ?? 0) <= (i.min_stock_threshold ?? 5)) ? (
                                     "Atenção ao estoque crítico! Reponha itens essenciais agora para garantir que sua produção não pare."
                                 ) : (
@@ -441,7 +469,7 @@ const Dashboard = () => {
                         </CardContent>
                     </Card>
                 </div>
-            </FadeIn>
+            </div>
 
             {/* Financial cards */}
             <div className="mt-4">
@@ -556,7 +584,7 @@ const Dashboard = () => {
                         </Card>
                     </div>
                 </TooltipProvider>
-            </FadeIn>
+            </div>
 
 
 
@@ -714,8 +742,8 @@ const Dashboard = () => {
 
 
                 </div>
-            </FadeIn>
-        </div>
+            </div>
+        </div >
     );
 };
 
