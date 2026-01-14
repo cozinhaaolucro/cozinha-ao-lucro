@@ -374,11 +374,20 @@ const Dashboard = () => {
             {/* Premium Goal Progress */}
             <FadeIn delay={75}>
                 <div className="grid gap-6 md:grid-cols-3">
-                    {/* Meta de Vendas - Gradient Blue (Secondary based) */}
-                    <Card className="md:col-span-2 overflow-hidden border z-10 relative shadow-xl group border-white/20"
-                        style={{ background: 'linear-gradient(135deg, hsl(182, 16%, 62%) 0%, hsl(182, 20%, 50%) 100%)' }}>
-                        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-overlay" />
-                        <div className="absolute -top-24 -right-24 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+                    {/* Meta de Vendas - Angled, Illuminated & Translucent Glass */}
+                    <Card className="md:col-span-2 overflow-hidden border z-10 relative shadow-2xl group border-t-white/30 border-l-white/20 border-r-white/10 border-b-white/5 backdrop-blur-2xl"
+                        style={{
+                            background: 'linear-gradient(120deg, hsla(182, 16%, 62%, 0.55) 0%, hsla(182, 20%, 40%, 0.65) 100%)',
+                            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 40px rgba(94, 234, 212, 0.15)',
+                            transform: 'perspective(1000px)' // Adds a subtle 3D context
+                        }}>
+                        {/* Angled Light Sheen - Removed Hover Interaction */}
+
+                        {/* Static Angled Sheen */}
+                        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0)_40%,rgba(255,255,255,0.08)_50%,rgba(255,255,255,0)_60%)] pointer-events-none" />
+
+                        {/* Ambient Glow */}
+                        <div className="absolute -top-32 -right-32 w-80 h-80 bg-[radial-gradient(circle,rgba(255,255,255,0.2)_0%,rgba(0,0,0,0)_70%)] pointer-events-none blur-3xl opacity-60" />
 
                         <CardContent className="p-6 relative">
                             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -438,8 +447,8 @@ const Dashboard = () => {
             <FadeIn delay={100}>
                 <TooltipProvider>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <Card className="border-l-2 border-l-primary hover:shadow-md transition-shadow">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3">
                                 <div className="flex items-center gap-2">
                                     <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
                                     <UITooltip>
@@ -455,14 +464,14 @@ const Dashboard = () => {
                                 </div>
                                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="p-3 pt-0">
                                 <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
                                 <p className="text-xs text-muted-foreground">Vendas brutas totais</p>
                             </CardContent>
                         </Card>
 
-                        <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <Card className="border-l-2 border-l-primary hover:shadow-md transition-shadow">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3">
                                 <div className="flex items-center gap-2">
                                     <CardTitle className="text-sm font-medium">Lucro Líquido</CardTitle>
                                     <UITooltip>
@@ -478,14 +487,14 @@ const Dashboard = () => {
                                 </div>
                                 <Wallet className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="p-3 pt-0">
                                 <div className="text-2xl font-bold">R$ {totalProfit.toFixed(2)}</div>
                                 <p className="text-xs text-muted-foreground">O que sobra no bolso</p>
                             </CardContent>
                         </Card>
 
-                        <Card className="border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <Card className="border-l-2 border-l-primary hover:shadow-md transition-shadow">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3">
                                 <div className="flex items-center gap-2">
                                     <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
                                     <UITooltip>
@@ -501,14 +510,14 @@ const Dashboard = () => {
                                 </div>
                                 <CreditCard className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="p-3 pt-0">
                                 <div className="text-2xl font-bold">R$ {totalCost.toFixed(2)}</div>
                                 <p className="text-xs text-muted-foreground">Gasto com ingredientes</p>
                             </CardContent>
                         </Card>
 
-                        <Card className="border-l-4 border-l-orange-500 hover:shadow-md transition-shadow">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <Card className="border-l-2 border-l-primary hover:shadow-md transition-shadow">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3">
                                 <div className="flex items-center gap-2">
                                     <CardTitle className="text-sm font-medium">Margem Bruta</CardTitle>
                                     <UITooltip>
@@ -524,7 +533,7 @@ const Dashboard = () => {
                                 </div>
                                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="p-3 pt-0">
                                 <div className="text-2xl font-bold">{profitMargin.toFixed(1)}%</div>
                                 <p className="text-xs text-muted-foreground">Eficiência das vendas</p>
                             </CardContent>
@@ -589,26 +598,7 @@ const Dashboard = () => {
                         } />
                     </div>
 
-                    {/* Ticket médio - subtle indicator */}
-                    <Card className="bg-gradient-to-r from-[hsl(41,53%,95%)] to-background border-[hsl(41,53%,75%)]">
-                        <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'hsl(41, 53%, 85%)' }}>
-                                        <ShoppingCart className="w-5 h-5" style={{ color: 'hsl(41, 53%, 55%)' }} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Ticket Médio</p>
-                                        <p className="text-xl font-bold" style={{ color: 'hsl(41, 53%, 55%)' }}>R$ {averageOrderValue.toFixed(2)}</p>
-                                    </div>
-                                </div>
-                                <div className="text-right text-xs text-muted-foreground">
-                                    <p>Valor médio por pedido</p>
-                                    <p>no período selecionado</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+
 
                     {/* Stock vs demand and top products */}
                     <div className="grid gap-4 md:grid-cols-2">
@@ -703,61 +693,7 @@ const Dashboard = () => {
                         </Card>
                     </div>
 
-                    {/* Additional metrics */}
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <Card
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => navigate('/app/pedidos')}
-                        >
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Pedidos Ativos</CardTitle>
-                                <Package className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{pendingOrdersCount}</div>
-                                <p className="text-xs text-muted-foreground">Em produção/pendentes</p>
-                            </CardContent>
-                        </Card>
-                        <Card
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => navigate('/app/clientes')}
-                        >
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Clientes</CardTitle>
-                                <Users className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{customers.length}</div>
-                                <p className="text-xs text-muted-foreground">Total cadastrados</p>
-                            </CardContent>
-                        </Card>
-                        <Card
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => navigate('/app/agenda')}
-                        >
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Agenda</CardTitle>
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">Ver Agenda</div>
-                                <p className="text-xs text-muted-foreground">Organize sua produção</p>
-                            </CardContent>
-                        </Card>
-                        <Card
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => navigate('/app/lista-inteligente')}
-                        >
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Lista Inteligente</CardTitle>
-                                <FileText className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">Lista Inteligente</div>
-                                <p className="text-xs text-muted-foreground">Baseada em pedidos</p>
-                            </CardContent>
-                        </Card>
-                    </div>
+
                 </div>
             </FadeIn>
         </div>
