@@ -5,7 +5,7 @@ interface CostBreakdownChartProps {
     data: { name: string; value: number }[];
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+const COLORS = ['#2dd4bf', '#f472b6', '#facc15', '#a78bfa', '#fb923c', '#9ca3af'];
 
 export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
     // Top 5 ingredients + text "Outros"
@@ -22,15 +22,20 @@ export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
     const finalData = processData();
 
     return (
-        <Card className="col-span-1">
-            <CardHeader>
-                <CardTitle>Onde vai seu dinheiro?</CardTitle>
-                <CardDescription>Custos por ingrediente.</CardDescription>
+        <Card className="col-span-1 relative shadow-2xl overflow-hidden border z-10 border-t-white/30 border-l-white/20 border-r-white/10 border-b-white/5 backdrop-blur-2xl"
+            style={{
+                background: 'linear-gradient(120deg, hsla(182, 16%, 62%, 0.55) 0%, hsla(182, 20%, 40%, 0.65) 100%)',
+                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.1)'
+            }}>
+            <div className="absolute inset-0 bg-white/5 pointer-events-none" />
+            <CardHeader className="relative z-10">
+                <CardTitle className="text-primary-foreground">Onde vai seu dinheiro?</CardTitle>
+                <CardDescription className="text-white/60">Custos por ingrediente.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative z-10">
                 <div className="h-[300px]">
                     {finalData.length === 0 ? (
-                        <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+                        <div className="h-full flex items-center justify-center text-white/50 text-sm">
                             Sem dados de custo suficiente.
                         </div>
                     ) : (
@@ -44,13 +49,28 @@ export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
                                     outerRadius={80}
                                     paddingAngle={5}
                                     dataKey="value"
+                                    stroke="none"
                                 >
                                     {finalData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
-                                <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                                <Tooltip
+                                    formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+                                    contentStyle={{
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(255,255,255,0.2)',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                        background: 'rgba(23, 23, 23, 0.95)'
+                                    }}
+                                    itemStyle={{ color: '#fff' }}
+                                />
+                                <Legend
+                                    layout="horizontal"
+                                    verticalAlign="bottom"
+                                    align="center"
+                                    wrapperStyle={{ fontSize: '12px', paddingTop: '10px', color: 'rgba(255,255,255,0.8)' }}
+                                />
                             </PieChart>
                         </ResponsiveContainer>
                     )}
