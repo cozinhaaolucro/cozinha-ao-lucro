@@ -19,7 +19,7 @@ import { Plus, X, UserPlus, ShoppingCart, Calendar, User as UserIcon, AlertCircl
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getCustomers, getProducts, createOrder, createCustomer, updateIngredient, createStockMovement } from '@/lib/database';
 import { supabase } from '@/lib/supabase';
-import type { Customer, Product, OrderStatus } from '@/types/database';
+import type { Customer, Product, OrderStatus, PaymentMethod, DeliveryMethod } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -40,6 +40,8 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
         notes: '',
         status: 'pending' as OrderStatus,
         start_date: '',
+        payment_method: 'pix' as PaymentMethod,
+        delivery_method: 'pickup' as DeliveryMethod,
     });
     const [items, setItems] = useState<Array<{ product_id: string; quantity: number }>>([]);
     const [showNewCustomer, setShowNewCustomer] = useState(false);
@@ -271,7 +273,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
     };
 
     const resetForm = () => {
-        setFormData({ customer_id: '', delivery_date: '', delivery_time: '', notes: '', status: 'pending', start_date: '' });
+        setFormData({ customer_id: '', delivery_date: '', delivery_time: '', notes: '', status: 'pending', start_date: '', payment_method: 'pix', delivery_method: 'pickup' });
         setItems([]);
         setShowNewCustomer(false);
         setNewCustomerData({ name: '', phone: '', address: '', notes: '' });
@@ -390,24 +392,55 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                     </div>
                 </div>
 
+
+
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 text-lg font-semibold border-b pb-2">
                         <div className="w-5 h-5 rounded-full border-2 border-primary" />
-                        <h3>Status</h3>
+                        <h3>Detalhes</h3>
                     </div>
-                    <div>
-                        <Label htmlFor="status" className="sr-only">Status</Label>
-                        <Select value={formData.status} onValueChange={(value: string) => setFormData({ ...formData, status: value as OrderStatus })}>
-                            <SelectTrigger className="h-10">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="pending">A Fazer</SelectItem>
-                                <SelectItem value="preparing">Em Produção</SelectItem>
-                                <SelectItem value="ready">Pronto</SelectItem>
-                                <SelectItem value="delivered">Entregue</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    <div className="space-y-3">
+                        <div>
+                            <Label htmlFor="status">Status</Label>
+                            <Select value={formData.status} onValueChange={(value: string) => setFormData({ ...formData, status: value as OrderStatus })}>
+                                <SelectTrigger className="h-10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="pending">A Fazer</SelectItem>
+                                    <SelectItem value="preparing">Em Produção</SelectItem>
+                                    <SelectItem value="ready">Pronto</SelectItem>
+                                    <SelectItem value="delivered">Entregue</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="payment_method">Forma de Pagamento</Label>
+                            <Select value={formData.payment_method} onValueChange={(value: string) => setFormData({ ...formData, payment_method: value as PaymentMethod })}>
+                                <SelectTrigger className="h-10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="pix">Pix</SelectItem>
+                                    <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+                                    <SelectItem value="debit_card">Cartão de Débito</SelectItem>
+                                    <SelectItem value="cash">Dinheiro</SelectItem>
+                                    <SelectItem value="transfer">Transferência</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="delivery_method">Método de Entrega</Label>
+                            <Select value={formData.delivery_method} onValueChange={(value: string) => setFormData({ ...formData, delivery_method: value as DeliveryMethod })}>
+                                <SelectTrigger className="h-10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="pickup">Retirada no Balcão</SelectItem>
+                                    <SelectItem value="delivery">Delivery</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -494,7 +527,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                     className="min-h-[80px]"
                 />
             </div>
-        </div>
+        </div >
     );
 
     const TotalFooter = (

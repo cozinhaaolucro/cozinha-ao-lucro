@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, X, Trash2, MessageCircle } from 'lucide-react';
 import { getCustomers, getProducts } from '@/lib/database';
 import { supabase } from '@/lib/supabase';
-import type { Customer, Product, OrderWithDetails, OrderStatus } from '@/types/database';
+import type { Customer, Product, OrderWithDetails, OrderStatus, PaymentMethod, DeliveryMethod } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -40,6 +40,8 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
         notes: '',
         status: 'pending' as OrderStatus,
         start_date: '',
+        payment_method: 'pix' as PaymentMethod,
+        delivery_method: 'pickup' as DeliveryMethod,
     });
     const [items, setItems] = useState<Array<{ id?: string; product_id: string; product_name: string; quantity: number; unit_price: number }>>([]);
     const { toast } = useToast();
@@ -59,6 +61,8 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                     notes: order.notes || '',
                     status: order.status,
                     start_date: order.start_date || '',
+                    payment_method: order.payment_method || 'pix',
+                    delivery_method: order.delivery_method || 'pickup',
                 });
                 setItems(order.items?.map(item => ({
                     id: item.id,
@@ -144,6 +148,8 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                 start_date: formData.start_date || null,
                 notes: formData.notes || null,
                 status: formData.status,
+                payment_method: formData.payment_method,
+                delivery_method: formData.delivery_method,
                 total_value: totalValue,
                 updated_at: new Date().toISOString(),
             })
@@ -259,6 +265,35 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                             {customers.map((c) => (
                                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                             ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div>
+                    <Label htmlFor="payment_method">Forma de Pagamento</Label>
+                    <Select value={formData.payment_method} onValueChange={(value: string) => setFormData({ ...formData, payment_method: value as PaymentMethod })}>
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="pix">Pix</SelectItem>
+                            <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+                            <SelectItem value="debit_card">Cartão de Débito</SelectItem>
+                            <SelectItem value="cash">Dinheiro</SelectItem>
+                            <SelectItem value="transfer">Transferência</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div>
+                    <Label htmlFor="delivery_method">Método de Entrega</Label>
+                    <Select value={formData.delivery_method} onValueChange={(value: string) => setFormData({ ...formData, delivery_method: value as DeliveryMethod })}>
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="pickup">Retirada no Balcão</SelectItem>
+                            <SelectItem value="delivery">Delivery</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

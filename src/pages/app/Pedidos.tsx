@@ -4,7 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Added Tabs
-import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2, PackageCheck, ChevronRight, ChefHat, FileSpreadsheet, FileDown, FileText } from 'lucide-react';
+import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2, PackageCheck, ChevronRight, ChefHat, FileSpreadsheet, FileDown, FileText, AlertCircle } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { createStockMovement } from '@/lib/database';
 import { StockAlertBadge } from '@/components/orders/StockAlertBadge';
 import { getOrders, updateOrderStatus, updateOrderPositions, deleteOrder, createOrder, createCustomer, getProducts, getCustomers, getIngredients } from '@/lib/database';
 import { exportToExcel, exportToCSV, importFromExcel, getValue } from '@/lib/excel';
@@ -123,6 +125,12 @@ const Pedidos = () => {
     const [messageOrder, setMessageOrder] = useState<OrderWithDetails | null>(null);
     const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
 
+    // Duplicate Stock Alert States
+    const [duplicatingOrder, setDuplicatingOrder] = useState<OrderWithDetails | null>(null);
+    const [showDuplicateStockAlert, setShowDuplicateStockAlert] = useState(false);
+    const [missingIngredientsForDuplicate, setMissingIngredientsForDuplicate] = useState<Array<{ id: string; name: string; missing: number; current: number; needed: number; unit: string }>>([]);
+    const [isDuplicateRestocking, setIsDuplicateRestocking] = useState(false);
+
     const isDrawerOpenRef = useRef(false);
     const { toast } = useToast();
     const isMobile = useIsMobile();
@@ -174,46 +182,176 @@ const Pedidos = () => {
         setIsMessageDialogOpen(true);
     };
 
-    const handleDuplicate = async (order: OrderWithDetails) => {
-        const orderData = {
-            customer_id: order.customer_id,
-            delivery_date: null,
-            delivery_time: null,
-            notes: order.notes ? `Cópia: ${order.notes}` : 'Cópia duplicada',
-            status: 'pending' as const, // Force type literal
-            total_value: order.total_value,
-            order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-        };
+    // Calculate missing stock for order duplication
+    const calculateMissingStockForDuplicate = async (order: OrderWithDetails) => {
+        // 1. Identify all needed ingredients for this order
+        const needed = new Map<string, { name: string; qty: number; unit: string }>();
+        const ingredientIds = new Set<string>();
 
-        const items = order.items.map(item => ({
-            product_id: item.product_id,
-            product_name: item.product_name,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            subtotal: item.subtotal,
-            unit_cost: 0
-        }));
+        // For each item in the order, get the product and its ingredients
+        for (const item of order.items) {
+            const product = products.find(p => p.id === item.product_id);
+            if (product?.product_ingredients) {
+                product.product_ingredients.forEach((pi: any) => {
+                    const ing = pi.ingredient;
+                    if (ing) {
+                        const total = (pi.quantity * item.quantity);
+                        const existing = needed.get(ing.id) || { name: ing.name, qty: 0, unit: ing.unit };
+                        existing.qty += total;
+                        needed.set(ing.id, existing);
+                        ingredientIds.add(ing.id);
+                    }
+                });
+            }
+        }
 
-        const { error } = await createOrder({
-            ...orderData,
-            total_cost: 0,
-            display_id: 0,
-            delivery_method: 'pickup',
-            delivery_fee: 0,
-            payment_method: 'pix',
-            google_event_id: null,
-            production_started_at: null,
-            production_completed_at: null,
-            production_duration_minutes: null,
-            delivered_at: null,
-            start_date: null
-        }, items);
+        if (ingredientIds.size === 0) return [];
 
-        if (!error) {
-            toast({ title: 'Pedido duplicado com sucesso!' });
+        // 2. Fetch fresh stock data from database
+        const { data: freshIngredients } = await supabase
+            .from('ingredients')
+            .select('id, stock_quantity, name, unit')
+            .in('id', Array.from(ingredientIds));
+
+        const stockMap = new Map<string, number>();
+        freshIngredients?.forEach((ing: any) => {
+            stockMap.set(ing.id, ing.stock_quantity);
+        });
+
+        // 3. Check missing ingredients
+        const missing: any[] = [];
+        needed.forEach((val, key) => {
+            const currentStock = stockMap.get(key) || 0;
+            if (val.qty > currentStock) {
+                missing.push({
+                    id: key,
+                    name: val.name,
+                    missing: val.qty - currentStock,
+                    current: currentStock,
+                    needed: val.qty,
+                    unit: val.unit
+                });
+            }
+        });
+
+        return missing;
+    };
+
+    // Process duplicate order creation (without stock check)
+    const processDuplicateOrderCreation = async (order: OrderWithDetails) => {
+        try {
+            // Explicitly construct the new order object with only valid fields
+            // Only include columns that exist in the orders table
+            const newOrder = {
+                customer_id: order.customer_id,
+                order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+                status: 'pending' as const,
+                total_value: order.total_value || 0,
+                total_cost: order.total_cost || 0,
+                delivery_date: null,
+                delivery_time: null,
+                delivery_method: order.delivery_method || 'pickup',
+                delivery_fee: order.delivery_fee || 0,
+                payment_method: order.payment_method || 'pix',
+                notes: order.notes,
+            };
+
+            const newItems = order.items.map(item => ({
+                product_id: item.product_id,
+                product_name: item.product_name,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                subtotal: item.subtotal,
+                unit_cost: item.unit_cost || 0
+            }));
+
+            console.log('=== DUPLICATE ORDER DEBUG ===');
+            console.log('New Order Object:', JSON.stringify(newOrder, null, 2));
+            console.log('New Items:', JSON.stringify(newItems, null, 2));
+
+            // @ts-ignore - bypassing strict Omit checks for easier duplication logic
+            const { data, error } = await createOrder(newOrder, newItems);
+
+            console.log('Create Order Result - Data:', data);
+            console.log('Create Order Result - Error:', error);
+
+            if (error) {
+                console.error('Create Order Error Details:', {
+                    message: error.message,
+                    details: (error as any).details,
+                    hint: (error as any).hint,
+                    code: (error as any).code,
+                });
+                throw error;
+            }
+
+            toast({
+                title: 'Pedido duplicado',
+                description: 'O pedido foi duplicado com sucesso para a aba "A Fazer".',
+            });
             loadOrders();
+        } catch (error: any) {
+            console.error('=== DUPLICATE ERROR ===');
+            console.error('Full Error Object:', error);
+            console.error('Error Message:', error?.message);
+            console.error('Error Details:', error?.details);
+            console.error('Error Hint:', error?.hint);
+            console.error('Error Code:', error?.code);
+            toast({
+                title: 'Erro ao duplicar',
+                description: `Erro: ${error?.message || 'Verifique o console para mais detalhes.'}`,
+                variant: 'destructive',
+            });
+        }
+    };
+
+    // Handle auto restock for duplicate
+    const handleDuplicateAutoRestock = async () => {
+        if (!duplicatingOrder) return;
+        setIsDuplicateRestocking(true);
+        try {
+            await Promise.all(missingIngredientsForDuplicate.map(async (item) => {
+                await createStockMovement({
+                    ingredient_id: item.id,
+                    type: 'in',
+                    quantity: item.missing,
+                    reason: `Auto-refill para Duplicação de Pedido`
+                });
+            }));
+
+            toast({ title: 'Estoque atualizado automaticamente!' });
+            setShowDuplicateStockAlert(false);
+            await processDuplicateOrderCreation(duplicatingOrder);
+            setDuplicatingOrder(null);
+        } catch (error) {
+            console.error('Auto-restock error', error);
+            toast({ title: 'Erro ao atualizar estoque', variant: 'destructive' });
+        } finally {
+            setIsDuplicateRestocking(false);
+        }
+    };
+
+    // Main duplicate handler with stock check
+    const handleDuplicate = async (order: OrderWithDetails) => {
+        // If order is already in 'pending' status, duplicate directly without stock check
+        // (Stock is only deducted when moving to 'preparing', so pending orders are safe)
+        if (order.status === 'pending') {
+            await processDuplicateOrderCreation(order);
+            return;
+        }
+
+        // For orders in other statuses, check stock first
+        // This ensures user is aware if there's not enough stock for when they move to production
+        const missing = await calculateMissingStockForDuplicate(order);
+
+        if (missing.length > 0) {
+            // Show stock alert modal
+            setDuplicatingOrder(order);
+            setMissingIngredientsForDuplicate(missing);
+            setShowDuplicateStockAlert(true);
         } else {
-            toast({ title: 'Erro ao duplicar pedido', variant: 'destructive' });
+            // Stock is sufficient, proceed with duplication
+            await processDuplicateOrderCreation(order);
         }
     };
 
@@ -574,6 +712,18 @@ const Pedidos = () => {
                                                         <span><strong>Entrega:</strong> {formatDate(order.delivery_date)}</span>
                                                         <span className="font-bold text-base">R$ {order.total_value.toFixed(2)}</span>
                                                     </div>
+                                                    <div className="flex gap-2 mt-1">
+                                                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-5 border-blue-200 bg-blue-50 text-blue-700">
+                                                            {order.payment_method === 'credit_card' && 'Crédito'}
+                                                            {order.payment_method === 'debit_card' && 'Débito'}
+                                                            {order.payment_method === 'pix' && 'Pix'}
+                                                            {order.payment_method === 'cash' && 'Dinheiro'}
+                                                            {!order.payment_method && 'Pix'}
+                                                        </Badge>
+                                                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-5 border-orange-200 bg-orange-50 text-orange-700">
+                                                            {order.delivery_method === 'delivery' ? 'Delivery' : 'Retirada'}
+                                                        </Badge>
+                                                    </div>
                                                     {order.start_date && (
                                                         <div className="flex items-center gap-1 text-muted-foreground" title="Data de Produção">
                                                             <ChefHat className="w-3 h-3" />
@@ -883,6 +1033,75 @@ const Pedidos = () => {
                     onOpenChange={setIsMessageDialogOpen} // Fixed Prop Name
                     order={messageOrder}
                 />
+
+                {/* Duplicate Order Stock Alert */}
+                <AlertDialog open={showDuplicateStockAlert} onOpenChange={setShowDuplicateStockAlert}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
+                                <AlertCircle className="h-5 w-5" />
+                                Estoque Insuficiente
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Os seguintes ingredientes não têm estoque suficiente para este pedido:
+                                <ul className="mt-2 text-sm space-y-2 bg-muted/50 p-3 rounded max-h-[200px] overflow-auto">
+                                    {missingIngredientsForDuplicate.map(item => (
+                                        <li key={item.id} className="space-y-1 pb-2 border-b border-muted last:border-0">
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">{item.name}</span>
+                                                <span className="font-bold text-red-500">
+                                                    Falta: {item.missing.toFixed(2)} {item.unit}
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-muted-foreground flex gap-4">
+                                                <span>Disponível: {Math.max(0, item.current).toFixed(2)}</span>
+                                                <span>Este pedido: {item.needed.toFixed(2)}</span>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <p className="mt-3 font-medium">
+                                    Deseja adicionar a quantidade faltante ao estoque automaticamente e prosseguir?
+                                </p>
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="sm:justify-between">
+                            <Button
+                                variant="ghost"
+                                className="text-muted-foreground hover:text-destructive"
+                                onClick={() => {
+                                    setShowDuplicateStockAlert(false);
+                                    if (duplicatingOrder) {
+                                        processDuplicateOrderCreation(duplicatingOrder);
+                                        setDuplicatingOrder(null);
+                                    }
+                                }}
+                                disabled={isDuplicateRestocking}
+                            >
+                                Desconsiderar e criar
+                            </Button>
+
+                            <div className="flex gap-2">
+                                <AlertDialogCancel
+                                    disabled={isDuplicateRestocking}
+                                    onClick={() => setDuplicatingOrder(null)}
+                                >
+                                    Cancelar
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleDuplicateAutoRestock();
+                                    }}
+                                    className="bg-amber-600 hover:bg-amber-700"
+                                    disabled={isDuplicateRestocking}
+                                >
+                                    {isDuplicateRestocking ? 'Atualizando...' : 'Regularizar e Criar'}
+                                </AlertDialogAction>
+                            </div>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
 
                 {/* Mobile Long-Press Action Sheet - Centered Modal */}
                 {longPressOrder && (

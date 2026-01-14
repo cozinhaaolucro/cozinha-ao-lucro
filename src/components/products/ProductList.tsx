@@ -109,7 +109,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
         const confirmDuplicate = confirm(`Deseja duplicar o produto "${product.name}"?`);
         if (!confirmDuplicate) return;
 
-        // Prepare new product data
+        // Prepare new product data - only include columns that exist in the database
         const productData = {
             name: `${product.name} (Cópia)`,
             description: product.description,
@@ -118,8 +118,6 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
             image_url: product.image_url,
             active: true,
             selling_unit: product.selling_unit || 'unidade',
-            hourly_rate: product.hourly_rate || 0,
-            is_highlight: product.is_highlight || false,
             category: product.category || 'Geral'
         };
 
@@ -134,7 +132,8 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
             toast({ title: 'Produto duplicado com sucesso!' });
             loadProducts();
         } else {
-            toast({ title: 'Erro ao duplicar produto', variant: 'destructive' });
+            console.error('Error duplicating product:', error);
+            toast({ title: 'Erro ao duplicar produto', description: error?.message, variant: 'destructive' });
         }
     };
 

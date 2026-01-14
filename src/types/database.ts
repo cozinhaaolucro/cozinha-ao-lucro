@@ -123,7 +123,7 @@ export type Customer = {
 
 export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
 export type DeliveryMethod = 'pickup' | 'delivery';
-export type PaymentMethod = 'cash' | 'pix' | 'card' | 'transfer';
+export type PaymentMethod = 'cash' | 'pix' | 'credit_card' | 'debit_card' | 'transfer';
 
 export type Order = {
     id: string;

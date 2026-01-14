@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileText, Download, CheckCircle2, AlertCircle } from 'lucide-react';
-import { getOrders, getIngredients } from '@/lib/database';
+import { getOrders, getIngredients, updateIngredient } from '@/lib/database';
 import type { OrderWithDetails, Ingredient } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import { addPdfHeader, addPdfFooter, autoTable } from '@/lib/pdfUtils';
-
+import { motion, useAnimation, PanInfo } from 'framer-motion';
 
 type ShoppingItem = {
     ingredientId: string;
@@ -18,6 +18,48 @@ type ShoppingItem = {
     needed: number;
     inStock: number;
     toBuy: number;
+};
+
+const SwipeButton = ({ onConfirm, disabled }: { onConfirm: () => void, disabled: boolean }) => {
+    const controls = useAnimation();
+    const [dragX, setDragX] = useState(0);
+
+    const handleDragEnd = async (_: any, info: PanInfo) => {
+        if (info.offset.x > 150) { // Threshold
+            await controls.start({ x: 200, opacity: 0 }); // Swipe off
+            onConfirm();
+            // Reset after a delay if needed, but usually we just process
+            setTimeout(() => {
+                controls.set({ x: 0, opacity: 1 });
+            }, 1000);
+        } else {
+            controls.start({ x: 0 }); // Snap back
+        }
+    };
+
+    return (
+        <div className={`relative h-12 w-72 bg-muted/50 dark:bg-muted/20 rounded-full overflow-hidden border border-border/50 select-none shadow-sm ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className="absolute inset-0 flex items-center justify-center pl-10 text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] z-0">
+                Deslize para Comprar
+            </div>
+            <motion.div
+                drag="x"
+                dragConstraints={{ left: 0, right: 200 }}
+                dragElastic={0.1}
+                dragMomentum={false}
+                onDrag={(_, info) => setDragX(info.offset.x)}
+                onDragEnd={handleDragEnd}
+                animate={controls}
+                className="absolute top-1 bottom-1 left-1 w-14 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing z-10 shadow-lg"
+            >
+                <CheckCircle2 className="text-white w-6 h-6" />
+            </motion.div>
+            <motion.div
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500/20 to-orange-600/20 z-0"
+                style={{ width: dragX + 30 }}
+            />
+        </div>
+    );
 };
 
 const SmartList = () => {
@@ -73,11 +115,6 @@ const SmartList = () => {
 
             ingredients?.forEach(ing => {
                 const needed = neededMap.get(ing.id) || 0;
-                // We only care if we need it OR if we want to show everything. 
-                // Context: "Smart List based on demand". So only show if needed > 0 usually, 
-                // OR if needed > stock (meaning we actually need to buy).
-                // Let's show everything that is needed for the current batch, 
-                // and highlight what needs to be bought.
 
                 if (needed > 0 || ing.stock_quantity < 0) {
                     const toBuy = Math.max(0, needed - ing.stock_quantity);
@@ -102,6 +139,41 @@ const SmartList = () => {
         }
     };
 
+    const handleRestock = async () => {
+        const itemsToBuy = items.filter(i => i.toBuy > 0);
+        if (itemsToBuy.length === 0) return;
+
+        const confirm = window.confirm(`Confirmar a compra de ${itemsToBuy.length} itens ? Isso adicionará as quantidades ao estoque.`);
+        if (!confirm) return;
+
+        setLoading(true);
+        try {
+            let updated = 0;
+            // Sequential update for safety
+            for (const item of itemsToBuy) {
+                const newStock = (item.inStock || 0) + item.toBuy;
+
+                const { error } = await updateIngredient(item.ingredientId, {
+                    stock_quantity: newStock
+                });
+
+                if (error) {
+                    console.error(`Failed to update ${item.name} `, error);
+                } else {
+                    updated++;
+                }
+            }
+
+            toast({ title: 'Estoque atualizado!', description: `${updated} ingredientes repostos.` });
+            calculateShoppingList(); // Refresh
+        } catch (error) {
+            console.error('Batch update error', error);
+            toast({ title: 'Erro ao atualizar estoque', variant: 'destructive' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     const formatUnit = (quantity: number, unit: string) => {
         if (!unit) return '';
@@ -117,14 +189,13 @@ const SmartList = () => {
 
         addPdfHeader(doc, 'Lista Inteligente', 'Baseada nos pedidos "A Fazer"');
 
-        const tableData = items
-            .filter(item => item.toBuy > 0)
-            .map(item => [
-                item.name,
-                `${item.toBuy.toFixed(2)} ${formatUnit(item.toBuy, item.unit)}`,
-                `${item.inStock.toFixed(2)} ${formatUnit(item.inStock, item.unit)}`,
-                `${item.needed.toFixed(2)} ${formatUnit(item.needed, item.unit)}`
-            ]);
+        const itemsToBuy = items.filter(i => i.toBuy > 0);
+        const tableData = itemsToBuy.map(item => [
+            item.name,
+            `${item.toBuy.toFixed(2)} ${formatUnit(item.toBuy, item.unit)} `,
+            `${item.inStock.toFixed(2)} ${formatUnit(item.inStock, item.unit)} `,
+            `${item.needed.toFixed(2)} ${formatUnit(item.needed, item.unit)} `
+        ]);
 
         if (tableData.length === 0) {
             doc.setFontSize(12);
@@ -160,21 +231,23 @@ const SmartList = () => {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Lista Inteligente</h1>
                     <p className="text-muted-foreground">
                         Geração automática de compras baseada na demanda dos pedidos "A Fazer".
                     </p>
                 </div>
-                <Button onClick={handleDownloadPDF} disabled={loading || itemsToBuy.length === 0}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Baixar PDF
-                </Button>
+                <div className="flex items-center gap-4">
+                    <Button variant="outline" onClick={handleDownloadPDF} disabled={loading || itemsToBuy.length === 0}>
+                        <Download className="mr-2 h-4 w-4" />
+                        PDF
+                    </Button>
+                </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-3">
-                <Card className={`md:col-span-2 ${itemsToBuy.length === 0 ? 'border-green-200 bg-green-50' : ''}`}>
+                <Card className={`md:col-span-2 ${itemsToBuy.length === 0 ? 'border-green-200 bg-green-50' : ''} flex flex-col`}>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             {itemsToBuy.length === 0 ? (
@@ -195,7 +268,7 @@ const SmartList = () => {
                                 : 'Estes itens estão em falta ou insuficientes para a produção atual.'}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="flex-1">
                         <ScrollArea className="h-[400px] pr-4">
                             {loading ? (
                                 <div className="space-y-4">
@@ -231,6 +304,11 @@ const SmartList = () => {
                             )}
                         </ScrollArea>
                     </CardContent>
+                    {itemsToBuy.length > 0 && (
+                        <div className="p-6 pt-0 mt-4 flex justify-end">
+                            <SwipeButton onConfirm={handleRestock} disabled={loading} />
+                        </div>
+                    )}
                 </Card>
 
                 {/* Summary / Stats Card */}
@@ -278,3 +356,4 @@ const SmartList = () => {
 };
 
 export default SmartList;
+

@@ -344,7 +344,7 @@ const DashboardLayout = () => {
                         </div>
                     </div>
                 )}
-                <div className="hidden md:flex absolute top-6 right-8 z-10">
+                <div className="hidden md:flex w-full justify-end mb-4">
                     <NotificationBell />
                 </div>
                 {/* Content Logic: Mutually Exclusive */}

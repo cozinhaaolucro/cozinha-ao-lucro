@@ -180,7 +180,10 @@ const ProductionStatusWidget = () => {
                                 activeOrders.slice(0, 3).map(order => (
                                     <div key={order.id} className="bg-neutral-800/40 p-2 rounded border border-white/5">
                                         <div className="flex justify-between items-center text-xs text-white mb-1">
-                                            <span className="font-bold">#{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}</span>
+                                            <span className="font-bold">
+                                                #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
+                                                <span className="ml-2 font-normal text-neutral-400 text-[10px]">{order.customer?.name?.split(' ')[0]}</span>
+                                            </span>
                                             <ProductionTimer startDate={order.production_started_at} />
                                         </div>
                                         <p className="text-[10px] text-neutral-400 truncate">{order.items?.map(i => i.product_name).join(', ')}</p>
