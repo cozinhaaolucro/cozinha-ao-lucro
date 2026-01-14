@@ -374,47 +374,59 @@ const Dashboard = () => {
             {/* Premium Goal Progress */}
             <FadeIn delay={75}>
                 <div className="grid gap-6 md:grid-cols-3">
-                    <Card className="md:col-span-2 overflow-hidden border-none shadow-lg" style={{ background: 'hsl(182, 16%, 55%)' }}>
-                        <CardContent className="p-6">
+                    {/* Meta de Vendas - Gradient Blue (Secondary based) */}
+                    <Card className="md:col-span-2 overflow-hidden border z-10 relative shadow-xl group border-white/20"
+                        style={{ background: 'linear-gradient(135deg, hsl(182, 16%, 62%) 0%, hsl(182, 20%, 50%) 100%)' }}>
+                        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-overlay" />
+                        <div className="absolute -top-24 -right-24 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+
+                        <CardContent className="p-6 relative">
                             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                                 <div className="space-y-1 text-center md:text-left">
-                                    <h3 className="text-lg font-semibold flex items-center gap-2 justify-center md:justify-start text-white">
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 justify-center md:justify-start text-white drop-shadow-sm">
                                         Meta de Vendas do Mês 🎯
                                     </h3>
-                                    <p className="text-sm text-white/80">
-                                        Você atingiu <span className="font-bold text-white">R$ {totalRevenue.toFixed(2)}</span> de uma meta de <span className="font-bold">R$ 10.000,00</span>
+                                    <p className="text-sm text-white/90">
+                                        Você atingiu <span className="font-bold text-white drop-shadow-sm">R$ {totalRevenue.toFixed(2)}</span> de uma meta de <span className="font-bold">R$ 10.000,00</span>
                                     </p>
                                 </div>
                                 <div className="flex-1 w-full max-w-md space-y-2">
-                                    <div className="flex justify-between text-xs font-medium text-white">
+                                    <div className="flex justify-between text-xs font-medium text-white/90">
                                         <span>{((totalRevenue / 10000) * 100).toFixed(1)}%</span>
                                         <span>R$ 10.000,00</span>
                                     </div>
-                                    <Progress value={(totalRevenue / 10000) * 100} className="h-3 shadow-inner bg-white/30 [&>div]:bg-[hsl(186,35%,28%)]" />
+                                    <Progress value={(totalRevenue / 10000) * 100} className="h-3 shadow-inner bg-black/20 [&>div]:bg-[hsl(186,35%,28%)] [&>div]:shadow-lg" />
                                 </div>
-                                <div className="hidden lg:block text-right bg-white/90 p-3 rounded-lg">
-                                    <p className="text-sm font-medium text-gray-600">Faltam apenas</p>
-                                    <p className="text-2xl font-bold" style={{ color: 'hsl(182, 16%, 45%)' }}>R$ {Math.max(0, 10000 - totalRevenue).toFixed(2)}</p>
+                                {/* Mini Block - No BG, Just White Text */}
+                                <div className="hidden lg:block text-right p-3">
+                                    <p className="text-sm font-medium text-white/80">Faltam apenas</p>
+                                    <p className="text-2xl font-bold text-white drop-shadow-sm">R$ {Math.max(0, 10000 - totalRevenue).toFixed(2)}</p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="overflow-hidden border-none shadow-lg" style={{ background: 'hsl(182, 16%, 55%)' }}>
-                        <CardContent className="p-6 flex flex-col justify-center h-full space-y-2">
+                    {/* Dica do Especialista - Gradient Teal (Primary based lightened) */}
+                    <Card className="overflow-hidden border z-10 relative shadow-xl border-white/20"
+                        style={{ background: 'linear-gradient(135deg, hsl(188, 30%, 45%) 0%, hsl(188, 34%, 35%) 100%)' }}>
+                        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+
+                        <CardContent className="p-6 flex flex-col justify-center h-full space-y-3 relative">
                             <div className="flex items-center gap-2 text-white">
-                                <Lightbulb className="w-5 h-5 animate-pulse" />
-                                <h3 className="font-bold">Dica do Especialista</h3>
+                                <div className="p-1.5 bg-white/20 rounded-full shadow-inner backdrop-blur-sm">
+                                    <Lightbulb className="w-4 h-4 text-yellow-300 animate-pulse" />
+                                </div>
+                                <h3 className="font-bold text-white drop-shadow-sm">Dica do Especialista</h3>
                             </div>
-                            <p className="text-sm text-white/90 leading-relaxed">
+                            <p className="text-sm text-white/90 leading-relaxed font-medium">
                                 {totalProfit > 0 && profitMargin < 30 ? (
                                     "Sua margem está abaixo de 30%. Avalie se é possível reduzir o desperdício de insumos ou ajustar o preço de seus pratos principais."
                                 ) : totalRevenue > 5000 ? (
-                                    "Excelente volume de vendas! Considere criar combos com seus produtos mais lucrativos para aumentar ainda mais o ticket médio."
+                                    "Excelentes vendas! Crie combos com seus produtos mais lucrativos para aumentar o ticket médio e fidelizar clientes."
                                 ) : ingredients.some(i => (i.stock_quantity ?? 0) <= (i.min_stock_threshold ?? 5)) ? (
-                                    "Atenção ao estoque! Alguns itens críticos estão acabando. Reponha agora para não perder vendas."
+                                    "Atenção ao estoque crítico! Reponha itens essenciais agora para garantir que sua produção não pare."
                                 ) : (
-                                    "Mantenha seus clientes por perto! O CRM mostra quem não compra há mais de 30 dias. Que tal enviar um cupom hoje?"
+                                    "Use o CRM para reconquistar inativos! Clientes que não compram há 30 dias podem voltar com um cupom especial."
                                 )}
                             </p>
                         </CardContent>
