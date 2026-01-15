@@ -21,10 +21,10 @@ const buttonVariants = cva(
         premium: "bg-gradient-to-r from-primary via-primary-glow to-primary text-primary-foreground shadow-lg hover:shadow-elegant hover:scale-[1.02] border border-white/20",
       },
       size: {
-        default: "h-12 px-6 py-3 rounded-xl", /* 12px radius, generous padding */
-        sm: "h-9 rounded-lg px-3",
-        lg: "h-14 rounded-2xl px-8",
-        icon: "h-10 w-10 rounded-xl",
+        default: "h-10 px-4 py-2 rounded-lg", /* Reduced from h-12 to h-10 */
+        sm: "h-8 rounded-md px-3 text-xs", /* Reduced from h-9 to h-8 */
+        lg: "h-12 rounded-xl px-8", /* Reduced from h-14 to h-12 */
+        icon: "h-9 w-9 rounded-lg", /* Reduced for density */
       },
     },
     defaultVariants: {

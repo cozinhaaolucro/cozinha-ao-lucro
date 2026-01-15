@@ -10,130 +10,154 @@
 
     /* 
       Palette Rebrand (2026) - STRICT IMPLEMENTATION:
-      Primary: 188 34% 28%
-      Secondary: 182 16% 55%
-      Financial Highlight: 38 65% 55%
-      Background: 38 33% 95%
-      Surface/Card: 38 20% 98%
-      Text/Neutral Dark: 210 9% 32%
-      Text/Auxiliary: 210 9% 45%
-      
-      Functional Colors:
-      Success: 155 35% 72%
-      Info/Production: 210 60% 65% (New)
-      Warning/Attention: 38 65% 55% (Same as Financial)
-      Error/Critical: 8 48% 58%
-      Neutral/Inactive: 210 9% 75%
+      Background: Off White — HSL 60°, 5%, 98% (Neutral/Warm-ish Off White)
+      Primary: Dark Blue — HSL 186°, 35%, 28%
+      Secondary: Light Blue — HSL 182°, 16%, 55%
+      Financial: Gold — HSL 41°, 53%, 55%
+      Neutral/Icon: Grey — HSL 58°, 2%, 54%
+      Borders: Light Grey — HSL 60°, 5%, 83%
+      Text Main: HSL 210°, 9%, 32% (Kept for legibility as per Microdetails)
     */
 
-    --background: 38 33% 95%;
+    --background: 200 5% 98%;
     --foreground: 210 9% 32%;
+    /* Main Text */
 
-    --card: 38 20% 98%;
+    --card: 200 5% 99%;
+    /* Cool neutral card */
     --card-foreground: 210 9% 32%;
 
-    --popover: 38 20% 98%;
+    --popover: 200 5% 98%;
     --popover-foreground: 210 9% 32%;
 
-    --primary: 188 34% 28%;
-    --primary-foreground: 38 33% 95%;
-    --primary-glow: 188 34% 34%;
-    --primary-dark: 186 35% 28%;
+    --primary: 186 35% 28%;
+    --primary-foreground: 38 35% 94%;
+    --primary-glow: 186 35% 35%;
+    /* Generated logical glow */
+    --primary-dark: 186 45% 20%;
 
-    --secondary: 182 16% 55%;
-    --secondary-foreground: 38 33% 95%;
-    --secondary-light: 182 16% 65%;
+    --secondary: 187 29% 58%;
+    --secondary-foreground: 38 35% 94%;
+    --secondary-light: 187 29% 68%;
 
-    --muted: 210 9% 75%;
-    /* Neutral/Inactive Data */
-    --muted-foreground: 210 9% 45%;
-    /* Text Auxiliary */
+    --muted: 200 5% 90%;
+    --muted-foreground: 200 3% 50%;
+    /* Text Auxiliary / Neutral Icons */
 
     --accent: 182 16% 55%;
-    --accent-foreground: 38 33% 95%;
+    --accent-foreground: 38 35% 94%;
 
     --financial: 41 53% 55%;
 
     --warning: 41 53% 55%;
     --warning-foreground: 210 9% 32%;
 
-    --success: 155 35% 72%;
-    --success-foreground: 210 9% 32%;
+    --success: 168 22% 52%;
+    --success-foreground: 38 35% 94%;
 
-    --info: 210 60% 65%;
-    /* New Info/Production Color */
-    --info-foreground: 38 33% 95%;
+    --destructive: 8 48% 58%;
+    --destructive-foreground: 38 35% 94%;
 
-    --destructive: 359 88% 27%;
-    /* Error/Critical - Updated to specified red */
-    --destructive-foreground: 38 33% 95%;
+    --info: 24 58% 56%;
+    --info-foreground: 38 35% 94%;
 
-    --icon-color: 155 35% 72%;
-    /* Standard Icon Color */
+    --icon-color: 58 2% 54%;
+    /* Neutral Icons */
 
-    --footer: 190 38% 22%;
-    --footer-foreground: 38 33% 95%;
+    --footer: 186 35% 20%;
+    /* Darker primary */
+    --footer-foreground: 38 35% 94%;
 
-    --border: 210 9% 75%;
-    --input: 210 9% 75%;
+    --border: 200 5% 85%;
+    --input: 200 5% 85%;
     --ring: 182 16% 55%;
 
     --radius: 0.75rem;
-    /* 12px */
 
-    /* Shadows - Refined */
-    --shadow-elegant: 0 4px 12px rgba(0, 0, 0, 0.1);
-    /* Opacity ~10% */
-    --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.12);
-    /* Slightly stronger for hover */
-    --shadow-glow: 0 0 20px rgba(47, 96, 107, 0.3);
-    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 10px 15px -3px rgba(0, 0, 0, 0.02);
+    /* STATUS COLORS (SaaS) */
+    /* A Fazer (was Delivered Gold) */
+    --status-pending-base: 41 53% 55%;
+    --status-pending-bg: 41 53% 92%;
 
-    --inner-glow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+    /* Em Produção (was Pending Blue) - Lightened */
+    --status-preparing-base: 200 48% 60%;
+    --status-preparing-bg: 200 48% 94%;
 
-    /* Sidebar Variables - Reinstated & Branded */
-    --sidebar-background: 38 20% 98%;
-    /* Light Surface Match */
+    /* Pronto */
+    --status-ready-base: 155 35% 46%;
+    --status-ready-bg: 155 35% 92%;
+
+    /* Entregue (Neutral Gray) */
+    --status-delivered-base: 220 10% 45%;
+    --status-delivered-bg: 220 10% 96%;
+
+    /* Atrasado */
+    --status-late-base: 8 48% 58%;
+    --status-late-bg: 8 48% 92%;
+
+    /* Shadows */
+    /* Non-colored standard: HSL 210 15% 20% -> 210 15% 20% */
+    --shadow-color: 210 15% 20%;
+
+    --shadow-elegant: 0 4px 12px hsla(210, 15%, 20%, 0.1);
+    --shadow-hover: 0 6px 16px hsla(210, 15%, 20%, 0.14);
+    --shadow-card: 0 4px 6px -1px hsla(210, 15%, 20%, 0.1), 0 2px 4px -1px hsla(210, 15%, 20%, 0.06);
+    /* Standard Card text says 10% opacity */
+
+    /* Sidebar Variables */
+    --sidebar-background: 60 5% 96%;
     --sidebar-foreground: 210 9% 32%;
-    --sidebar-primary: 188 34% 28%;
-    --sidebar-primary-foreground: 38 33% 95%;
-    --sidebar-accent: 188 34% 92%;
-    /* Soft Hover */
-    --sidebar-accent-foreground: 188 34% 28%;
-    --sidebar-border: 210 9% 75%;
+    --sidebar-primary: 186 35% 28%;
+    --sidebar-primary-foreground: 38 35% 94%;
+    --sidebar-accent: 182 16% 55%;
+    --sidebar-accent-foreground: 38 35% 94%;
+    --sidebar-border: 60 5% 83%;
     --sidebar-ring: 182 16% 55%;
   }
 
   .dark {
-    /* Forcing Light Mode look as requested, keeping identical */
-    --background: 38 33% 95%;
+    /* Identical to Light for now per request */
+    --background: 38 35% 94%;
     --foreground: 210 9% 32%;
     --card: 38 20% 98%;
     --card-foreground: 210 9% 32%;
-    --primary: 188 34% 28%;
-    --primary-foreground: 38 33% 95%;
+    --popover: 38 35% 94%;
+    --popover-foreground: 210 9% 32%;
+    --primary: 186 35% 28%;
+    --primary-foreground: 38 35% 94%;
     --secondary: 182 16% 55%;
-    --secondary-foreground: 38 33% 95%;
-    --muted: 210 9% 75%;
-    --muted-foreground: 210 9% 45%;
+    --secondary-foreground: 38 35% 94%;
+    --muted: 60 5% 90%;
+    --muted-foreground: 58 2% 54%;
     --accent: 182 16% 55%;
-    --accent-foreground: 210 9% 32%;
-    --financial: 38 65% 55%;
-    --icon-color: 155 35% 72%;
-    --border: 210 9% 75%;
-    --input: 210 9% 75%;
+    --accent-foreground: 38 35% 94%;
+    --financial: 41 53% 55%;
+    --destructive: 8 48% 58%;
+    --destructive-foreground: 38 35% 94%;
+    --border: 60 5% 83%;
+    --input: 60 5% 83%;
     --ring: 182 16% 55%;
-    --footer: 190 38% 22%;
-    --footer-foreground: 38 33% 95%;
 
-    /* Sidebar Dark Mode (Matching Light for now as requested) */
-    --sidebar-background: 38 20% 98%;
+    --status-pending-base: 41 53% 55%;
+    --status-pending-bg: 41 53% 92%;
+    --status-preparing-base: 200 48% 60%;
+    --status-preparing-bg: 200 48% 94%;
+    --status-ready-base: 155 35% 46%;
+    --status-ready-bg: 155 35% 92%;
+    --status-delivered-base: 220 10% 45%;
+    --status-delivered-bg: 220 10% 96%;
+    --status-late-base: 8 48% 58%;
+    --status-late-bg: 8 48% 92%;
+
+    --shadow-color: 210 15% 20%;
+
+    --sidebar-background: 200 5% 97%;
     --sidebar-foreground: 210 9% 32%;
-    --sidebar-primary: 188 34% 28%;
-    --sidebar-primary-foreground: 38 33% 95%;
-    --sidebar-accent: 188 34% 92%;
-    --sidebar-accent-foreground: 188 34% 28%;
-    --sidebar-border: 210 9% 75%;
+    --sidebar-primary: 186 35% 28%;
+    --sidebar-primary-foreground: 200 5% 98%;
+    --sidebar-accent: 182 16% 55%;
+    --sidebar-accent-foreground: 200 5% 98%;
+    --sidebar-border: 200 5% 85%;
     --sidebar-ring: 182 16% 55%;
   }
 }
@@ -148,6 +172,11 @@
     font-family: 'Manrope', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     line-height: 1.6;
+    /* User requested: Off-white background with stronger spots (Green from buttons) and movement */
+    background-image:
+      radial-gradient(circle at 15% 50%, hsla(186, 35%, 28%, 0.03) 0%, transparent 25%),
+      radial-gradient(circle at 85% 30%, hsla(186, 35%, 28%, 0.02) 0%, transparent 25%);
+    background-attachment: fixed;
   }
 
   h1,
@@ -194,11 +223,11 @@
   }
 
   .spotlight-warm {
-    background: radial-gradient(circle at 50% 50%, rgba(255, 240, 230, 0.4) 0%, rgba(255, 255, 255, 0) 70%);
+    background: radial-gradient(circle at 50% 50%, rgba(46, 95, 101, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
   }
 
   .text-glow {
-    text-shadow: 0 0 20px rgba(118, 17, 24, 0.2);
+    text-shadow: 0 0 20px rgba(46, 95, 101, 0.15);
   }
 
   .inner-depth {
@@ -488,6 +517,8 @@
 /* Smooth scrolling for the entire app */
 /* Smooth scrolling and Jitter Fix - Strict Force */
 html {
+  font-size: 13px;
+  /* 25% Global Zoom Out base */
   scroll-behavior: smooth;
   overflow-y: scroll !important;
   /* Force scrollbar always visible to prevent jumping */

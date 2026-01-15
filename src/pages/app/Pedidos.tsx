@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Added Tabs
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Phone, Filter, Pencil, Download, Upload, Copy, Trash2, PackageCheck, ChevronRight, ChefHat, FileSpreadsheet, FileDown, FileText, AlertCircle } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { createStockMovement } from '@/lib/database';
@@ -20,12 +20,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from '@/lib/supabase';
 import type { OrderWithDetails, ProductWithIngredients, Ingredient } from '@/types/database';
-import { useIsMobile } from '@/hooks/use-mobile'; // Added useIsMobile
+import { useIsMobile } from '@/hooks/use-mobile';
 import NewOrderDialog from '@/components/orders/NewOrderDialog';
 import EditOrderDialog from '@/components/orders/EditOrderDialog';
 import { useToast } from '@/hooks/use-toast';
 import { parseLocalDate, formatLocalDate } from '@/lib/dateUtils';
-import confetti from 'canvas-confetti';
+import confetti from 'canvas-confetti'; // Keep if used or remove if unused, keeping for safety
 import { motion, AnimatePresence } from 'framer-motion';
 import ClientProfileDrawer from '@/components/crm/ClientProfileDrawer';
 import SendMessageDialog from '@/components/crm/SendMessageDialog';
@@ -62,7 +62,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 // Sortable Item Component
-const SortableOrderCard = ({ order, config, isMobile, draggedOrderId, ...props }: any) => {
+const SortableOrderCard = ({ order, statusConfig, isMobile, draggedOrderId, ...props }: any) => {
     const {
         attributes,
         listeners,
@@ -83,30 +83,63 @@ const SortableOrderCard = ({ order, config, isMobile, draggedOrderId, ...props }
         transition,
     };
 
+    // Late Check
+    const isLate = React.useMemo(() => {
+        if (order.status === 'delivered' || order.status === 'cancelled') return false;
+        if (!order.delivery_date) return false;
+        const delivery = parseLocalDate(order.delivery_date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return delivery < today;
+    }, [order]);
+
+    // Determine Status Key for classes
+    const statusKey = isLate ? 'late' : order.status;
+    // const isReadyStatus = order.status === 'ready' && !isLate; 
+
+    // Inline styles for dynamic theming using CSS variables
+    const cardStyle = {
+        backgroundColor: 'hsl(var(--card))', // Clean White/Card BG
+        borderLeft: `3px solid hsl(var(--status-${statusKey}-base))`,
+        boxShadow: isDragging
+            ? '0 10px 15px -3px hsla(var(--shadow-color), 0.1), 0 4px 6px -2px hsla(var(--shadow-color), 0.05)'
+            : '0 2px 4px -1px hsla(var(--shadow-color), 0.08), 0 1px 2px -1px hsla(var(--shadow-color), 0.04)',
+        color: 'hsl(var(--foreground))',
+    };
+
+    // Pass color base for children (badges, icons)
+    const baseColor = `hsl(var(--status-${statusKey}-base))`;
+
     if (isDragging) {
         return (
             <div
                 ref={setNodeRef}
                 style={style}
-                className="opacity-30 p-2"
+                className="opacity-50 p-2"
             >
-                <Card className={`h-[150px] ${config.color} border-2 border-dashed`} />
+                <Card
+                    className="h-[150px] border border-dashed"
+                    style={{
+                        backgroundColor: 'hsl(var(--muted)/0.3)',
+                        borderColor: `hsl(var(--status-${statusKey}-base))`
+                    }}
+                />
             </div>
         );
     }
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-manipulation">
-            {props.children}
+            {React.cloneElement(props.children, { isLate, cardStyle, baseColor, statusKey })}
         </div>
     );
 };
 
 const STATUS_COLUMNS = {
-    pending: { label: 'A Fazer', color: 'bg-yellow-50 border-yellow-200' },
-    preparing: { label: 'Em Produção', color: 'bg-blue-50 border-blue-200' },
-    ready: { label: 'Pronto', color: 'bg-green-50 border-green-200' },
-    delivered: { label: 'Entregue', color: 'bg-gray-50 border-gray-200' },
+    pending: { label: 'A Fazer', key: 'pending' },
+    preparing: { label: 'Em Produção', key: 'preparing' },
+    ready: { label: 'Pronto', key: 'ready' },
+    delivered: { label: 'Entregue', key: 'delivered' },
 };
 
 const Pedidos = () => {
@@ -128,18 +161,18 @@ const Pedidos = () => {
     // Duplicate Stock Alert States
     const [duplicatingOrder, setDuplicatingOrder] = useState<OrderWithDetails | null>(null);
     const [showDuplicateStockAlert, setShowDuplicateStockAlert] = useState(false);
-    const [missingIngredientsForDuplicate, setMissingIngredientsForDuplicate] = useState<Array<{ id: string; name: string; missing: number; current: number; needed: number; unit: string }>>([]);
+    const [missingIngredientsForDuplicate, setMissingIngredientsForDuplicate] = useState<any[]>([]);
     const [isDuplicateRestocking, setIsDuplicateRestocking] = useState(false);
 
-    const isDrawerOpenRef = useRef(false);
     const { toast } = useToast();
     const isMobile = useIsMobile();
+    const [activeId, setActiveId] = useState<string | null>(null);
 
-    // DND Sensors
+    // Sensors
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                distance: 8, // Require 8px movement to start drag (prevents accidental clicks)
+                distance: 8,
             },
         }),
         useSensor(KeyboardSensor, {
@@ -147,14 +180,11 @@ const Pedidos = () => {
         }),
         useSensor(TouchSensor, {
             activationConstraint: {
-                delay: 250, // Delay for touch to allow scrolling
+                delay: 250,
                 tolerance: 5,
             },
         })
     );
-
-    const [activeId, setActiveId] = useState<string | null>(null);
-
 
     const loadOrders = async () => {
         const { data, error } = await getOrders();
@@ -182,13 +212,10 @@ const Pedidos = () => {
         setIsMessageDialogOpen(true);
     };
 
-    // Calculate missing stock for order duplication
     const calculateMissingStockForDuplicate = async (order: OrderWithDetails) => {
-        // 1. Identify all needed ingredients for this order
         const needed = new Map<string, { name: string; qty: number; unit: string }>();
         const ingredientIds = new Set<string>();
 
-        // For each item in the order, get the product and its ingredients
         for (const item of order.items) {
             const product = products.find(p => p.id === item.product_id);
             if (product?.product_ingredients) {
@@ -207,7 +234,6 @@ const Pedidos = () => {
 
         if (ingredientIds.size === 0) return [];
 
-        // 2. Fetch fresh stock data from database
         const { data: freshIngredients } = await supabase
             .from('ingredients')
             .select('id, stock_quantity, name, unit')
@@ -218,7 +244,6 @@ const Pedidos = () => {
             stockMap.set(ing.id, ing.stock_quantity);
         });
 
-        // 3. Check missing ingredients
         const missing: any[] = [];
         needed.forEach((val, key) => {
             const currentStock = stockMap.get(key) || 0;
@@ -237,11 +262,8 @@ const Pedidos = () => {
         return missing;
     };
 
-    // Process duplicate order creation (without stock check)
     const processDuplicateOrderCreation = async (order: OrderWithDetails) => {
         try {
-            // Explicitly construct the new order object with only valid fields
-            // Only include columns that exist in the orders table
             const newOrder = {
                 customer_id: order.customer_id,
                 order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
@@ -265,25 +287,10 @@ const Pedidos = () => {
                 unit_cost: item.unit_cost || 0
             }));
 
-            console.log('=== DUPLICATE ORDER DEBUG ===');
-            console.log('New Order Object:', JSON.stringify(newOrder, null, 2));
-            console.log('New Items:', JSON.stringify(newItems, null, 2));
-
-            // @ts-ignore - bypassing strict Omit checks for easier duplication logic
+            // @ts-ignore
             const { data, error } = await createOrder(newOrder, newItems);
 
-            console.log('Create Order Result - Data:', data);
-            console.log('Create Order Result - Error:', error);
-
-            if (error) {
-                console.error('Create Order Error Details:', {
-                    message: error.message,
-                    details: (error as any).details,
-                    hint: (error as any).hint,
-                    code: (error as any).code,
-                });
-                throw error;
-            }
+            if (error) throw error;
 
             toast({
                 title: 'Pedido duplicado',
@@ -291,21 +298,14 @@ const Pedidos = () => {
             });
             loadOrders();
         } catch (error: any) {
-            console.error('=== DUPLICATE ERROR ===');
-            console.error('Full Error Object:', error);
-            console.error('Error Message:', error?.message);
-            console.error('Error Details:', error?.details);
-            console.error('Error Hint:', error?.hint);
-            console.error('Error Code:', error?.code);
             toast({
                 title: 'Erro ao duplicar',
-                description: `Erro: ${error?.message || 'Verifique o console para mais detalhes.'}`,
+                description: `Erro: ${error?.message}`,
                 variant: 'destructive',
             });
         }
     };
 
-    // Handle auto restock for duplicate
     const handleDuplicateAutoRestock = async () => {
         if (!duplicatingOrder) return;
         setIsDuplicateRestocking(true);
@@ -331,26 +331,19 @@ const Pedidos = () => {
         }
     };
 
-    // Main duplicate handler with stock check
     const handleDuplicate = async (order: OrderWithDetails) => {
-        // If order is already in 'pending' status, duplicate directly without stock check
-        // (Stock is only deducted when moving to 'preparing', so pending orders are safe)
         if (order.status === 'pending') {
             await processDuplicateOrderCreation(order);
             return;
         }
 
-        // For orders in other statuses, check stock first
-        // This ensures user is aware if there's not enough stock for when they move to production
         const missing = await calculateMissingStockForDuplicate(order);
 
         if (missing.length > 0) {
-            // Show stock alert modal
             setDuplicatingOrder(order);
             setMissingIngredientsForDuplicate(missing);
             setShowDuplicateStockAlert(true);
         } else {
-            // Stock is sufficient, proceed with duplication
             await processDuplicateOrderCreation(order);
         }
     };
@@ -360,195 +353,6 @@ const Pedidos = () => {
             setSelectedCustomer(customer);
             setIsDrawerOpen(true);
         }
-    };
-
-    // Helper for Excel Import
-    const getValue = (row: any, keys: string[]) => {
-        for (const key of keys) {
-            if (row[key] !== undefined && row[key] !== null) return row[key];
-        }
-        return null;
-    };
-
-    const filteredOrders = orders.filter((order) => {
-        if (order.status === 'cancelled') return false;
-
-        // Scheduling Logic disabled to prevent confusion
-        // if (order.status === 'pending' && order.start_date && !dateFilter.start && !dateFilter.end) {
-        //     const startDate = parseLocalDate(order.start_date);
-        //     startDate.setHours(0, 0, 0, 0);
-        //     const today = new Date();
-        //     today.setHours(0, 0, 0, 0);
-        //     if (startDate > today) return false;
-        // }
-
-        if (!dateFilter.start && !dateFilter.end) return true;
-
-        if (!order.delivery_date) return false;
-        const orderDate = parseLocalDate(order.delivery_date);
-        orderDate.setHours(0, 0, 0, 0);
-
-        const start = dateFilter.start ? new Date(dateFilter.start + 'T00:00:00') : null;
-        const end = dateFilter.end ? new Date(dateFilter.end + 'T23:59:59.999') : null;
-
-        if (start && orderDate < start) return false;
-        if (end && orderDate > end) return false;
-        return true;
-    });
-
-
-    // Custom Collision Detection Strategy
-    const customCollisionDetection: CollisionDetection = (args) => {
-        const pointerCollisions = pointerWithin(args);
-
-        // If we hit an item natively with pointer, that's our best bet
-        if (pointerCollisions.length > 0) {
-            return pointerCollisions;
-        }
-
-        // If not, check if we are intersecting with a container (Column)
-        // This is crucial for empty columns or sparse columns
-        const rectCollisions = rectIntersection(args);
-        return rectCollisions;
-    };
-
-
-    // DND Handlers
-    const handleDragStart = (event: DragStartEvent) => {
-        setActiveId(event.active.id as string);
-    };
-
-    const handleDragOver = (event: DragOverEvent) => {
-        const { active, over } = event;
-        if (!over) return;
-
-        const activeId = active.id as string;
-        const overId = over.id as string;
-
-        // Find items
-        const activeOrder = orders.find(o => o.id === activeId);
-        const overOrder = orders.find(o => o.id === overId);
-
-        if (!activeOrder) return;
-
-        const activeStatus = activeOrder.status;
-
-        // Determine status based on what we are over
-        let overStatus: OrderStatus | undefined;
-
-        if (overId in STATUS_COLUMNS) {
-            // We are strictly over a column container
-            overStatus = overId as OrderStatus;
-        } else if (overOrder) {
-            // We are over another order
-            overStatus = overOrder.status;
-        }
-
-        if (!overStatus || activeStatus === overStatus) return;
-
-        // Update local state immediately for visual feedback
-        setOrders((prev) => {
-            const activeItem = prev.find(i => i.id === activeId);
-            if (!activeItem) return prev; // Safety
-
-            // We need to move the item to the new list conceptually
-            // We don't worry about exact index in DragOver mostly, just the ephemeral status change
-            return prev.map(o =>
-                o.id === activeId ? { ...o, status: overStatus! } : o
-            );
-        });
-    };
-
-    const handleDragEnd = async (event: DragEndEvent) => {
-        const { active, over } = event;
-        setActiveId(null);
-
-        if (!over) return;
-
-        const activeId = active.id as string;
-        const overId = over.id as string;
-
-        const activeOrder = orders.find(o => o.id === activeId);
-        if (!activeOrder) return;
-
-        const currentStatus = activeOrder.status; // This SHOULD be the new status from DragOver
-
-        // We assume activeOrder.status is already correct because of DragOver state updates.
-        // However, we need to calculate the *exact position* (index) in the new list.
-
-        const statusOrders = orders
-            .filter(o => o.status === currentStatus)
-            .sort((a, b) => (a.position || 0) - (b.position || 0));
-
-        const oldIndex = statusOrders.findIndex(o => o.id === activeId);
-        let newIndex: number;
-
-        if (overId in STATUS_COLUMNS) {
-            // We dropped on the container column itself.
-            // If it's the same column we started in (rare if we have items), go to end?
-            // Usually if we drop on container, we append to end.
-            newIndex = statusOrders.length;
-        } else {
-            // We dropped on an item
-            newIndex = statusOrders.findIndex(o => o.id === overId);
-
-            // If we are dropping "below" or "above" depends on direction, 
-            // but arrayMove handles index based logic. 
-            // Generally dnd-kit sortable strategy handles "swapping" indices.
-
-            // NOTE: If we just moved into this column, activeID might be at the end strictly in the array
-            // but visually we dropped over overId.
-
-            const isBelow = over && active.rect.current.translated && active.rect.current.translated.top > over.rect.top + over.rect.height;
-            const modifier = isBelow ? 1 : 0;
-            // Actually, arrayMove/findIndex is usually sufficient if the indices are consistent.
-            // But since we mutate state in DragOver, the indices might be transient.
-
-            // Simplification: Trust the overId index.
-            if (newIndex === -1) newIndex = statusOrders.length;
-        }
-
-        let reorderedList = statusOrders;
-
-        // Correct the array move
-        if (oldIndex !== newIndex) {
-            reorderedList = arrayMove(statusOrders, oldIndex, newIndex);
-        }
-
-        // Generate updates for ALL items in this column to ensure consistency
-        const updates = reorderedList.map((order, index) => ({
-            id: order.id,
-            status: currentStatus,
-            position: index
-        }));
-
-        // Optimistic UI Update
-        setOrders(prev => {
-            // Remove all from this status
-            const otherOrders = prev.filter(o => o.status !== currentStatus);
-            // Add back reordered with new position
-            const updatedReordered = reorderedList.map((o, idx) => ({ ...o, position: idx }));
-            return [...otherOrders, ...updatedReordered];
-        });
-
-        // Persist
-        const { error } = await updateOrderPositions(updates);
-        if (error) {
-            toast({ title: 'Erro ao salvar ordem', variant: 'destructive' });
-            loadOrders(); // Revert
-        }
-    };
-
-    const DroppableColumn = ({ status, children }: { status: string, children: React.ReactNode }) => {
-        const { setNodeRef } = useDroppable({
-            id: status,
-        });
-
-        return (
-            <div ref={setNodeRef} className="h-full w-full flex-1 min-h-[150px]">
-                {children}
-            </div>
-        );
     };
 
     const handleDeleteOrder = async (id: string) => {
@@ -563,7 +367,7 @@ const Pedidos = () => {
 
     const handleExport = (format: 'excel' | 'csv') => {
         const dataToExport = filteredOrders.map(o => ({
-            Status: STATUS_COLUMNS[o.status]?.label || o.status,
+            Status: STATUS_COLUMNS[o.status as keyof typeof STATUS_COLUMNS]?.label || o.status,
             Cliente: o.customer?.name || 'Não informado',
             'Data Entrega': o.delivery_date ? new Date(o.delivery_date).toLocaleDateString('pt-BR') : '-',
             Items: o.items?.map(i => `${i.product_name} (${i.quantity})`).join(', ') || '',
@@ -577,11 +381,122 @@ const Pedidos = () => {
         }
     };
 
+    const filteredOrders = orders.filter((order) => {
+        if (order.status === 'cancelled') return false;
+        if (!dateFilter.start && !dateFilter.end) return true;
+        if (!order.delivery_date) return false;
+        const orderDate = parseLocalDate(order.delivery_date);
+        orderDate.setHours(0, 0, 0, 0);
+        const start = dateFilter.start ? new Date(dateFilter.start + 'T00:00:00') : null;
+        const end = dateFilter.end ? new Date(dateFilter.end + 'T23:59:59.999') : null;
+        if (start && orderDate < start) return false;
+        if (end && orderDate > end) return false;
+        return true;
+    });
+
+    const customCollisionDetection: CollisionDetection = (args) => {
+        const pointerCollisions = pointerWithin(args);
+        if (pointerCollisions.length > 0) return pointerCollisions;
+        return rectIntersection(args);
+    };
+
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(event.active.id as string);
+    };
+
+    const handleDragOver = (event: DragOverEvent) => {
+        const { active, over } = event;
+        if (!over) return;
+
+        const activeId = active.id as string;
+        const overId = over.id as string;
+        const activeOrder = orders.find(o => o.id === activeId);
+        const overOrder = orders.find(o => o.id === overId);
+
+        if (!activeOrder) return;
+
+        const activeStatus = activeOrder.status;
+        let overStatus: OrderStatus | undefined;
+
+        if (overId in STATUS_COLUMNS) {
+            overStatus = overId as OrderStatus;
+        } else if (overOrder) {
+            overStatus = overOrder.status;
+        }
+
+        if (!overStatus || activeStatus === overStatus) return;
+
+        setOrders((prev) => {
+            return prev.map(o =>
+                o.id === activeId ? { ...o, status: overStatus! } : o
+            );
+        });
+    };
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        setActiveId(null);
+        if (!over) return;
+
+        const activeId = active.id as string;
+        const overId = over.id as string;
+        const activeOrder = orders.find(o => o.id === activeId);
+        if (!activeOrder) return;
+
+        const currentStatus = activeOrder.status;
+        const statusOrders = orders
+            .filter(o => o.status === currentStatus)
+            .sort((a, b) => (a.position || 0) - (b.position || 0));
+
+        const oldIndex = statusOrders.findIndex(o => o.id === activeId);
+        let newIndex: number;
+
+        if (overId in STATUS_COLUMNS) {
+            newIndex = statusOrders.length;
+        } else {
+            newIndex = statusOrders.findIndex(o => o.id === overId);
+            if (newIndex === -1) newIndex = statusOrders.length;
+        }
+
+        let reorderedList = statusOrders;
+        if (oldIndex !== newIndex) {
+            reorderedList = arrayMove(statusOrders, oldIndex, newIndex);
+        }
+
+        const updates = reorderedList.map((order, index) => ({
+            id: order.id,
+            status: currentStatus,
+            position: index
+        }));
+
+        setOrders(prev => {
+            const otherOrders = prev.filter(o => o.status !== currentStatus);
+            const updatedReordered = reorderedList.map((o, idx) => ({ ...o, position: idx }));
+            return [...otherOrders, ...updatedReordered];
+        });
+
+        const { error } = await updateOrderPositions(updates);
+        if (error) {
+            toast({ title: 'Erro ao salvar ordem', variant: 'destructive' });
+            loadOrders();
+        }
+    };
+
+    const DroppableColumn = ({ status, children }: { status: string, children: React.ReactNode }) => {
+        const { setNodeRef } = useDroppable({
+            id: status,
+        });
+        return (
+            <div ref={setNodeRef} className="h-full w-full flex-1 min-h-[150px]">
+                {children}
+            </div>
+        );
+    };
+
     const renderColumn = (status: string, config: typeof STATUS_COLUMNS[keyof typeof STATUS_COLUMNS]) => {
         const statusOrders = filteredOrders
             .filter((o) => o.status === status)
             .sort((a, b) => (a.position || 0) - (b.position || 0));
-
         const isEmpty = statusOrders.length === 0;
 
         return (
@@ -589,11 +504,10 @@ const Pedidos = () => {
                 <div className="h-full flex flex-col space-y-3">
                     {!isMobile && (
                         <div className="flex items-center justify-between">
-                            <h3 className="font-semibold">{config.label}</h3>
-                            <Badge variant="secondary">{statusOrders.length}</Badge>
+                            <h3 className="font-semibold text-foreground/80">{config.label}</h3>
+                            <Badge variant="secondary" className="bg-muted text-muted-foreground">{statusOrders.length}</Badge>
                         </div>
                     )}
-
                     <SortableContext
                         id={status}
                         items={statusOrders.map(o => o.id)}
@@ -601,8 +515,8 @@ const Pedidos = () => {
                     >
                         <div className={isMobile ? "space-y-3 pb-20 min-h-[150px]" : "space-y-2 min-h-[400px]"} >
                             {isEmpty ? (
-                                <Card className={`${config.color} border-2 border-dashed h-full min-h-[150px] flex flex-col items-center justify-center p-6 text-center`}>
-                                    <div className="w-12 h-12 rounded-full bg-white/50 flex items-center justify-center mb-3">
+                                <Card className="border-2 border-dashed h-full min-h-[150px] flex flex-col items-center justify-center p-6 text-center bg-muted/20 border-border/60">
+                                    <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
                                         <PackageCheck className="w-6 h-6 text-muted-foreground/40" />
                                     </div>
                                     <p className="text-sm font-medium text-muted-foreground/60 leading-tight">
@@ -617,131 +531,26 @@ const Pedidos = () => {
                                     <SortableOrderCard
                                         key={order.id}
                                         order={order}
-                                        config={config}
+                                        statusConfig={config}
                                         isMobile={isMobile}
                                         draggedOrderId={activeId}
                                     >
-                                        <Card
-                                            className={`${config.color} border-2 hover:shadow-md transition-all cursor-move group relative ${activeId === order.id ? 'opacity-30' : ''}`}
-                                            onTouchStart={() => {
-                                                longPressTimerRef.current = setTimeout(() => {
-                                                    setLongPressOrder(order);
-                                                }, 500);
-                                            }}
-                                            onTouchEnd={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); }}
-                                            onTouchMove={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); }}
-                                        >
-                                            <StockAlertBadge
-                                                order={order}
-                                                products={products}
-                                                ingredients={ingredients}
-                                                onStockUpdate={loadOrders}
-                                            />
-                                            <CardHeader className="pb-3">
-                                                <div className="text-sm flex items-center justify-between">
-                                                    <div className="font-semibold" onClick={() => handleCustomerClick(order.customer)}>
-                                                        <span className="hover:underline cursor-pointer text-primary">
-                                                            {order.customer?.name || 'Cliente não informado'}
-                                                        </span>
-                                                        <div className="text-xs text-muted-foreground font-normal">
-                                                            #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
-                                                        </div>
-                                                    </div>
-
-                                                    <div className={isMobile ? "flex gap-1" : "flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"}>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8"
-                                                            onPointerDown={(e) => e.stopPropagation()} // Prevent drag start
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDuplicate(order);
-                                                            }}
-                                                            title="Duplicar Pedido"
-                                                        >
-                                                            <Copy className="w-4 h-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8"
-                                                            onPointerDown={(e) => e.stopPropagation()}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setEditingOrder(order);
-                                                            }}
-                                                        >
-                                                            <Pencil className="w-4 h-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-destructive hover:text-red-600 hover:bg-red-50"
-                                                            onPointerDown={(e) => e.stopPropagation()}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if (confirm('Excluir este pedido?')) {
-                                                                    handleDeleteOrder(order.id);
-                                                                }
-                                                            }}
-                                                            title="Excluir"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </Button>
-                                                        {order.customer?.phone && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                                onPointerDown={(e) => e.stopPropagation()}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleWhatsApp(order);
-                                                                }}
-                                                            >
-                                                                <Phone className="w-4 h-4" />
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </CardHeader>
-                                            <CardContent className="space-y-2">
-                                                <div className="text-xs space-y-1">
-                                                    <div className="flex justify-between">
-                                                        <span><strong>Entrega:</strong> {formatDate(order.delivery_date)}</span>
-                                                        <span className="font-bold text-base">R$ {order.total_value.toFixed(2)}</span>
-                                                    </div>
-                                                    <div className="flex gap-2 mt-1">
-                                                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-5 border-blue-200 bg-blue-50 text-blue-700">
-                                                            {order.payment_method === 'credit_card' && 'Crédito'}
-                                                            {order.payment_method === 'debit_card' && 'Débito'}
-                                                            {order.payment_method === 'pix' && 'Pix'}
-                                                            {order.payment_method === 'cash' && 'Dinheiro'}
-                                                            {!order.payment_method && 'Pix'}
-                                                        </Badge>
-                                                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-5 border-orange-200 bg-orange-50 text-orange-700">
-                                                            {order.delivery_method === 'delivery' ? 'Delivery' : 'Retirada'}
-                                                        </Badge>
-                                                    </div>
-                                                    {order.start_date && (
-                                                        <div className="flex items-center gap-1 text-muted-foreground" title="Data de Produção">
-                                                            <ChefHat className="w-3 h-3" />
-                                                            <span>{formatDate(order.start_date)}</span>
-                                                        </div>
-                                                    )}
-
-                                                    {order.items && order.items.length > 0 && (
-                                                        <div className="text-xs text-muted-foreground mt-2 pt-2 border-t text-left">
-                                                            {order.items.slice(0, 2).map((item, idx) => (
-                                                                <p key={idx} className="line-clamp-1">• {item.product_name} (x{item.quantity})</p>
-                                                            ))}
-                                                            {order.items.length > 2 && <p className="text-[10px] italic">+ {order.items.length - 2} itens...</p>}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                        <CardWithStyle
+                                            activeId={activeId}
+                                            loadOrders={loadOrders}
+                                            products={products}
+                                            ingredients={ingredients}
+                                            handleCustomerClick={handleCustomerClick}
+                                            handleDuplicate={handleDuplicate}
+                                            setEditingOrder={setEditingOrder}
+                                            handleDeleteOrder={handleDeleteOrder}
+                                            handleWhatsApp={handleWhatsApp}
+                                            setLongPressOrder={setLongPressOrder}
+                                            isMobile={isMobile}
+                                            longPressTimerRef={longPressTimerRef}
+                                            formatDate={formatDate}
+                                            order={order}
+                                        />
                                     </SortableOrderCard>
                                 ))
                             )}
@@ -757,7 +566,7 @@ const Pedidos = () => {
     return (
         <DndContext
             sensors={sensors}
-            collisionDetection={customCollisionDetection} // Changed from closestCorners
+            collisionDetection={customCollisionDetection}
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
@@ -765,7 +574,7 @@ const Pedidos = () => {
             <div className="space-y-6 h-full flex flex-col">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Pedidos</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">Pedidos</h1>
                         <p className="text-sm text-muted-foreground">Visão Macro: Planejamento, Agendamento e Histórico de Todos os Pedidos.</p>
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto">
@@ -777,68 +586,46 @@ const Pedidos = () => {
                             onChange={async (e) => {
                                 const file = e.target.files?.[0];
                                 if (!file) return;
-
                                 try {
                                     const data: any[] = await importFromExcel(file);
-
-                                    // Pre-load data for lookups
                                     const { data: existingCustomers } = await getCustomers();
                                     const { data: existingProducts } = await getProducts();
-
                                     let successCount = 0;
                                     let errorCount = 0;
 
                                     for (const row of data) {
-                                        // 1. Resolve Customer
                                         const customerName = getValue(row, ['Cliente', 'name', 'Customer', 'cliente', 'Nome']);
                                         if (!customerName || customerName === 'Não informado') continue;
 
                                         let customerId = existingCustomers?.find(c => c.name.toLowerCase() === customerName.toLowerCase())?.id;
-
                                         if (!customerId) {
-                                            // Create new customer if not found
                                             const { data: newCust, error: custError } = await createCustomer({
                                                 name: customerName,
-                                                email: null,
-                                                phone: null,
-                                                address: null,
-                                                notes: null,
-                                                last_order_date: null
+                                                email: null, phone: null, address: null, notes: null, last_order_date: null
                                             });
                                             if (newCust && !custError) {
                                                 customerId = newCust.id;
-                                                // Update local cache
                                                 existingCustomers?.push(newCust);
                                             } else {
-                                                console.error("Failed to create customer", customerName);
-                                                errorCount++;
-                                                continue;
+                                                errorCount++; continue;
                                             }
                                         }
 
-                                        // 2. Parse Status
                                         const statusLabel = getValue(row, ['Status', 'status', 'Estado', 'Situacao']);
                                         const statusKey = Object.keys(STATUS_COLUMNS).find(key =>
                                             STATUS_COLUMNS[key as keyof typeof STATUS_COLUMNS].label === statusLabel ||
                                             key === statusLabel?.toLowerCase()
                                         ) || 'pending';
 
-                                        // 3. Parse Items
                                         const itemsString = getValue(row, ['Items', 'items', 'Itens', 'Produtos', 'products']) || '';
                                         const items: any[] = [];
-
                                         if (itemsString) {
-                                            // Format: "Product A (2), Product B (1)"
                                             const itemParts = itemsString.split(',').map((s: string) => s.trim());
-
                                             for (const part of itemParts) {
-                                                // Robust regex for "Name (Qty)" or just "Name"
                                                 const match = part.match(/^(.*)\s\((\d+)\)$/);
                                                 const pName = match ? match[1].trim() : part;
                                                 const qty = match ? parseInt(match[2]) : 1;
-
                                                 const product = existingProducts?.find(p => p.name.toLowerCase() === pName.toLowerCase());
-
                                                 if (product) {
                                                     items.push({
                                                         product_id: product.id,
@@ -851,7 +638,6 @@ const Pedidos = () => {
                                             }
                                         }
 
-                                        // 4. Create Order
                                         const deliveryDateVal = getValue(row, ['Data Entrega', 'delivery_date', 'Data', 'Date', 'Entrega']);
                                         const deliveryDate = deliveryDateVal ? new Date(deliveryDateVal).toISOString() : null;
 
@@ -862,44 +648,28 @@ const Pedidos = () => {
                                             delivery_time: null,
                                             total_value: items.reduce((acc, item) => acc + item.subtotal, 0),
                                             notes: 'Importado via Excel',
-                                            order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}` // Simple random ID
+                                            order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`
                                         };
 
                                         if (items.length > 0) {
-                                            const { error } = await createOrder({
-                                                ...orderData,
-                                                total_cost: 0,
-                                                display_id: 0,
-                                                delivery_method: 'pickup',
-                                                delivery_fee: 0,
-                                                payment_method: 'pix',
-                                                google_event_id: null,
-                                                production_started_at: null,
-                                                production_completed_at: null,
-                                                production_duration_minutes: null,
-                                                delivered_at: null,
-                                                start_date: null
-                                            }, items);
+                                            // @ts-ignore
+                                            const { error } = await createOrder({ ...orderData, total_cost: 0, display_id: 0, delivery_method: 'pickup', delivery_fee: 0, payment_method: 'pix', google_event_id: null, production_started_at: null, production_completed_at: null, production_duration_minutes: null, delivered_at: null, start_date: null }, items);
                                             if (!error) successCount++;
                                             else errorCount++;
                                         } else {
-                                            console.warn("Skipping order with no valid items");
                                             errorCount++;
                                         }
                                     }
-
                                     toast({
                                         title: 'Importação Concluída',
                                         description: `${successCount} pedidos criados. ${errorCount} erros/ignorados.`,
                                         variant: successCount > 0 ? 'default' : 'destructive'
                                     });
                                     loadOrders();
-
                                 } catch (err) {
                                     console.error("Import error", err);
                                     toast({ title: 'Erro na importação', description: 'Falha ao ler arquivo', variant: 'destructive' });
                                 }
-
                                 e.target.value = '';
                             }}
                         />
@@ -1024,13 +794,13 @@ const Pedidos = () => {
                 <ClientProfileDrawer
                     customer={selectedCustomer}
                     open={isDrawerOpen}
-                    onOpenChange={setIsDrawerOpen} // Fixed Prop Name
-                    onUpdate={loadOrders} // Fixed Prop Name (was missing or inferred)
+                    onOpenChange={setIsDrawerOpen}
+                    onUpdate={loadOrders}
                 />
 
                 <SendMessageDialog
-                    open={isMessageDialogOpen} // Fixed Prop Name
-                    onOpenChange={setIsMessageDialogOpen} // Fixed Prop Name
+                    open={isMessageDialogOpen}
+                    onOpenChange={setIsMessageDialogOpen}
                     order={messageOrder}
                 />
 
@@ -1164,7 +934,6 @@ const Pedidos = () => {
                                         </Button>
                                     </>
                                 )}
-                                {/* ... Other status conditions using updateOrderStatus ... */}
                                 {longPressOrder.status === 'ready' && (
                                     <>
                                         <Button
@@ -1206,42 +975,203 @@ const Pedidos = () => {
                                         ← Voltar para Pronto
                                     </Button>
                                 )}
-
-                                <div className="pt-2">
-                                    <Button
-                                        variant="ghost"
-                                        className="w-full text-muted-foreground"
-                                        onClick={() => setLongPressOrder(null)}
-                                    >
-                                        Fechar
-                                    </Button>
-                                </div>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-gray-100 flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    className="flex-1"
+                                    onClick={() => {
+                                        setLongPressOrder(null);
+                                        setEditingOrder(longPressOrder);
+                                    }}
+                                >
+                                    <Pencil className="w-4 h-4 mr-2" /> Editar
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    className="flex-1 text-destructive hover:bg-red-50"
+                                    onClick={() => {
+                                        if (confirm('Excluir?')) handleDeleteOrder(longPressOrder.id);
+                                        setLongPressOrder(null);
+                                    }}
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                                </Button>
                             </div>
                         </div>
                     </div>
                 )}
+
+                <DragOverlay>
+                    {activeOrder ? (
+                        <div className="opacity-90 rotate-3 cursor-grabbing scale-105">
+                            <CardWithStyle
+                                activeId={activeId}
+                                loadOrders={loadOrders}
+                                products={products}
+                                ingredients={ingredients}
+                                handleCustomerClick={handleCustomerClick}
+                                handleDuplicate={handleDuplicate}
+                                setEditingOrder={setEditingOrder}
+                                handleDeleteOrder={handleDeleteOrder}
+                                handleWhatsApp={handleWhatsApp}
+                                setLongPressOrder={setLongPressOrder}
+                                isMobile={isMobile}
+                                longPressTimerRef={longPressTimerRef}
+                                formatDate={formatDate}
+                                order={activeOrder}
+                                // Props for styling in overlay
+                                isLate={activeOrder.status !== 'delivered' && activeOrder.status !== 'cancelled' && activeOrder.delivery_date ? parseLocalDate(activeOrder.delivery_date) < (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })() : false}
+                                cardStyle={{
+                                    backgroundColor: 'hsl(var(--card))',
+                                    borderLeft: `3px solid hsl(var(--status-${activeOrder.status === 'delivered' || activeOrder.status === 'cancelled' ? activeOrder.status : (activeOrder.delivery_date && parseLocalDate(activeOrder.delivery_date) < new Date(new Date().setHours(0, 0, 0, 0)) ? 'late' : activeOrder.status)}-base))`,
+                                    boxShadow: '0 10px 15px -3px hsla(var(--shadow-color), 0.1), 0 4px 6px -2px hsla(var(--shadow-color), 0.05)'
+                                }}
+                                baseColor={`hsl(var(--status-${activeOrder.status}-base))`} // Approximation
+                                statusKey={activeOrder.status}
+                            />
+                        </div>
+                    ) : null}
+                </DragOverlay>
             </div>
-            <DragOverlay dropAnimation={{
-                sideEffects: defaultDropAnimationSideEffects({
-                    styles: { active: { opacity: '0.5' } }
-                })
-            }}>
-                {activeOrder ? (
-                    <Card className="w-[300px] shadow-2xl bg-background border-primary/50 cursor-grabbing rotate-3">
-                        <CardHeader className="p-4">
-                            <div className="flex justify-between items-center">
-                                <CardTitle className="text-sm">{activeOrder.customer?.name}</CardTitle>
-                                <Badge>{activeOrder.status}</Badge>
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                                #{activeOrder.display_id}
-                            </div>
-                        </CardHeader>
-                    </Card>
-                ) : null}
-            </DragOverlay>
         </DndContext>
     );
 };
+
+// Sub-component for the card content 
+const CardWithStyle = ({
+    isLate,
+    cardStyle,
+    baseColor,
+    statusKey,
+    order,
+    activeId,
+    loadOrders,
+    products,
+    ingredients,
+    handleCustomerClick,
+    handleDuplicate,
+    setEditingOrder,
+    handleDeleteOrder,
+    handleWhatsApp,
+    setLongPressOrder,
+    isMobile,
+    longPressTimerRef,
+    formatDate
+}: any) => {
+    return (
+        <Card
+            className={`transition-all cursor-move group relative border border-border/40 rounded-lg hover:border-border/80 ${activeId === order.id ? 'opacity-30' : ''}`}
+            style={cardStyle}
+            onTouchStart={() => {
+                longPressTimerRef.current = setTimeout(() => {
+                    setLongPressOrder(order);
+                }, 500);
+            }}
+            onTouchEnd={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); }}
+            onTouchMove={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); }}
+        >
+            <StockAlertBadge
+                order={order}
+                products={products}
+                ingredients={ingredients}
+                onStockUpdate={loadOrders}
+            />
+            <CardHeader className="pb-1 pt-2.5 pl-4 pr-3">
+                <div className="text-sm flex items-start justify-between">
+                    <div className="font-semibold flex flex-col gap-0.5" onClick={() => handleCustomerClick(order.customer)}>
+                        <span
+                            className="hover:underline cursor-pointer text-sm font-medium tracking-tight"
+                            style={{ color: 'hsl(var(--foreground))' }} // Text Main
+                        >
+                            {order.customer?.name || 'Cliente não informado'}
+                        </span>
+                        <div className="text-[10px] uppercase tracking-wider font-semibold opacity-70" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                            #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
+                        </div>
+                    </div>
+
+                    <div className={isMobile ? "flex gap-0.5" : "flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"}>
+                        <ActionIcon Icon={Copy} onClick={(e: any) => { e.stopPropagation(); handleDuplicate(order); }} color={baseColor} title="Duplicar" />
+                        <ActionIcon Icon={Pencil} onClick={(e: any) => { e.stopPropagation(); setEditingOrder(order); }} color={baseColor} title="Editar" />
+                        <ActionIcon Icon={Trash2} onClick={(e: any) => { e.stopPropagation(); if (confirm('Excluir?')) handleDeleteOrder(order.id); }} color={baseColor} title="Excluir" />
+                        {order.customer?.phone && (
+                            <ActionIcon Icon={Phone} onClick={(e: any) => { e.stopPropagation(); handleWhatsApp(order); }} color={baseColor} title="WhatsApp" />
+                        )}
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-2 pb-2 pl-4 pr-3">
+                <div className="grid gap-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                        <span className="flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                            {order.delivery_date ? formatDate(order.delivery_date) : 'Sem data'}
+                        </span>
+                        <span className="font-semibold text-sm font-mono tracking-tight" style={{ color: 'hsl(var(--financial))' }}>
+                            R$ {order.total_value.toFixed(2)}
+                        </span>
+                    </div>
+
+                    <div className="flex gap-1.5 flex-wrap items-center">
+                        {/* Badge Pill Logic - More Professional Look */}
+                        <Badge
+                            variant="outline"
+                            className="text-[10px] px-2 py-0.5 h-auto rounded-md border border-opacity-20 font-medium bg-opacity-10"
+                            style={{
+                                backgroundColor: `hsla(var(--status-${statusKey}-base), 0.08)`,
+                                borderColor: `hsla(var(--status-${statusKey}-base), 0.25)`,
+                                color: baseColor
+                            }}
+                        >
+                            {order.payment_method === 'credit_card' && 'Crédito'}
+                            {order.payment_method === 'debit_card' && 'Débito'}
+                            {order.payment_method === 'pix' && 'Pix'}
+                            {order.payment_method === 'cash' && 'Dinheiro'}
+                            {!order.payment_method && 'Pix'}
+                        </Badge>
+                        <Badge
+                            variant="secondary"
+                            className="text-[10px] px-2 py-0.5 h-auto rounded-md font-medium bg-muted text-muted-foreground hover:bg-muted"
+                        >
+                            {order.delivery_method === 'delivery' ? 'Delivery' : 'Retirada'}
+                        </Badge>
+                        {isLate && (
+                            <Badge className="text-[10px] px-2 py-0.5 h-auto rounded-md bg-red-50 text-red-600 border border-red-100 hover:bg-red-50">
+                                Atrasado
+                            </Badge>
+                        )}
+                    </div>
+
+                    {order.items && order.items.length > 0 && (
+                        <div className="text-xs mt-1 pt-1.5 border-t border-border/40 text-left" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                            {order.items.slice(0, 3).map((item: any, idx: number) => (
+                                <p key={idx} className="line-clamp-1 flex items-center gap-1.5 py-0.5">
+                                    <span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0"></span>
+                                    <span className="font-medium text-foreground/80">{item.product_name}</span>
+                                    <span className="opacity-60 text-[10px]">(x{item.quantity})</span>
+                                </p>
+                            ))}
+                            {order.items.length > 3 && <p className="text-[10px] italic opacity-50 pl-2.5 mt-0.5">+ {order.items.length - 3} itens...</p>}
+                        </div>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
+const ActionIcon = ({ Icon, onClick, color, title }: any) => (
+    <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 hover:bg-muted rounded-full transition-colors"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={onClick}
+        title={title}
+    >
+        <Icon className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" style={{ color: color, strokeWidth: 1.5 }} />
+    </Button>
+);
 
 export default Pedidos;

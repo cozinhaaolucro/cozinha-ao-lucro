@@ -58,13 +58,13 @@ export const DashboardInsights = ({ hasProducts, hasOrders, hasStock }: Dashboar
 
     return (
         <Card className={`${insight.bg} ${insight.border} border-l-4 shadow-sm animate-in slide-in-from-top-4 mb-6`}>
-            <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-full bg-white shadow-sm ${insight.color}`}>
-                        <insight.icon className="w-6 h-6" />
+                    <div className={`p-2 rounded-full bg-white shadow-sm ${insight.color}`}>
+                        <insight.icon className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className={`font-bold text-lg ${insight.color}`}>{insight.title}</h3>
+                        <h3 className={`font-bold text-base ${insight.color}`}>{insight.title}</h3>
                         <p className="text-muted-foreground max-w-xl">{insight.description}</p>
                     </div>
                 </div>

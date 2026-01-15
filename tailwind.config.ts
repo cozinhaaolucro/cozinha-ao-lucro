@@ -78,6 +78,28 @@ export default {
 					DEFAULT: 'hsl(var(--financial))',
 					foreground: 'hsl(var(--foreground))'
 				},
+				status: {
+					pending: {
+						base: 'hsl(var(--status-pending-base))',
+						bg: 'hsl(var(--status-pending-bg))',
+					},
+					preparing: {
+						base: 'hsl(var(--status-preparing-base))',
+						bg: 'hsl(var(--status-preparing-bg))',
+					},
+					ready: {
+						base: 'hsl(var(--status-ready-base))',
+						bg: 'hsl(var(--status-ready-bg))',
+					},
+					delivered: {
+						base: 'hsl(var(--status-delivered-base))',
+						bg: 'hsl(var(--status-delivered-bg))',
+					},
+					late: {
+						base: 'hsl(var(--status-late-base))',
+						bg: 'hsl(var(--status-late-bg))',
+					},
+				},
 				icon: {
 					DEFAULT: 'hsl(var(--icon-color))',
 					foreground: 'hsl(var(--foreground))'

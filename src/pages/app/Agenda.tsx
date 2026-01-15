@@ -141,12 +141,12 @@ const Agenda = () => {
 
     const getStatusColor = (status: string) => {
         const colors = {
-            pending: 'bg-yellow-500',
-            preparing: 'bg-blue-500',
-            ready: 'bg-green-500',
-            delivered: 'bg-gray-400',
+            pending: 'bg-warning',
+            preparing: 'bg-secondary',
+            ready: 'bg-success',
+            delivered: 'bg-muted-foreground/40',
         };
-        return colors[status as keyof typeof colors] || 'bg-gray-400';
+        return colors[status as keyof typeof colors] || 'bg-muted-foreground/40';
     };
 
     const getStatusLabel = (status: string) => {
@@ -284,8 +284,8 @@ const Agenda = () => {
                 </div>
             </div>
 
-            <div className="grid lg:grid-cols-[360px_1fr] gap-4">
-                <Card className="overflow-hidden">
+            <div className="grid lg:grid-cols-[320px_1fr] gap-4">
+                <Card className="overflow-hidden bg-white shadow-elegant border border-border/60">
                     <CardHeader className="pb-3 px-4 pt-4">
                         <div className="flex items-center justify-between">
                             <h3 className="text-base font-semibold capitalize">
@@ -353,7 +353,7 @@ const Agenda = () => {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-white shadow-elegant border border-border/60">
                     <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center justify-between">
                             <span>
@@ -375,134 +375,109 @@ const Agenda = () => {
                             </div>
                         ) : (
                             displayOrders.map(order => (
-                                <Card
+                                <div
                                     key={order.id}
-                                    className={`border-l-4 hover:shadow-md transition-shadow cursor-pointer relative group ${order.status === 'pending' ? 'border-l-yellow-500 bg-yellow-50' :
-                                        order.status === 'preparing' ? 'border-l-blue-500 bg-blue-50' :
-                                            order.status === 'ready' ? 'border-l-green-500 bg-green-50' :
-                                                'border-l-gray-400 bg-gray-50'
+                                    className={`bg-white border border-border/60 rounded-lg p-2.5 hover:shadow-md transition-all cursor-pointer group flex items-center gap-3 ${order.status === 'pending' ? 'border-l-2 border-l-warning' :
+                                        order.status === 'preparing' ? 'border-l-2 border-l-secondary' :
+                                            order.status === 'ready' ? 'border-l-2 border-l-success' :
+                                                'border-l-2 border-l-muted-foreground/40'
                                         }`}
                                     onClick={() => setEditingOrder(order)}
                                 >
-                                    <CardContent className="p-3">
-                                        <div className="flex items-start gap-2">
-                                            {/* Action icons on the left */}
-                                            <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-100"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleWhatsApp(order);
-                                                    }}
-                                                >
-                                                    <MessageCircle className="w-4 h-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-100"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleDelete(order.id);
-                                                    }}
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
+                                    {/* Main content */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <h4 className="font-medium text-sm truncate">{order.customer?.name || 'Sem cliente'}</h4>
+                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
+                                                    {getStatusLabel(order.status)}
+                                                </Badge>
                                             </div>
-
-                                            {/* Main content */}
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-start justify-between mb-2">
-                                                    <div className="flex-1 min-w-0">
-                                                        <h4 className="font-semibold text-sm truncate">{order.customer?.name || 'Sem cliente'}</h4>
-                                                        <Badge variant="outline" className="text-xs mt-1">
-                                                            {getStatusLabel(order.status)}
-                                                        </Badge>
-                                                    </div>
-                                                    <div className="text-right flex-shrink-0 ml-2">
-                                                        <div className="font-bold text-sm">R$ {order.total_value.toFixed(2)}</div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-1 text-xs text-muted-foreground">
-                                                    {order.delivery_date && (
-                                                        <div className="flex items-center gap-1">
-                                                            <Clock className="w-3 h-3" />
-                                                            <span>
-                                                                {formatLocalDate(order.delivery_date)}
-                                                                {order.delivery_time && ` • ${order.delivery_time}`}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    {order.customer?.address && (
-                                                        <div className="flex items-center gap-1">
-                                                            <MapPin className="w-3 h-3" />
-                                                            <span className="line-clamp-1">{order.customer.address}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {order.items && order.items.length > 0 && (
-                                                    <div className="mt-2 pt-2 border-t text-xs space-y-0.5">
-                                                        {order.items.map((item, idx) => (
-                                                            <div key={idx} className="flex items-center justify-between">
-                                                                <span className="text-muted-foreground">{item.product_name}</span>
-                                                                <span className="font-medium">x{item.quantity}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
+                                            <div className="text-sm font-semibold text-foreground shrink-0">R$ {order.total_value.toFixed(2)}</div>
                                         </div>
-                                    </CardContent>
-                                </Card>
+
+                                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                                            {order.delivery_date && (
+                                                <span className="flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    {formatLocalDate(order.delivery_date)}
+                                                    {order.delivery_time && ` ${order.delivery_time}`}
+                                                </span>
+                                            )}
+                                            {order.items && order.items.length > 0 && (
+                                                <span className="text-muted-foreground/70">
+                                                    {order.items.map(i => `${i.quantity}x ${i.product_name}`).join(', ')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Action icons */}
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 text-primary hover:text-primary hover:bg-primary/10"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleWhatsApp(order);
+                                            }}
+                                        >
+                                            <MessageCircle className="w-3.5 h-3.5" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(order.id);
+                                            }}
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </Button>
+                                    </div>
+                                </div>
                             ))
                         )}
                     </CardContent>
                 </Card>
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
-                <Button
-                    variant={selectedStatus === 'pending' ? 'default' : 'outline'}
+            {/* Status Pills */}
+            <div className="flex items-center gap-2 flex-wrap">
+                <button
                     onClick={() => handleStatusClick('pending')}
-                    className={`h-auto p-3 flex-col items-start border-l-4 border-l-yellow-500 hover:bg-[hsl(182,16%,55%)] hover:text-white ${selectedStatus === 'pending' ? 'bg-[hsl(182,16%,55%)] hover:bg-[hsl(182,16%,50%)] text-white border-[hsl(182,16%,55%)]' : ''}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${selectedStatus === 'pending' ? 'bg-warning text-white border-warning' : 'bg-white text-warning border-warning/30 hover:border-warning hover:bg-warning/5'}`}
                 >
-                    <div className="text-2xl font-bold">
-                        {orders.filter(o => o.status === 'pending').length}
-                    </div>
-                    <div className="text-xs">A Fazer</div>
-                </Button>
-                <Button
-                    variant={selectedStatus === 'preparing' ? 'default' : 'outline'}
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    A Fazer
+                    <span className="font-bold">{orders.filter(o => o.status === 'pending').length}</span>
+                </button>
+                <button
                     onClick={() => handleStatusClick('preparing')}
-                    className={`h-auto p-3 flex-col items-start border-l-4 border-l-blue-500 hover:bg-blue-50 ${selectedStatus === 'preparing' ? 'bg-[hsl(182,16%,55%)] hover:bg-[hsl(182,16%,50%)] text-white border-[hsl(182,16%,55%)]' : ''}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${selectedStatus === 'preparing' ? 'bg-secondary text-white border-secondary' : 'bg-white text-secondary border-secondary/30 hover:border-secondary hover:bg-secondary/5'}`}
                 >
-                    <div className="text-2xl font-bold">
-                        {orders.filter(o => o.status === 'preparing').length}
-                    </div>
-                    <div className="text-xs">Em Produção</div>
-                </Button>
-                <Button
-                    variant={selectedStatus === 'ready' ? 'default' : 'outline'}
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    Produção
+                    <span className="font-bold">{orders.filter(o => o.status === 'preparing').length}</span>
+                </button>
+                <button
                     onClick={() => handleStatusClick('ready')}
-                    className={`h-auto p-3 flex-col items-start border-l-4 border-l-green-500 hover:bg-green-50 ${selectedStatus === 'ready' ? 'bg-[hsl(182,16%,55%)] hover:bg-[hsl(182,16%,50%)] text-white border-[hsl(182,16%,55%)]' : ''}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${selectedStatus === 'ready' ? 'bg-success text-white border-success' : 'bg-white text-success border-success/30 hover:border-success hover:bg-success/5'}`}
                 >
-                    <div className="text-2xl font-bold">
-                        {orders.filter(o => o.status === 'ready').length}
-                    </div>
-                    <div className="text-xs">Prontos</div>
-                </Button>
-                <Button
-                    variant={selectedStatus === 'late' ? 'default' : 'outline'}
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    Prontos
+                    <span className="font-bold">{orders.filter(o => o.status === 'ready').length}</span>
+                </button>
+                <button
                     onClick={() => handleStatusClick('late')}
-                    className={`h-auto p-3 flex-col items-start border-l-4 border-l-red-500 hover:bg-red-50 ${selectedStatus === 'late' ? 'bg-[hsl(182,16%,55%)] hover:bg-[hsl(182,16%,50%)] text-white border-[hsl(182,16%,55%)]' : ''}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${selectedStatus === 'late' ? 'bg-destructive text-white border-destructive' : 'bg-white text-destructive border-destructive/30 hover:border-destructive hover:bg-destructive/5'}`}
                 >
-                    <div className="text-2xl font-bold">{getLateOrders()}</div>
-                    <div className="text-xs">Atrasados</div>
-                </Button>
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    Atrasados
+                    <span className="font-bold">{getLateOrders()}</span>
+                </button>
             </div>
 
             <EditOrderDialog

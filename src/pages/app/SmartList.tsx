@@ -234,8 +234,8 @@ const SmartList = () => {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Lista Inteligente</h1>
-                    <p className="text-muted-foreground">
+                    <h1 className="text-2xl font-bold tracking-tight">Lista Inteligente</h1>
+                    <p className="text-sm text-muted-foreground">
                         Geração automática de compras baseada na demanda dos pedidos "A Fazer".
                     </p>
                 </div>
@@ -247,18 +247,22 @@ const SmartList = () => {
                 </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
-                <Card className={`md:col-span-2 ${itemsToBuy.length === 0 ? 'border-green-200 bg-green-50' : ''} flex flex-col`}>
+            <div className="grid gap-4 md:grid-cols-3">
+                <Card className={`md:col-span-2 bg-white shadow-elegant border ${itemsToBuy.length === 0 ? 'border-l-4 border-l-success' : 'border-l-4 border-l-amber-500'} flex flex-col`}>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
+                        <CardTitle className="flex items-center gap-2 text-foreground">
                             {itemsToBuy.length === 0 ? (
                                 <>
-                                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                                    <span className="text-green-700">Tudo em ordem!</span>
+                                    <div className="p-1.5 bg-primary/10 rounded-lg">
+                                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <span>Tudo em ordem!</span>
                                 </>
                             ) : (
                                 <>
-                                    <AlertCircle className="h-5 w-5 text-amber-500" />
+                                    <div className="p-1.5 bg-amber-500/10 rounded-lg">
+                                        <AlertCircle className="h-5 w-5 text-amber-600" />
+                                    </div>
                                     <span>Itens para Comprar ({itemsToBuy.length})</span>
                                 </>
                             )}
@@ -270,7 +274,7 @@ const SmartList = () => {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1">
-                        <ScrollArea className="h-[400px] pr-4">
+                        <ScrollArea className="h-[300px] pr-4">
                             {loading ? (
                                 <div className="space-y-4">
                                     {[1, 2, 3].map(i => (
@@ -290,7 +294,7 @@ const SmartList = () => {
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <Badge variant="destructive" className="text-lg py-1 px-3">
+                                                <Badge variant="destructive" className="text-sm py-1 px-3">
                                                     {item.toBuy.toFixed(2)} {formatUnit(item.toBuy, item.unit)}
                                                 </Badge>
                                             </div>
@@ -299,7 +303,7 @@ const SmartList = () => {
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-                                    <CheckCircle2 className="h-12 w-12 text-green-200 mb-4" />
+                                    <CheckCircle2 className="h-12 w-12 text-success/30 mb-4" />
                                     <p>Nenhuma compra necessária no momento.</p>
                                 </div>
                             )}
@@ -313,7 +317,7 @@ const SmartList = () => {
                 </Card>
 
                 {/* Summary / Stats Card */}
-                <Card>
+                <Card className="bg-white shadow-elegant border">
                     <CardHeader>
                         <CardTitle>Resumo do Estoque</CardTitle>
                         <CardDescription>Análise dos ingredientes utilizados</CardDescription>
@@ -330,7 +334,7 @@ const SmartList = () => {
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Itens Suficientes</span>
-                                <span className="font-medium text-green-600">{items.length - itemsToBuy.length}</span>
+                                <span className="font-medium text-success">{items.length - itemsToBuy.length}</span>
                             </div>
                         </div>
 
@@ -341,7 +345,7 @@ const SmartList = () => {
                                     {items.map(item => (
                                         <li key={item.ingredientId} className="flex justify-between items-center text-muted-foreground">
                                             <span className="truncate max-w-[150px]">{item.name}</span>
-                                            <span className={item.toBuy > 0 ? "text-amber-500 font-medium" : "text-green-600"}>
+                                            <span className={item.toBuy > 0 ? "text-amber-500 font-medium" : "text-success"}>
                                                 {item.needed.toFixed(2)} {formatUnit(item.needed, item.unit)}
                                             </span>
                                         </li>

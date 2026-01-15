@@ -181,7 +181,7 @@ const DashboardLayout = () => {
             {/* Desktop Sidebar */}
 
             <OnboardingModal />
-            <aside className="hidden md:flex w-64 flex-col border-r bg-card h-full overflow-y-auto">
+            <aside className="hidden md:flex w-52 flex-col border-r bg-card h-full overflow-y-auto">
                 <div className="p-6 border-b flex items-center gap-3 shrink-0">
                     <UserAvatar size="md" clickable />
                     <div className="flex-1 min-w-0">
@@ -192,7 +192,7 @@ const DashboardLayout = () => {
 
                 {/* Search Bar Removed as per user request */}
 
-                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
                     {navItems.map((item) => {
                         const isSpecial = item.id === 'nav-painel';
                         return (
@@ -200,7 +200,7 @@ const DashboardLayout = () => {
                                 key={item.path}
                                 id={item.id}
                                 to={item.path}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-300 relative overflow-hidden group ${isSpecial
+                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-300 relative overflow-hidden group ${isSpecial
                                     ? 'bg-gradient-to-r from-blue-700 to-purple-800 text-white shadow-lg hover:shadow-blue-900/40 active:scale-[0.98] border border-white/10'
                                     : isActive(item.path)
                                         ? 'bg-primary text-primary-foreground shadow-md'
@@ -289,7 +289,7 @@ const DashboardLayout = () => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-40 md:pb-32 relative h-full">
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-40 md:pb-32 relative h-full">
                 {/* Loading State - apenas no conteúdo, não na sidebar */}
                 {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">

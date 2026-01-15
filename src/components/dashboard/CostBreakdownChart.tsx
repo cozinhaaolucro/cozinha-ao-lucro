@@ -5,7 +5,7 @@ interface CostBreakdownChartProps {
     data: { name: string; value: number }[];
 }
 
-const COLORS = ['#2dd4bf', '#f472b6', '#facc15', '#a78bfa', '#fb923c', '#9ca3af'];
+const COLORS = ['#2E5F65', '#74B3B8', '#C6A74F', '#D66050', '#8B8C88', '#D6D6D1'];
 
 export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
     // Top 5 ingredients + text "Outros"
@@ -22,18 +22,13 @@ export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
     const finalData = processData();
 
     return (
-        <Card className="col-span-1 relative shadow-2xl overflow-hidden border z-10 border-t-white/30 border-l-white/20 border-r-white/10 border-b-white/5 backdrop-blur-2xl"
-            style={{
-                background: 'linear-gradient(120deg, hsla(182, 16%, 62%, 0.55) 0%, hsla(182, 20%, 40%, 0.65) 100%)',
-                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.1)'
-            }}>
-            <div className="absolute inset-0 bg-white/5 pointer-events-none" />
+        <Card className="col-span-1 relative shadow-elegant overflow-hidden border border-border/60 z-10 bg-white">
             <CardHeader className="relative z-10">
-                <CardTitle className="text-primary-foreground">Onde vai seu dinheiro?</CardTitle>
-                <CardDescription className="text-white/60">Custos por ingrediente.</CardDescription>
+                <CardTitle className="text-foreground">Onde vai seu dinheiro?</CardTitle>
+                <CardDescription className="text-muted-foreground">Custos por ingrediente.</CardDescription>
             </CardHeader>
             <CardContent className="relative z-10">
-                <div className="h-[300px]">
+                <div className="h-[200px]">
                     {finalData.length === 0 ? (
                         <div className="h-full flex items-center justify-center text-white/50 text-sm">
                             Sem dados de custo suficiente.
@@ -45,8 +40,8 @@ export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
                                     data={finalData}
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
+                                    innerRadius={50}
+                                    outerRadius={70}
                                     paddingAngle={5}
                                     dataKey="value"
                                     stroke="none"
@@ -59,17 +54,17 @@ export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
                                     formatter={(value: number) => `R$ ${value.toFixed(2)}`}
                                     contentStyle={{
                                         borderRadius: '8px',
-                                        border: '1px solid rgba(255,255,255,0.2)',
+                                        border: '1px solid #D6D6D1',
                                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                        background: 'rgba(23, 23, 23, 0.95)'
+                                        background: '#fff'
                                     }}
-                                    itemStyle={{ color: '#fff' }}
+                                    itemStyle={{ color: '#1f2937' }}
                                 />
                                 <Legend
                                     layout="horizontal"
                                     verticalAlign="bottom"
                                     align="center"
-                                    wrapperStyle={{ fontSize: '12px', paddingTop: '10px', color: 'rgba(255,255,255,0.8)' }}
+                                    wrapperStyle={{ fontSize: '12px', paddingTop: '10px', color: '#8B8C88' }}
                                 />
                             </PieChart>
                         </ResponsiveContainer>

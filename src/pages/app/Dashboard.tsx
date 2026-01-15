@@ -304,7 +304,7 @@ const Dashboard = () => {
                         <p className="font-bold text-lg">{payload[0].value} pedidos</p>
                     )}
                     {type === 'revenue' && (
-                        <p className="font-bold text-lg text-green-600">R$ {payload[0].value.toFixed(2)}</p>
+                        <p className="font-bold text-lg text-success">R$ {payload[0].value.toFixed(2)}</p>
                     )}
                 </div>
             );
@@ -327,8 +327,8 @@ const Dashboard = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Visão Geral</h1>
-                    <p className="text-muted-foreground">Análise completa do seu negócio</p>
+                    <h1 className="text-2xl font-bold tracking-tight">Visão Geral</h1>
+                    <p className="text-sm text-muted-foreground">Análise completa do seu negócio</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="flex items-center gap-2">
@@ -373,36 +373,29 @@ const Dashboard = () => {
 
             {/* Premium Goal Progress */}
             <div className="mt-4">
-                <div className="grid gap-6 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-3">
                     {/* Meta de Vendas - Neo-Glass Aurora Design */}
-                    <Card className="md:col-span-2 relative overflow-hidden border-0 shadow-2xl group bg-slate-950">
-                        {/* Animated Aurora Background */}
-                        <div className="absolute inset-0 opacity-40">
-                            <div className="absolute top-[-50%] left-[-20%] w-[100%] h-[200%] bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 blur-[100px] animate-[pulse_8s_ease-in-out_infinite]" />
-                            <div className="absolute bottom-[-50%] right-[-20%] w-[100%] h-[200%] bg-gradient-to-tl from-cyan-600 via-emerald-600 to-indigo-600 blur-[100px] animate-[pulse_10s_ease-in-out_infinite]" style={{ animationDelay: '1s' }} />
-                        </div>
+                    <Card className="md:col-span-2 relative overflow-hidden border border-border/60 shadow-elegant group bg-white">
+                        {/* Subtle Premium Gradient Stroke - Top */}
+                        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-50" />
 
                         {/* Glass Overlay & Border */}
-                        <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px]" />
-                        <div className="absolute inset-0 border border-white/10 rounded-xl" />
-
-                        {/* Hover Effect: Glowing Border */}
-                        <div className="absolute inset-0 border-2 border-transparent group-hover:border-indigo-500/30 transition-colors duration-500 rounded-xl" />
+                        <div className="absolute inset-0 border border-transparent transition-colors duration-500 rounded-xl" />
 
                         <CardContent className="p-6 relative z-10 flex flex-col justify-center h-full">
                             <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                                 <div className="space-y-3 text-center md:text-left flex-1">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/5 backdrop-blur-md mb-2">
-                                        <Target className="w-3.5 h-3.5 text-cyan-300" />
-                                        <span className="text-xs font-bold text-cyan-100 uppercase tracking-wider">Meta Mensal</span>
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 mb-2">
+                                        <Target className="w-3.5 h-3.5 text-primary" />
+                                        <span className="text-xs font-bold text-primary uppercase tracking-wider">Meta Mensal</span>
                                     </div>
 
                                     <div className="space-y-1">
-                                        <h3 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-cyan-200 drop-shadow-sm">
+                                        <h3 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
                                             R$ {totalRevenue.toFixed(2)}
                                         </h3>
-                                        <p className="text-sm font-medium text-indigo-200/80">
-                                            de <span className="text-white font-bold">R$ 10.000,00</span> projetados
+                                        <p className="text-sm font-medium text-muted-foreground">
+                                            de <span className="text-foreground font-bold">R$ 10.000,00</span> projetados
                                         </p>
                                     </div>
                                 </div>
@@ -410,30 +403,28 @@ const Dashboard = () => {
                                 <div className="flex-1 w-full max-w-sm space-y-4">
                                     <div className="flex justify-between items-end">
                                         <div className="flex flex-col">
-                                            <span className="text-xs text-indigo-200/70 font-medium">Progresso</span>
-                                            <span className="text-lg font-bold text-white">{((totalRevenue / 10000) * 100).toFixed(1)}%</span>
+                                            <span className="text-xs text-muted-foreground font-medium">Progresso</span>
+                                            <span className="text-lg font-bold text-primary">{((totalRevenue / 10000) * 100).toFixed(1)}%</span>
                                         </div>
                                         <div className="flex flex-col items-end">
-                                            <span className="text-xs text-indigo-200/70 font-medium">Restante</span>
-                                            <span className="text-sm font-bold text-white">R$ {Math.max(0, 10000 - totalRevenue).toFixed(2)}</span>
+                                            <span className="text-xs text-muted-foreground font-medium">Restante</span>
+                                            <span className="text-sm font-bold text-foreground">R$ {Math.max(0, 10000 - totalRevenue).toFixed(2)}</span>
                                         </div>
                                     </div>
 
-                                    <div className="relative h-4 w-full bg-slate-900/50 rounded-full overflow-hidden border border-white/10 shadow-inner">
+                                    <div className="relative h-3 w-full bg-muted/50 rounded-full overflow-hidden">
                                         <div
                                             className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out flex items-center justify-end pr-1"
                                             style={{
                                                 width: `${Math.min(100, (totalRevenue / 10000) * 100)}%`,
-                                                background: 'linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%)',
-                                                boxShadow: '0 0 20px rgba(6, 182, 212, 0.5)'
+                                                background: 'linear-gradient(90deg, hsl(186, 35%, 28%) 0%, hsl(187, 29%, 58%) 100%)', // Primary to Secondary
                                             }}
                                         >
-                                            {/* Glow tip */}
-                                            <div className="w-1.5 h-full bg-white/50 blur-[2px]" />
+                                            {/* Glow tip removed for minimalism */}
                                         </div>
                                     </div>
 
-                                    <p className="text-center text-xs text-indigo-200/60 font-medium pt-1">
+                                    <p className="text-center text-xs text-muted-foreground font-medium pt-1">
                                         {totalRevenue >= 10000 ? "🎉 Meta atingida com sucesso!" : "Continue acelerando!"}
                                     </p>
                                 </div>
@@ -441,21 +432,23 @@ const Dashboard = () => {
                         </CardContent>
                     </Card>
 
-                    {/* Dica do Especialista - Gradient Teal (Darker & Richer - Button Color) */}
-                    <Card className="overflow-hidden border z-10 relative shadow-md border-white/10"
-                        style={{ background: 'linear-gradient(135deg, hsl(188, 50%, 40%) 0%, hsl(188, 40%, 30%) 100%)' }}>
+                    {/* Dica do Especialista - Clean White */}
+                    <Card className="overflow-hidden border border-border/60 shadow-elegant relative bg-white">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-secondary to-primary/60" />
 
-                        {/* Soft Glows for Depth */}
-                        <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none mix-blend-overlay" />
+                        {/* Subtle background decoration */}
+                        <div className="absolute -right-6 -bottom-6 opacity-[0.03] text-primary">
+                            <Lightbulb className="w-32 h-32" />
+                        </div>
 
                         <CardContent className="p-5 flex flex-col justify-center h-full space-y-3 relative">
-                            <div className="flex items-center gap-2 text-white">
-                                <div className="p-1 bg-white/20 rounded-full shadow-inner backdrop-blur-sm">
-                                    <Lightbulb className="w-3.5 h-3.5 text-amber-200 animate-pulse" />
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 bg-secondary/10 rounded-full text-secondary">
+                                    <Lightbulb className="w-4 h-4" />
                                 </div>
-                                <h3 className="font-semibold text-sm text-white drop-shadow-sm">Dica do Especialista</h3>
+                                <h3 className="font-semibold text-sm text-foreground">Dica do Especialista</h3>
                             </div>
-                            <p className="text-xs text-white/95 leading-relaxed font-medium line-clamp-3">
+                            <p className="text-xs text-muted-foreground leading-relaxed font-medium line-clamp-3">
                                 {totalProfit > 0 && profitMargin < 30 ? (
                                     "Sua margem está abaixo de 30%. Avalie se é possível reduzir o desperdício de insumos ou ajustar o preço de seus pratos principais."
                                 ) : totalRevenue > 5000 ? (
@@ -475,111 +468,116 @@ const Dashboard = () => {
             <div className="mt-4">
                 <TooltipProvider>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        {/* Receita Total - Cyan/Blue Gradient */}
-                        <Card className="relative overflow-hidden backdrop-blur-xl"
-                            style={{
-                                background: 'linear-gradient(135deg, hsla(190, 80%, 40%, 0.85) 0%, hsla(210, 80%, 30%, 0.9) 100%)'
-                            }}>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-2 bg-transparent border-none shadow-none">
+
+                        {/* Receita Total - Minimalist */}
+                        <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
                                 <div className="flex items-center gap-2">
-                                    <CardTitle className="text-xs font-bold text-white drop-shadow-md">Receita Total</CardTitle>
+                                    <div className="p-1.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                                        <DollarSign className="h-4 w-4 text-primary" />
+                                    </div>
+                                    <CardTitle className="text-xs font-bold text-muted-foreground">Receita Total</CardTitle>
                                     <UITooltip>
                                         <TooltipTrigger>
-                                            <Info className="h-3 w-3 text-white/70 hover:text-white cursor-help transition-colors" />
+                                            <Info className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
                                         </TooltipTrigger>
-                                        <TooltipContent side="bottom" className="bg-slate-900/90 border-slate-700 text-slate-100">
+                                        <TooltipContent side="bottom" className="bg-popover text-popover-foreground border-border shadow-lg">
                                             <p className="w-64 text-xs">
                                                 Soma de todos os pedidos finalizados (Entregues) e em produção no período selecionado.
                                             </p>
                                         </TooltipContent>
                                     </UITooltip>
                                 </div>
-                                <DollarSign className="h-3 w-3 text-white/80" />
                             </CardHeader>
-                            <CardContent className="p-2 pt-0">
-                                <div className="text-lg font-bold text-white drop-shadow-md">R$ {totalRevenue.toFixed(2)}</div>
-                                <p className="text-[10px] text-cyan-100/80 font-medium">Vendas brutas totais</p>
+                            <CardContent className="p-3 pt-2">
+                                <div className="text-lg font-bold text-foreground">R$ {totalRevenue.toFixed(2)}</div>
+                                <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                                    <span className="w-1 h-1 rounded-full bg-primary" /> Vendas brutas totais
+                                </p>
                             </CardContent>
                         </Card>
 
-                        {/* Lucro Líquido - Emerald/Green Gradient */}
-                        <Card className="relative overflow-hidden backdrop-blur-xl"
-                            style={{
-                                background: 'linear-gradient(135deg, hsla(150, 80%, 35%, 0.85) 0%, hsla(170, 80%, 25%, 0.9) 100%)'
-                            }}>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-2 bg-transparent border-none shadow-none">
+                        {/* Lucro Líquido - Minimalist */}
+                        <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
                                 <div className="flex items-center gap-2">
-                                    <CardTitle className="text-xs font-bold text-white drop-shadow-md">Lucro Líquido</CardTitle>
+                                    <div className="p-1.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                                        <Wallet className="h-4 w-4 text-primary" />
+                                    </div>
+                                    <CardTitle className="text-xs font-bold text-muted-foreground">Lucro Líquido</CardTitle>
                                     <UITooltip>
                                         <TooltipTrigger>
-                                            <Info className="h-3 w-3 text-white/70 hover:text-white cursor-help transition-colors" />
+                                            <Info className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
                                         </TooltipTrigger>
-                                        <TooltipContent side="bottom" className="bg-slate-900/90 border-slate-700 text-slate-100">
+                                        <TooltipContent side="bottom" className="bg-popover text-popover-foreground border-border shadow-lg">
                                             <p className="w-64 text-xs">
                                                 Quanto sobrou no seu bolso após descontar o custo dos ingredientes de cada venda.
                                             </p>
                                         </TooltipContent>
                                     </UITooltip>
                                 </div>
-                                <Wallet className="h-3 w-3 text-white/80" />
                             </CardHeader>
-                            <CardContent className="p-2 pt-0">
-                                <div className="text-lg font-bold text-white drop-shadow-md">R$ {totalProfit.toFixed(2)}</div>
-                                <p className="text-[10px] text-emerald-100/80 font-medium">O que sobra no bolso</p>
+                            <CardContent className="p-3 pt-2">
+                                <div className="text-lg font-bold text-foreground">R$ {totalProfit.toFixed(2)}</div>
+                                <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                                    <span className="w-1 h-1 rounded-full bg-emerald-500" /> O que sobra no bolso
+                                </p>
                             </CardContent>
                         </Card>
 
-                        {/* Custo Total - Rose/Red Gradient */}
-                        <Card className="relative overflow-hidden backdrop-blur-xl"
-                            style={{
-                                background: 'linear-gradient(135deg, hsla(340, 75%, 45%, 0.85) 0%, hsla(355, 75%, 35%, 0.9) 100%)'
-                            }}>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-2 bg-transparent border-none shadow-none">
+                        {/* Custo Total - Minimalist */}
+                        <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
                                 <div className="flex items-center gap-2">
-                                    <CardTitle className="text-xs font-bold text-white drop-shadow-md">Custo Total</CardTitle>
+                                    <div className="p-1.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                                        <CreditCard className="h-4 w-4 text-primary" />
+                                    </div>
+                                    <CardTitle className="text-xs font-bold text-muted-foreground">Custo Total</CardTitle>
                                     <UITooltip>
                                         <TooltipTrigger>
-                                            <Info className="h-3 w-3 text-white/70 hover:text-white cursor-help transition-colors" />
+                                            <Info className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
                                         </TooltipTrigger>
-                                        <TooltipContent side="bottom" className="bg-slate-900/90 border-slate-700 text-slate-100">
+                                        <TooltipContent side="bottom" className="bg-popover text-popover-foreground border-border shadow-lg">
                                             <p className="w-64 text-xs">
                                                 Total gasto em insumos e ingredientes para produzir as vendas do período.
                                             </p>
                                         </TooltipContent>
                                     </UITooltip>
                                 </div>
-                                <CreditCard className="h-3 w-3 text-white/80" />
                             </CardHeader>
-                            <CardContent className="p-2 pt-0">
-                                <div className="text-lg font-bold text-white drop-shadow-md">R$ {totalCost.toFixed(2)}</div>
-                                <p className="text-[10px] text-rose-100/80 font-medium">Gasto com ingredientes</p>
+                            <CardContent className="p-3 pt-2">
+                                <div className="text-lg font-bold text-foreground">R$ {totalCost.toFixed(2)}</div>
+                                <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                                    <span className="w-1 h-1 rounded-full bg-red-500" /> Gasto com ingredientes
+                                </p>
                             </CardContent>
                         </Card>
 
-                        {/* Margem Bruta - Violet/Purple Gradient */}
-                        <Card className="relative overflow-hidden backdrop-blur-xl"
-                            style={{
-                                background: 'linear-gradient(135deg, hsla(260, 70%, 55%, 0.85) 0%, hsla(275, 70%, 45%, 0.9) 100%)'
-                            }}>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-2 bg-transparent border-none shadow-none">
+                        {/* Margem Bruta - Minimalist */}
+                        <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
                                 <div className="flex items-center gap-2">
-                                    <CardTitle className="text-xs font-bold text-white drop-shadow-md">Margem Bruta</CardTitle>
+                                    <div className="p-1.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                                        <TrendingUp className="h-4 w-4 text-primary" />
+                                    </div>
+                                    <CardTitle className="text-xs font-bold text-muted-foreground">Margem Bruta</CardTitle>
                                     <UITooltip>
                                         <TooltipTrigger>
-                                            <Info className="h-3 w-3 text-white/70 hover:text-white cursor-help transition-colors" />
+                                            <Info className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
                                         </TooltipTrigger>
-                                        <TooltipContent side="bottom" className="bg-slate-900/90 border-slate-700 text-slate-100">
+                                        <TooltipContent side="bottom" className="bg-popover text-popover-foreground border-border shadow-lg">
                                             <p className="w-64 text-xs">
                                                 A porcentagem do seu faturamento que é lucro. Maiores margens indicam maior eficiência.
                                             </p>
                                         </TooltipContent>
                                     </UITooltip>
                                 </div>
-                                <TrendingUp className="h-3 w-3 text-white/80" />
                             </CardHeader>
-                            <CardContent className="p-2 pt-0">
-                                <div className="text-lg font-bold text-white drop-shadow-md">{profitMargin.toFixed(1)}%</div>
-                                <p className="text-[10px] text-violet-100/80 font-medium">Eficiência das vendas</p>
+                            <CardContent className="p-3 pt-2">
+                                <div className="text-lg font-bold text-foreground">{profitMargin.toFixed(1)}%</div>
+                                <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                                    <span className="w-1 h-1 rounded-full bg-financial" /> Eficiência das vendas
+                                </p>
                             </CardContent>
                         </Card>
                     </div>
@@ -617,15 +615,12 @@ const Dashboard = () => {
 
                     {/* Stock vs demand and top products */}
                     <div className="grid gap-4 md:grid-cols-2">
-                        <Card className="relative shadow-2xl overflow-hidden border z-10 border-t-white/30 border-l-white/20 border-r-white/10 border-b-white/5 backdrop-blur-2xl"
-                            style={{
-                                background: 'linear-gradient(120deg, hsla(186, 30%, 20%, 0.9) 0%, hsla(186, 40%, 12%, 0.95) 100%)',
-                                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.1)'
-                            }}>
-                            <div className="absolute inset-0 bg-white/5 pointer-events-none" />
+                        <Card className="relative shadow-elegant overflow-hidden border border-border/60 z-10 bg-white">
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-primary-foreground">
-                                    <Package className="w-5 h-5 text-emerald-200" />
+                                <CardTitle className="flex items-center gap-2 text-foreground">
+                                    <div className="p-1.5 bg-primary/10 rounded-lg">
+                                        <Package className="w-5 h-5 text-primary" />
+                                    </div>
                                     Estoque vs Demanda
                                 </CardTitle>
                             </CardHeader>
@@ -654,20 +649,20 @@ const Dashboard = () => {
                                     )}
 
                                     {stockAnalysis.length === 0 ? (
-                                        <p className="text-sm text-white/50 text-center py-8">Nenhum ingrediente em uso</p>
+                                        <p className="text-sm text-muted-foreground text-center py-8">Nenhum ingrediente em uso</p>
                                     ) : (
                                         stockAnalysis
                                             .filter(item => item.status !== 'critical') // Avoid dupes if we only want criticals at top
                                             .map(item => (
-                                                <div key={item.ingredient.id} className="flex items-center justify-between border-b border-white/10 pb-2 p-2 rounded hover:bg-white/10 transition-colors duration-200 group">
+                                                <div key={item.ingredient.id} className="flex items-center justify-between border-b border-border/40 pb-2 p-2 rounded hover:bg-muted/30 transition-colors duration-200 group">
                                                     <div className="flex items-center gap-3 flex-1">
-                                                        {item.status === 'sufficient' && <CheckCircle className="w-4 h-4 text-emerald-300 group-hover:scale-110 transition-transform" />}
-                                                        {item.status === 'low' && <AlertCircle className="w-4 h-4 text-amber-300 group-hover:scale-110 transition-transform" />}
-                                                        {item.status === 'unused' && <AlertCircle className="w-4 h-4 text-white/40" />}
+                                                        {item.status === 'sufficient' && <CheckCircle className="w-4 h-4 text-success group-hover:scale-110 transition-transform" />}
+                                                        {item.status === 'low' && <AlertCircle className="w-4 h-4 text-warning group-hover:scale-110 transition-transform" />}
+                                                        {item.status === 'unused' && <AlertCircle className="w-4 h-4 text-muted-foreground/40" />}
                                                         <div className="flex-1">
-                                                            <p className="font-semibold text-sm text-white">{item.ingredient.name}</p>
-                                                            <p className="text-xs text-white/70">
-                                                                Estoque: <span className="font-mono text-white/90">{item.stock.toFixed(2)}</span> / Demanda: <span className="font-mono text-white/90">{item.demand.toFixed(2)}</span>
+                                                            <p className="font-semibold text-sm text-foreground">{item.ingredient.name}</p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Estoque: <span className="font-mono text-foreground/80">{item.stock.toFixed(2)}</span> / Demanda: <span className="font-mono text-foreground/80">{item.demand.toFixed(2)}</span>
                                                             </p>
                                                         </div>
                                                     </div>
@@ -675,9 +670,9 @@ const Dashboard = () => {
                                                         variant="outline"
                                                         className={cn(
                                                             "whitespace-nowrap border-0 font-bold",
-                                                            item.status === 'sufficient' ? 'bg-emerald-500/30 text-emerald-100' :
-                                                                item.status === 'low' ? 'bg-amber-500/30 text-amber-100' :
-                                                                    'bg-white/10 text-white/60'
+                                                            item.status === 'sufficient' ? 'bg-success/10 text-success' :
+                                                                item.status === 'low' ? 'bg-warning/10 text-warning' :
+                                                                    'bg-muted text-muted-foreground'
                                                         )}
                                                     >
                                                         {item.balance > 0 ? '+' : ''}{item.balance.toFixed(1)} {item.ingredient.unit}
@@ -688,28 +683,25 @@ const Dashboard = () => {
                                 </div>
                             </CardContent>
                         </Card>
-                        <Card className="relative shadow-2xl overflow-hidden border z-10 border-t-white/30 border-l-white/20 border-r-white/10 border-b-white/5 backdrop-blur-2xl"
-                            style={{
-                                background: 'linear-gradient(120deg, hsla(182, 16%, 62%, 0.55) 0%, hsla(182, 20%, 40%, 0.65) 100%)',
-                                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.1)'
-                            }}>
-                            <div className="absolute inset-0 bg-white/5 pointer-events-none" />
+                        <Card className="relative shadow-elegant overflow-hidden border border-border/60 z-10 bg-white">
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-primary-foreground">
-                                    <TrendingUp className="w-5 h-5" />
+                                <CardTitle className="flex items-center gap-2 text-foreground">
+                                    <div className="p-1.5 bg-primary/10 rounded-lg">
+                                        <TrendingUp className="w-5 h-5 text-primary" />
+                                    </div>
                                     Produtos Mais Lucrativos
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
                                     {topProfitableProducts.length === 0 ? (
-                                        <p className="text-sm text-white/50 text-center py-8">Nenhuma venda no período</p>
+                                        <p className="text-sm text-muted-foreground text-center py-8">Nenhuma venda no período</p>
                                     ) : (
                                         topProfitableProducts.map((p, idx) => (
-                                            <div key={idx} className="flex items-center justify-between border-b border-white/5 pb-2">
+                                            <div key={idx} className="flex items-center justify-between border-b border-border/40 pb-2">
                                                 <div className="flex items-center gap-2">
                                                     {products.find(prod => prod.name === p.name)?.image_url ? (
-                                                        <div className="w-8 h-8 rounded overflow-hidden bg-white/10 ring-1 ring-white/20">
+                                                        <div className="w-8 h-8 rounded overflow-hidden bg-muted ring-1 ring-border">
                                                             <img
                                                                 src={products.find(prod => prod.name === p.name)?.image_url}
                                                                 alt={p.name}
@@ -717,20 +709,20 @@ const Dashboard = () => {
                                                             />
                                                         </div>
                                                     ) : (
-                                                        <Badge variant="outline" className="font-bold bg-white/10 text-white border-white/20">{idx + 1}º</Badge>
+                                                        <Badge variant="outline" className="font-bold bg-muted text-muted-foreground border-border">{idx + 1}º</Badge>
                                                     )}
                                                     <div>
-                                                        <p className="font-medium text-sm text-white/90">{p.name}</p>
-                                                        <p className="text-xs text-white/60">
+                                                        <p className="font-medium text-sm text-foreground">{p.name}</p>
+                                                        <p className="text-xs text-muted-foreground">
                                                             {p.quantity} un • Margem {p.margin.toFixed(1)}%
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className={`text-sm font-bold ${p.profit >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                                                    <div className={`text-sm font-bold ${p.profit >= 0 ? 'text-success' : 'text-destructive'}`}>
                                                         {p.profit > 0 ? '+' : ''}R$ {p.profit.toFixed(2)}
                                                     </div>
-                                                    <div className="text-xs text-white/50">R$ {p.revenue.toFixed(2)}</div>
+                                                    <div className="text-xs text-muted-foreground">R$ {p.revenue.toFixed(2)}</div>
                                                 </div>
                                             </div>
                                         ))
