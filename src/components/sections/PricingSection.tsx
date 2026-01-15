@@ -28,20 +28,20 @@ const PricingSection = () => {
                     {/* Pro Plan */}
                     {/* Pro Plan */}
                     <RevealOnScroll delay={0.2} className="h-full">
-                        <Card className="h-full relative overflow-hidden bg-card border border-white/50 shadow-elegant rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col hover:shadow-floating hover:border-primary/10 backface-hidden will-change-transform">
+                        <Card className="h-full relative overflow-hidden bg-card border-2 border-primary shadow-2xl rounded-2xl transform hover:scale-[1.02] transition-transform duration-300 flex flex-col hover:shadow-floating backface-hidden will-change-transform z-10">
                             {/* Popular Badge */}
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-b-xl z-20 shadow-md overflow-hidden effect-shine shine-delay-2 whitespace-nowrap flex items-center justify-center min-w-[140px]">
-                                MAIS ESCOLHIDO
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-6 py-2 rounded-b-xl z-20 shadow-lg overflow-hidden effect-shine shine-delay-2 whitespace-nowrap flex items-center justify-center min-w-[160px] tracking-wide uppercase">
+                                Mais Escolhido
                             </div>
 
-                            <CardHeader className="text-center pt-12 pb-4">
-                                <CardTitle className="text-2xl font-bold text-primary font-heading">Assinatura Pro</CardTitle>
-                                <div className="mt-5 flex items-baseline justify-center gap-2">
-                                    <span className="text-lg text-muted-foreground line-through">R$ 97,00</span>
-                                    <span className="text-5xl font-bold text-financial font-heading relative inline-block effect-shine shine-delay-1 overflow-hidden px-2 -mx-2">R$ 39,90</span>
-                                    <span className="text-muted-foreground">/mês</span>
+                            <CardHeader className="text-center pt-14 pb-4">
+                                <CardTitle className="text-2xl font-bold text-foreground font-heading">Assinatura Pro</CardTitle>
+                                <div className="mt-6 flex items-baseline justify-center gap-2">
+                                    <span className="text-xl text-muted-foreground line-through opacity-70">R$ 97</span>
+                                    <span className="text-6xl font-extrabold text-primary font-heading tracking-tight relative inline-block">R$ 39,90</span>
+                                    <span className="text-muted-foreground font-medium">/mês</span>
                                 </div>
-                                <p className="text-sm text-emerald-600 font-bold mt-3 bg-emerald-600/10 inline-block px-4 py-1.5 rounded-full border border-emerald-600/20 shadow-sm animate-pulse-slow">
+                                <p className="text-sm text-emerald-600 font-bold mt-4 bg-emerald-500/10 inline-block px-4 py-1.5 rounded-full border border-emerald-500/20 shadow-sm animate-pulse-slow">
                                     7 Dias Grátis para Testar
                                 </p>
                             </CardHeader>
@@ -57,8 +57,10 @@ const PricingSection = () => {
                                         "Bônus: 50 Receitas que Vendem",
                                         "Suporte Prioritário"
                                     ].map((feature, i) => (
-                                        <li key={i} className="flex items-center gap-3 text-foreground/85">
-                                            <CheckCircle className="w-5 h-5 text-icon flex-shrink-0" />
+                                        <li key={i} className="flex items-center gap-3 text-foreground/80 font-medium">
+                                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                                <CheckCircle className="w-4 h-4 text-primary" />
+                                            </div>
                                             <span>{feature}</span>
                                         </li>
                                     ))}
@@ -66,7 +68,7 @@ const PricingSection = () => {
 
                                 <Button
                                     onClick={() => navigate('/register')}
-                                    className="btn-primary btn-shine shine-delay-2 w-full text-lg py-7 mb-5 shadow-xl group rounded-xl"
+                                    className="btn-primary btn-shine shine-delay-2 w-full text-lg py-8 mb-4 shadow-xl group rounded-xl hover:scale-[1.02] transition-all"
                                 >
                                     <span className="md:hidden">Assinar Agora</span>
                                     <span className="hidden md:inline">Quero Lucrar com Organização</span>

@@ -629,13 +629,13 @@ const Dashboard = () => {
                                                 <AlertTriangle className="w-4 h-4" /> Ação Necessária
                                             </h4>
                                             {criticalStock.map(item => (
-                                                <div key={`critical-${item.ingredient.id}`} className="flex items-center justify-between text-sm bg-red-950/20 p-2 rounded border border-red-500/20">
+                                                <div key={`critical-${item.ingredient.id}`} className="flex items-center justify-between text-sm bg-red-100 p-2 rounded border border-red-300">
                                                     <div className="flex items-center gap-2">
-                                                        <XCircle className="w-4 h-4 text-red-400" />
-                                                        <span className="font-medium text-red-100">{item.ingredient.name}</span>
+                                                        <XCircle className="w-4 h-4 text-red-600" />
+                                                        <span className="font-medium text-red-800">{item.ingredient.name}</span>
                                                     </div>
                                                     <div className="text-right">
-                                                        <Badge variant="destructive" className="bg-red-500/20 text-red-200 border-red-500/30">
+                                                        <Badge variant="destructive" className="bg-red-500 text-white border-red-600">
                                                             -{Math.abs(item.balance).toFixed(1)} {item.ingredient.unit}
                                                         </Badge>
                                                     </div>

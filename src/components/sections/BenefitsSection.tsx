@@ -57,12 +57,13 @@ const BenefitsSection = () => {
                     {benefits.map((benefit, index) => (
                         <Tilt key={index} options={{ max: 10, scale: 1.02, speed: 400 }} className="h-full">
                             <RevealOnScroll delay={index * 0.1} className="h-full">
-                                <Card className="bg-card hover:shadow-elegant transition-all duration-300 text-center group cursor-pointer hover:border-primary/20 h-full">
-                                    <CardContent className="p-8 flex flex-col items-center h-full">
-                                        <div className="w-16 h-16 bg-icon/20 rounded-[4px] flex items-center justify-center mx-auto mb-6 transition-colors duration-300 transform shadow-sm">
-                                            <benefit.icon className="w-8 h-8 text-icon stroke-[2]" />
+                                <Card className="bg-card/50 backdrop-blur-sm border-white/10 hover:border-primary/20 hover:shadow-elegant transition-all duration-300 text-center group cursor-pointer h-full relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                    <CardContent className="p-8 flex flex-col items-center h-full relative z-10">
+                                        <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-6 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/10 shadow-sm border border-primary/10">
+                                            <benefit.icon className="w-8 h-8 text-primary stroke-[1.5]" />
                                         </div>
-                                        <h3 className="text-xl font-bold mb-3 text-primary transition-colors duration-300">{benefit.title}</h3>
+                                        <h3 className="text-xl font-bold mb-3 text-foreground transition-colors duration-300">{benefit.title}</h3>
                                         <p className="text-muted-foreground leading-relaxed group-hover:text-foreground/80 transition-colors duration-300">{benefit.desc}</p>
                                     </CardContent>
                                 </Card>

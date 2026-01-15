@@ -7,13 +7,18 @@ import AuthoritySection from '@/components/sections/AuthoritySection';
 import FAQSection from '@/components/sections/FAQSection';
 import Footer from '@/components/sections/Footer';
 
+import AppShowcase from '@/components/sections/AppShowcase';
+
 const Index = () => {
   return (
     <div className="min-h-screen bg-background font-sans selection:bg-primary selection:text-primary-foreground">
       <Navbar />
 
-      {/* Hero with Calculator */}
+      {/* Hero with Mockups */}
       <HeroSection />
+
+      {/* App Showcase (Features) */}
+      <AppShowcase />
 
       {/* Benefits Section - Platform Preview */}
       <BenefitsSection />
