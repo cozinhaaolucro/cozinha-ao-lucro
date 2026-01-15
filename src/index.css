@@ -1,5 +1,4 @@
-/* Design System para Landing Page de Alta Conversão - Da Cozinha ao Lucro */
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,6 +6,7 @@
 
 @layer base {
   :root {
+
 
     /* 
       Palette Rebrand (2026) - STRICT IMPLEMENTATION:
@@ -101,7 +101,8 @@
 
     --shadow-elegant: 0 4px 12px hsla(210, 15%, 20%, 0.1);
     --shadow-hover: 0 6px 16px hsla(210, 15%, 20%, 0.14);
-    --shadow-card: 0 4px 6px -1px hsla(210, 15%, 20%, 0.1), 0 2px 4px -1px hsla(210, 15%, 20%, 0.06);
+    --shadow-card: 0 4px 6px -1px hsla(210, 15%, 20%, 0.1),
+      0 2px 4px -1px hsla(210, 15%, 20%, 0.06);
     /* Standard Card text says 10% opacity */
 
     /* Sidebar Variables */
@@ -169,7 +170,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Manrope', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     line-height: 1.6;
     /* User requested: Off-white background with stronger spots (Green from buttons) and movement */
@@ -185,8 +186,8 @@
   h4,
   h5,
   h6 {
-    font-family: 'Poppins', system-ui, sans-serif;
-    /* Replaced missing Recoleta with Poppins for consistency */
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    /* Replaced Poppins with Plus Jakarta Sans for modern SaaS feel */
     letter-spacing: -0.02em;
     line-height: 1.25;
     font-weight: 700;
