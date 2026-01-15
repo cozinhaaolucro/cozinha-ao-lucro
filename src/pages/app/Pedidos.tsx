@@ -18,6 +18,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/components/ui/date-picker";
 import { supabase } from '@/lib/supabase';
 import type { OrderWithDetails, ProductWithIngredients, Ingredient } from '@/types/database';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -28,6 +30,7 @@ import { parseLocalDate, formatLocalDate } from '@/lib/dateUtils';
 import confetti from 'canvas-confetti'; // Keep if used or remove if unused, keeping for safety
 import { motion, AnimatePresence } from 'framer-motion';
 import ClientProfileDrawer from '@/components/crm/ClientProfileDrawer';
+import { formatUnit } from '@/lib/utils';
 import SendMessageDialog from '@/components/crm/SendMessageDialog';
 import { Customer, OrderStatus } from '@/types/database';
 
@@ -148,7 +151,7 @@ const Pedidos = () => {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingOrder, setEditingOrder] = useState<OrderWithDetails | null>(null);
-    const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
+    const [dateFilter, setDateFilter] = useState<DateRange | undefined>();
     const [longPressOrder, setLongPressOrder] = useState<OrderWithDetails | null>(null);
     const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -383,14 +386,23 @@ const Pedidos = () => {
 
     const filteredOrders = orders.filter((order) => {
         if (order.status === 'cancelled') return false;
-        if (!dateFilter.start && !dateFilter.end) return true;
+        if (!dateFilter?.from) return true;
         if (!order.delivery_date) return false;
+
         const orderDate = parseLocalDate(order.delivery_date);
         orderDate.setHours(0, 0, 0, 0);
-        const start = dateFilter.start ? new Date(dateFilter.start + 'T00:00:00') : null;
-        const end = dateFilter.end ? new Date(dateFilter.end + 'T23:59:59.999') : null;
-        if (start && orderDate < start) return false;
-        if (end && orderDate > end) return false;
+
+        const start = new Date(dateFilter.from);
+        start.setHours(0, 0, 0, 0);
+
+        if (orderDate < start) return false;
+
+        if (dateFilter.to) {
+            const end = new Date(dateFilter.to);
+            end.setHours(23, 59, 59, 999);
+            if (orderDate > end) return false;
+        }
+
         return true;
     });
 
@@ -711,37 +723,26 @@ const Pedidos = () => {
                 </div>
 
                 {/* Date Filters */}
-                <Card>
-                    <CardContent className="p-3">
-                        <div className="flex items-center gap-3 flex-wrap">
-                            <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                            <div className="flex items-center gap-2 flex-1 sm:flex-none">
-                                <Input
-                                    type="date"
-                                    value={dateFilter.start}
-                                    onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
-                                    className="h-9 text-xs"
-                                />
-                                <span className="text-sm text-muted-foreground">até</span>
-                                <Input
-                                    type="date"
-                                    value={dateFilter.end}
-                                    onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
-                                    className="h-9 text-xs"
-                                />
-                            </div>
-                            {(dateFilter.start || dateFilter.end) && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setDateFilter({ start: '', end: '' })}
-                                >
-                                    Limpar
-                                </Button>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
+                <div className="flex flex-wrap items-center gap-4 bg-muted/20 p-3 rounded-xl border border-border/50 shadow-sm w-fit border-l-4 border-l-primary/50">
+                    <div className="flex items-center gap-2">
+                        <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm font-medium text-muted-foreground">Filtros:</span>
+                    </div>
+                    <DateRangePicker
+                        date={dateFilter}
+                        setDate={setDateFilter}
+                        className="w-[250px]"
+                    />
+                    {(dateFilter?.from) && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDateFilter(undefined)}
+                        >
+                            Limpar
+                        </Button>
+                    )}
+                </div>
 
                 {/* Kanban Board - Layout Switch */}
                 {isMobile ? (
@@ -820,7 +821,7 @@ const Pedidos = () => {
                                             <div className="flex justify-between items-center">
                                                 <span className="font-medium">{item.name}</span>
                                                 <span className="font-bold text-red-500">
-                                                    Falta: {item.missing.toFixed(2)} {item.unit}
+                                                    Falta: {item.missing.toFixed(2)} {formatUnit(item.missing, item.unit)}
                                                 </span>
                                             </div>
                                             <div className="text-xs text-muted-foreground flex gap-4">

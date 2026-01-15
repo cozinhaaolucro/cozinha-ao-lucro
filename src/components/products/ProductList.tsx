@@ -250,7 +250,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-card p-3 sm:p-4 rounded-lg border shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-muted/20 p-3 sm:p-4 rounded-xl border border-border/50 shadow-sm border-l-4 border-l-primary/50">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                     <div className="flex items-center gap-2">
                         <Checkbox

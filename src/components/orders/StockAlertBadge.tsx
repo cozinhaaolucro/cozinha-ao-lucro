@@ -14,6 +14,7 @@ import {
 import { createStockMovement } from '@/lib/database';
 import type { OrderWithDetails, ProductWithIngredients, Ingredient } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
+import { formatUnit } from '@/lib/utils';
 
 interface StockAlertBadgeProps {
     order: OrderWithDetails;
@@ -118,7 +119,7 @@ export function StockAlertBadge({ order, products, ingredients, onStockUpdate }:
                                     </span>
                                     <span className="text-muted-foreground">→</span>
                                     <span className="text-green-600 font-bold">
-                                        + {deficit.toFixed(2)} {ingredient.unit}
+                                        + {deficit.toFixed(2)} {formatUnit(deficit, ingredient.unit)}
                                     </span>
                                 </div>
                             </div>

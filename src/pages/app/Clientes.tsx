@@ -21,6 +21,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/components/ui/date-picker";
 
 const Clientes = () => {
     const { toast } = useToast();
@@ -28,7 +30,7 @@ const Clientes = () => {
     const [selectedClients, setSelectedClients] = useState<string[]>([]);
     const [search, setSearch] = useState('');
     const [showInactive, setShowInactive] = useState(false);
-    const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
+    const [dateFilter, setDateFilter] = useState<DateRange | undefined>();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
     const [loading, setLoading] = useState(true);
@@ -62,14 +64,23 @@ const Clientes = () => {
         const matchesInactive = showInactive ? isInactive(customer.last_order_date) : true;
 
         let matchesDate = true;
-        if (dateFilter.start || dateFilter.end) {
+        if (dateFilter?.from) {
             const orderDate = customer.last_order_date ? new Date(customer.last_order_date) : null;
             if (orderDate) {
-                if (dateFilter.start && orderDate < new Date(dateFilter.start)) {
+                // Reset times for accurate date comparison
+                const start = new Date(dateFilter.from);
+                start.setHours(0, 0, 0, 0);
+
+                if (orderDate < start) {
                     matchesDate = false;
                 }
-                if (dateFilter.end && orderDate > new Date(dateFilter.end)) {
-                    matchesDate = false;
+
+                if (dateFilter.to) {
+                    const end = new Date(dateFilter.to);
+                    end.setHours(23, 59, 59, 999);
+                    if (orderDate > end) {
+                        matchesDate = false;
+                    }
                 }
             } else {
                 matchesDate = false;
@@ -291,54 +302,27 @@ const Clientes = () => {
                 </Button>
             </div>
 
-            <Card>
-                <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 justify-between">
-                        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
-                            <div className="flex items-center gap-2">
-                                <Checkbox
-                                    checked={selectedClients.length === filteredCustomers.length && filteredCustomers.length > 0}
-                                    onCheckedChange={toggleSelectAll}
-                                />
-                                <span className="text-sm font-medium">Selecionar Todos</span>
-                            </div>
-                            <div className="hidden md:block h-4 w-px bg-border" />
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-muted/20 p-4 rounded-xl border border-border/50 shadow-sm border-l-4 border-l-primary/50">
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        checked={selectedClients.length === filteredCustomers.length && filteredCustomers.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                    />
+                    <span className="text-sm font-medium">Selecionar Todos</span>
+                </div>
 
-                            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                                <div className="flex items-center gap-2">
-                                    <Filter className="w-4 h-4 text-muted-foreground" />
-                                    <span className="text-sm font-medium whitespace-nowrap">Último pedido entre:</span>
-                                </div>
-                                <div className="flex items-center gap-2 flex-1 md:flex-none">
-                                    <Input
-                                        type="date"
-                                        value={dateFilter.start}
-                                        onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
-                                        className="h-8 w-full md:w-auto min-w-[120px]"
-                                    />
-                                    <span className="text-sm text-muted-foreground">e</span>
-                                    <Input
-                                        type="date"
-                                        value={dateFilter.end}
-                                        onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
-                                        className="h-8 w-full md:w-auto min-w-[120px]"
-                                    />
-                                    {(dateFilter.start || dateFilter.end) && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => setDateFilter({ start: '', end: '' })}
-                                            className="h-8"
-                                        >
-                                            Limpar
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                <div className="flex flex-wrap items-center gap-4 w-full md:w-auto justify-end">
+                    <div className="flex items-center gap-2">
+                        <Filter className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-medium whitespace-nowrap hidden sm:inline">Último pedido:</span>
                     </div>
-                </CardContent>
-            </Card>
+                    <DateRangePicker
+                        date={dateFilter}
+                        setDate={setDateFilter}
+                        className="w-full md:w-auto"
+                    />
+                </div>
+            </div>
 
             <div className="grid gap-3">
                 {filteredCustomers.length === 0 ? (

@@ -4,9 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getOrders, getProducts, getIngredients } from '@/lib/database';
+import { formatUnit } from '@/lib/utils';
 import type { OrderWithDetails, ProductWithIngredients, Ingredient } from '@/types/database';
 import { ShoppingCart, Calendar, Check, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/components/ui/date-picker";
 
 interface ShoppingItem {
     ingredientId: string;
@@ -24,8 +27,10 @@ const ShoppingList = () => {
     const nextWeek = new Date();
     nextWeek.setDate(today.getDate() + 7);
 
-    const [startDate, setStartDate] = useState(today.toISOString().split('T')[0]);
-    const [endDate, setEndDate] = useState(nextWeek.toISOString().split('T')[0]);
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: today,
+        to: nextWeek
+    });
 
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
     const [products, setProducts] = useState<ProductWithIngredients[]>([]);
@@ -49,14 +54,18 @@ const ShoppingList = () => {
 
     useEffect(() => {
         generateList();
-    }, [startDate, endDate, orders, products, ingredients]);
+    }, [dateRange, orders, products, ingredients]);
 
     const generateList = () => {
         if (!orders.length || !products.length || !ingredients.length) return;
 
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59);
+        if (!dateRange?.from) return;
+
+        const start = new Date(dateRange.from);
+        start.setHours(0, 0, 0, 0);
+
+        const end = dateRange.to ? new Date(dateRange.to) : new Date(start);
+        end.setHours(23, 59, 59, 999);
 
         // 1. Filter Pending/Preparing Orders in range
         const relevantOrders = orders.filter(o => {
@@ -115,9 +124,9 @@ const ShoppingList = () => {
     const exportList = () => {
         const data = items.map(i => ({
             Ingrediente: i.name,
-            'Em Estoque': `${i.currentStock.toFixed(2)} ${i.unit}`,
-            'Necessário': `${i.needed.toFixed(2)} ${i.unit}`,
-            'Comprar': `${i.toBuy.toFixed(2)} ${i.unit}`
+            'Em Estoque': `${i.currentStock.toFixed(2)} ${formatUnit(i.currentStock, i.unit)}`,
+            'Necessário': `${i.needed.toFixed(2)} ${formatUnit(i.needed, i.unit)}`,
+            'Comprar': `${i.toBuy.toFixed(2)} ${formatUnit(i.toBuy, i.unit)}`
         }));
 
         const ws = XLSX.utils.json_to_sheet(data);
@@ -150,23 +159,12 @@ const ShoppingList = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center gap-4">
-                        <div className="grid gap-1.5">
-                            <label className="text-sm text-muted-foreground">De:</label>
-                            <Input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                            />
-                        </div>
-                        <div className="grid gap-1.5">
-                            <label className="text-sm text-muted-foreground">Até:</label>
-                            <Input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex-1 text-right text-sm text-muted-foreground self-end mb-2">
+                        <DateRangePicker
+                            date={dateRange}
+                            setDate={setDateRange}
+                            className="w-[300px]"
+                        />
+                        <div className="flex-1 text-right text-sm text-muted-foreground items-center flex justify-end h-10">
                             {items.length} itens listados
                         </div>
                     </div>
@@ -197,12 +195,12 @@ const ShoppingList = () => {
                                         <div className="flex-1">
                                             <p className="font-bold line-clamp-1">{item.name}</p>
                                             <p className="text-sm text-muted-foreground">
-                                                Precisa: {item.needed.toFixed(2)} {item.unit} | Tem: {item.currentStock.toFixed(2)} {item.unit}
+                                                Precisa: {item.needed.toFixed(2)} {formatUnit(item.needed, item.unit)} | Tem: {item.currentStock.toFixed(2)} {formatUnit(item.currentStock, item.unit)}
                                             </p>
                                         </div>
                                         <div className="text-right">
                                             <div className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-bold text-sm">
-                                                +{item.toBuy.toFixed(2)} {item.unit}
+                                                +{item.toBuy.toFixed(2)} {formatUnit(item.toBuy, item.unit)}
                                             </div>
                                         </div>
                                     </CardContent>
@@ -230,11 +228,11 @@ const ShoppingList = () => {
                                         <div>
                                             <p className="font-medium line-clamp-1">{item.name}</p>
                                             <p className="text-xs text-muted-foreground">
-                                                Vai usar: {item.needed.toFixed(2)} {item.unit}
+                                                Vai usar: {item.needed.toFixed(2)} {formatUnit(item.needed, item.unit)}
                                             </p>
                                         </div>
                                         <div className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
-                                            Tem {item.currentStock.toFixed(2)} {item.unit}
+                                            Tem {item.currentStock.toFixed(2)} {formatUnit(item.currentStock, item.unit)}
                                         </div>
                                     </CardContent>
                                 </Card>

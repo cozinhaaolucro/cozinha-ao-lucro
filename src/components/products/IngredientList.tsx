@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Download, Upload, Package, FileSpreadsheet, FileD
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { formatUnit } from '@/lib/utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -266,12 +267,21 @@ const IngredientList = () => {
         return demand;
     };
 
-    const getStatusColor = (stock: number, demand: number) => {
-        if (demand === 0) return stock > 0 ? 'bg-green-500/5 border-l-green-500' : 'bg-gray-100 border-l-gray-300';
+    const getStatusType = (stock: number, demand: number) => {
+        if (demand === 0) return stock > 0 ? 'good' : 'neutral';
         const ratio = stock / demand;
-        if (ratio >= 1) return 'bg-green-500/10 border-l-green-500';
-        if (ratio >= 0.5) return 'bg-yellow-500/10 border-l-yellow-500';
-        return 'bg-red-500/10 border-l-red-500';
+        if (ratio >= 1) return 'good';
+        if (ratio >= 0.5) return 'warning';
+        return 'critical';
+    };
+
+    const getStatusStyles = (type: string) => {
+        switch (type) {
+            case 'good': return { text: 'text-emerald-700', icon: 'text-emerald-600/80', bg: '' };
+            case 'warning': return { text: 'text-amber-700', icon: 'text-amber-600/80', bg: '' };
+            case 'critical': return { text: 'text-red-700', icon: 'text-red-600/80', bg: '' };
+            default: return { text: 'text-muted-foreground', icon: 'text-muted-foreground/70', bg: '' };
+        }
     };
 
     // --- FORM CONTENT ---
@@ -393,7 +403,7 @@ const IngredientList = () => {
     // --- RENDER ---
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-card p-3 sm:p-4 rounded-lg border shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-muted/20 p-3 sm:p-4 rounded-xl border border-border/50 shadow-sm border-l-4 border-l-primary/50">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                     <div className="flex items-center gap-2">
                         <Checkbox
@@ -482,10 +492,11 @@ const IngredientList = () => {
                     {ingredients.map((ingredient) => {
                         const demand = getDemand(ingredient.id);
                         const stock = ingredient.stock_quantity || 0;
-                        const statusClass = getStatusColor(stock, demand);
+                        const statusType = getStatusType(stock, demand);
+                        const styles = getStatusStyles(statusType);
 
                         return (
-                            <Card key={ingredient.id} className={`border-l-4 ${statusClass} group`}>
+                            <Card key={ingredient.id} className="group hover:scale-[1.01] transition-all duration-200">
                                 <CardContent className="p-3">
                                     <div className="flex items-start justify-between mb-2">
                                         <div className="flex items-center gap-2">
@@ -495,34 +506,34 @@ const IngredientList = () => {
                                             />
                                             {(() => {
                                                 const Icon = getIngredientIcon(ingredient.name);
-                                                return <Icon className="w-4 h-4 text-muted-foreground" />;
+                                                return <Icon className={`w-4 h-4 ${styles.icon}`} />;
                                             })()}
-                                            <CardTitle className="text-sm font-medium line-clamp-1">
+                                            <CardTitle className={`text-sm font-medium line-clamp-1 ${styles.text}`}>
                                                 {ingredient.name}
                                             </CardTitle>
                                         </div>
                                     </div>
-                                    <div className="text-lg font-bold text-primary">
+                                    <div className="text-lg font-bold text-foreground/90">
                                         R$ {ingredient.cost_per_unit.toFixed(2)}
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <p className={`text-xs ${stock < 0 ? 'text-red-600 font-bold' : 'text-muted-foreground'}`}>
-                                            {Number(stock.toFixed(2))} {ingredient.unit}
+                                        <p className={`text-xs font-semibold ${styles.text}`}>
+                                            {Number(stock.toFixed(2))} {formatUnit(stock, ingredient.unit)}
                                         </p>
                                         {stock < 0 && (
-                                            <Badge variant="destructive" className="text-[10px] h-4">
+                                            <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
                                                 Negativo
                                             </Badge>
                                         )}
                                         {stock === 0 && (
-                                            <Badge variant="destructive" className="text-[10px] h-4 opacity-70">
+                                            <Badge variant="secondary" className="text-[10px] h-4 opacity-70 px-1.5">
                                                 Esgotado
                                             </Badge>
                                         )}
                                     </div>
                                     {demand > 0 && (
                                         <p className="text-[10px] text-orange-600 mt-1">
-                                            Demanda: {demand.toFixed(1)} {ingredient.unit}
+                                            Demanda: {demand.toFixed(1)} {formatUnit(demand, ingredient.unit)}
                                         </p>
                                     )}
                                     <div className="mt-2 hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

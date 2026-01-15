@@ -201,7 +201,7 @@
   }
 
   .glass-card {
-    @apply bg-white/60 backdrop-blur-md border border-white/50 shadow-lg hover:bg-white/80 transition-all duration-300 hover:shadow-xl hover:border-primary/20;
+    @apply bg-white/60 backdrop-blur-md border border-white/50 shadow-lg hover:bg-white/80 transition-all duration-300 hover:shadow-xl hover:border-primary/20 hover:-translate-y-1;
   }
 
   .dark .glass-panel {
@@ -261,37 +261,33 @@
 
   /* Button Styles - STRICT IMPLEMENTATION */
   .btn-primary {
-    @apply bg-primary text-primary-foreground font-semibold px-8 py-4 rounded-xl shadow-elegant transition-all duration-150 ease-out;
-    /* Hover: Lighten +6% (Visual approximation via bright filter or specific class, using brightness filter is reliable) */
+    @apply bg-primary text-primary-foreground font-semibold px-8 py-4 rounded-xl shadow-elegant transition-all duration-200 ease-out;
   }
 
   .btn-primary:hover {
-    filter: brightness(1.06);
-    /* ~+6% lightness logic */
+    filter: brightness(1.1);
     transform: translateY(-2px);
-    /* offset vertical 6px logic (start 4px + 2px) */
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-    /* Increased elevation */
+    box-shadow: var(--shadow-hover);
   }
 
   .btn-primary:active {
     filter: brightness(0.94);
-    /* ~-6% lightness logic */
-    transform: translateY(0);
+    transform: translateY(0) scale(0.98);
   }
 
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground font-semibold px-8 py-4 rounded-xl shadow-md transition-all duration-150 ease-out;
+    @apply bg-secondary text-secondary-foreground font-semibold px-8 py-4 rounded-xl shadow-md transition-all duration-200 ease-out;
   }
 
   .btn-secondary:hover {
-    filter: brightness(1.06);
-    transform: translateY(-2px);
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
   }
 
   .btn-secondary:active {
     filter: brightness(0.94);
-    transform: translateY(0);
+    transform: translateY(0) scale(0.98);
   }
 
   /* Link Styles */
@@ -640,7 +636,7 @@ button,
 [class*="hover:scale"] {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform: translate3d(0, 0, 0) scale(0.9999);
+  transform: translate3d(0, 0, 0);
   perspective: 1000px;
   will-change: transform;
   -webkit-font-smoothing: subpixel-antialiased;

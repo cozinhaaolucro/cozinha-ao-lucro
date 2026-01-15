@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { addDays, format, subDays } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/components/ui/date-picker";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -61,8 +64,20 @@ const Dashboard = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [products, setProducts] = useState<ProductWithIngredients[]>([]);
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-    const [period, setPeriod] = useState('30');
-    const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: subDays(new Date(), 30),
+        to: new Date(),
+    });
+    const [appliedRange, setAppliedRange] = useState<DateRange | undefined>({
+        from: subDays(new Date(), 30),
+        to: new Date(),
+    });
+
+    useEffect(() => {
+        if (!dateRange || (dateRange.from && dateRange.to)) {
+            setAppliedRange(dateRange);
+        }
+    }, [dateRange]);
     const [isLoading, setIsLoading] = useState(true);
     const [dataLoaded, setDataLoaded] = useState(false);
 
@@ -91,7 +106,7 @@ const Dashboard = () => {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [dataLoaded, period, dateFilter]);
+    }, [dataLoaded, appliedRange]);
 
     const loadData = async () => {
         setIsLoading(true);
@@ -113,22 +128,15 @@ const Dashboard = () => {
         }
     };
 
-    // Helper: filter orders by selected period or date range
+    // Helper: filter orders by selected date range
     const getFilteredOrders = () => {
-        let start: Date;
-        let end: Date = new Date();
+        if (!appliedRange?.from) return orders;
 
-        if (dateFilter.start && dateFilter.end) {
-            start = new Date(dateFilter.start);
-            start.setHours(0, 0, 0, 0); // Include full start day
-            end = new Date(dateFilter.end);
-            end.setHours(23, 59, 59, 999);
-        } else {
-            const daysAgo = parseInt(period);
-            start = new Date();
-            start.setDate(start.getDate() - daysAgo);
-            start.setHours(0, 0, 0, 0); // Include full first day of period
-        }
+        const start = new Date(appliedRange.from);
+        start.setHours(0, 0, 0, 0);
+
+        const end = appliedRange.to ? new Date(appliedRange.to) : new Date(start);
+        end.setHours(23, 59, 59, 999);
 
         return orders.filter(o => {
             if (!o.created_at) return false;
@@ -262,17 +270,30 @@ const Dashboard = () => {
     // Last N days data for chart
     const getChartData = () => {
         const days: { date: string; revenue: number; profit: number; ordersCount: number; averageTicket: number }[] = [];
-        const numDays = dateFilter.start && dateFilter.end ?
-            Math.ceil((new Date(dateFilter.end).getTime() - new Date(dateFilter.start).getTime()) / (1000 * 60 * 60 * 24)) + 1 :
-            Math.min(parseInt(period), 14);
+
+        // Determine range
+        let start: Date;
+        let end: Date;
+
+        if (appliedRange?.from) {
+            start = new Date(appliedRange.from);
+            end = appliedRange.to ? new Date(appliedRange.to) : new Date(start);
+        } else {
+            // Fallback
+            end = new Date();
+            start = subDays(end, 30);
+        }
+
+        // Normalize time
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+
+        const numDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
         for (let i = numDays - 1; i >= 0; i--) {
-            const d = new Date();
-            if (dateFilter.start && dateFilter.end) {
-                d.setTime(new Date(dateFilter.start).getTime() + (numDays - 1 - i) * 24 * 60 * 60 * 1000);
-            } else {
-                d.setDate(d.getDate() - i);
-            }
+            const d = new Date(end);
+            d.setDate(d.getDate() - i); // Go backwards from end
+
             const dayOrders = filteredOrders.filter(o => {
                 if (!o.created_at) return false;
                 const od = new Date(o.created_at);
@@ -314,9 +335,8 @@ const Dashboard = () => {
 
 
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const clearDateFilter = () => {
-        setDateFilter({ start: '', end: '' });
+        setDateRange(undefined);
     };
 
     if (isLoading) {
@@ -331,35 +351,11 @@ const Dashboard = () => {
                     <p className="text-sm text-muted-foreground">Análise completa do seu negócio</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2">
-                        <Input
-                            type="date"
-                            value={dateFilter.start}
-                            onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
-                            className="w-36 h-9"
-                        />
-                        <span className="text-sm text-muted-foreground">até</span>
-                        <Input
-                            type="date"
-                            value={dateFilter.end}
-                            onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
-                            className="w-36 h-9"
-                        />
-                    </div>
-                    {(dateFilter.start || dateFilter.end) ? (
-                        <Button variant="ghost" size="sm" onClick={clearDateFilter}>Limpar</Button>
-                    ) : (
-                        <Select value={period} onValueChange={setPeriod}>
-                            <SelectTrigger className="w-[140px] h-9">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="7">7 dias</SelectItem>
-                                <SelectItem value="30">30 dias</SelectItem>
-                                <SelectItem value="90">90 dias</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    )}
+                    <DateRangePicker
+                        date={dateRange}
+                        setDate={setDateRange}
+                        className="w-[300px]"
+                    />
                 </div>
 
 

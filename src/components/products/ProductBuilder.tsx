@@ -40,7 +40,7 @@ import { getIngredients, createProduct, createIngredient, updateProduct } from '
 import type { Ingredient, Product } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import { PRESET_PRODUCTS, PRESET_INGREDIENTS } from '@/data/presets';
-import { cn } from '@/lib/utils';
+import { cn, formatUnit } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 type ProductBuilderProps = {
@@ -335,7 +335,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         // Ingredients Table
         const tableData = selectedIngredients.map(ing => [
             ing.name,
-            `${ing.display_quantity} ${ing.display_unit}`,
+            `${ing.display_quantity} ${formatUnit(ing.display_quantity, ing.display_unit)}`,
             `R$ ${(ing.cost * ing.display_quantity).toFixed(2)}`
         ]);
 
@@ -899,7 +899,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                                                     </Select>
                                                 ) : (
                                                     <div className="h-10 w-16 flex items-center justify-center bg-muted/50 border border-l-0 rounded-r-md text-sm font-medium text-muted-foreground">
-                                                        {si.display_unit}
+                                                        {formatUnit(si.display_quantity || 0, si.display_unit)}
                                                     </div>
                                                 )}
                                             </div>

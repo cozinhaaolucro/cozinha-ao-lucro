@@ -9,16 +9,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-elegant hover:bg-[#3AA8B6] hover:-translate-y-0.5 transition-all duration-200 ease-out active:bg-[#256D76]", /* Hover ~ 34% L -> 34% L (Wait, 28% L is base. Hover 34% L is +6%. Active 22% L is -6%. Manual values for perfect control or filter brightness) */
+        default: "bg-primary text-primary-foreground shadow-elegant hover:brightness-110 hover:-translate-y-[2px] hover:shadow-hover active:scale-[0.98] active:translate-y-0 transition-all duration-200 ease-out",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground shadow-sm hover:brightness-110 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] transition-all duration-200",
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-200",
         secondary:
-          "bg-transparent text-secondary hover:underline hover:underline-offset-4 transition-all duration-200", /* Transparent, Colored Text, Hover Underline */
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        premium: "bg-gradient-to-r from-primary via-primary-glow to-primary text-primary-foreground shadow-lg hover:shadow-elegant hover:scale-[1.02] border border-white/20",
+          "bg-secondary text-secondary-foreground shadow-sm hover:brightness-110 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98] transition-all duration-200",
+        ghost: "hover:bg-primary/5 hover:text-primary transition-colors duration-200",
+        link: "text-primary underline-offset-4 hover:underline transition-all duration-200",
+        premium: "bg-gradient-to-r from-primary via-primary-glow to-primary text-primary-foreground shadow-lg hover:shadow-elegant hover:scale-[1.02] border border-white/20 transition-all duration-300",
       },
       size: {
         default: "h-10 px-4 py-2 rounded-lg", /* Reduced from h-12 to h-10 */

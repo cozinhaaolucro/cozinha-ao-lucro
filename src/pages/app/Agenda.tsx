@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ChevronLeft, ChevronRight, Clock, MapPin, X, Calendar as CalendarIcon, Trash2, MessageCircle, RefreshCw } from 'lucide-react';
+import { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/components/ui/date-picker";
 import { getOrders, deleteOrder } from '@/lib/database';
 import type { OrderWithDetails } from '@/types/database';
 import { parseLocalDate, formatLocalDate } from '@/lib/dateUtils';
@@ -16,10 +18,8 @@ import { supabase } from '@/lib/supabase';
 const Agenda = () => {
     const [orders, setOrders] = useState<OrderWithDetails[]>([]);
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [rangeStart, setRangeStart] = useState<Date | null>(null);
-    const [rangeEnd, setRangeEnd] = useState<Date | null>(null);
     const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
-    const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
+    const [dateFilter, setDateFilter] = useState<DateRange | undefined>();
     const [editingOrder, setEditingOrder] = useState<OrderWithDetails | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
 
@@ -107,15 +107,25 @@ const Agenda = () => {
     };
 
     const isInRange = (date: Date) => {
-        if (!rangeStart || !rangeEnd) return false;
-        const start = rangeStart < rangeEnd ? rangeStart : rangeEnd;
-        const end = rangeStart < rangeEnd ? rangeEnd : rangeStart;
-        return date >= start && date <= end;
+        if (!dateFilter?.from || !dateFilter?.to) return false;
+        const start = dateFilter.from < dateFilter.to ? dateFilter.from : dateFilter.to;
+        const end = dateFilter.from < dateFilter.to ? dateFilter.to : dateFilter.from;
+        // Reset hours for accurate comparison
+        const d = new Date(date); d.setHours(0, 0, 0, 0);
+        const s = new Date(start); s.setHours(0, 0, 0, 0);
+        const e = new Date(end); e.setHours(0, 0, 0, 0);
+        return d >= s && d <= e;
     };
 
     const isRangeBoundary = (date: Date) => {
-        return (rangeStart && date.toDateString() === rangeStart.toDateString()) ||
-            (rangeEnd && date.toDateString() === rangeEnd.toDateString());
+        const d = new Date(date); d.setHours(0, 0, 0, 0);
+        const from = dateFilter?.from ? new Date(dateFilter.from) : null;
+        if (from) from.setHours(0, 0, 0, 0);
+        const to = dateFilter?.to ? new Date(dateFilter.to) : null;
+        if (to) to.setHours(0, 0, 0, 0);
+
+        return (from && d.getTime() === from.getTime()) ||
+            (to && d.getTime() === to.getTime());
     };
 
     const changeMonth = (increment: number) => {
@@ -123,19 +133,15 @@ const Agenda = () => {
     };
 
     const handleDateClick = (date: Date) => {
-        if (!rangeStart || (rangeStart && rangeEnd)) {
-            setRangeStart(date);
-            setRangeEnd(null);
+        if (!dateFilter?.from || (dateFilter.from && dateFilter.to)) {
             setSelectedStatus(null);
-            setDateFilter({ start: '', end: '' });
+            setDateFilter({ from: date, to: undefined });
         } else {
-            setRangeEnd(date);
-            const start = rangeStart < date ? rangeStart : date;
-            const end = rangeStart < date ? date : rangeStart;
-            setDateFilter({
-                start: start.toISOString().split('T')[0],
-                end: end.toISOString().split('T')[0]
-            });
+            const from = dateFilter.from;
+            const to = date;
+            const start = from < to ? from : to;
+            const end = from < to ? to : from;
+            setDateFilter({ from: start, to: end });
         }
     };
 
@@ -162,19 +168,18 @@ const Agenda = () => {
     const getFilteredOrders = () => {
         let filtered = orders;
 
-        if (dateFilter.start || dateFilter.end) {
+        if (dateFilter?.from) {
             filtered = filtered.filter(order => {
                 const orderDate = getOrderDate(order);
                 orderDate.setHours(0, 0, 0, 0);
 
-                const start = dateFilter.start ? parseLocalDate(dateFilter.start + 'T00:00:00') : null;
-                const end = dateFilter.end ? parseLocalDate(dateFilter.end + 'T00:00:00') : null;
+                const start = new Date(dateFilter.from!);
+                start.setHours(0, 0, 0, 0);
 
-                if (start) {
-                    start.setHours(0, 0, 0, 0);
-                    if (orderDate < start) return false;
-                }
-                if (end) {
+                if (orderDate < start) return false;
+
+                if (dateFilter.to) {
+                    const end = new Date(dateFilter.to);
                     end.setHours(23, 59, 59, 999);
                     if (orderDate > end) return false;
                 }
@@ -224,17 +229,13 @@ const Agenda = () => {
             setSelectedStatus(null);
         } else {
             setSelectedStatus(status);
-            setRangeStart(null);
-            setRangeEnd(null);
-            setDateFilter({ start: '', end: '' });
+            setDateFilter(undefined);
         }
     };
 
     const clearFilters = () => {
-        setRangeStart(null);
-        setRangeEnd(null);
         setSelectedStatus(null);
-        setDateFilter({ start: '', end: '' });
+        setDateFilter(undefined);
     };
 
     return (
@@ -243,39 +244,18 @@ const Agenda = () => {
                 <div>
                     <h1 className="text-2xl font-bold">Agenda</h1>
                     <p className="text-sm text-muted-foreground">
-                        {rangeStart && !rangeEnd ? 'Clique na data final do período' : 'Gerencie suas entregas'}
+                        {dateFilter?.from && !dateFilter?.to ? 'Clique na data final do período' : 'Gerencie suas entregas'}
                     </p>
                 </div>
                 <div className="flex gap-2">
-
-                    <div className="flex items-center gap-2">
-                        <Input
-                            type="date"
-                            value={dateFilter.start}
-                            onChange={(e) => {
-                                setDateFilter({ ...dateFilter, start: e.target.value });
-                                setRangeStart(null);
-                                setRangeEnd(null);
-                                setSelectedStatus(null);
-                            }}
-                            placeholder="Data inicial"
-                            className="w-36 h-9 text-xs"
-                        />
-                        <span className="text-xs text-muted-foreground">até</span>
-                        <Input
-                            type="date"
-                            value={dateFilter.end}
-                            onChange={(e) => {
-                                setDateFilter({ ...dateFilter, end: e.target.value });
-                                setRangeStart(null);
-                                setRangeEnd(null);
-                                setSelectedStatus(null);
-                            }}
-                            placeholder="Data final"
-                            className="w-36 h-9 text-xs"
-                        />
-                    </div>
-                    {(rangeStart || selectedStatus || dateFilter.start || dateFilter.end) && (
+                    <DateRangePicker
+                        date={dateFilter}
+                        setDate={(range) => {
+                            setDateFilter(range);
+                            if (range) setSelectedStatus(null);
+                        }}
+                    />
+                    {(selectedStatus || dateFilter?.from) && (
                         <Button variant="outline" size="sm" onClick={clearFilters} className="gap-2 h-9">
                             <X className="w-4 h-4" />
                             Limpar
@@ -357,8 +337,8 @@ const Agenda = () => {
                     <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center justify-between">
                             <span>
-                                {dateFilter.start && dateFilter.end &&
-                                    `${parseLocalDate(dateFilter.start + 'T00:00:00').toLocaleDateString('pt-BR')} - ${parseLocalDate(dateFilter.end + 'T00:00:00').toLocaleDateString('pt-BR')} • `}
+                                {dateFilter?.from && dateFilter?.to &&
+                                    `${new Date(dateFilter.from).toLocaleDateString('pt-BR')} - ${new Date(dateFilter.to).toLocaleDateString('pt-BR')} • `}
                                 {selectedStatus && `${getStatusLabel(selectedStatus)} • `}
                                 {displayOrders.length} {displayOrders.length === 1 ? 'pedido' : 'pedidos'}
                             </span>
@@ -370,7 +350,7 @@ const Agenda = () => {
                                 <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-20" />
                                 <p>Nenhum pedido encontrado</p>
                                 <p className="text-xs mt-1">
-                                    {rangeStart && !rangeEnd ? 'Clique na data final' : 'Selecione um período ou status'}
+                                    {dateFilter?.from && !dateFilter?.to ? 'Clique na data final' : 'Selecione um período ou status'}
                                 </p>
                             </div>
                         ) : (
