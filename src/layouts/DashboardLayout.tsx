@@ -42,7 +42,7 @@ import { SpeedDial } from '@/components/layout/SpeedDial';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import CommandPalette from '@/components/CommandPalette';
-import OnboardingModal from '@/components/onboarding/OnboardingModal';
+
 
 // Dialogs for Speed Dial
 import NewOrderDialog from '@/components/orders/NewOrderDialog';
@@ -180,7 +180,7 @@ const DashboardLayout = () => {
         <div className="h-screen overflow-hidden bg-background flex flex-col md:flex-row">
             {/* Desktop Sidebar */}
 
-            <OnboardingModal />
+
             <aside className="hidden md:flex w-52 flex-col border-r bg-card h-full overflow-y-auto">
                 <div className="p-6 border-b flex items-center gap-3 shrink-0">
                     <UserAvatar size="md" clickable />
