@@ -22,6 +22,8 @@ import {
     DrawerTitle,
 } from "@/components/ui/drawer"
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DatePicker } from "@/components/ui/date-picker";
+import { parseLocalDate, formatDateForInput } from '@/lib/dateUtils';
 
 type EditOrderDialogProps = {
     order: OrderWithDetails | null;
@@ -42,6 +44,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
         start_date: '',
         payment_method: 'pix' as PaymentMethod,
         delivery_method: 'pickup' as DeliveryMethod,
+        delivery_fee: 0,
     });
     const [items, setItems] = useState<Array<{ id?: string; product_id: string; product_name: string; quantity: number; unit_price: number }>>([]);
     const { toast } = useToast();
@@ -63,6 +66,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                     start_date: order.start_date || '',
                     payment_method: order.payment_method || 'pix',
                     delivery_method: order.delivery_method || 'pickup',
+                    delivery_fee: order.delivery_fee || 0,
                 });
                 setItems(order.items?.map(item => ({
                     id: item.id,
@@ -130,7 +134,8 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
     };
 
     const calculateTotal = () => {
-        return items.reduce((total, item) => total + (item.unit_price * item.quantity), 0);
+        const itemsTotal = items.reduce((total, item) => total + (item.unit_price * item.quantity), 0);
+        return itemsTotal + (Number(formData.delivery_fee) || 0);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -150,6 +155,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                 status: formData.status,
                 payment_method: formData.payment_method,
                 delivery_method: formData.delivery_method,
+                delivery_fee: Number(formData.delivery_fee) || 0,
                 total_value: totalValue,
                 updated_at: new Date().toISOString(),
             })
@@ -334,11 +340,11 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <Label htmlFor="delivery_date">Data de Entrega</Label>
-                    <Input
-                        id="delivery_date"
-                        type="date"
-                        value={formData.delivery_date}
-                        onChange={(e) => setFormData({ ...formData, delivery_date: e.target.value })}
+                    <DatePicker
+                        date={formData.delivery_date ? parseLocalDate(formData.delivery_date) : undefined}
+                        setDate={(date) => setFormData({ ...formData, delivery_date: date ? formatDateForInput(date) : '' })}
+                        className="w-full h-10"
+                        placeholder="Selecione a data"
                     />
                 </div>
                 <div>
@@ -351,14 +357,28 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
                     />
                 </div>
             </div>
+
+            <div>
+                <Label htmlFor="delivery_fee">Taxa de Entrega (R$)</Label>
+                <Input
+                    id="delivery_fee"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0,00"
+                    value={formData.delivery_fee}
+                    onChange={(e) => setFormData({ ...formData, delivery_fee: parseFloat(e.target.value) || 0 })}
+                    className="h-10"
+                />
+            </div>
             <div className="grid grid-cols-1">
                 <div className="space-y-2">
                     <Label htmlFor="start_date">Data de Produção / Início</Label>
-                    <Input
-                        id="start_date"
-                        type="date"
-                        value={formData.start_date}
-                        onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                    <DatePicker
+                        date={formData.start_date ? parseLocalDate(formData.start_date) : undefined}
+                        setDate={(date) => setFormData({ ...formData, start_date: date ? formatDateForInput(date) : '' })}
+                        className="w-full h-10"
+                        placeholder="Selecione a data"
                     />
                     <p className="text-[10px] text-muted-foreground">Pedido aparecerá na fila "A Fazer" nesta data.</p>
                 </div>

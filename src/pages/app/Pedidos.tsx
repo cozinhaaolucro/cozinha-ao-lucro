@@ -97,7 +97,7 @@ const SortableOrderCard = ({ order, statusConfig, isMobile, draggedOrderId, ...p
     }, [order]);
 
     // Determine Status Key for classes
-    const statusKey = isLate ? 'late' : order.status;
+    const statusKey = order.status;
     // const isReadyStatus = order.status === 'ready' && !isLate; 
 
     // Inline styles for dynamic theming using CSS variables

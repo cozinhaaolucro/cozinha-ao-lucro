@@ -3,13 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, TrendingUp, Pencil, Download, Trash2, Copy } from 'lucide-react';
+import { Plus, TrendingUp, Pencil, Download, Trash2, Copy, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { getProducts, deleteProduct, updateProduct, createProduct, getIngredients } from '@/lib/database';
 import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
 import { PRESET_PRODUCTS } from '@/data/presets';
 import type { Product, Ingredient } from '@/types/database';
 import ProductBuilder from './ProductBuilder';
 import ProductTemplateDialog from './ProductTemplateDialog';
+import NewOrderDialog from '../orders/NewOrderDialog';
 import { useToast } from '@/hooks/use-toast';
 import {
     DropdownMenu,
@@ -39,6 +40,10 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [editingProduct, setEditingProduct] = useState<ProductWithIngredients | null>(null);
     const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+    const [showAllIngredients, setShowAllIngredients] = useState(false);
+    const [hoveredProductId, setHoveredProductId] = useState<string | null>(null);
+    const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+    const [productForOrder, setProductForOrder] = useState<string | null>(null);
 
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -401,10 +406,24 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                         <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="hidden xs:inline">Novo</span> Produto
                     </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 sm:h-9 sm:w-9"
+                        onClick={() => setShowAllIngredients(!showAllIngredients)}
+                        title={showAllIngredients ? "Ocultar detalhes" : "Mostrar detalhes"}
+                    >
+                        {showAllIngredients ? (
+                            <EyeOff className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                            <Eye className="w-4 h-4 text-muted-foreground" />
+                        )}
+                    </Button>
                 </div>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
                 {products.length === 0 ? (
                     <Card className="col-span-full border-dashed">
                         <CardContent className="p-12 text-center">
@@ -427,7 +446,12 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                         const profit = (product.selling_price || 0) - totalCost;
 
                         return (
-                            <Card key={product.id} className="hover:shadow-lg transition-shadow group">
+                            <Card
+                                key={product.id}
+                                className="hover:shadow-lg transition-shadow group"
+                                onMouseEnter={() => setHoveredProductId(product.id)}
+                                onMouseLeave={() => setHoveredProductId(null)}
+                            >
                                 <CardHeader className="pb-3">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">
@@ -586,8 +610,10 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                         </Tooltip>
                                     </TooltipProvider>
 
-                                    {product.product_ingredients.length > 0 && (
-                                        <div className="text-xs text-muted-foreground border-t pt-2">
+
+
+                                    {(showAllIngredients || hoveredProductId === product.id) && product.product_ingredients.length > 0 && (
+                                        <div className="text-xs text-muted-foreground border-t pt-2 animate-in slide-in-from-top-2 fade-in duration-200">
                                             <p className="font-medium mb-1">Ingredientes:</p>
                                             <ul className="space-y-0.5">
                                                 {product.product_ingredients.map((pi, idx) => {
@@ -631,7 +657,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                         const hasStock = producibleUnits > 0;
 
                                         return (
-                                            <div className="flex justify-end mt-2 pt-2 border-t border-dashed border-border/40">
+                                            <div className="flex justify-between items-center mt-2 pt-2 border-t border-dashed border-border/40">
                                                 <TooltipProvider>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
@@ -692,6 +718,21 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 </TooltipProvider>
+
+                                                {(showAllIngredients || hoveredProductId === product.id) && (
+                                                    <Button
+                                                        size="sm"
+                                                        className="h-7 text-xs gap-1.5 animate-in fade-in zoom-in duration-200"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setProductForOrder(product.id);
+                                                            setOrderDialogOpen(true);
+                                                        }}
+                                                    >
+                                                        <Plus className="w-3 h-3" />
+                                                        Criar Pedido
+                                                    </Button>
+                                                )}
                                             </div>
                                         );
                                     })()}
@@ -716,6 +757,21 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                 open={isTemplateDialogOpen}
                 onOpenChange={setIsTemplateDialogOpen}
                 onSuccess={loadProducts}
+            />
+
+            <NewOrderDialog
+                open={orderDialogOpen}
+                onOpenChange={(open) => {
+                    setOrderDialogOpen(open);
+                    if (!open) setProductForOrder(null);
+                }}
+                onSuccess={() => {
+                    setOrderDialogOpen(false);
+                    setProductForOrder(null);
+                    // Optional: You could navigate to orders or show a link
+                    toast({ title: "Pedido criado! Verifique na aba Pedidos." });
+                }}
+                initialProductId={productForOrder}
             />
         </div>
     );

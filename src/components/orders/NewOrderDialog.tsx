@@ -23,14 +23,17 @@ import type { Customer, Product, OrderStatus, PaymentMethod, DeliveryMethod } fr
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DatePicker } from "@/components/ui/date-picker";
+import { parseLocalDate, formatDateForInput } from '@/lib/dateUtils';
 
 type NewOrderDialogProps = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSuccess: () => void;
+    initialProductId?: string | null;
 };
 
-const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) => {
+const NewOrderDialog = ({ open, onOpenChange, onSuccess, initialProductId }: NewOrderDialogProps) => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [formData, setFormData] = useState({
@@ -42,6 +45,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
         start_date: '',
         payment_method: 'pix' as PaymentMethod,
         delivery_method: 'pickup' as DeliveryMethod,
+        delivery_fee: 0,
     });
     const [items, setItems] = useState<Array<{ product_id: string; quantity: number }>>([]);
     const [showNewCustomer, setShowNewCustomer] = useState(false);
@@ -64,8 +68,13 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
     useEffect(() => {
         if (open) {
             loadData();
+            if (initialProductId) {
+                setItems([{ product_id: initialProductId, quantity: 1 }]);
+            } else {
+                setItems([]);
+            }
         }
-    }, [open]);
+    }, [open, initialProductId]);
 
     const loadData = async () => {
         const [customersRes, productsRes] = await Promise.all([
@@ -123,10 +132,11 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
     };
 
     const calculateTotal = () => {
-        return items.reduce((total, item) => {
+        const itemsTotal = items.reduce((total, item) => {
             const product = products.find((p) => p.id === item.product_id);
             return total + (product?.selling_price || 0) * item.quantity;
         }, 0);
+        return itemsTotal + (Number(formData.delivery_fee) || 0);
     };
 
     const calculateMissingStock = async () => {
@@ -234,6 +244,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                 status: formData.status,
                 total_value: calculateTotal(),
                 start_date: formData.start_date || null,
+                delivery_fee: Number(formData.delivery_fee) || 0,
                 order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
             } as any,
             orderItems as any
@@ -273,7 +284,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
     };
 
     const resetForm = () => {
-        setFormData({ customer_id: '', delivery_date: '', delivery_time: '', notes: '', status: 'pending', start_date: '', payment_method: 'pix', delivery_method: 'pickup' });
+        setFormData({ customer_id: '', delivery_date: '', delivery_time: '', notes: '', status: 'pending', start_date: '', payment_method: 'pix', delivery_method: 'pickup', delivery_fee: 0 });
         setItems([]);
         setShowNewCustomer(false);
         setNewCustomerData({ name: '', phone: '', address: '', notes: '' });
@@ -361,12 +372,11 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                     <div className="space-y-3">
                         <div>
                             <Label htmlFor="delivery_date">Data de Entrega</Label>
-                            <Input
-                                id="delivery_date"
-                                type="date"
-                                value={formData.delivery_date}
-                                onChange={(e) => setFormData({ ...formData, delivery_date: e.target.value })}
-                                className="h-10"
+                            <DatePicker
+                                date={formData.delivery_date ? parseLocalDate(formData.delivery_date) : undefined}
+                                setDate={(date) => setFormData({ ...formData, delivery_date: date ? formatDateForInput(date) : '' })}
+                                className="w-full h-10"
+                                placeholder="Selecione a data"
                             />
                         </div>
                         <div>
@@ -381,12 +391,11 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                         </div>
                         <div>
                             <Label htmlFor="start_date">Data de Produção</Label>
-                            <Input
-                                id="start_date"
-                                type="date"
-                                value={formData.start_date}
-                                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                                className="h-10"
+                            <DatePicker
+                                date={formData.start_date ? parseLocalDate(formData.start_date) : undefined}
+                                setDate={(date) => setFormData({ ...formData, start_date: date ? formatDateForInput(date) : '' })}
+                                className="w-full h-10"
+                                placeholder="Selecione a data"
                             />
                         </div>
                     </div>
@@ -440,6 +449,19 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess }: NewOrderDialogProps) 
                                     <SelectItem value="delivery">Delivery</SelectItem>
                                 </SelectContent>
                             </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="delivery_fee">Taxa de Entrega (R$)</Label>
+                            <Input
+                                id="delivery_fee"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="0,00"
+                                value={formData.delivery_fee}
+                                onChange={(e) => setFormData({ ...formData, delivery_fee: parseFloat(e.target.value) || 0 })}
+                                className="h-10"
+                            />
                         </div>
                     </div>
                 </div>
