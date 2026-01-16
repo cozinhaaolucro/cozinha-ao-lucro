@@ -19,7 +19,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Upload, Image as ImageIcon, FileSpreadsheet, FileText, Info, FileDown } from 'lucide-react';
+import { Upload, Image as ImageIcon, FileSpreadsheet, FileText, Info, FileDown, Package } from 'lucide-react';
 import {
     Tooltip,
     TooltipContent,
@@ -36,6 +36,7 @@ type ProductWithIngredients = Product & {
 
 const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     const [products, setProducts] = useState<ProductWithIngredients[]>([]);
+    const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [editingProduct, setEditingProduct] = useState<ProductWithIngredients | null>(null);
     const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
@@ -44,8 +45,12 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
 
     const loadProducts = async () => {
         const { data, error } = await getProducts();
+        const { data: ingredientsData } = await getIngredients();
         if (!error && data) {
             setProducts(data as ProductWithIngredients[]);
+        }
+        if (ingredientsData) {
+            setIngredients(ingredientsData);
         }
     };
 
@@ -64,6 +69,22 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     const calculateMargin = (cost: number, price: number) => {
         if (price === 0) return 0;
         return ((price - cost) / price) * 100;
+    };
+
+    // Calculate how many units of a product can be produced with current stock
+    const calculateProducibleUnits = (product: ProductWithIngredients) => {
+        if (!product.product_ingredients.length) return Infinity;
+
+        let minUnits = Infinity;
+        for (const pi of product.product_ingredients) {
+            if (!pi.ingredient || !pi.quantity) continue;
+            const ingredient = ingredients.find(i => i.id === pi.ingredient.id);
+            if (!ingredient) continue;
+            const stock = ingredient.stock_quantity || 0;
+            const unitsFromThisIngredient = Math.floor(stock / pi.quantity);
+            minUnits = Math.min(minUnits, unitsFromThisIngredient);
+        }
+        return minUnits === Infinity ? 0 : minUnits;
     };
 
     // Bulk Actions
@@ -543,6 +564,77 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                             </ul>
                                         </div>
                                     )}
+
+                                    {/* Producible Units Indicator */}
+                                    {(() => {
+                                        const producibleUnits = calculateProducibleUnits(product);
+                                        const hasIngredients = product.product_ingredients.length > 0;
+                                        if (!hasIngredients) return null;
+
+                                        // Build ingredient usage breakdown for tooltip
+                                        const ingredientBreakdown = product.product_ingredients
+                                            .filter(pi => pi.ingredient && pi.quantity)
+                                            .map(pi => {
+                                                const ingredient = ingredients.find(i => i.id === pi.ingredient.id);
+                                                const stock = ingredient?.stock_quantity || 0;
+                                                const usagePerUnit = pi.quantity;
+                                                const totalUsage = producibleUnits > 0 ? usagePerUnit * producibleUnits : 0;
+                                                return {
+                                                    name: pi.ingredient.name,
+                                                    usagePerUnit,
+                                                    totalUsage,
+                                                    stock,
+                                                    unit: pi.ingredient.unit
+                                                };
+                                            });
+
+                                        const hasStock = producibleUnits > 0;
+
+                                        return (
+                                            <div className="flex justify-end mt-2 pt-2 border-t border-dashed border-border/40">
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Badge
+                                                            variant="secondary"
+                                                            className={`text-xs font-medium gap-1.5 cursor-help ${hasStock
+                                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                                                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                                                                }`}
+                                                        >
+                                                            <Package className="w-3 h-3" />
+                                                            {hasStock
+                                                                ? `${producibleUnits > 999 ? "999+" : producibleUnits} possíveis`
+                                                                : "Adicione ingredientes"
+                                                            }
+                                                        </Badge>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="max-w-[280px]">
+                                                        {hasStock ? (
+                                                            <div className="space-y-2">
+                                                                <p className="text-xs font-medium">
+                                                                    Para produzir {producibleUnits} unidade(s):
+                                                                </p>
+                                                                <div className="space-y-1">
+                                                                    {ingredientBreakdown.map((item, idx) => (
+                                                                        <div key={idx} className="flex justify-between text-[10px] gap-4">
+                                                                            <span className="truncate">{item.name}</span>
+                                                                            <span className="font-mono text-emerald-600 whitespace-nowrap">
+                                                                                {item.totalUsage.toFixed(1)} {item.unit}
+                                                                            </span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-xs">
+                                                                Adicione ingredientes ao estoque para produzir este produto.
+                                                            </p>
+                                                        )}
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </div>
+                                        );
+                                    })()}
                                 </CardContent>
                             </Card>
                         );

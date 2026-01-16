@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { getIngredients, createIngredient, updateIngredient, deleteIngredient, getOrders } from '@/lib/database';
 import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
 import { Badge } from '@/components/ui/badge';
@@ -65,6 +66,12 @@ const IngredientList = () => {
     const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
     const [isBulkEditDialogOpen, setIsBulkEditDialogOpen] = useState(false);
 
+    // Package Mode State
+    const [packageMode, setPackageMode] = useState(false);
+    const [packageQty, setPackageQty] = useState(1);
+    const [packageSize, setPackageSize] = useState(0);
+    const [packageUnit, setPackageUnit] = useState<'grama' | 'ml' | 'unidade' | 'kg' | 'litro'>('grama');
+
     const loadIngredients = async () => {
         const { data, error } = await getIngredients();
         if (!error && data) {
@@ -91,8 +98,20 @@ const IngredientList = () => {
     const handleSubmit = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
 
+        // Calculate final stock quantity based on mode
+        const finalStockQuantity = packageMode
+            ? packageQty * packageSize
+            : formData.stock_quantity;
+
+        const submitData = {
+            ...formData,
+            stock_quantity: finalStockQuantity,
+            // Use package unit when in package mode
+            unit: packageMode ? packageUnit : formData.unit
+        };
+
         if (editingIngredient) {
-            const { error } = await updateIngredient(editingIngredient.id, formData);
+            const { error } = await updateIngredient(editingIngredient.id, submitData);
             if (!error) {
                 toast({ title: 'Ingrediente atualizado' });
                 loadIngredients();
@@ -105,7 +124,7 @@ const IngredientList = () => {
                 });
             }
         } else {
-            const { error } = await createIngredient(formData);
+            const { error } = await createIngredient(submitData);
             if (!error) {
                 toast({ title: 'Ingrediente criado' });
                 loadIngredients();
@@ -133,6 +152,10 @@ const IngredientList = () => {
     const resetForm = () => {
         setFormData({ name: '', unit: 'kg', cost_per_unit: 0, stock_quantity: 0 });
         setEditingIngredient(null);
+        setPackageMode(false);
+        setPackageQty(1);
+        setPackageSize(0);
+        setPackageUnit('grama');
         setIsDialogOpen(false);
     };
 
@@ -356,18 +379,101 @@ const IngredientList = () => {
                     </div>
                 </div>
 
-                <div>
-                    <Label htmlFor="stock">Quantidade em Estoque</Label>
-                    <Input
-                        id="stock"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.stock_quantity}
-                        onChange={(e) => setFormData({ ...formData, stock_quantity: parseFloat(e.target.value) || 0 })}
-                        placeholder="Ex: 5.5"
-                        className="h-10"
-                    />
+                {/* Stock Entry Mode Toggle */}
+                <div className="space-y-4 p-3 bg-muted/10 rounded-lg border border-border/50">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">Modo de Entrada</Label>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xs ${!packageMode ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Direto</span>
+                            <Switch
+                                checked={packageMode}
+                                onCheckedChange={(checked) => {
+                                    setPackageMode(checked);
+                                    if (!checked) {
+                                        // Reset package values when switching back to direct
+                                        setPackageQty(1);
+                                        setPackageSize(0);
+                                    }
+                                }}
+                            />
+                            <span className={`text-xs ${packageMode ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Pacotes</span>
+                        </div>
+                    </div>
+
+                    {!packageMode ? (
+                        <div>
+                            <Label htmlFor="stock">Quantidade em Estoque</Label>
+                            <Input
+                                id="stock"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={formData.stock_quantity}
+                                onChange={(e) => setFormData({ ...formData, stock_quantity: parseFloat(e.target.value) || 0 })}
+                                placeholder="Ex: 5.5"
+                                className="h-10"
+                            />
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <Label htmlFor="packageQty">Qtd. de Pacotes</Label>
+                                    <Input
+                                        id="packageQty"
+                                        type="number"
+                                        step="1"
+                                        min="1"
+                                        value={packageQty}
+                                        onChange={(e) => setPackageQty(parseInt(e.target.value) || 1)}
+                                        placeholder="Ex: 3"
+                                        className="h-10"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="packageSize">Tamanho por Pacote</Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            id="packageSize"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={packageSize}
+                                            onChange={(e) => setPackageSize(parseFloat(e.target.value) || 0)}
+                                            placeholder="Ex: 350"
+                                            className="h-10 flex-1"
+                                        />
+                                        <Select
+                                            value={packageUnit}
+                                            onValueChange={(value) => setPackageUnit(value as any)}
+                                        >
+                                            <SelectTrigger className="h-10 w-24">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="grama">g</SelectItem>
+                                                <SelectItem value="ml">ml</SelectItem>
+                                                <SelectItem value="unidade">un</SelectItem>
+                                                <SelectItem value="kg">kg</SelectItem>
+                                                <SelectItem value="litro">L</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Live Preview */}
+                            <div className="flex items-center justify-between p-2 bg-emerald-50 rounded border border-emerald-200">
+                                <span className="text-xs text-emerald-700 font-medium flex items-center gap-1.5">
+                                    <Package className="w-3.5 h-3.5" />
+                                    Total calculado:
+                                </span>
+                                <span className="text-sm font-bold text-emerald-700">
+                                    {(packageQty * packageSize).toFixed(2)} {packageUnit}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <p className="text-[10px] text-muted-foreground p-2 bg-muted/20 rounded border">
