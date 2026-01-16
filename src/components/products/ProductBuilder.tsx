@@ -139,6 +139,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         hourly_rate: 0,
         is_highlight: false
     });
+    const [isPriceManual, setIsPriceManual] = useState(false);
     const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
     const [openCombobox, setOpenCombobox] = useState(false);
 
@@ -169,6 +170,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     hourly_rate: productToEdit.hourly_rate || 0,
                     is_highlight: productToEdit.is_highlight || false,
                 });
+                setIsPriceManual(true);
                 setImagePreview(productToEdit.image_url || null);
 
                 // Populate ingredients
@@ -193,9 +195,20 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
             } else {
                 // Reset for new product
                 resetFields();
+                setIsPriceManual(false);
             }
         }
     }, [open, productToEdit]);
+
+    // Auto-update price with suggested margin if not manual
+    const totalCostForEffect = selectedIngredients.reduce((acc, curr) => acc + (curr.cost * curr.quantity), 0);
+    useEffect(() => {
+        if (!isPriceManual && totalCostForEffect > 0) {
+            // Default 60% margin: Price = Cost / 0.4
+            const suggested = totalCostForEffect / 0.4;
+            setFormData(prev => ({ ...prev, selling_price: parseFloat(suggested.toFixed(2)) }));
+        }
+    }, [totalCostForEffect, isPriceManual]);
 
     const loadIngredients = async () => {
         const { data, error } = await getIngredients();
@@ -1036,13 +1049,20 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                 <p className="font-bold text-lg">R$ {totalCost.toFixed(2)}</p>
             </div>
             <div className="text-right">
-                <p className="text-xs text-muted-foreground">Preço (Margem {margin.toFixed(0)}%)</p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-end">
+                    <p className="text-xs text-muted-foreground">Preço (Margem {margin.toFixed(0)}%)</p>
+                </div>
+                <div className="flex items-center gap-2 justify-end">
+                    <span className="text-sm font-medium text-muted-foreground">R$</span>
                     <Input
                         type="number"
                         value={formData.selling_price}
-                        onChange={(e) => setFormData({ ...formData, selling_price: parseFloat(e.target.value) || 0 })}
-                        className="h-8 w-24 text-right font-bold bg-background"
+                        onChange={(e) => {
+                            setFormData({ ...formData, selling_price: parseFloat(e.target.value) || 0 });
+                            setIsPriceManual(true);
+                        }}
+                        className="h-10 w-32 text-right font-bold bg-background text-lg"
+                        step="0.01"
                     />
                 </div>
             </div>
