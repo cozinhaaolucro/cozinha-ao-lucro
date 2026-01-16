@@ -112,6 +112,7 @@ export const getProducts = async () => {
       *,
       product_ingredients (
         quantity,
+        display_unit,
         ingredient:ingredients (*)
       )
     `)
@@ -122,7 +123,7 @@ export const getProducts = async () => {
 
 export const createProduct = async (
     product: Omit<Product, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
-    ingredients: Array<{ ingredient_id: string; quantity: number }>
+    ingredients: Array<{ ingredient_id: string; quantity: number; display_unit?: string }>
 ) => {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return { data: null, error: new Error('Usuário não autenticado') };
@@ -147,6 +148,7 @@ export const createProduct = async (
                     product_id: productData.id,
                     ingredient_id: ing.ingredient_id,
                     quantity: ing.quantity,
+                    display_unit: ing.display_unit
                 }))
             );
 
@@ -159,7 +161,7 @@ export const createProduct = async (
 export const updateProduct = async (
     id: string,
     updates: Partial<Omit<Product, 'id' | 'user_id' | 'created_at' | 'updated_at'>>,
-    ingredients: Array<{ ingredient_id: string; quantity: number }> | null
+    ingredients: Array<{ ingredient_id: string; quantity: number; display_unit?: string }> | null
 ) => {
     // 1. Update product details
     const { data: productData, error: productError } = await supabase
@@ -189,7 +191,8 @@ export const updateProduct = async (
                     ingredients.map(ing => ({
                         product_id: id,
                         ingredient_id: ing.ingredient_id,
-                        quantity: ing.quantity
+                        quantity: ing.quantity,
+                        display_unit: ing.display_unit
                     }))
                 );
 
@@ -249,6 +252,7 @@ export const getOrders = async (status?: string, startDate?: string, endDate?: s
             *,
             product_ingredients (
                 quantity,
+                display_unit,
                 ingredient:ingredients (*)
             )
         )

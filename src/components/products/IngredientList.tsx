@@ -70,7 +70,8 @@ const IngredientList = () => {
     const [packageMode, setPackageMode] = useState(false);
     const [packageQty, setPackageQty] = useState(1);
     const [packageSize, setPackageSize] = useState(0);
-    const [packageUnit, setPackageUnit] = useState<'grama' | 'ml' | 'unidade' | 'kg' | 'litro'>('grama');
+    const [packageUnit, setPackageUnit] = useState<'g' | 'ml' | 'un' | 'kg' | 'l'>('g');
+    const [packageCost, setPackageCost] = useState(0);
 
     const loadIngredients = async () => {
         const { data, error } = await getIngredients();
@@ -103,11 +104,21 @@ const IngredientList = () => {
             ? packageQty * packageSize
             : formData.stock_quantity;
 
+        // Calculate final cost based on mode
+        const finalCostPerUnit = packageMode && packageSize > 0
+            ? packageCost / packageSize
+            : formData.cost_per_unit;
+
         const submitData = {
             ...formData,
+            cost_per_unit: finalCostPerUnit,
             stock_quantity: finalStockQuantity,
             // Use package unit when in package mode
-            unit: packageMode ? packageUnit : formData.unit
+            unit: packageMode ? packageUnit : formData.unit,
+            // Persist package info
+            package_qty: packageMode ? packageQty : null,
+            package_size: packageMode ? packageSize : null,
+            package_unit: packageMode ? packageUnit : null
         };
 
         if (editingIngredient) {
@@ -155,7 +166,8 @@ const IngredientList = () => {
         setPackageMode(false);
         setPackageQty(1);
         setPackageSize(0);
-        setPackageUnit('grama');
+        setPackageCost(0);
+        setPackageUnit('g');
         setIsDialogOpen(false);
     };
 
@@ -163,10 +175,26 @@ const IngredientList = () => {
         setEditingIngredient(ingredient);
         setFormData({
             name: ingredient.name,
-            unit: ingredient.unit as any,
+            unit: (ingredient.unit === 'litro' ? 'l' : ingredient.unit === 'grama' ? 'g' : ingredient.unit === 'unidade' ? 'un' : ingredient.unit) as any,
             cost_per_unit: ingredient.cost_per_unit,
             stock_quantity: ingredient.stock_quantity || 0,
         });
+
+        // Restore package info if available
+        if (ingredient.package_qty && ingredient.package_size) {
+            setPackageMode(true);
+            setPackageQty(ingredient.package_qty);
+            setPackageSize(ingredient.package_size);
+            setPackageUnit((ingredient.package_unit as any) || ingredient.unit);
+            setPackageCost(ingredient.cost_per_unit * ingredient.package_size);
+        } else {
+            setPackageMode(false);
+            setPackageQty(1);
+            setPackageSize(0);
+            setPackageUnit('g');
+            setPackageCost(0);
+        }
+
         setIsDialogOpen(true);
     };
 
@@ -358,21 +386,28 @@ const IngredientList = () => {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="kg">Kg</SelectItem>
-                                <SelectItem value="litro">Litro</SelectItem>
-                                <SelectItem value="grama">Grama</SelectItem>
+                                <SelectItem value="l">Litro (l)</SelectItem>
+                                <SelectItem value="g">Grama (g)</SelectItem>
                                 <SelectItem value="ml">ML</SelectItem>
-                                <SelectItem value="unidade">Unidade</SelectItem>
+                                <SelectItem value="un">Unidade</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div>
-                        <Label htmlFor="cost">Custo / Unidade (R$)</Label>
+                        <Label htmlFor="cost">{packageMode ? 'Custo total dos Pacotes (R$)' : `Custo / ${formData.unit} (R$)`}</Label>
                         <Input
                             id="cost"
                             type="number"
                             step="0.01"
-                            value={formData.cost_per_unit}
-                            onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) })}
+                            value={packageMode ? packageCost : formData.cost_per_unit}
+                            onChange={(e) => {
+                                const val = parseFloat(e.target.value) || 0;
+                                if (packageMode) {
+                                    setPackageCost(val);
+                                } else {
+                                    setFormData({ ...formData, cost_per_unit: val });
+                                }
+                            }}
                             required
                             className="h-10"
                         />
@@ -451,11 +486,11 @@ const IngredientList = () => {
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="grama">g</SelectItem>
+                                                <SelectItem value="kg">Kg</SelectItem>
+                                                <SelectItem value="g">g</SelectItem>
+                                                <SelectItem value="l">L</SelectItem>
                                                 <SelectItem value="ml">ml</SelectItem>
-                                                <SelectItem value="unidade">un</SelectItem>
-                                                <SelectItem value="kg">kg</SelectItem>
-                                                <SelectItem value="litro">L</SelectItem>
+                                                <SelectItem value="un">un</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -626,6 +661,12 @@ const IngredientList = () => {
                                         <p className={`text-xs font-semibold ${styles.text}`}>
                                             {Number(stock.toFixed(2))} {formatUnit(stock, ingredient.unit)}
                                         </p>
+                                        {ingredient.package_qty && (
+                                            <Badge variant="outline" className="text-[9px] h-4 px-1 gap-1 border-dashed text-muted-foreground ml-1">
+                                                <Package className="w-2 h-2" />
+                                                {ingredient.package_qty}x {ingredient.package_size}{ingredient.package_unit === 'grama' ? 'g' : ingredient.package_unit === 'ml' ? 'ml' : ingredient.package_unit}
+                                            </Badge>
+                                        )}
                                         {stock < 0 && (
                                             <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
                                                 Negativo

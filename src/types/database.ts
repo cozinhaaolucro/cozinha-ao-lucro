@@ -45,6 +45,10 @@ export type Ingredient = {
     cost_per_unit: number;
     stock_quantity: number;
     min_stock_threshold?: number;
+    // Package Mode Fields
+    package_qty?: number;
+    package_size?: number;
+    package_unit?: string;
     created_at: string;
     updated_at: string;
 };
@@ -81,6 +85,7 @@ export type ProductIngredient = {
     product_id: string;
     ingredient_id: string;
     quantity: number;
+    display_unit?: string;
     // Relacionamento
     ingredient?: Ingredient;
 };

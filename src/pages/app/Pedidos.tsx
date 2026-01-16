@@ -1109,7 +1109,7 @@ const CardWithStyle = ({
                             <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
                             {order.delivery_date ? formatDate(order.delivery_date) : 'Sem data'}
                         </span>
-                        <span className="font-semibold text-sm font-mono tracking-tight" style={{ color: baseColor }}>
+                        <span className="font-medium text-sm tracking-normal" style={{ color: baseColor }}>
                             R$ {order.total_value.toFixed(2)}
                         </span>
                     </div>

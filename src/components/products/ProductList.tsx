@@ -72,6 +72,37 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     };
 
     // Calculate how many units of a product can be produced with current stock
+    // Helper to convert quantity for display
+    const getDisplayQuantity = (qty: number, baseUnit: string, displayUnit?: string, packageSize?: number) => {
+        if (!displayUnit) return { value: qty, unit: baseUnit };
+
+        const base = baseUnit.toLowerCase();
+        const display = displayUnit.toLowerCase();
+
+        if (display === base) return { value: qty, unit: baseUnit };
+
+        if (display === 'pacote' && packageSize) {
+            return { value: qty / packageSize, unit: 'pacote(s)' };
+        }
+
+        const isKg = ['kg', 'quilo', 'kilograma'].includes(base);
+        const isG = ['g', 'grama'].includes(base);
+        const isL = ['l', 'litro'].includes(base);
+        const isMl = ['ml', 'mililitro'].includes(base);
+
+        const targetIsKg = ['kg', 'quilo', 'kilograma'].includes(display);
+        const targetIsG = ['g', 'grama'].includes(display);
+        const targetIsL = ['l', 'litro'].includes(display);
+        const targetIsMl = ['ml', 'mililitro'].includes(display);
+
+        if (isKg && targetIsG) return { value: qty * 1000, unit: 'g' };
+        if (isG && targetIsKg) return { value: qty / 1000, unit: 'kg' };
+        if (isL && targetIsMl) return { value: qty * 1000, unit: 'ml' };
+        if (isMl && targetIsL) return { value: qty / 1000, unit: 'l' };
+
+        return { value: qty, unit: displayUnit };
+    };
+
     const calculateProducibleUnits = (product: ProductWithIngredients) => {
         if (!product.product_ingredients.length) return Infinity;
 
@@ -505,9 +536,15 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                 <div className="space-y-1">
                                                     {product.product_ingredients.map((pi, idx) => {
                                                         if (!pi.ingredient) return null;
+                                                        const display = getDisplayQuantity(pi.quantity, pi.ingredient.unit, pi.display_unit, pi.ingredient.package_size);
                                                         return (
                                                             <div key={idx} className="flex justify-between text-[10px] gap-4">
-                                                                <span className="truncate">{pi.ingredient.name}</span>
+                                                                <span className="truncate">
+                                                                    {pi.ingredient.name}
+                                                                    <span className="text-muted-foreground ml-1">
+                                                                        ({display.value < 0.01 ? display.value.toExponential(1) : parseFloat(display.value.toFixed(3))} {display.unit})
+                                                                    </span>
+                                                                </span>
                                                                 <span className="font-mono text-green-600">R$ {((pi.ingredient.cost_per_unit || 0) * pi.quantity).toFixed(2)}</span>
                                                             </div>
                                                         );
@@ -555,9 +592,10 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                             <ul className="space-y-0.5">
                                                 {product.product_ingredients.map((pi, idx) => {
                                                     if (!pi.ingredient) return null;
+                                                    const display = getDisplayQuantity(pi.quantity, pi.ingredient.unit, pi.display_unit, pi.ingredient.package_size);
                                                     return (
                                                         <li key={idx}>
-                                                            • {pi.ingredient.name} ({pi.quantity} {pi.ingredient.unit})
+                                                            • {pi.ingredient.name} ({display.value < 0.01 ? display.value.toExponential(1) : parseFloat(display.value.toFixed(3))} {display.unit})
                                                         </li>
                                                     );
                                                 })}
@@ -584,7 +622,9 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                     usagePerUnit,
                                                     totalUsage,
                                                     stock,
-                                                    unit: pi.ingredient.unit
+                                                    unit: pi.ingredient.unit,
+                                                    displayUnit: pi.display_unit,
+                                                    ingredient: pi.ingredient
                                                 };
                                             });
 
@@ -592,46 +632,66 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
 
                                         return (
                                             <div className="flex justify-end mt-2 pt-2 border-t border-dashed border-border/40">
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className={`text-xs font-medium gap-1.5 cursor-help ${hasStock
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className={`text-xs font-medium gap-1.5 cursor-help ${hasStock
                                                                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                                                                     : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-                                                                }`}
-                                                        >
-                                                            <Package className="w-3 h-3" />
-                                                            {hasStock
-                                                                ? `${producibleUnits > 999 ? "999+" : producibleUnits} possíveis`
-                                                                : "Adicione ingredientes"
-                                                            }
-                                                        </Badge>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent className="max-w-[280px]">
-                                                        {hasStock ? (
-                                                            <div className="space-y-2">
-                                                                <p className="text-xs font-medium">
-                                                                    Para produzir {producibleUnits} unidade(s):
-                                                                </p>
-                                                                <div className="space-y-1">
-                                                                    {ingredientBreakdown.map((item, idx) => (
-                                                                        <div key={idx} className="flex justify-between text-[10px] gap-4">
-                                                                            <span className="truncate">{item.name}</span>
-                                                                            <span className="font-mono text-emerald-600 whitespace-nowrap">
-                                                                                {item.totalUsage.toFixed(1)} {item.unit}
-                                                                            </span>
-                                                                        </div>
-                                                                    ))}
+                                                                    }`}
+                                                            >
+                                                                <Package className="w-3 h-3" />
+                                                                {hasStock
+                                                                    ? `${producibleUnits > 999 ? "999+" : producibleUnits} possíveis`
+                                                                    : "Adicione ingredientes"
+                                                                }
+                                                            </Badge>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent className="max-w-[280px]">
+                                                            {hasStock ? (
+                                                                <div className="space-y-2">
+                                                                    <p className="text-xs font-medium">
+                                                                        Para produzir {producibleUnits} unidade(s):
+                                                                    </p>
+                                                                    <div className="space-y-1">
+                                                                        {ingredientBreakdown.map((item, idx) => {
+                                                                            const display = getDisplayQuantity(item.totalUsage, item.unit, item.displayUnit, item.ingredient?.package_size);
+                                                                            return (
+                                                                                <div key={idx} className="flex justify-between text-[10px] gap-4">
+                                                                                    <span className="truncate">{item.name}</span>
+                                                                                    <span className="font-mono text-emerald-600 whitespace-nowrap">
+                                                                                        {parseFloat(display.value.toFixed(2))} {display.unit}
+                                                                                    </span>
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        ) : (
-                                                            <p className="text-xs">
-                                                                Adicione ingredientes ao estoque para produzir este produto.
-                                                            </p>
-                                                        )}
-                                                    </TooltipContent>
-                                                </Tooltip>
+                                                            ) : (
+                                                                <div className="space-y-2">
+                                                                    <p className="text-xs font-medium">
+                                                                        Estoque atual:
+                                                                    </p>
+                                                                    <div className="space-y-1">
+                                                                        {ingredientBreakdown.map((item, idx) => (
+                                                                            <div key={idx} className="flex justify-between text-[10px] gap-4">
+                                                                                <span className="truncate">{item.name}</span>
+                                                                                <span className="font-mono text-muted-foreground whitespace-nowrap">
+                                                                                    {item.stock.toFixed(1)} {item.unit}
+                                                                                </span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                    <p className="text-[10px] text-muted-foreground pt-1 border-t">
+                                                                        Adicione ingredientes ao estoque.
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             </div>
                                         );
                                     })()}

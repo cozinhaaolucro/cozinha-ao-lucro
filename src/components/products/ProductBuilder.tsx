@@ -59,24 +59,69 @@ type SelectedIngredient = {
     display_unit: string;
     display_quantity: number;
     is_virtual?: boolean;
+    package_size?: number;
+    package_unit?: string;
 };
 
 // ... helpers logic remains ...
 // Helper to determine available units based on base unit
-const getUnitOptions = (baseUnit: string) => {
+const getUnitOptions = (baseUnit: string, ingredient?: any) => {
     const normalized = baseUnit.toLowerCase();
-    if (['kg', 'quilo', 'kilograma'].includes(normalized)) return ['kg', 'g'];
-    if (['l', 'litro'].includes(normalized)) return ['l', 'ml'];
-    return [baseUnit];
+    const options: string[] = [];
+
+    // Mass
+    if (['kg', 'quilo', 'kilograma', 'g', 'grama'].includes(normalized)) {
+        options.push('kg', 'g');
+    }
+    // Volume
+    else if (['l', 'litro', 'ml', 'mililitro'].includes(normalized)) {
+        options.push('l', 'ml');
+    }
+    // Unit
+    else {
+        options.push('un');
+    }
+
+    if (ingredient?.package_size) {
+        options.push('pacote');
+    }
+
+    // Return unique options
+    return [...new Set(options)];
 };
 
 // Helper to convert between units
-const convertQuantity = (qty: number, fromUnit: string, toUnit: string): number => {
+const convertQuantity = (qty: number, fromUnit: string, toUnit: string, packageSize: number = 0): number => {
     if (fromUnit === toUnit) return qty;
-    if (fromUnit === 'kg' && toUnit === 'g') return qty * 1000;
-    if (fromUnit === 'g' && toUnit === 'kg') return qty / 1000;
-    if (fromUnit === 'l' && toUnit === 'ml') return qty * 1000;
-    if (fromUnit === 'ml' && toUnit === 'l') return qty / 1000;
+
+    const from = fromUnit.toLowerCase();
+    const to = toUnit.toLowerCase();
+
+    // Package Logic
+    if (from === 'pacote') {
+        return qty * packageSize;
+    }
+    if (to === 'pacote') {
+        if (packageSize === 0) return qty;
+        return qty / packageSize;
+    }
+
+    // Normalize inputs
+    const isKg = ['kg', 'quilo', 'kilograma'].includes(from);
+    const isG = ['g', 'grama'].includes(from);
+    const isL = ['l', 'litro'].includes(from);
+    const isMl = ['ml', 'mililitro'].includes(from);
+
+    const targetIsKg = ['kg', 'quilo', 'kilograma'].includes(to);
+    const targetIsG = ['g', 'grama'].includes(to);
+    const targetIsL = ['l', 'litro'].includes(to);
+    const targetIsMl = ['ml', 'mililitro'].includes(to);
+
+    if (isKg && targetIsG) return qty * 1000;
+    if (isG && targetIsKg) return qty / 1000;
+    if (isL && targetIsMl) return qty * 1000;
+    if (isMl && targetIsL) return qty / 1000;
+
     return qty;
 };
 
@@ -134,8 +179,14 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                         unit: pi.ingredient.unit, // Base unit from DB
                         cost: pi.ingredient.cost_per_unit,
                         quantity: pi.quantity, // Quantity in base unit
-                        display_unit: pi.ingredient.unit, // Default to base unit
-                        display_quantity: pi.quantity,
+                        display_unit: pi.display_unit || pi.ingredient.unit, // Use saved display unit or fallback
+                        display_quantity: pi.display_unit === 'pacote' && pi.ingredient.package_size
+                            ? pi.quantity / pi.ingredient.package_size // Convert base->pakage for display if needed
+                            : pi.display_unit && pi.display_unit !== pi.ingredient.unit
+                                ? convertQuantity(pi.quantity, pi.ingredient.unit, pi.display_unit, pi.ingredient.package_size)
+                                : pi.quantity,
+                        package_size: pi.ingredient.package_size,
+                        package_unit: pi.ingredient.package_unit
                     }));
                     setSelectedIngredients(mappedIngredients);
                 }
@@ -159,6 +210,9 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
             return;
         }
 
+        const isPackage = !!ingredient.package_size;
+        const normalizedUnit = ingredient.unit === 'litro' ? 'l' : ingredient.unit === 'grama' ? 'g' : ingredient.unit === 'unidade' ? 'un' : ingredient.unit;
+
         setSelectedIngredients([
             ...selectedIngredients,
             {
@@ -166,10 +220,12 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                 name: ingredient.name,
                 unit: ingredient.unit,
                 cost: ingredient.cost_per_unit,
-                quantity: 1,
-                display_unit: ingredient.unit,
+                quantity: isPackage ? ingredient.package_size! : 1,
+                display_unit: isPackage ? 'pacote' : normalizedUnit,
                 display_quantity: 1,
-                is_virtual: false
+                is_virtual: false,
+                package_size: ingredient.package_size,
+                package_unit: ingredient.package_unit
             }
         ]);
         setOpenCombobox(false);
@@ -228,8 +284,10 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         const updated = [...selectedIngredients];
         const item = updated[index];
 
-        // Calculate base quantity
-        const baseQty = convertQuantity(newDisplayQty, item.display_unit, item.unit);
+        // Calculate base quantity (what goes to DB stock deduction)
+        // If display unit is pacote, convert Package -> Base
+        // If display unit is g, convert g -> kg (if base is kg)
+        const baseQty = convertQuantity(newDisplayQty, item.display_unit, item.unit, item.package_size);
 
         updated[index] = {
             ...item,
@@ -243,14 +301,14 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         const updated = [...selectedIngredients];
         const item = updated[index];
 
-        // When changing unit, we want to KEEP the physical quantity, but change the displayed number
-        // e.g. 0.05kg (50g) -> switch to 'g' -> should display 50
-        const newDisplayQty = convertQuantity(item.quantity, item.unit, newUnit);
+        // When changing unit, we want to KEEP the physical quantity (item.quantity), but change the displayed number
+        // e.g. 0.05kg -> 'pacote' (size 0.5kg) -> 0.1 pacote
+        const newDisplayQty = convertQuantity(item.quantity, item.unit, newUnit, item.package_size);
 
         updated[index] = {
             ...item,
             display_unit: newUnit,
-            display_quantity: parseFloat(newDisplayQty.toFixed(4)) // Avoid rough floating point math
+            display_quantity: parseFloat(newDisplayQty.toFixed(4))
         };
         setSelectedIngredients(updated);
     };
@@ -260,6 +318,9 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         if (!ingredient) return;
 
         const updated = [...selectedIngredients];
+        const isPackage = !!ingredient.package_size;
+        const normalizedUnit = ingredient.unit === 'litro' ? 'l' : ingredient.unit === 'grama' ? 'g' : ingredient.unit === 'unidade' ? 'un' : ingredient.unit;
+
         updated[index] = {
             ...updated[index],
             ingredient_id: ingredient.id,
@@ -267,10 +328,13 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
             unit: ingredient.unit,
             cost: ingredient.cost_per_unit,
             is_virtual: false,
-            // Reset to defaults for the new ingredient type
-            display_unit: ingredient.unit,
+            // Defaults: prioritize package if exists
+            display_unit: isPackage ? 'pacote' : normalizedUnit,
             display_quantity: 1,
-            quantity: 1
+            quantity: isPackage ? ingredient.package_size! : 1,
+            // Package info
+            package_size: ingredient.package_size,
+            package_unit: ingredient.package_unit
         };
         setSelectedIngredients(updated);
     };
@@ -358,7 +422,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         setUploading(true);
 
         // 1. Process ingredients (create virtual ones if needed)
-        const finalIngredients: Array<{ ingredient_id: string; quantity: number }> = [];
+        const finalIngredients: Array<{ ingredient_id: string; quantity: number; display_unit?: string }> = [];
 
         for (const si of selectedIngredients) {
             let ingredientId = si.ingredient_id;
@@ -387,7 +451,11 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
             }
 
             if (ingredientId) {
-                finalIngredients.push({ ingredient_id: ingredientId, quantity: si.quantity });
+                finalIngredients.push({
+                    ingredient_id: ingredientId,
+                    quantity: si.quantity,
+                    display_unit: si.display_unit
+                });
             }
         }
 
@@ -883,30 +951,33 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                                                     onChange={(e) => updateIngredientDisplayQuantity(index, parseFloat(e.target.value) || 0)}
                                                     className="h-10 rounded-r-none border-r-0"
                                                 />
-                                                {si.is_virtual ? (
-                                                    <Select
-                                                        value={si.display_unit}
-                                                        onValueChange={(val) => updateIngredientDisplayUnit(index, val)}
-                                                    >
-                                                        <SelectTrigger className="h-10 w-20 rounded-l-none bg-muted/50">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {getUnitOptions(si.unit).map(u => (
-                                                                <SelectItem key={u} value={u}>{u}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                ) : (
-                                                    <div className="h-10 w-16 flex items-center justify-center bg-muted/50 border border-l-0 rounded-r-md text-sm font-medium text-muted-foreground">
-                                                        {formatUnit(si.display_quantity || 0, si.display_unit)}
-                                                    </div>
-                                                )}
+                                                <Select
+                                                    value={si.display_unit}
+                                                    onValueChange={(val) => updateIngredientDisplayUnit(index, val)}
+                                                >
+                                                    <SelectTrigger className="h-10 w-20 rounded-l-none bg-muted/50">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {getUnitOptions(si.unit, si).map(u => (
+                                                            <SelectItem key={u} value={u}>
+                                                                {u === 'pacote' && si.package_size
+                                                                    ? `Pacote (${si.package_size}${si.package_unit})`
+                                                                    : u}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                         </div>
                                         <div className="text-right min-w-[30%]">
                                             <p className="text-xs text-muted-foreground">Custo</p>
                                             <p className="font-semibold">R$ {(si.cost * si.quantity).toFixed(2)}</p>
+                                            {si.display_unit === 'pacote' && si.package_size && (
+                                                <p className="text-[10px] text-muted-foreground mt-1">
+                                                    = {(si.display_quantity * si.package_size).toFixed(2)} {si.package_unit || si.unit}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
