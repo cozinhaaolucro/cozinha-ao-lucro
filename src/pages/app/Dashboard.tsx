@@ -688,7 +688,7 @@ const Dashboard = () => {
                                     Produtos Mais Lucrativos
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent style={{ border: '1px solid rgba(199, 110, 96, 1)' }}>
+                            <CardContent>
                                 <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
                                     {topProfitableProducts.length === 0 ? (
                                         <p className="text-sm text-muted-foreground text-center py-8">Nenhuma venda no período</p>
