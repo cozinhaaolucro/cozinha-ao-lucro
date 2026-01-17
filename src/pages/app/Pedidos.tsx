@@ -1110,7 +1110,10 @@ const CardWithStyle = ({
                             {order.delivery_date ? formatDate(order.delivery_date) : 'Sem data'}
                         </span>
                         <span className="font-medium text-sm tracking-normal" style={{ color: baseColor }}>
-                            R$ {order.total_value.toFixed(2)}
+                            R$
+                            <div style={{ color: 'rgba(114, 108, 92, 1)' }}>
+                                {order.total_value.toFixed(2)}
+                            </div>
                         </span>
                     </div>
 

@@ -629,13 +629,13 @@ const Dashboard = () => {
                                                 <AlertTriangle className="w-4 h-4" /> Ação Necessária
                                             </h4>
                                             {criticalStock.map(item => (
-                                                <div key={`critical-${item.ingredient.id}`} className="flex items-center justify-between text-sm bg-red-100 p-2 rounded border border-red-300">
+                                                <div key={`critical-${item.ingredient.id}`} className="flex items-center justify-between text-sm bg-white p-2 rounded border" style={{ borderColor: 'rgba(199, 110, 96, 1)' }}>
                                                     <div className="flex items-center gap-2">
                                                         <XCircle className="w-4 h-4 text-red-600" />
-                                                        <span className="font-medium text-red-800">{item.ingredient.name}</span>
+                                                        <span className="font-medium" style={{ color: '#62696f' }}>{item.ingredient.name}</span>
                                                     </div>
                                                     <div className="text-right">
-                                                        <Badge variant="destructive" className="bg-red-500 text-white border-red-600">
+                                                        <Badge className="text-stone-50" style={{ backgroundColor: 'rgba(250, 250, 249, 1)', color: 'rgba(199, 110, 96, 1)', border: '1px solid rgba(199, 110, 96, 1)' }}>
                                                             -{Math.abs(item.balance).toFixed(1)} {item.ingredient.unit}
                                                         </Badge>
                                                     </div>
@@ -688,7 +688,7 @@ const Dashboard = () => {
                                     Produtos Mais Lucrativos
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent style={{ border: '1px solid rgba(199, 110, 96, 1)' }}>
                                 <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
                                     {topProfitableProducts.length === 0 ? (
                                         <p className="text-sm text-muted-foreground text-center py-8">Nenhuma venda no período</p>
