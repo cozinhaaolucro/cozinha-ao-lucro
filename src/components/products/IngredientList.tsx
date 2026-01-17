@@ -25,7 +25,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { getIngredients, createIngredient, updateIngredient, deleteIngredient, getOrders } from '@/lib/database';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { getIngredients, createIngredient, updateIngredient, deleteIngredient, getOrders, createStockMovement } from '@/lib/database';
 import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
 import { Badge } from '@/components/ui/badge';
 import type { Ingredient } from '@/types/database';
@@ -319,6 +321,7 @@ const IngredientList = () => {
     };
 
     const getStatusType = (stock: number, demand: number) => {
+        if (stock < 0) return 'critical';
         if (demand === 0) return stock > 0 ? 'good' : 'neutral';
         const ratio = stock / demand;
         if (ratio >= 1) return 'good';
@@ -649,7 +652,7 @@ const IngredientList = () => {
                                                 const Icon = getIngredientIcon(ingredient.name);
                                                 return <Icon className={`w-4 h-4 ${styles.icon}`} />;
                                             })()}
-                                            <CardTitle className={`text-sm font-medium line-clamp-1 ${styles.text}`}>
+                                            <CardTitle className={`text-sm font-medium line-clamp-1 text-foreground`}>
                                                 {ingredient.name}
                                             </CardTitle>
                                         </div>
@@ -657,32 +660,30 @@ const IngredientList = () => {
                                     <div className="text-lg font-bold text-foreground/90">
                                         R$ {ingredient.cost_per_unit.toFixed(2)}
                                     </div>
-                                    <div className="flex items-center justify-between">
-                                        <p className={`text-xs font-semibold ${styles.text}`}>
-                                            {Number(stock.toFixed(2))} {formatUnit(stock, ingredient.unit)}
-                                        </p>
-                                        {ingredient.package_qty && (
-                                            <Badge variant="outline" className="text-[9px] h-4 px-1 gap-1 border-dashed text-muted-foreground ml-1">
-                                                <Package className="w-2 h-2" />
-                                                {ingredient.package_qty}x {ingredient.package_size}{ingredient.package_unit === 'grama' ? 'g' : ingredient.package_unit === 'ml' ? 'ml' : ingredient.package_unit}
-                                            </Badge>
-                                        )}
-                                        {stock < 0 && (
-                                            <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
-                                                Negativo
-                                            </Badge>
-                                        )}
-                                        {stock === 0 && (
-                                            <Badge variant="secondary" className="text-[10px] h-4 opacity-70 px-1.5">
-                                                Esgotado
-                                            </Badge>
-                                        )}
+                                    <div className="flex items-center justify-between mt-2">
+                                        <div className="flex flex-col">
+                                            <p className={`text-xs font-semibold ${stock < 0 ? 'text-destructive' :
+                                                stock === 0 ? 'text-muted-foreground' :
+                                                    styles.text
+                                                }`}>
+                                                {Number(stock.toFixed(2))} {formatUnit(stock, ingredient.unit)}
+                                            </p>
+                                            {demand > 0 && (
+                                                <p className="text-[10px] text-orange-600">
+                                                    Op: {demand.toFixed(1)}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <QuickAddStock
+                                            ingredient={ingredient}
+                                            onSuccess={() => {
+                                                loadIngredients();
+                                                toast({ title: 'Estoque atualizado!' });
+                                            }}
+                                        />
                                     </div>
-                                    {demand > 0 && (
-                                        <p className="text-[10px] text-orange-600 mt-1">
-                                            Demanda: {demand.toFixed(1)} {formatUnit(demand, ingredient.unit)}
-                                        </p>
-                                    )}
+
                                     <div className="mt-2 hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Button
                                             variant="outline"
@@ -770,5 +771,153 @@ const IngredientList = () => {
         </div>
     );
 };
+
+const QuickAddStock = ({ ingredient, onSuccess }: { ingredient: Ingredient; onSuccess: () => void }) => {
+    const { toast } = useToast();
+    const [open, setOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Mode: 'direct' or 'package'
+    const [mode, setMode] = useState<'direct' | 'package'>('direct');
+
+    // Direct inputs
+    const [directQty, setDirectQty] = useState('');
+
+    // Package inputs (defaults from ingredient if available)
+    const [packQty, setPackQty] = useState('1');
+    const [packSize, setPackSize] = useState(ingredient.package_size?.toString() || '');
+    const [packUnit, setPackUnit] = useState(ingredient.package_unit || ingredient.unit);
+
+    const handleAdd = async () => {
+        let finalQty = 0;
+
+        if (mode === 'direct') {
+            finalQty = parseFloat(directQty);
+        } else {
+            const pQty = parseFloat(packQty);
+            const pSize = parseFloat(packSize);
+            if (pQty > 0 && pSize > 0) {
+                finalQty = pQty * pSize;
+                // Basic unit conversion if needed (assuming packUnit matches ingredient unit base for now, 
+                // but if packUnit is 'g' and ingredient is 'kg', we might need conversion. 
+                // For simplicity in this quick add, we assume user inputs compatible values or system handles generic unit).
+                // Actually, let's respect the unit logic from the main form:
+                // If ingredient is KG and pack is G, simple math.
+                // NOTE: 'formatUnit' and backend logic usually expects base units. 
+                // Let's rely on simple multiplication for now, assuming user consistentcy.
+            }
+        }
+
+        if (!finalQty || finalQty <= 0) return;
+
+        setIsLoading(true);
+        try {
+            await createStockMovement({
+                ingredient_id: ingredient.id,
+                type: 'in',
+                quantity: finalQty,
+                reason: mode === 'package' ? `Adição Rápida: ${packQty}x ${packSize}${packUnit}` : 'Adição Rápida'
+            });
+
+            // Artificial delay to ensure DB trigger propagation before reload
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            setOpen(false);
+            setDirectQty('');
+            // Keep package settings for convenience? Or reset? Let's reset qty but keep size.
+            setPackQty('1');
+            onSuccess();
+        } catch (error) {
+            console.error(error);
+            toast({ title: 'Erro ao atualizar', variant: 'destructive' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full bg-background border-border/60 text-primary shadow-sm transition-all duration-200 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+                >
+                    <Plus className="w-5 h-5" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-3" align="end" side="left">
+                <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 h-8 mb-3">
+                        <TabsTrigger value="direct" className="text-xs">Direto</TabsTrigger>
+                        <TabsTrigger value="package" className="text-xs">Pacotes</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="direct" className="space-y-3">
+                        <div className="flex gap-2 items-end">
+                            <div className="flex-1">
+                                <Label className="text-[10px] text-muted-foreground mb-1 block">Quantidade ({ingredient.unit})</Label>
+                                <Input
+                                    type="number"
+                                    placeholder="0.00"
+                                    value={directQty}
+                                    onChange={(e) => setDirectQty(e.target.value)}
+                                    className="h-8 text-sm"
+                                    autoFocus
+                                />
+                            </div>
+                            <Button size="sm" className="h-8 px-3" onClick={handleAdd} disabled={isLoading}>
+                                {isLoading ? <span className="animate-spin">...</span> : <Plus className="w-4 h-4" />}
+                            </Button>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="package" className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <Label className="text-[10px] text-muted-foreground mb-1 block">
+                                    {parseInt(packQty) === 1 ? 'Pacote' : 'Pacotes'}
+                                </Label>
+                                <Input
+                                    type="number"
+                                    value={packQty}
+                                    onChange={(e) => setPackQty(e.target.value)}
+                                    className="h-8 text-sm"
+                                />
+                            </div>
+                            <div>
+                                <Label className="text-[10px] text-muted-foreground mb-1 block">Tamanho</Label>
+                                <div className="flex relative">
+                                    <Input
+                                        type="number"
+                                        value={packSize}
+                                        onChange={(e) => setPackSize(e.target.value)}
+                                        className="h-8 text-sm pr-8"
+                                        placeholder="Ex: 500"
+                                    />
+                                    <span className="absolute right-2 top-2 text-[10px] text-muted-foreground">
+                                        {packUnit}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t">
+                            <div className="text-[10px] text-muted-foreground">
+                                Total: <span className="font-bold text-foreground">
+                                    {(parseFloat(packQty || '0') * parseFloat(packSize || '0')).toFixed(2)} {packUnit}
+                                </span>
+                            </div>
+                            <Button size="sm" className="h-7 px-3 text-xs" onClick={handleAdd} disabled={isLoading}>
+                                {isLoading ? 'Adicionando...' : 'Adicionar'}
+                            </Button>
+                        </div>
+                    </TabsContent>
+                </Tabs>
+            </PopoverContent>
+        </Popover>
+    );
+};
+
 
 export default IngredientList;

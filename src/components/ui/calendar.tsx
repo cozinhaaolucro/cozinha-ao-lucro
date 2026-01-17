@@ -32,22 +32,22 @@ function Calendar({
         table: "w-full border-collapse space-y-1",
         head_row: "flex mb-2",
         head_cell:
-          "text-muted-foreground rounded-md w-9 font-medium text-[0.7rem] uppercase tracking-wider",
+          "text-muted-foreground rounded-lg w-9 font-medium text-[0.7rem] uppercase tracking-wider",
         row: "flex w-full mt-2 gap-1",
-        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+        cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md hover:bg-primary/10 hover:text-primary aria-selected:hover:bg-primary aria-selected:hover:text-primary-foreground transition-all duration-200"
+          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-muted hover:text-foreground transition-all duration-200"
         ),
         day_range_end: "day-range-end",
         day_selected:
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground shadow-sm font-semibold focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent/20 text-accent-foreground border border-primary/20",
+        day_today: "bg-transparent text-foreground ring-2 ring-primary ring-offset-2 font-semibold",
         day_outside:
           "day-outside text-muted-foreground opacity-30 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
         day_disabled: "text-muted-foreground opacity-20",
         day_range_middle:
-          "aria-selected:bg-accent aria-selected:text-accent-foreground",
+          "aria-selected:bg-accent/50 aria-selected:text-accent-foreground rounded-lg",
         day_hidden: "invisible",
         ...classNames,
       }}

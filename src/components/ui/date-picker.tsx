@@ -30,7 +30,7 @@ export function DatePicker({
                 <Button
                     variant={"outline"}
                     className={cn(
-                        "w-[240px] justify-start text-left font-normal bg-muted/10 border-input/60 hover:bg-muted/20 hover:border-primary/30 shadow-sm",
+                        "w-[240px] justify-start text-left font-normal bg-muted/10 border-input/60 hover:bg-muted/20 hover:border-primary/30 hover:text-foreground shadow-sm",
                         !date && "text-muted-foreground",
                         className
                     )}
@@ -68,7 +68,7 @@ export function DateRangePicker({
                         id="date"
                         variant={"outline"}
                         className={cn(
-                            "w-full justify-start text-left font-normal bg-muted/10 border-input/60 hover:bg-muted/20 hover:border-primary/30 shadow-sm",
+                            "w-full justify-start text-left font-normal bg-muted/10 border-input/60 hover:bg-muted/20 hover:border-primary/30 hover:text-foreground shadow-sm",
                             !date && "text-muted-foreground"
                         )}
                     >
@@ -80,7 +80,7 @@ export function DateRangePicker({
                                     {format(date.to, "dd/MM/y", { locale: ptBR })}
                                 </>
                             ) : (
-                                format(date.from, "dd/MM/y", { locale: ptBR })
+                                <span>Selecione a data final</span>
                             )
                         ) : (
                             <span>Selecione um período</span>

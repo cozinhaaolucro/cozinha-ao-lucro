@@ -74,7 +74,10 @@ const Dashboard = () => {
     });
 
     useEffect(() => {
-        if (!dateRange || (dateRange.from && dateRange.to)) {
+        // Enforce 2-click filtering: Only update if BOTH from and to are present, or if cleared.
+        if (!dateRange) {
+            setAppliedRange(undefined);
+        } else if (dateRange.from && dateRange.to) {
             setAppliedRange(dateRange);
         }
     }, [dateRange]);
