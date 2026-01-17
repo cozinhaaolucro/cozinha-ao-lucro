@@ -13,24 +13,37 @@ import EditOrderDialog from '@/components/orders/EditOrderDialog';
 import { generateWhatsAppLink, getDefaultTemplateForStatus, parseMessageTemplate } from '@/lib/crm';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
+import { useOrders } from '@/hooks/useQueries';
 
 
 const Agenda = () => {
-    const [orders, setOrders] = useState<OrderWithDetails[]>([]);
+    // const [orders, setOrders] = useState<OrderWithDetails[]>([]); // Derived
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
     const [dateFilter, setDateFilter] = useState<DateRange | undefined>();
     const [editingOrder, setEditingOrder] = useState<OrderWithDetails | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
 
+    // React Query Hook
+    // Agenda typically needs ALL orders for the calendar view (or at least for the current month).
+    // The current pagination/filtering hook might be limiting if not careful.
+    // Ideally we fetch by range (current month).
+    // For now, let's just fetch "all" (or large limit) via the hook without strict filters, 
+    // OR implementation smart month-based fetching. 
+    // Simplest step forward: Fetch all active/recent via basic hook call, but user expects *calendar* data.
+    // We already have `getOrders` fetching everything by default if no args.
+    // The `useOrders` hook takes filters. 
 
+    // Let's pass year/month filters if possible? 
+    // The current `useOrders` only takes specific date range. 
+    // Let's just use it without filters for now (Fetch World pattern replacement with Cache World) 
+    // maximizing cache hit chance with other pages.
+    const { data: ordersData, refetch: refetchOrders } = useOrders();
 
-    const loadOrders = async () => {
-        const { data, error } = await getOrders();
-        if (!error && data) {
-            setOrders(data.filter(o => o.status !== 'cancelled'));
-        }
-    };
+    const orders = (ordersData || []).filter(o => o.status !== 'cancelled');
+
+    // Remove loadOrders
+    // const loadOrders = async () ...
 
     const handleDelete = async (id: string) => {
         if (confirm('Tem certeza que deseja excluir este pedido?')) {
@@ -46,7 +59,7 @@ const Agenda = () => {
                     title: "Pedido excluído",
                     description: "O pedido foi removido com sucesso."
                 });
-                loadOrders();
+                refetchOrders();
             }
         }
     };
@@ -67,9 +80,7 @@ const Agenda = () => {
         window.open(link, '_blank');
     };
 
-    useEffect(() => {
-        loadOrders();
-    }, []);
+    // useEffect(() => { refetchOrders(); }, []); -> Removed
 
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();
@@ -464,7 +475,7 @@ const Agenda = () => {
                 open={!!editingOrder}
                 onOpenChange={(open) => !open && setEditingOrder(null)}
                 order={editingOrder}
-                onSuccess={loadOrders}
+                onSuccess={refetchOrders}
             />
         </div >
     );

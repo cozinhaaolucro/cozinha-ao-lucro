@@ -12,6 +12,7 @@ import ProductBuilder from './ProductBuilder';
 import ProductTemplateDialog from './ProductTemplateDialog';
 import NewOrderDialog from '../orders/NewOrderDialog';
 import { useToast } from '@/hooks/use-toast';
+import { useProducts, useIngredients } from '@/hooks/useQueries';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -36,8 +37,8 @@ type ProductWithIngredients = Product & {
 };
 
 const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
-    const [products, setProducts] = useState<ProductWithIngredients[]>([]);
-    const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+    // const [products, setProducts] = useState<ProductWithIngredients[]>([]); // Derived
+    // const [ingredients, setIngredients] = useState<Ingredient[]>([]); // Derived
     const [editingProduct, setEditingProduct] = useState<ProductWithIngredients | null>(null);
     const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
     const [showAllIngredients, setShowAllIngredients] = useState(false);
@@ -48,20 +49,28 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const loadProducts = async () => {
-        const { data, error } = await getProducts();
-        const { data: ingredientsData } = await getIngredients();
-        if (!error && data) {
-            setProducts(data as ProductWithIngredients[]);
-        }
-        if (ingredientsData) {
-            setIngredients(ingredientsData);
-        }
+    const [page, setPage] = useState(1);
+    const [limit] = useState(18); // Multipie of 2 and 3 for grid
+
+    // React Query Hooks
+    const { data: productsData, isLoading: productsLoading, refetch: refetchProducts } = useProducts(page, limit);
+    const { data: ingredientsData, isLoading: ingredientsLoading, refetch: refetchIngredients } = useIngredients();
+
+    // Derived
+    const products = productsData?.products || [];
+    const totalCount = productsData?.count || 0;
+    const ingredients = ingredientsData?.ingredients || [];
+    const isLoading = productsLoading || ingredientsLoading;
+
+    // Helper to refresh everything
+    const loadProducts = () => {
+        refetchProducts();
+        refetchIngredients();
     };
 
-    useEffect(() => {
-        loadProducts();
-    }, []);
+    // Remove manual loadProducts async function and effect
+    // const loadProducts = async () ...
+    // useEffect ...
 
     // ... calculation helpers ...
     const calculateTotalCost = (product: ProductWithIngredients) => {
@@ -491,16 +500,14 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                         checked={product.active !== false}
                                                         onChange={async (e) => {
                                                             const newActive = e.target.checked;
-                                                            // Optimistic update
-                                                            const updatedProducts = products.map(p =>
-                                                                p.id === product.id ? { ...p, active: newActive } : p
-                                                            );
-                                                            setProducts(updatedProducts);
+                                                            // Optimistic update removed (requires mutation cache update)
+                                                            // setProducts(updatedProducts); -> Removed
 
                                                             const { error } = await updateProduct(product.id, { active: newActive }, null);
                                                             if (error) {
                                                                 toast({ title: 'Erro ao atualizar status', variant: 'destructive' });
-                                                                loadProducts();
+                                                            } else {
+                                                                loadProducts(); // Refetch to show new state
                                                             }
                                                         }}
                                                     />
@@ -742,6 +749,74 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                     })
                 )}
             </div>
+
+            {/* Pagination Controls */}
+            {
+                totalCount > 0 && (
+                    <div className="flex items-center justify-between border-t pt-4 mt-4">
+                        <div className="text-sm text-muted-foreground">
+                            Mostrando {products.length} de {totalCount} produtos
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1 || isLoading}
+                            >
+                                <ChevronDown className="h-4 w-4 rotate-90 mr-1" />
+                                Anterior
+                            </Button>
+                            <div className="text-sm font-medium min-w-[3rem] text-center">
+                                Pág. {page}
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={products.length < limit || (page * limit) >= totalCount || isLoading}
+                            >
+                                Próximo
+                                <ChevronDown className="h-4 w-4 -rotate-90 ml-1" />
+                            </Button>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Pagination Controls */}
+            {
+                totalCount > 0 && (
+                    <div className="flex items-center justify-between border-t pt-4 mt-4">
+                        <div className="text-sm text-muted-foreground">
+                            Mostrando {products.length} de {totalCount} produtos
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1 || isLoading}
+                            >
+                                <ChevronDown className="h-4 w-4 rotate-90 mr-1" />
+                                Anterior
+                            </Button>
+                            <div className="text-sm font-medium min-w-[3rem] text-center">
+                                Pág. {page}
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={products.length < limit || (page * limit) >= totalCount || isLoading}
+                            >
+                                Próximo
+                                <ChevronDown className="h-4 w-4 -rotate-90 ml-1" />
+                            </Button>
+                        </div>
+                    </div>
+                )
+            }
 
             <ProductBuilder
                 open={!!editingProduct}

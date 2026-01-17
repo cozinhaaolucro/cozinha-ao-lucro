@@ -32,6 +32,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ClientProfileDrawer from '@/components/crm/ClientProfileDrawer';
 import { formatUnit } from '@/lib/utils';
 import SendMessageDialog from '@/components/crm/SendMessageDialog';
+import { useKanbanOrders, useProducts, useIngredients } from '@/hooks/useQueries';
 import { Customer, OrderStatus } from '@/types/database';
 
 // DND Kit Imports
@@ -145,10 +146,12 @@ const STATUS_COLUMNS = {
     delivered: { label: 'Entregue', key: 'delivered' },
 };
 
+const formatDate = (date: string | null | undefined) => {
+    if (!date) return '-';
+    return formatLocalDate(date);
+};
+
 const Pedidos = () => {
-    const [orders, setOrders] = useState<OrderWithDetails[]>([]);
-    const [products, setProducts] = useState<ProductWithIngredients[]>([]);
-    const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingOrder, setEditingOrder] = useState<OrderWithDetails | null>(null);
     const [dateFilter, setDateFilter] = useState<DateRange | undefined>();
@@ -189,26 +192,31 @@ const Pedidos = () => {
         })
     );
 
-    const loadOrders = async () => {
-        const { data, error } = await getOrders();
-        const { data: pData } = await getProducts();
-        const { data: iData } = await getIngredients();
+    // React Query Hooks
+    const { data: serverOrders, refetch: refetchOrders } = useKanbanOrders(dateFilter);
+    const { data: productsData } = useProducts();
+    const { data: ingredientsData } = useIngredients();
 
-        if (!error && data) {
-            setOrders(data);
-        }
-        if (pData) setProducts(pData as ProductWithIngredients[]);
-        if (iData) setIngredients(iData);
-    };
+    // Local state for DnD (synced with server)
+    const [orders, setOrders] = useState<OrderWithDetails[]>([]);
+
+    // Aliases
+    const products = productsData?.products || [];
+    const ingredients = ingredientsData?.ingredients || [];
 
     useEffect(() => {
-        loadOrders();
-    }, []);
+        if (serverOrders) {
+            setOrders(serverOrders);
+        }
+    }, [serverOrders]);
 
-    const formatDate = (date: string | null) => {
-        if (!date) return '-';
-        return formatLocalDate(date);
-    };
+    // Removed manual syncing of products/ingredients state as hooks handle it now.
+    // Removed refetchOrders calls.
+
+    // refetchOrders removed (replaced by hooks)
+
+
+
 
     const handleWhatsApp = (order: OrderWithDetails) => {
         setMessageOrder(order);
@@ -299,7 +307,7 @@ const Pedidos = () => {
                 title: 'Pedido duplicado',
                 description: 'O pedido foi duplicado com sucesso para a aba "A Fazer".',
             });
-            loadOrders();
+            refetchOrders();
         } catch (error: any) {
             toast({
                 title: 'Erro ao duplicar',
@@ -362,7 +370,7 @@ const Pedidos = () => {
         const { error } = await deleteOrder(id);
         if (!error) {
             toast({ title: 'Pedido excluído' });
-            loadOrders();
+            refetchOrders();
         } else {
             toast({ title: 'Erro ao excluir pedido', variant: 'destructive' });
         }
@@ -386,23 +394,7 @@ const Pedidos = () => {
 
     const filteredOrders = orders.filter((order) => {
         if (order.status === 'cancelled') return false;
-        if (!dateFilter?.from) return true;
-        if (!order.delivery_date) return false;
-
-        const orderDate = parseLocalDate(order.delivery_date);
-        orderDate.setHours(0, 0, 0, 0);
-
-        const start = new Date(dateFilter.from);
-        start.setHours(0, 0, 0, 0);
-
-        if (orderDate < start) return false;
-
-        if (dateFilter.to) {
-            const end = new Date(dateFilter.to);
-            end.setHours(23, 59, 59, 999);
-            if (orderDate > end) return false;
-        }
-
+        // Date filtering is now handled server-side in refetchOrders
         return true;
     });
 
@@ -490,7 +482,7 @@ const Pedidos = () => {
         const { error } = await updateOrderPositions(updates);
         if (error) {
             toast({ title: 'Erro ao salvar ordem', variant: 'destructive' });
-            loadOrders();
+            refetchOrders();
         }
     };
 
@@ -549,7 +541,7 @@ const Pedidos = () => {
                                     >
                                         <CardWithStyle
                                             activeId={activeId}
-                                            loadOrders={loadOrders}
+                                            refetchOrders={refetchOrders}
                                             products={products}
                                             ingredients={ingredients}
                                             handleCustomerClick={handleCustomerClick}
@@ -677,7 +669,7 @@ const Pedidos = () => {
                                         description: `${successCount} pedidos criados. ${errorCount} erros/ignorados.`,
                                         variant: successCount > 0 ? 'default' : 'destructive'
                                     });
-                                    loadOrders();
+                                    refetchOrders();
                                 } catch (err) {
                                     console.error("Import error", err);
                                     toast({ title: 'Erro na importação', description: 'Falha ao ler arquivo', variant: 'destructive' });
@@ -779,7 +771,7 @@ const Pedidos = () => {
                     <NewOrderDialog
                         open={isDialogOpen}
                         onOpenChange={setIsDialogOpen}
-                        onSuccess={loadOrders}
+                        onSuccess={refetchOrders}
                     />
                 )}
 
@@ -788,7 +780,7 @@ const Pedidos = () => {
                         order={editingOrder}
                         open={!!editingOrder}
                         onOpenChange={(open) => !open && setEditingOrder(null)}
-                        onSuccess={loadOrders}
+                        onSuccess={refetchOrders}
                     />
                 )}
 
@@ -796,7 +788,7 @@ const Pedidos = () => {
                     customer={selectedCustomer}
                     open={isDrawerOpen}
                     onOpenChange={setIsDrawerOpen}
-                    onUpdate={loadOrders}
+                    onUpdate={refetchOrders}
                 />
 
                 <SendMessageDialog
@@ -901,7 +893,7 @@ const Pedidos = () => {
                                         onClick={async () => {
                                             await updateOrderStatus(longPressOrder.id, 'preparing', longPressOrder.status);
                                             toast({ title: '→ Em Produção - Estoque Deduzido' });
-                                            loadOrders();
+                                            refetchOrders();
                                             setLongPressOrder(null);
                                         }}
                                     >
@@ -915,7 +907,7 @@ const Pedidos = () => {
                                             onClick={async () => {
                                                 await updateOrderStatus(longPressOrder.id, 'ready', longPressOrder.status);
                                                 toast({ title: '→ Pronto' });
-                                                loadOrders();
+                                                refetchOrders();
                                                 setLongPressOrder(null);
                                             }}
                                         >
@@ -927,7 +919,7 @@ const Pedidos = () => {
                                             onClick={async () => {
                                                 await updateOrderStatus(longPressOrder.id, 'pending', longPressOrder.status);
                                                 toast({ title: '← Voltou para A Fazer - Estoque Estornado' });
-                                                loadOrders();
+                                                refetchOrders();
                                                 setLongPressOrder(null);
                                             }}
                                         >
@@ -942,7 +934,7 @@ const Pedidos = () => {
                                             onClick={async () => {
                                                 await updateOrderStatus(longPressOrder.id, 'delivered', longPressOrder.status);
                                                 toast({ title: '→ Entregue' });
-                                                loadOrders();
+                                                refetchOrders();
                                                 setLongPressOrder(null);
                                             }}
                                         >
@@ -954,7 +946,7 @@ const Pedidos = () => {
                                             onClick={async () => {
                                                 await updateOrderStatus(longPressOrder.id, 'preparing', longPressOrder.status);
                                                 toast({ title: '← Voltou para Produção' });
-                                                loadOrders();
+                                                refetchOrders();
                                                 setLongPressOrder(null);
                                             }}
                                         >
@@ -969,7 +961,7 @@ const Pedidos = () => {
                                         onClick={async () => {
                                             await updateOrderStatus(longPressOrder.id, 'ready', longPressOrder.status);
                                             toast({ title: '← Voltou para Pronto' });
-                                            loadOrders();
+                                            refetchOrders();
                                             setLongPressOrder(null);
                                         }}
                                     >
@@ -1008,7 +1000,7 @@ const Pedidos = () => {
                         <div className="opacity-90 rotate-3 cursor-grabbing scale-105">
                             <CardWithStyle
                                 activeId={activeId}
-                                loadOrders={loadOrders}
+                                refetchOrders={refetchOrders}
                                 products={products}
                                 ingredients={ingredients}
                                 handleCustomerClick={handleCustomerClick}
@@ -1047,7 +1039,7 @@ const CardWithStyle = ({
     statusKey,
     order,
     activeId,
-    loadOrders,
+    refetchOrders,
     products,
     ingredients,
     handleCustomerClick,
@@ -1076,7 +1068,7 @@ const CardWithStyle = ({
                 order={order}
                 products={products}
                 ingredients={ingredients}
-                onStockUpdate={loadOrders}
+                onStockUpdate={refetchOrders}
             />
             <CardHeader className="pb-1 pt-2.5 pl-4 pr-3">
                 <div className="text-sm flex items-start justify-between">

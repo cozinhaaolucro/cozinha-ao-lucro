@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Download, Upload, Package, FileSpreadsheet, FileDown, FileText } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download, Upload, Package, FileSpreadsheet, FileDown, FileText, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -75,16 +75,24 @@ const IngredientList = () => {
     const [packageUnit, setPackageUnit] = useState<'g' | 'ml' | 'un' | 'kg' | 'l'>('g');
     const [packageCost, setPackageCost] = useState(0);
 
+    const [page, setPage] = useState(1);
+    const [limit] = useState(24);
+    const [totalCount, setTotalCount] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+
     const loadIngredients = async () => {
-        const { data, error } = await getIngredients();
+        setIsLoading(true);
+        const { data, error, count } = await getIngredients(page, limit);
         if (!error && data) {
             setIngredients(data);
+            if (count !== null) setTotalCount(count);
         }
+        setIsLoading(false);
     };
 
     useEffect(() => {
         loadIngredients();
-    }, []);
+    }, [page]);
 
     const handlePresetSelect = (presetName: string) => {
         const preset = presetIngredients.find(p => p.name === presetName);
@@ -330,11 +338,13 @@ const IngredientList = () => {
     };
 
     const getStatusStyles = (type: string) => {
+        // Standardize icon color to primary blue for consistency
+        const iconClass = 'text-primary';
         switch (type) {
-            case 'good': return { text: 'text-emerald-700', icon: 'text-emerald-600/80', bg: '' };
-            case 'warning': return { text: 'text-amber-700', icon: 'text-amber-600/80', bg: '' };
-            case 'critical': return { text: 'text-red-700', icon: 'text-red-600/80', bg: '' };
-            default: return { text: 'text-muted-foreground', icon: 'text-muted-foreground/70', bg: '' };
+            case 'good': return { text: 'text-emerald-700', icon: iconClass, bg: '' };
+            case 'warning': return { text: 'text-amber-700', icon: iconClass, bg: '' };
+            case 'critical': return { text: 'text-red-700', icon: iconClass, bg: '' };
+            default: return { text: 'text-muted-foreground', icon: iconClass, bg: '' };
         }
     };
 
@@ -719,48 +729,85 @@ const IngredientList = () => {
                         );
                     })}
                 </div>
-            )}
+            )
+            }
 
-            {isMobile ? (
-                <Drawer open={isDialogOpen} onOpenChange={(open) => {
-                    if (!open) resetForm();
-                    setIsDialogOpen(open);
-                }}>
-                    <DrawerContent className="h-[90vh] flex flex-col">
-                        <DrawerHeader className="border-b pb-4">
-                            <DrawerTitle>{editingIngredient ? 'Editar Ingrediente' : 'Novo Ingrediente'}</DrawerTitle>
-                            <DrawerDescription>
-                                {editingIngredient ? 'Faça alterações no ingrediente existente' : 'Cadastre um novo ingrediente para seu estoque'}
-                            </DrawerDescription>
-                        </DrawerHeader>
-                        <ScrollArea className="flex-1 overflow-y-auto">
-                            <div className="px-4 py-4 w-full max-w-md mx-auto">
-                                {FormContent}
+            {/* Pagination Controls */}
+            {
+                totalCount > 0 && (
+                    <div className="flex items-center justify-between border-t pt-4 mt-4">
+                        <div className="text-sm text-muted-foreground">
+                            Mostrando {ingredients.length} de {totalCount} ingredientes
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1 || isLoading}
+                            >
+                                <ChevronDown className="h-4 w-4 rotate-90 mr-1" />
+                                Anterior
+                            </Button>
+                            <div className="text-sm font-medium min-w-[3rem] text-center">
+                                Pág. {page}
                             </div>
-                        </ScrollArea>
-                        <div className="p-4 border-t mt-auto">
-                            {FooterButtons}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={ingredients.length < limit || (page * limit) >= totalCount || isLoading}
+                            >
+                                Próximo
+                                <ChevronDown className="h-4 w-4 -rotate-90 ml-1" />
+                            </Button>
                         </div>
-                    </DrawerContent>
-                </Drawer>
-            ) : (
-                <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                    if (!open) resetForm();
-                    setIsDialogOpen(open);
-                }}>
-                    <DialogContent className="sm:max-w-[500px] flex flex-col p-0 max-h-[85vh]">
-                        <DialogHeader className="p-6 pb-2 border-b bg-background z-10 rounded-t-lg">
-                            <DialogTitle>{editingIngredient ? 'Editar Ingrediente' : 'Novo Ingrediente'}</DialogTitle>
-                        </DialogHeader>
-                        <ScrollArea className="flex-1 p-6 overflow-y-auto">
-                            {FormContent}
-                        </ScrollArea>
-                        <div className="p-4 border-t bg-muted/10 rounded-b-lg">
-                            {FooterButtons}
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            )}
+                    </div>
+                )
+            }
+
+            {
+                isMobile ? (
+                    <Drawer open={isDialogOpen} onOpenChange={(open) => {
+                        if (!open) resetForm();
+                        setIsDialogOpen(open);
+                    }}>
+                        <DrawerContent className="h-[90vh] flex flex-col">
+                            <DrawerHeader className="border-b pb-4">
+                                <DrawerTitle>{editingIngredient ? 'Editar Ingrediente' : 'Novo Ingrediente'}</DrawerTitle>
+                                <DrawerDescription>
+                                    {editingIngredient ? 'Faça alterações no ingrediente existente' : 'Cadastre um novo ingrediente para seu estoque'}
+                                </DrawerDescription>
+                            </DrawerHeader>
+                            <ScrollArea className="flex-1 overflow-y-auto">
+                                <div className="px-4 py-4 w-full max-w-md mx-auto">
+                                    {FormContent}
+                                </div>
+                            </ScrollArea>
+                            <div className="p-4 border-t mt-auto">
+                                {FooterButtons}
+                            </div>
+                        </DrawerContent>
+                    </Drawer>
+                ) : (
+                    <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                        if (!open) resetForm();
+                        setIsDialogOpen(open);
+                    }}>
+                        <DialogContent className="sm:max-w-[500px] flex flex-col p-0 max-h-[85vh]">
+                            <DialogHeader className="p-6 pb-2 border-b bg-background z-10 rounded-t-lg">
+                                <DialogTitle>{editingIngredient ? 'Editar Ingrediente' : 'Novo Ingrediente'}</DialogTitle>
+                            </DialogHeader>
+                            <ScrollArea className="flex-1 p-6 overflow-y-auto">
+                                {FormContent}
+                            </ScrollArea>
+                            <div className="p-4 border-t bg-muted/10 rounded-b-lg">
+                                {FooterButtons}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                )
+            }
 
             <BulkEditIngredientsDialog
                 open={isBulkEditDialogOpen}
@@ -768,7 +815,7 @@ const IngredientList = () => {
                 selectedCount={selectedIngredients.length}
                 onSave={handleBulkSave}
             />
-        </div>
+        </div >
     );
 };
 

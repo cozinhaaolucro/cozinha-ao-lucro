@@ -5,7 +5,7 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getOrders, getProducts, getIngredients, getCustomers } from '@/lib/database';
+import { getOrders, getProducts, getIngredients, getCustomers, getOrdersByDateRange, getActiveOrders, getDashboardMetrics } from '@/lib/database';
 import { AnalyticsService } from '@/services/analytics.service';
 import type { OrderWithDetails, ProductWithIngredients, Ingredient, Customer } from '@/types/database';
 
@@ -36,6 +36,7 @@ export interface UseDashboardMetricsResult {
 
     // Filtered data
     filteredOrders: OrderWithDetails[];
+    activeOrders: OrderWithDetails[];
 
     // State
     isLoading: boolean;
@@ -52,6 +53,7 @@ export interface UseDashboardMetricsResult {
 export const dashboardQueryKeys = {
     all: ['dashboard'] as const,
     orders: () => [...dashboardQueryKeys.all, 'orders'] as const,
+    ordersFiltered: (filters: DashboardFilters) => [...dashboardQueryKeys.all, 'orders', filters] as const,
     products: () => [...dashboardQueryKeys.all, 'products'] as const,
     ingredients: () => [...dashboardQueryKeys.all, 'ingredients'] as const,
     customers: () => [...dashboardQueryKeys.all, 'customers'] as const,
@@ -65,112 +67,130 @@ export const dashboardQueryKeys = {
 export function useDashboardMetrics(filters: DashboardFilters): UseDashboardMetricsResult {
     const queryClient = useQueryClient();
 
-    // Fetch orders
+    // 1. Calculate Date Range (Client Side)
+    const dateRange = useMemo(() => {
+        if (filters.period === 'custom' && filters.customRange) {
+            return {
+                start: filters.customRange.start,
+                end: filters.customRange.end
+            };
+        }
+        // Named periods
+        const end = new Date();
+        const start = new Date();
+        const days = parseInt(filters.period) || 30;
+        start.setDate(start.getDate() - days);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+
+        return {
+            start: start.toISOString(),
+            end: end.toISOString()
+        };
+    }, [filters]);
+
+    // 2. Fetch Orders (Client Side - Required for Charts & Metrics Reliability)
     const {
         data: ordersData,
         isLoading: ordersLoading,
         error: ordersError,
     } = useQuery({
-        queryKey: dashboardQueryKeys.orders(),
+        queryKey: dashboardQueryKeys.ordersFiltered(filters),
         queryFn: async () => {
-            const { data, error } = await getOrders();
+            const { data, error } = await getOrdersByDateRange(dateRange.start, dateRange.end);
             if (error) throw error;
             return data || [];
         },
-        staleTime: 1000 * 60 * 2, // 2 min
+        staleTime: 1000 * 60 * 5, // 5 min
     });
 
-    // Fetch products
+    // 3. Fetch Active Orders
+    const {
+        data: activeOrdersData,
+        isLoading: activeOrdersLoading,
+    } = useQuery({
+        queryKey: ['dashboard', 'active_orders'],
+        queryFn: async () => {
+            const { data } = await getActiveOrders();
+            return data || [];
+        },
+        staleTime: 1000 * 30
+    });
+
+    // 4. Fetch Products 
     const {
         data: productsData,
         isLoading: productsLoading,
-        error: productsError,
     } = useQuery({
         queryKey: dashboardQueryKeys.products(),
         queryFn: async () => {
-            const { data, error } = await getProducts();
-            if (error) throw error;
+            const { data } = await getProducts();
             return data || [];
         },
-        staleTime: 1000 * 60 * 5, // 5 min
+        staleTime: 1000 * 60 * 10,
     });
 
-    // Fetch ingredients
+    // 5. Fetch Ingredients
     const {
         data: ingredientsData,
-        isLoading: ingredientsLoading,
-        error: ingredientsError,
+        isLoading: ingredientsLoading
     } = useQuery({
         queryKey: dashboardQueryKeys.ingredients(),
         queryFn: async () => {
-            const { data, error } = await getIngredients();
-            if (error) throw error;
+            const { data } = await getIngredients();
             return data || [];
         },
-        staleTime: 1000 * 60 * 5, // 5 min
+        staleTime: 1000 * 60 * 10
     });
 
-    // Fetch customers
+    // 6. Fetch Customers
     const {
         data: customersData,
-        isLoading: customersLoading,
-        error: customersError,
+        isLoading: customersLoading
     } = useQuery({
         queryKey: dashboardQueryKeys.customers(),
         queryFn: async () => {
-            const { data, error } = await getCustomers();
-            if (error) throw error;
+            const { data } = await getCustomers();
             return data || [];
         },
-        staleTime: 1000 * 60 * 5, // 5 min
+        staleTime: 1000 * 60 * 5
     });
 
     // Default values
     const orders = ordersData || [];
+    const activeOrders = activeOrdersData || [];
     const products = productsData || [];
     const ingredients = ingredientsData || [];
     const customers = customersData || [];
+    const filteredOrders = orders;
 
-    // Filter orders by period
-    const filteredOrders = useMemo(() => {
-        return AnalyticsService.filterOrdersByPeriod(
-            orders,
-            filters.period,
-            filters.customRange
-        );
-    }, [orders, filters.period, filters.customRange]);
-
-    // Calculate metrics
+    // Calculate metrics Client-Side
     const metrics = useMemo(() => {
         return AnalyticsService.calculateMetrics(filteredOrders, products as any);
     }, [filteredOrders, products]);
 
     // Analyze stock demand
     const stockAnalysis = useMemo(() => {
-        return AnalyticsService.analyzeStockDemand(orders, products as any, ingredients);
-    }, [orders, products, ingredients]);
+        return AnalyticsService.analyzeStockDemand(activeOrders, products as any, ingredients);
+    }, [activeOrders, products, ingredients]);
 
-    // Generate chart data
+    // Generate chart data client-side
     const chartData = useMemo(() => {
         const days = filters.period === 'custom' ? 30 : parseInt(filters.period) || 7;
         return AnalyticsService.getChartData(filteredOrders, products as any, days);
     }, [filteredOrders, products, filters.period]);
 
-    // Product performance
+    // Product performance client-side
     const productPerformance = useMemo(() => {
         return AnalyticsService.getProductPerformance(filteredOrders, products as any);
     }, [filteredOrders, products]);
 
-    // Refetch function
     const refetch = useCallback(() => {
         queryClient.invalidateQueries({ queryKey: dashboardQueryKeys.all });
     }, [queryClient]);
 
-    // Combined loading state
-    const isLoading = ordersLoading || productsLoading || ingredientsLoading || customersLoading;
-
-    // Combined error
-    const error = ordersError || productsError || ingredientsError || customersError || null;
+    const isLoading = ordersLoading || productsLoading || ingredientsLoading || customersLoading || activeOrdersLoading;
+    const error = ordersError as Error;
 
     return {
         metrics,
@@ -178,6 +198,7 @@ export function useDashboardMetrics(filters: DashboardFilters): UseDashboardMetr
         chartData,
         productPerformance,
         orders,
+        activeOrders,
         products,
         ingredients,
         customers,

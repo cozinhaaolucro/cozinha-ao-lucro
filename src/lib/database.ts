@@ -37,18 +37,37 @@ export const updateProfile = async (updates: Partial<Profile>) => {
 };
 
 // Ingredients
-export const getIngredients = async () => {
+export const getIngredients = async (page?: number, limit?: number) => {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) {
         return { data: [], error: new Error('User not authenticated') };
     }
 
-    const { data, error } = await supabase
+    let query = supabase
         .from('ingredients')
         .select('*')
         .eq('user_id', user.id)
         .order('name');
-    return { data, error };
+
+    if (page !== undefined && limit !== undefined) {
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
+    }
+
+    const { data, error } = await query;
+
+    // Get count for pagination
+    let count = null;
+    if (page !== undefined && limit !== undefined) {
+        const countRes = await supabase
+            .from('ingredients')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+        count = countRes.count;
+    }
+
+    return { data, error, count };
 };
 
 export const createIngredient = async (ingredient: Omit<Ingredient, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
@@ -102,11 +121,11 @@ export const deleteIngredient = async (id: string) => {
 };
 
 // Products
-export const getProducts = async () => {
+export const getProducts = async (page?: number, limit?: number) => {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return { data: null, error: new Error('User not authenticated') };
 
-    const { data, error } = await supabase
+    let query = supabase
         .from('products')
         .select(`
       *,
@@ -118,7 +137,34 @@ export const getProducts = async () => {
     `)
         .eq('user_id', user.id)
         .order('name');
-    return { data, error };
+    if (page !== undefined && limit !== undefined) {
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
+    }
+
+    const { data, error } = await query;
+    // Get count for pagination
+    let count = null;
+    if (page !== undefined && limit !== undefined) {
+        const countRes = await supabase
+            .from('products')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+        count = countRes.count;
+    }
+
+    return { data, error, count };
+};
+
+export const getProductsCount = async () => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { count: 0, error: new Error('User not authenticated') };
+    const { count, error } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+    return { count, error };
 };
 
 export const createProduct = async (
@@ -212,16 +258,81 @@ export const deleteProduct = async (id: string) => {
 };
 
 // Customers
-export const getCustomers = async () => {
+// Customers
+export const getCustomers = async (page?: number, limit?: number, search?: string, filters?: { startDate?: Date, endDate?: Date, onlyInactive?: boolean }) => {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return { data: [], error: new Error('User not authenticated') };
 
-    const { data, error } = await supabase
+    let query = supabase
         .from('customers')
         .select('*')
         .eq('user_id', user.id)
         .order('name');
-    return { data, error };
+    if (search) {
+        query = query.ilike('name', `%${search}%`);
+    }
+
+    if (filters?.startDate) {
+        query = query.gte('last_order_date', filters.startDate.toISOString());
+    }
+    if (filters?.endDate) {
+        // End of day
+        const end = new Date(filters.endDate);
+        end.setHours(23, 59, 59, 999);
+        query = query.lte('last_order_date', end.toISOString());
+    }
+    if (filters?.onlyInactive) {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        query = query.lt('last_order_date', thirtyDaysAgo.toISOString());
+    }
+
+    if (page !== undefined && limit !== undefined) {
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
+    }
+
+    const { data, error } = await query;
+
+    // Get count for pagination
+    let count = null;
+    if (page !== undefined && limit !== undefined) {
+        let countQuery = supabase
+            .from('customers')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+        if (search) countQuery = countQuery.ilike('name', `%${search}%`);
+
+        if (filters?.startDate) {
+            countQuery = countQuery.gte('last_order_date', filters.startDate.toISOString());
+        }
+        if (filters?.endDate) {
+            const end = new Date(filters.endDate);
+            end.setHours(23, 59, 59, 999);
+            countQuery = countQuery.lte('last_order_date', end.toISOString());
+        }
+        if (filters?.onlyInactive) {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            countQuery = countQuery.lt('last_order_date', thirtyDaysAgo.toISOString());
+        }
+
+        const countRes = await countQuery;
+        count = countRes.count;
+    }
+
+    return { data, error, count };
+};
+
+export const getCustomersCount = async () => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { count: 0, error: new Error('User not authenticated') };
+    const { count, error } = await supabase
+        .from('customers')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+    return { count, error };
 };
 
 export const createCustomer = async (customer: Omit<Customer, 'id' | 'user_id' | 'total_orders' | 'total_spent' | 'created_at' | 'updated_at'>) => {
@@ -237,7 +348,7 @@ export const createCustomer = async (customer: Omit<Customer, 'id' | 'user_id' |
 };
 
 // Orders
-export const getOrders = async (status?: string, startDate?: string, endDate?: string) => {
+export const getOrders = async (status?: string, startDate?: string, endDate?: string, page?: number, limit?: number) => {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return { data: [], error: new Error('User not authenticated') };
 
@@ -273,7 +384,74 @@ export const getOrders = async (status?: string, startDate?: string, endDate?: s
         query = query.lte('delivery_date', endDate);
     }
 
+    if (page !== undefined && limit !== undefined) {
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
+    }
+
     const { data, error } = await query;
+
+    // Get count if pagination is active
+    let count = null;
+    if (page !== undefined && limit !== undefined) {
+        let countQuery = supabase
+            .from('orders')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+
+        if (status) countQuery = countQuery.eq('status', status);
+        if (startDate) countQuery = countQuery.gte('delivery_date', startDate);
+        if (endDate) countQuery = countQuery.lte('delivery_date', endDate);
+
+        const countRes = await countQuery;
+        count = countRes.count;
+    }
+
+    return { data: data as OrderWithDetails[] | null, error, count };
+};
+
+export const getOrdersByDateRange = async (startDate: string, endDate: string) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: [], error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+        .from('orders')
+        .select(`
+            *,
+            items:order_items (
+                *,
+                product_id,
+                quantity,
+                unit_cost,
+                subtotal,
+                product_name
+            )
+        `)
+        .eq('user_id', user.id)
+        .gte('created_at', startDate)
+        .lte('created_at', endDate)
+        .neq('status', 'cancelled');
+
+    return { data: data as OrderWithDetails[] | null, error };
+};
+
+export const getActiveOrders = async () => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return { data: [], error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+        .from('orders')
+        .select(`
+            *,
+            items:order_items (
+                product_id,
+                quantity
+            )
+        `)
+        .eq('user_id', user.id)
+        .in('status', ['pending', 'preparing']);
+
     return { data: data as OrderWithDetails[] | null, error };
 };
 
@@ -614,6 +792,18 @@ const updateIngredientStock = async (ingredientId: string, quantityDelta: number
 // ============================================================================
 // ORDER STATUS LOGS
 // ============================================================================
+
+// ============================================================================
+// DASHBOARD RPC
+// ============================================================================
+
+export const getDashboardMetrics = async (startDate: string, endDate: string) => {
+    const { data, error } = await supabase.rpc('get_dashboard_metrics', {
+        start_date: startDate,
+        end_date: endDate
+    });
+    return { data, error };
+};
 
 export const getOrderStatusLogs = async (orderId: string) => {
     const { data, error } = await supabase

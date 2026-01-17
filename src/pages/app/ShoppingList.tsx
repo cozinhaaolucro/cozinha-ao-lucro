@@ -10,6 +10,7 @@ import { ShoppingCart, Calendar, Check, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/ui/date-picker";
+import { useOrders, useProducts, useIngredients } from '@/hooks/useQueries';
 
 interface ShoppingItem {
     ingredientId: string;
@@ -32,25 +33,20 @@ const ShoppingList = () => {
         to: nextWeek
     });
 
-    const [orders, setOrders] = useState<OrderWithDetails[]>([]);
-    const [products, setProducts] = useState<ProductWithIngredients[]>([]);
-    const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [items, setItems] = useState<ShoppingItem[]>([]);
 
-    useEffect(() => {
-        loadData();
-    }, []);
+    // React Query Hooks (Concurrent Fetching)
+    const { data: ordersData } = useOrders();
+    const { data: productsData } = useProducts();
+    const { data: ingredientsData } = useIngredients();
 
-    const loadData = async () => {
-        const [ord, prod, ing] = await Promise.all([
-            getOrders(),
-            getProducts(),
-            getIngredients()
-        ]);
-        if (ord.data) setOrders(ord.data);
-        if (prod.data) setProducts(prod.data as ProductWithIngredients[]);
-        if (ing.data) setIngredients(ing.data);
-    };
+    const orders = ordersData || [];
+    const products = productsData?.products || [];
+    const ingredients = ingredientsData?.ingredients || [];
+
+    // Removed manual state and effects
+    // const [orders, setOrders] ...
+    // const loadData = async () ...
 
     useEffect(() => {
         generateList();

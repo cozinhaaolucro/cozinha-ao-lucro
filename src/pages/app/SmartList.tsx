@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { FileText, Download, CheckCircle2, AlertCircle } from 'lucide-react';
 import { getOrders, getIngredients, updateIngredient } from '@/lib/database';
 import type { OrderWithDetails, Ingredient } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
+import { useOrders, useIngredients } from '@/hooks/useQueries';
 import jsPDF from 'jspdf';
 import { addPdfHeader, addPdfFooter, autoTable } from '@/lib/pdfUtils';
 import { motion, useAnimation, PanInfo } from 'framer-motion';
@@ -64,81 +65,70 @@ const SwipeButton = ({ onConfirm, disabled }: { onConfirm: () => void, disabled:
 };
 
 const SmartList = () => {
-    const [loading, setLoading] = useState(true);
-    const [items, setItems] = useState<ShoppingItem[]>([]);
+    // const [loading, setLoading] = useState(true); // Derived
+    const [localItems, setLocalItems] = useState<ShoppingItem[] | null>(null); // For override or just use Memo?
+    // Actually, SmartList swipes to buy, which updates stock. 
+    // If we rely purely on props, we need to ensure cache invalidation on mutation.
+
     const { toast } = useToast();
 
-    useEffect(() => {
-        calculateShoppingList();
-    }, []);
+    // Hooks
+    const { data: pendingOrdersData, isLoading: ordersLoading, refetch: refetchOrders } = useOrders({ status: 'pending' });
+    const { data: ingredientsData, isLoading: ingredientsLoading, refetch: refetchIngredients } = useIngredients();
 
-    const calculateShoppingList = async () => {
-        setLoading(true);
-        try {
-            // 1. Fetch 'pending' orders (A Fazer)
-            const { data: orders, error: ordersError } = await getOrders();
-            if (ordersError) throw ordersError;
+    const pendingOrders = pendingOrdersData || [];
+    const ingredients = ingredientsData?.ingredients || [];
+    const loading = ordersLoading || ingredientsLoading;
 
-            // Type assertion to OrderWithDetails
-            const pendingOrders = (orders as OrderWithDetails[])?.filter(o => o.status === 'pending') || [];
+    // Calculation (Memoized)
+    const items = useMemo(() => {
+        if (!pendingOrders.length || !ingredients.length) return [];
 
-            // 2. Fetch current ingredients stock
-            const { data: ingredients, error: ingError } = await getIngredients();
-            if (ingError) throw ingError;
+        const neededMap = new Map<string, number>();
 
-            // 3. Aggregate needed ingredients
-            const neededMap = new Map<string, number>(); // IngredientID -> Quantity
+        pendingOrders.forEach(order => {
+            if (order.items) {
+                order.items.forEach(item => {
+                    if (item.product && item.product.product_ingredients) {
+                        item.product.product_ingredients.forEach((pi: any) => {
+                            const ingredientId = pi.ingredient_id || pi.ingredient?.id;
+                            if (ingredientId) {
+                                const totalNeeded = pi.quantity * item.quantity;
+                                neededMap.set(ingredientId, (neededMap.get(ingredientId) || 0) + totalNeeded);
+                            }
+                        });
+                    }
+                });
+            }
+        });
 
-            pendingOrders.forEach(order => {
-                // Verify if items exists (it should based on OrderWithDetails)
-                if (order.items) {
-                    order.items.forEach(item => {
-                        if (item.product && item.product.product_ingredients) {
-                            item.product.product_ingredients.forEach((pi: any) => {
-                                // pi.ingredient might be populated or not, but we need ingredient_id and quantity
-                                // getOrders usually returns product_ingredients with ingredient join.
-                                // But we just need ingredient_id and quantity.
-                                const ingredientId = pi.ingredient_id || pi.ingredient?.id;
+        const list: ShoppingItem[] = [];
+        ingredients.forEach(ing => {
+            const needed = neededMap.get(ing.id) || 0;
+            if (needed > 0 || ing.stock_quantity < 0) {
+                const toBuy = Math.max(0, needed - ing.stock_quantity);
+                list.push({
+                    ingredientId: ing.id,
+                    name: ing.name,
+                    unit: ing.unit,
+                    needed: Math.max(needed, toBuy),
+                    inStock: ing.stock_quantity,
+                    toBuy: toBuy
+                });
+            }
+        });
 
-                                if (ingredientId) {
-                                    const totalNeededForThisItem = pi.quantity * item.quantity;
-                                    const current = neededMap.get(ingredientId) || 0;
-                                    neededMap.set(ingredientId, current + totalNeededForThisItem);
-                                }
-                            });
-                        }
-                    });
-                }
-            });
+        return list.sort((a, b) => b.toBuy - a.toBuy);
+    }, [pendingOrders, ingredients]);
 
-            // 4. Compare with Stock
-            const shoppingList: ShoppingItem[] = [];
+    // Manually refresh if needed (e.g. after swipe)
+    const refreshData = () => {
+        refetchOrders();
+        refetchIngredients();
+    }
 
-            ingredients?.forEach(ing => {
-                const needed = neededMap.get(ing.id) || 0;
-
-                if (needed > 0 || ing.stock_quantity < 0) {
-                    const toBuy = Math.max(0, needed - ing.stock_quantity);
-                    shoppingList.push({
-                        ingredientId: ing.id,
-                        name: ing.name,
-                        unit: ing.unit,
-                        needed: Math.max(needed, toBuy),
-                        inStock: ing.stock_quantity,
-                        toBuy: toBuy
-                    });
-                }
-            });
-
-            setItems(shoppingList.sort((a, b) => b.toBuy - a.toBuy)); // Prioritize what needs buying
-
-        } catch (error) {
-            console.error('Error calculating smart list:', error);
-            toast({ title: 'Erro ao gerar lista inteligente', variant: 'destructive' });
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Remove calculateShoppingList
+    // useEffect ... calculateShoppingList ...
 
     const handleRestock = async () => {
         const itemsToBuy = items.filter(i => i.toBuy > 0);
@@ -147,7 +137,7 @@ const SmartList = () => {
         const confirm = window.confirm(`Confirmar a compra de ${itemsToBuy.length} itens ? Isso adicionará as quantidades ao estoque.`);
         if (!confirm) return;
 
-        setLoading(true);
+        // setLoading(true); -> Managed by hook
         try {
             let updated = 0;
             // Sequential update for safety
@@ -166,12 +156,12 @@ const SmartList = () => {
             }
 
             toast({ title: 'Estoque atualizado!', description: `${updated} ingredientes repostos.` });
-            calculateShoppingList(); // Refresh
+            refreshData(); // Refresh
         } catch (error) {
             console.error('Batch update error', error);
             toast({ title: 'Erro ao atualizar estoque', variant: 'destructive' });
         } finally {
-            setLoading(false);
+            // setLoading(false); // Handled by hook
         }
     };
 

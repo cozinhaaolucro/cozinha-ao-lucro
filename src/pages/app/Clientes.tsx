@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Phone, Plus, Search, MessageCircle, Filter, Pencil, Trash2, X, Mail, Download, Upload, Users, FileSpreadsheet, FileDown, FileText } from 'lucide-react';
+import { Phone, Plus, Search, MessageCircle, Filter, Pencil, Trash2, X, Mail, Download, Upload, Users, FileSpreadsheet, FileDown, FileText, ChevronDown } from 'lucide-react';
 import { getCustomers, deleteCustomer, createCustomer } from '@/lib/database';
 import { exportToExcel, exportToCSV, importFromExcel, getValue } from '@/lib/excel';
 import { useToast } from '@/hooks/use-toast';
@@ -23,31 +23,48 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/ui/date-picker";
+import { useCustomers } from '@/hooks/useQueries';
 
 const Clientes = () => {
     const { toast } = useToast();
-    const [customers, setCustomers] = useState<Customer[]>([]);
+    // derived customers from hook
     const [selectedClients, setSelectedClients] = useState<string[]>([]);
     const [search, setSearch] = useState('');
     const [showInactive, setShowInactive] = useState(false);
     const [dateFilter, setDateFilter] = useState<DateRange | undefined>();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-    const [loading, setLoading] = useState(true);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const loadCustomers = async () => {
-        setLoading(true);
-        const { data, error } = await getCustomers();
-        if (!error && data) {
-            setCustomers(data);
-        }
-        setLoading(false);
-    };
+    const [page, setPage] = useState(1);
+    const [limit] = useState(12);
+    // const [totalCount, setTotalCount] = useState(0); // Derived from hook
+    const [debouncedSearch, setDebouncedSearch] = useState(search);
 
     useEffect(() => {
-        loadCustomers();
-    }, []);
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+            setPage(1); // Reset to page 1 on search change
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    // React Query Hook
+    const filters = {
+        startDate: dateFilter?.from,
+        endDate: dateFilter?.to,
+        onlyInactive: showInactive
+    };
+
+    const { data: customerData, isLoading: loading, refetch: refetchCustomers } = useCustomers(page, limit, debouncedSearch, filters);
+
+    // Derived Data
+    const customers = customerData?.customers || [];
+    const totalCount = customerData?.count || 0;
+
+    // Remove manual loadCustomers and effect
+    // const loadCustomers = ...
+    // useEffect(() => { refetchCustomers() ... }, [...])
 
     const isInactive = (lastOrderDate: string | null) => {
         if (!lastOrderDate) return false;
@@ -56,39 +73,8 @@ const Clientes = () => {
         return new Date(lastOrderDate) < thirtyDaysAgo;
     };
 
-    const filteredCustomers = customers.filter((customer) => {
-        const matchesSearch = customer.name.toLowerCase().includes(search.toLowerCase()) ||
-            customer.email?.toLowerCase().includes(search.toLowerCase()) ||
-            customer.phone?.toLowerCase().includes(search.toLowerCase());
-
-        const matchesInactive = showInactive ? isInactive(customer.last_order_date) : true;
-
-        let matchesDate = true;
-        if (dateFilter?.from) {
-            const orderDate = customer.last_order_date ? new Date(customer.last_order_date) : null;
-            if (orderDate) {
-                // Reset times for accurate date comparison
-                const start = new Date(dateFilter.from);
-                start.setHours(0, 0, 0, 0);
-
-                if (orderDate < start) {
-                    matchesDate = false;
-                }
-
-                if (dateFilter.to) {
-                    const end = new Date(dateFilter.to);
-                    end.setHours(23, 59, 59, 999);
-                    if (orderDate > end) {
-                        matchesDate = false;
-                    }
-                }
-            } else {
-                matchesDate = false;
-            }
-        }
-
-        return matchesSearch && matchesInactive && matchesDate;
-    });
+    // Client-side filtering removed in favor of server-side
+    const filteredCustomers = customers; // direct reference now
 
     const toggleSelect = (id: string) => {
         setSelectedClients((prev) =>
@@ -135,7 +121,7 @@ const Clientes = () => {
 
         toast({ title: `${successCount} clientes excluídos` });
         setSelectedClients([]);
-        loadCustomers();
+        refetchCustomers();
     };
 
     const handleExport = (format: 'excel' | 'csv') => {
@@ -190,7 +176,7 @@ const Clientes = () => {
                 description: `${successCount} clientes importados. ${errorCount > 0 ? `${errorCount} falhas.` : ''}`,
                 variant: successCount > 0 ? 'default' : 'destructive'
             });
-            loadCustomers();
+            refetchCustomers();
         } catch (error) {
             console.error(error);
             toast({ title: 'Erro na importação', description: 'Verifique o formato do arquivo.', variant: 'destructive' });
@@ -421,7 +407,7 @@ const Clientes = () => {
                                                     const { error } = await deleteCustomer(customer.id);
                                                     if (!error) {
                                                         toast({ title: 'Cliente excluído' });
-                                                        loadCustomers();
+                                                        refetchCustomers();
                                                     }
                                                 }
                                             }}
@@ -458,11 +444,41 @@ const Clientes = () => {
                 )}
             </div>
 
+            {/* Pagination Controls */}
+            {totalCount > 0 && (
+                <div className="flex items-center justify-between border-t pt-4 mt-4">
+                    <div className="text-sm text-muted-foreground">
+                        Mostrando {customers.length} de {totalCount} clientes
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1 || loading}
+                        >
+                            Ant.
+                        </Button>
+                        <div className="text-sm font-medium min-w-[3rem] text-center">
+                            Pág. {page}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage(p => p + 1)}
+                            disabled={customers.length < limit || (page * limit) >= totalCount || loading}
+                        >
+                            Próx.
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             <NewCustomerDialog
                 open={isDialogOpen}
                 onOpenChange={setIsDialogOpen}
                 onSuccess={() => {
-                    loadCustomers();
+                    refetchCustomers();
                     setIsDialogOpen(false);
                 }}
             />
@@ -472,7 +488,7 @@ const Clientes = () => {
                 open={!!editingCustomer}
                 onOpenChange={(open) => !open && setEditingCustomer(null)}
                 onSuccess={() => {
-                    loadCustomers();
+                    refetchCustomers();
                     setEditingCustomer(null);
                 }}
             />
