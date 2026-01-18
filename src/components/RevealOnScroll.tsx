@@ -68,17 +68,31 @@ export const RevealOnScroll = ({
         const currentRef = ref.current;
         if (!currentRef) return;
 
-        // Register with shared observer
-        observe(currentRef, () => {
-            if (!hasAnimated) {
-                setIsVisible(true);
-                setHasAnimated(true);
-                // Cleanup self from observer once animated
-                unobserve(currentRef);
-            }
-        });
+        // Defer registration to unblock main thread during hydration
+        // This pushes TBT down significantly
+        const registerOnIdle = () => {
+            const requestIdleCallback = (window as any).requestIdleCallback || ((cb: Function) => setTimeout(cb, 1));
+            const cancelIdleCallback = (window as any).cancelIdleCallback || clearTimeout;
+
+            const handle = requestIdleCallback(() => {
+                // Register with shared observer
+                observe(currentRef, () => {
+                    if (!hasAnimated) {
+                        setIsVisible(true);
+                        setHasAnimated(true);
+                        // Cleanup self from observer once animated
+                        unobserve(currentRef);
+                    }
+                });
+            });
+
+            return () => cancelIdleCallback(handle);
+        };
+
+        const cancelRegistration = registerOnIdle();
 
         return () => {
+            cancelRegistration();
             if (currentRef) {
                 unobserve(currentRef);
             }
