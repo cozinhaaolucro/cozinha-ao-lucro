@@ -57,7 +57,7 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
                                 type="monotone"
                                 dataKey="revenue"
                                 name="Receita"
-                                stroke="#2E5F65"
+                                stroke="#5F98A1"
                                 strokeWidth={2}
                                 fillOpacity={1}
                                 fill="url(#colorRevenue)"

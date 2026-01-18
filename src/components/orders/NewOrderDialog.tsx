@@ -606,7 +606,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess, initialProductId }: New
             <AlertDialog open={showStockAlert} onOpenChange={setShowStockAlert}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
+                        <AlertDialogTitle className="flex items-center gap-2 text-red-600">
                             <AlertCircle className="h-5 w-5" />
                             Estoque Insuficiente
                         </AlertDialogTitle>
@@ -624,7 +624,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess, initialProductId }: New
                                         <div className="text-xs text-muted-foreground flex gap-4">
                                             <span>Disponível: {Math.max(0, item.current).toFixed(2)}</span>
                                             {item.reserved > 0 && (
-                                                <span className="text-amber-600">
+                                                <span className="text-red-600">
                                                     Reservado: {item.reserved.toFixed(2)}
                                                 </span>
                                             )}
@@ -658,7 +658,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess, initialProductId }: New
                                     e.preventDefault();
                                     handleAutoRestock();
                                 }}
-                                className="bg-amber-600 hover:bg-[hsl(182,16%,55%)] hover:text-white"
+                                className="bg-[#2e5b60] hover:bg-[#2e5b60]/90 hover:text-white transition-colors"
                                 disabled={isRestocking}
                             >
                                 {isRestocking ? 'Atualizando...' : 'Regularizar e Criar'}

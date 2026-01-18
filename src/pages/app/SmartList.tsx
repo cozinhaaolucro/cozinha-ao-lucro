@@ -254,7 +254,7 @@ const SmartList = () => {
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
-                <Card className={`md:col-span-2 bg-white shadow-elegant border ${itemsToBuy.length === 0 ? 'border-l-4 border-l-success' : 'border-l-4 border-l-amber-500'} flex flex-col`}>
+                <Card className={`md:col-span-2 bg-white shadow-elegant border ${itemsToBuy.length === 0 ? 'border-l-4 border-l-[#2FBF71]' : 'border-l-4 border-l-[#C76E60]'} flex flex-col`}>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-foreground">
                             {itemsToBuy.length === 0 ? (
@@ -266,8 +266,8 @@ const SmartList = () => {
                                 </>
                             ) : (
                                 <>
-                                    <div className="p-1.5 bg-amber-500/10 rounded-lg">
-                                        <AlertCircle className="h-5 w-5 text-amber-600" />
+                                    <div className="p-1.5 bg-[#C9A34F]/10 rounded-lg">
+                                        <AlertCircle className="h-5 w-5 text-[#C9A34F]" />
                                     </div>
                                     <span>Itens para Comprar ({itemsToBuy.length})</span>
                                 </>
@@ -280,7 +280,7 @@ const SmartList = () => {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1">
-                        <ScrollArea className="h-[300px] pr-4">
+                        <ScrollArea className="h-[300px] pr-4" type="hover" scrollHideDelay={100}>
                             {loading ? (
                                 <div className="space-y-4">
                                     {[1, 2, 3].map(i => (
@@ -300,7 +300,7 @@ const SmartList = () => {
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <Badge variant="destructive" className="text-sm py-1 px-3">
+                                                <Badge className="text-sm py-1 px-3 bg-[#C76E60]/10 text-[#C76E60] hover:bg-[#C76E60]/20 shadow-none border-0">
                                                     {item.toBuy.toFixed(2)} {formatUnit(item.toBuy, item.unit)}
                                                 </Badge>
                                             </div>
@@ -309,7 +309,7 @@ const SmartList = () => {
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-                                    <CheckCircle2 className="h-12 w-12 text-success/30 mb-4" />
+                                    <CheckCircle2 className="h-12 w-12 text-[#2FBF71]/30 mb-4" />
                                     <p>Nenhuma compra necessária no momento.</p>
                                 </div>
                             )}
@@ -340,18 +340,18 @@ const SmartList = () => {
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Itens Suficientes</span>
-                                <span className="font-medium text-success">{items.length - itemsToBuy.length}</span>
+                                <span className="font-medium text-[#2FBF71]">{items.length - itemsToBuy.length}</span>
                             </div>
                         </div>
 
                         <div className="pt-4 border-t">
                             <h4 className="font-medium mb-2 text-sm">Todos os Itens Necessários</h4>
-                            <ScrollArea className="h-[200px]">
+                            <ScrollArea className="h-[200px]" type="hover" scrollHideDelay={100}>
                                 <ul className="space-y-2 text-sm">
                                     {items.map(item => (
                                         <li key={item.ingredientId} className="flex justify-between items-center text-muted-foreground">
                                             <span className="truncate max-w-[150px]">{item.name}</span>
-                                            <span className={item.toBuy > 0 ? "text-amber-500 font-medium" : "text-success"}>
+                                            <span className={item.toBuy > 0 ? "text-[#C76E60] font-medium" : "text-[#2FBF71]"}>
                                                 {item.needed.toFixed(2)} {formatUnit(item.needed, item.unit)}
                                             </span>
                                         </li>

@@ -17,10 +17,10 @@ export const SpeedDial = ({ onNewOrder, onNewClient, onNewProduct, onNewIngredie
 
     // Actions definition mapped to callbacks
     const actions = [
-        { label: 'Novo Pedido', icon: ShoppingBag, onClick: onNewOrder, color: 'bg-blue-500' },
-        { label: 'Novo Cliente', icon: Users, onClick: onNewClient, color: 'bg-green-500' },
-        { label: 'Novo Produto', icon: Package, onClick: onNewProduct, color: 'bg-orange-500' },
-        { label: 'Novo Ingrediente', icon: UtensilsCrossed, onClick: onNewIngredient, color: 'bg-purple-500' },
+        { label: 'Novo Pedido', icon: ShoppingBag, onClick: onNewOrder, color: 'bg-[#5F98A1]/90 hover:bg-[#5F98A1] text-white' },
+        { label: 'Novo Cliente', icon: Users, onClick: onNewClient, color: 'bg-[#5F98A1]/90 hover:bg-[#5F98A1] text-white' },
+        { label: 'Novo Produto', icon: Package, onClick: onNewProduct, color: 'bg-[#5F98A1]/90 hover:bg-[#5F98A1] text-white' },
+        { label: 'Novo Ingrediente', icon: UtensilsCrossed, onClick: onNewIngredient, color: 'bg-[#5F98A1]/90 hover:bg-[#5F98A1] text-white' },
     ];
 
     const toggleOpen = () => setOpen(!open);
@@ -48,7 +48,7 @@ export const SpeedDial = ({ onNewOrder, onNewClient, onNewProduct, onNewIngredie
                                     {action.label}
                                 </span>
                                 <Button
-                                    className={`rounded-full shadow-lg w-10 h-10 ${action.color} hover:${action.color} text-white border-0`}
+                                    className={`rounded-full shadow-lg w-10 h-10 ${action.color} border-2 transition-colors`}
                                     onClick={() => handleAction(action.onClick)}
                                 >
                                     <action.icon className="w-5 h-5" />
@@ -65,7 +65,7 @@ export const SpeedDial = ({ onNewOrder, onNewClient, onNewProduct, onNewIngredie
             >
                 <Button
                     size="icon"
-                    className={`h-14 w-14 rounded-full shadow-xl transition-all duration-300 ${open ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary/90'}`}
+                    className={`h-14 w-14 rounded-full shadow-xl transition-all duration-300 ${open ? 'bg-[#2e5b60] hover:bg-[#2e5b60]/90' : 'bg-primary hover:bg-primary/90'} text-white`}
                     onClick={toggleOpen}
                 >
                     <Plus className="w-8 h-8" />

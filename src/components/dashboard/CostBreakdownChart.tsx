@@ -5,7 +5,7 @@ interface CostBreakdownChartProps {
     data: { name: string; value: number }[];
 }
 
-const COLORS = ['#2E5F65', '#74B3B8', '#C6A74F', '#D66050', '#8B8C88', '#D6D6D1'];
+const COLORS = ['#2e5b60', '#68A9CA', '#4C9E7C', '#61888c', '#5F98A1'];
 
 export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
     // Top 5 ingredients + text "Outros"
@@ -47,7 +47,10 @@ export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
                                     stroke="none"
                                 >
                                     {finalData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={entry.name === 'Outros' ? '#9CA3AF' : COLORS[index % COLORS.length]}
+                                        />
                                     ))}
                                 </Pie>
                                 <Tooltip

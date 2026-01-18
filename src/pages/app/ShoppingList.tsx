@@ -170,13 +170,13 @@ const ShoppingList = () => {
             <div className="grid md:grid-cols-2 gap-6">
                 {/* To Buy List */}
                 <div className="space-y-4">
-                    <h3 className="font-semibold flex items-center gap-2 text-orange-600">
+                    <h3 className="font-semibold flex items-center gap-2" style={{ color: '#C76E60' }}>
                         <ShoppingCart className="w-5 h-5" />
                         Para Comprar (Falta Estoque)
                     </h3>
                     <div className="space-y-2">
                         {items.filter(i => i.toBuy > 0).length === 0 ? (
-                            <div className="p-8 border rounded-lg bg-orange-50 text-center text-orange-800">
+                            <div className="p-8 border rounded-lg text-center" style={{ borderColor: '#5F98A1', color: '#5F98A1', backgroundColor: 'rgba(95, 152, 161, 0.05)' }}>
                                 <Check className="w-8 h-8 mx-auto mb-2 opacity-50" />
                                 <p>Tudo em ordem! Seu estoque cobre a demanda.</p>
                             </div>
@@ -195,7 +195,7 @@ const ShoppingList = () => {
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <div className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-bold text-sm">
+                                            <div className="font-bold text-sm" style={{ color: '#C76E60' }}>
                                                 +{item.toBuy.toFixed(2)} {formatUnit(item.toBuy, item.unit)}
                                             </div>
                                         </div>
@@ -208,7 +208,7 @@ const ShoppingList = () => {
 
                 {/* Sufficient Stock List */}
                 <div className="space-y-4">
-                    <h3 className="font-semibold flex items-center gap-2 text-green-600">
+                    <h3 className="font-semibold flex items-center gap-2" style={{ color: '#5F98A1' }}>
                         <Check className="w-5 h-5" />
                         Em Estoque (Suficiente)
                     </h3>
@@ -227,7 +227,7 @@ const ShoppingList = () => {
                                                 Vai usar: {item.needed.toFixed(2)} {formatUnit(item.needed, item.unit)}
                                             </p>
                                         </div>
-                                        <div className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                                        <div className="text-xs font-bold" style={{ color: '#2FBF71' }}>
                                             Tem {item.currentStock.toFixed(2)} {formatUnit(item.currentStock, item.unit)}
                                         </div>
                                     </CardContent>

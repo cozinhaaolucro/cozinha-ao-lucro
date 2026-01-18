@@ -44,10 +44,10 @@ function Calendar({
           "bg-[#5F98A1] text-white hover:bg-[#5F98A1] hover:text-white focus:bg-[#5F98A1] focus:text-white",
         day_today: "bg-accent text-accent-foreground",
         day_outside:
-          "day-outside text-muted-foreground opacity-50 aria-selected:bg-[#5F98A1]/50 aria-selected:text-muted-foreground aria-selected:opacity-100",
+          "day-outside text-muted-foreground opacity-50 aria-selected:bg-[#5F98A1]/50 aria-selected:text-[#2e5b60] aria-selected:opacity-100",
         day_disabled: "text-muted-foreground opacity-50",
         day_range_middle:
-          "aria-selected:bg-[#d7d9db] aria-selected:text-accent-foreground",
+          "aria-selected:bg-[#5F98A1]/20 aria-selected:text-[#2e5b60]",
         day_hidden: "invisible",
         ...classNames,
       }}

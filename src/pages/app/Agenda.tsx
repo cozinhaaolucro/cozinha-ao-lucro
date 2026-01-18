@@ -109,7 +109,19 @@ const Agenda = () => {
     const getOrdersForDate = (date: Date) => {
         return orders.filter(order => {
             const orderDate = getOrderDate(order);
-            return orderDate.toDateString() === date.toDateString();
+            const isSameDate = orderDate.toDateString() === date.toDateString();
+            if (!isSameDate) return false;
+
+            if (selectedStatus) {
+                if (selectedStatus === 'late') {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    if (order.status === 'delivered') return false;
+                    return orderDate < today;
+                }
+                return order.status === selectedStatus;
+            }
+            return true;
         });
     };
 
@@ -158,10 +170,12 @@ const Agenda = () => {
 
     const getStatusColor = (status: string) => {
         const colors = {
-            pending: 'bg-warning',
-            preparing: 'bg-secondary',
-            ready: 'bg-success',
-            delivered: 'bg-muted-foreground/40',
+            pending: 'bg-[#C9A34F]',
+            preparing: 'bg-[#68A9CA]',
+            ready: 'bg-[#4C9E7C]',
+            delivered: 'bg-[#5F98A1]',
+            late: 'bg-[#C76E60]',
+            cancelled: 'bg-[#C76E60]'
         };
         return colors[status as keyof typeof colors] || 'bg-muted-foreground/40';
     };
@@ -275,74 +289,112 @@ const Agenda = () => {
                 </div>
             </div>
 
-            <div className="grid lg:grid-cols-[320px_1fr] gap-4">
-                <Card className="overflow-hidden bg-white shadow-elegant border border-border/60">
-                    <CardHeader className="pb-3 px-4 pt-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-base font-semibold capitalize">
-                                {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                            </h3>
-                            <div className="flex gap-1">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => changeMonth(-1)}>
-                                    <ChevronLeft className="w-4 h-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => changeMonth(1)}>
-                                    <ChevronRight className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="p-3 max-h-[600px] overflow-y-auto">
-                        <div className="grid grid-cols-7 gap-1">
-                            {weekDays.map(day => (
-                                <div key={day} className="text-center text-xs font-medium text-muted-foreground h-7 flex items-center justify-center">
-                                    {day}
+            <div className="grid lg:grid-cols-[320px_1fr] gap-4 items-start">
+                <div className="space-y-4">
+                    <Card className="overflow-hidden bg-white shadow-elegant border border-border/60 h-fit">
+                        <CardHeader className="pb-3 px-4 pt-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-base font-semibold capitalize">
+                                    {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                                </h3>
+                                <div className="flex gap-1">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => changeMonth(-1)}>
+                                        <ChevronLeft className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => changeMonth(1)}>
+                                        <ChevronRight className="w-4 h-4" />
+                                    </Button>
                                 </div>
-                            ))}
-                            {days.map((date, idx) => {
-                                if (!date) {
-                                    return <div key={`empty-${idx}`} className="aspect-square" />;
-                                }
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-3 max-h-[600px] overflow-y-auto">
+                            <div className="grid grid-cols-7 gap-1">
+                                {weekDays.map(day => (
+                                    <div key={day} className="text-center text-xs font-medium text-muted-foreground h-7 flex items-center justify-center">
+                                        {day}
+                                    </div>
+                                ))}
+                                {days.map((date, idx) => {
+                                    if (!date) {
+                                        return <div key={`empty-${idx}`} className="aspect-square" />;
+                                    }
 
-                                const dayOrders = getOrdersForDate(date);
-                                const todayDate = isToday(date);
-                                const inRange = isInRange(date);
-                                const isBoundary = isRangeBoundary(date);
+                                    const dayOrders = getOrdersForDate(date);
+                                    const todayDate = isToday(date);
+                                    const inRange = isInRange(date);
+                                    const isBoundary = isRangeBoundary(date);
 
-                                return (
-                                    <button
-                                        key={idx}
-                                        onClick={() => handleDateClick(date)}
-                                        className={`
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleDateClick(date)}
+                                            className={`
                       relative aspect-square p-1 rounded-lg text-sm font-medium transition-all
-                      ${todayDate ? 'ring-2 ring-primary ring-offset-1' : ''}
-                      ${isBoundary ? 'bg-primary text-primary-foreground scale-105' : ''}
-                      ${inRange && !isBoundary ? 'bg-primary/20' : ''}
+                      ${todayDate ? 'ring-2 ring-[#5F98A1] ring-offset-1 text-[#5F98A1] font-bold' : ''}
+                      ${isBoundary ? 'bg-[#5F98A1] text-white scale-105 shadow-md' : ''}
+                      ${inRange && !isBoundary ? 'bg-[#5F98A1]/20 text-[#5F98A1]' : ''}
                       ${!inRange && !isBoundary && !todayDate ? 'hover:bg-muted' : ''}
                     `}
-                                    >
-                                        <div className="flex flex-col items-center justify-center h-full">
-                                            <span className="leading-none">{date.getDate()}</span>
-                                            {dayOrders.length > 0 && (
-                                                <div className="flex gap-0.5 mt-1 flex-wrap justify-center">
-                                                    {dayOrders.slice(0, 3).map((order, i) => (
-                                                        <div
-                                                            key={i}
-                                                            className={`w-1.5 h-1.5 rounded-full ${getStatusColor(order.status)}`}
-                                                        />
-                                                    ))}
-                                                    {dayOrders.length > 3 && (
-                                                        <span className="text-[9px] ml-0.5">+{dayOrders.length - 3}</span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </CardContent>
-                </Card>
+                                        >
+                                            <div className="flex flex-col items-center justify-center h-full">
+                                                <span className="leading-none">{date.getDate()}</span>
+                                                {dayOrders.length > 0 && (
+                                                    <div className="flex gap-0.5 mt-1 flex-wrap justify-center">
+                                                        {dayOrders.slice(0, 3).map((order, i) => (
+                                                            <div
+                                                                key={i}
+                                                                className={`w-1.5 h-1.5 rounded-full ${getStatusColor(order.status)}`}
+                                                            />
+                                                        ))}
+                                                        {dayOrders.length > 3 && (
+                                                            <span className="text-[9px] ml-0.5">+{dayOrders.length - 3}</span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Status Pills Grid */}
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            onClick={() => handleStatusClick('pending')}
+                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border shadow-sm ${selectedStatus === 'pending' ? 'bg-[#C9A34F] text-white border-[#C9A34F]' : 'bg-white text-[#C9A34F] border-[#C9A34F]/30 hover:border-[#C9A34F] hover:bg-[#C9A34F]/5'}`}
+                        >
+                            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                            A Fazer
+                            <span className="font-bold ml-1">{orders.filter(o => o.status === 'pending').length}</span>
+                        </button>
+                        <button
+                            onClick={() => handleStatusClick('preparing')}
+                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border shadow-sm ${selectedStatus === 'preparing' ? 'bg-[#68A9CA] text-white border-[#68A9CA]' : 'bg-white text-[#68A9CA] border-[#68A9CA]/30 hover:border-[#68A9CA] hover:bg-[#68A9CA]/5'}`}
+                        >
+                            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                            Produção
+                            <span className="font-bold ml-1">{orders.filter(o => o.status === 'preparing').length}</span>
+                        </button>
+                        <button
+                            onClick={() => handleStatusClick('ready')}
+                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border shadow-sm ${selectedStatus === 'ready' ? 'bg-[#4C9E7C] text-white border-[#4C9E7C]' : 'bg-white text-[#4C9E7C] border-[#4C9E7C]/30 hover:border-[#4C9E7C] hover:bg-[#4C9E7C]/5'}`}
+                        >
+                            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                            Prontos
+                            <span className="font-bold ml-1">{orders.filter(o => o.status === 'ready').length}</span>
+                        </button>
+                        <button
+                            onClick={() => handleStatusClick('late')}
+                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border shadow-sm ${selectedStatus === 'late' ? 'bg-[#C76E60] text-white border-[#C76E60]' : 'bg-white text-[#C76E60] border-[#C76E60]/30 hover:border-[#C76E60] hover:bg-[#C76E60]/5'}`}
+                        >
+                            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                            Atrasados
+                            <span className="font-bold ml-1">{getLateOrders()}</span>
+                        </button>
+                    </div>
+                </div>
 
                 <Card className="bg-white shadow-elegant border border-border/60">
                     <CardHeader className="pb-3">
@@ -368,10 +420,11 @@ const Agenda = () => {
                             displayOrders.map(order => (
                                 <div
                                     key={order.id}
-                                    className={`bg-white border border-border/60 rounded-lg p-2.5 hover:shadow-md transition-all cursor-pointer group flex items-center gap-3 ${order.status === 'pending' ? 'border-l-2 border-l-warning' :
-                                        order.status === 'preparing' ? 'border-l-2 border-l-secondary' :
-                                            order.status === 'ready' ? 'border-l-2 border-l-success' :
-                                                'border-l-2 border-l-muted-foreground/40'
+                                    className={`bg-white border border-border/60 rounded-lg p-2.5 hover:shadow-md transition-all cursor-pointer group flex items-center gap-3 ${order.status === 'pending' ? 'border-l-4 border-l-[#C9A34F]' :
+                                        order.status === 'preparing' ? 'border-l-4 border-l-[#68A9CA]' :
+                                            order.status === 'ready' ? 'border-l-4 border-l-[#4C9E7C]' :
+                                                order.status === 'delivered' ? 'border-l-4 border-l-[#5F98A1]' :
+                                                    'border-l-4 border-l-muted-foreground/40'
                                         }`}
                                     onClick={() => setEditingOrder(order)}
                                 >
@@ -380,11 +433,9 @@ const Agenda = () => {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2 min-w-0">
                                                 <h4 className="font-medium text-sm truncate">{order.customer?.name || 'Sem cliente'}</h4>
-                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
-                                                    {getStatusLabel(order.status)}
-                                                </Badge>
+                                                {/* Status indicator removed */}
                                             </div>
-                                            <div className="text-sm font-semibold text-foreground shrink-0">R$ {order.total_value.toFixed(2)}</div>
+                                            <div className="text-sm font-bold shrink-0" style={{ color: '#2FBF71' }}>R$ {order.total_value.toFixed(2)}</div>
                                         </div>
 
                                         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
@@ -436,40 +487,7 @@ const Agenda = () => {
             </div>
 
             {/* Status Pills */}
-            <div className="flex items-center gap-2 flex-wrap">
-                <button
-                    onClick={() => handleStatusClick('pending')}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${selectedStatus === 'pending' ? 'bg-warning text-white border-warning' : 'bg-white text-warning border-warning/30 hover:border-warning hover:bg-warning/5'}`}
-                >
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                    A Fazer
-                    <span className="font-bold">{orders.filter(o => o.status === 'pending').length}</span>
-                </button>
-                <button
-                    onClick={() => handleStatusClick('preparing')}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${selectedStatus === 'preparing' ? 'bg-secondary text-white border-secondary' : 'bg-white text-secondary border-secondary/30 hover:border-secondary hover:bg-secondary/5'}`}
-                >
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                    Produção
-                    <span className="font-bold">{orders.filter(o => o.status === 'preparing').length}</span>
-                </button>
-                <button
-                    onClick={() => handleStatusClick('ready')}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${selectedStatus === 'ready' ? 'bg-success text-white border-success' : 'bg-white text-success border-success/30 hover:border-success hover:bg-success/5'}`}
-                >
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                    Prontos
-                    <span className="font-bold">{orders.filter(o => o.status === 'ready').length}</span>
-                </button>
-                <button
-                    onClick={() => handleStatusClick('late')}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${selectedStatus === 'late' ? 'bg-destructive text-white border-destructive' : 'bg-white text-destructive border-destructive/30 hover:border-destructive hover:bg-destructive/5'}`}
-                >
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                    Atrasados
-                    <span className="font-bold">{getLateOrders()}</span>
-                </button>
-            </div>
+            {/* Status Pills removed from here */}
 
             <EditOrderDialog
                 open={!!editingOrder}

@@ -336,109 +336,16 @@ const Clientes = () => {
                         const isSelected = selectedClients.includes(customer.id);
 
                         return (
-                            <Card
+                            <CustomerCard
                                 key={customer.id}
-                                className={`hover:shadow-md transition-all group ${isSelected ? 'border-primary bg-primary/5' : ''}`}
-                            >
-                                <CardContent className="flex items-center justify-between p-4">
-                                    <div className="flex items-center gap-4 flex-1">
-                                        <Checkbox
-                                            checked={isSelected}
-                                            onCheckedChange={() => toggleSelect(customer.id)}
-                                        />
-                                        <div className="flex-1">
-                                            <div className="flex flex-wrap items-center gap-2 mb-1">
-                                                <h4 className="font-medium">{customer.name}</h4>
-                                                {customer.total_orders >= 10 || customer.total_spent >= 500 ? (
-                                                    <Badge className="bg-amber-100 text-amber-800 hover:bg-[hsl(182,16%,55%)] hover:text-white border-amber-200 gap-1">
-                                                        <Star className="w-3 h-3 fill-amber-500" /> VIP
-                                                    </Badge>
-                                                ) : customer.total_orders === 0 ? (
-                                                    <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50 gap-1">
-                                                        <UserPlus className="w-3 h-3" /> Novo
-                                                    </Badge>
-                                                ) : null}
-                                                {inactive && (
-                                                    <Badge variant="destructive" className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200 gap-1">
-                                                        <Clock className="w-3 h-3" /> Sumido
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                            <div className="text-sm text-muted-foreground space-y-0.5">
-                                                {customer.phone && (
-                                                    <p className="flex items-center gap-2">
-                                                        <Phone className="w-3 h-3" />
-                                                        {customer.phone}
-                                                    </p>
-                                                )}
-                                                {customer.email && (
-                                                    <p className="flex items-center gap-2">
-                                                        <Mail className="w-3 h-3" />
-                                                        {customer.email}
-                                                    </p>
-                                                )}
-                                                <p className="text-xs">
-                                                    {customer.total_orders} pedidos • R$ {customer.total_spent.toFixed(2)} total
-                                                </p>
-                                                {customer.last_order_date && (
-                                                    <p className="text-xs">
-                                                        Último pedido: {new Date(customer.last_order_date).toLocaleDateString('pt-BR')}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity md:flex hidden">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => setEditingCustomer(customer)}
-                                            title="Editar"
-                                        >
-                                            <Pencil className="w-4 h-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                                            onClick={async () => {
-                                                if (confirm(`Excluir ${customer.name}?`)) {
-                                                    const { error } = await deleteCustomer(customer.id);
-                                                    if (!error) {
-                                                        toast({ title: 'Cliente excluído' });
-                                                        refetchCustomers();
-                                                    }
-                                                }
-                                            }}
-                                            title="Excluir"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                        {customer.phone && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="gap-2"
-                                                onClick={() => handleWhatsApp(customer.phone!, customer.name, inactive)}
-                                            >
-                                                <MessageCircle className="w-4 h-4" />
-                                                WhatsApp
-                                            </Button>
-                                        )}
-                                    </div>
-                                    {/* Mobile: always visible */}
-                                    <div className="flex gap-2 md:hidden">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => setEditingCustomer(customer)}
-                                        >
-                                            <Pencil className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                customer={customer}
+                                isSelected={isSelected}
+                                toggleSelect={toggleSelect}
+                                isInactive={inactive}
+                                setEditingCustomer={setEditingCustomer}
+                                refetchCustomers={refetchCustomers}
+                                handleWhatsApp={handleWhatsApp}
+                            />
                         );
                     })
                 )}
@@ -493,6 +400,136 @@ const Clientes = () => {
                 }}
             />
         </div>
+    );
+};
+
+
+const CustomerCard = ({ customer, isSelected, toggleSelect, isInactive, setEditingCustomer, refetchCustomers, handleWhatsApp }: any) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    return (
+        <Card
+            className={`transition-all cursor-pointer border hover:border-border/80 ${isSelected ? 'border-primary bg-primary/5' : ''} group`}
+            onClick={() => setIsExpanded(!isExpanded)}
+        >
+            <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelect(customer.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="mr-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                                <h4 className="font-medium text-sm truncate">{customer.name}</h4>
+                                {(customer.total_orders >= 10 || customer.total_spent >= 500) && (
+                                    <Star className="w-3.5 h-3.5 fill-[#C9A34F] text-[#C9A34F] shrink-0" />
+                                )}
+                            </div>
+                            {customer.phone && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                                    <Phone className="w-3 h-3" />
+                                    {customer.phone}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        {customer.phone && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 hover:text-[#4C9E7C] hover:bg-[#4C9E7C]/10 transition-colors"
+                                onClick={() => handleWhatsApp(customer.phone!, customer.name, isInactive)}
+                                title="WhatsApp"
+                            >
+                                <MessageCircle className="w-4 h-4" />
+                            </Button>
+                        )}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => setIsExpanded(!isExpanded)}
+                        >
+                            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                        </Button>
+                    </div>
+                </div>
+
+                {isExpanded && (
+                    <div className="mt-3 pt-3 border-t border-border/50 animate-in slide-in-from-top-1 fade-in duration-200">
+                        <div className="flex flex-col sm:flex-row gap-y-2 gap-x-6 justify-between items-start sm:items-center text-xs text-muted-foreground">
+
+                            <div className="space-y-1.5 flex-1 min-w-0 w-full">
+                                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                                    <span className="flex items-center gap-1.5 whitespace-nowrap" title="Total de Pedidos">
+                                        <FileText className="w-3.5 h-3.5 opacity-70" />
+                                        {customer.total_orders} pedidos
+                                    </span>
+                                    <span className="flex items-center gap-1.5 whitespace-nowrap" title="Total Gasto">
+                                        <span className="font-bold opacity-70">R$</span>
+                                        {customer.total_spent.toFixed(2)}
+                                    </span>
+                                    {customer.last_order_date && (
+                                        <span className="flex items-center gap-1.5 whitespace-nowrap" title="Último Pedido">
+                                            <Clock className="w-3.5 h-3.5 opacity-70" />
+                                            {new Date(customer.last_order_date).toLocaleDateString('pt-BR')}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {(customer.email || customer.address) && (
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1 opacity-80">
+                                        {customer.email && (
+                                            <div className="flex items-center gap-1.5 truncate">
+                                                <Mail className="w-3.5 h-3.5" />
+                                                <span className="truncate max-w-[200px]">{customer.email}</span>
+                                            </div>
+                                        )}
+                                        {customer.address && (
+                                            <div className="flex items-center gap-1.5 truncate">
+                                                <div className="w-3.5 h-3.5 flex items-center justify-center">📍</div>
+                                                <span className="truncate max-w-[250px]">{customer.address}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-1 self-end sm:self-center shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setEditingCustomer(customer)}
+                                    className="h-7 w-7 p-0 hover:bg-muted"
+                                    title="Editar"
+                                >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={async () => {
+                                        if (confirm(`Excluir ${customer.name}?`)) {
+                                            const { error } = await deleteCustomer(customer.id);
+                                            if (!error) refetchCustomers();
+                                        }
+                                    }}
+                                    title="Excluir"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     );
 };
 

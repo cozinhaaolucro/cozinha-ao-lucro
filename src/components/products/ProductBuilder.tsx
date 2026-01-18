@@ -1014,7 +1014,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                         <PopoverContent className="w-[280px] p-0" align="start">
                             <Command>
                                 <CommandInput placeholder="Buscar ingrediente..." />
-                                <CommandList>
+                                <CommandList className="max-h-[200px] overflow-y-auto">
                                     <CommandEmpty>Nenhum ingrediente encontrado.</CommandEmpty>
                                     <CommandGroup>
                                         {ingredients.map((ingredient) => (

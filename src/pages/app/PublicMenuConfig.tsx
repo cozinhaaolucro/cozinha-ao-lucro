@@ -123,6 +123,7 @@ const PublicMenuConfig = () => {
 
     const COLOR_THEMES = [
         { value: 'orange', label: 'Laranja (Padrão)', class: 'bg-orange-500' },
+        { value: 'yellow', label: 'Amarelo', class: 'bg-yellow-500' },
         { value: 'red', label: 'Vermelho', class: 'bg-red-500' },
         { value: 'green', label: 'Verde', class: 'bg-green-600' },
         { value: 'blue', label: 'Azul', class: 'bg-blue-600' },
@@ -314,9 +315,8 @@ const PublicMenuConfig = () => {
                                     navigator.clipboard.writeText(`${window.location.origin}/menu/${profile?.slug || user?.id}`);
                                     toast.success('Link copiado!');
                                 }}
-                                variant="secondary"
                                 size="sm"
-                                className="h-7 text-xs"
+                                className="h-7 text-xs bg-[#2e5b60] text-white hover:bg-[#2e5b60]/90"
                             >
                                 Copiar
                             </Button>

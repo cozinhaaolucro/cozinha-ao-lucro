@@ -41,13 +41,13 @@ function UnifiedCalendar({
                 ),
                 day_range_end: "day-range-end",
                 day_selected:
-                    "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground shadow-sm font-semibold focus:bg-primary focus:text-primary-foreground",
+                    "bg-[#5F98A1] text-white hover:bg-[#5F98A1] hover:text-white shadow-sm font-semibold focus:bg-[#5F98A1] focus:text-white",
                 day_today: "bg-transparent text-foreground ring-2 ring-primary ring-offset-2 font-semibold",
                 day_outside:
                     "day-outside text-muted-foreground opacity-30 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
                 day_disabled: "text-muted-foreground opacity-20",
                 day_range_middle:
-                    "aria-selected:bg-accent aria-selected:text-accent-foreground rounded-none",
+                    "aria-selected:bg-[#d7d9db] aria-selected:text-accent-foreground",
                 day_hidden: "invisible",
                 ...classNames,
             }}

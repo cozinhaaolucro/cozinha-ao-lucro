@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Download, Upload, Package, FileSpreadsheet, FileDown, FileText, ChevronDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download, Upload, Package, FileSpreadsheet, FileDown, FileText, ChevronDown, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { formatUnit } from '@/lib/utils';
+import { formatUnit, cn } from '@/lib/utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -39,13 +39,26 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { presetIngredients } from '@/data/presetIngredients';
 import { getIngredientIcon } from '@/lib/ingredientIcons';
 
-const IngredientList = () => {
-    const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const isMobile = useIsMobile();
-    const fileInputRef = useRef<HTMLInputElement>(null);
+import { useIngredients } from '@/hooks/useQueries';
 
+const IngredientList = () => {
+    // Hooks and State
+    const { toast } = useToast();
+    const isMobile = useIsMobile();
     const [searchParams, setSearchParams] = useSearchParams();
+
+    // Pagination State
+    const [page, setPage] = useState(1);
+    const [limit] = useState(24);
+
+    // React Query
+    const { data: ingredientsData, isLoading, refetch } = useIngredients(page, limit);
+    const ingredients = ingredientsData?.ingredients || [];
+    const totalCount = ingredientsData?.count || 0;
+
+    // Local State for UI
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (searchParams.get('action') === 'new' && searchParams.get('tab') === 'ingredients') {
@@ -62,7 +75,8 @@ const IngredientList = () => {
         cost_per_unit: 0,
         stock_quantity: 0,
     });
-    const { toast } = useToast();
+    // Removed duplicate toast declaration
+
 
     // Bulk Selection State
     const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
@@ -75,24 +89,10 @@ const IngredientList = () => {
     const [packageUnit, setPackageUnit] = useState<'g' | 'ml' | 'un' | 'kg' | 'l'>('g');
     const [packageCost, setPackageCost] = useState(0);
 
-    const [page, setPage] = useState(1);
-    const [limit] = useState(24);
-    const [totalCount, setTotalCount] = useState(0);
-    const [isLoading, setIsLoading] = useState(false);
+    // Load active orders once for demand calculation - keeping manual for now as it's secondary
+    // Or we could wrap this in a query too, but low priority.
 
-    const loadIngredients = async () => {
-        setIsLoading(true);
-        const { data, error, count } = await getIngredients(page, limit);
-        if (!error && data) {
-            setIngredients(data);
-            if (count !== null) setTotalCount(count);
-        }
-        setIsLoading(false);
-    };
-
-    useEffect(() => {
-        loadIngredients();
-    }, [page]);
+    const loadIngredients = () => refetch(); // Alias for compatibility with existing functions
 
     const handlePresetSelect = (presetName: string) => {
         const preset = presetIngredients.find(p => p.name === presetName);
@@ -642,88 +642,129 @@ const IngredientList = () => {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
                     {ingredients.map((ingredient) => {
                         const demand = getDemand(ingredient.id);
                         const stock = ingredient.stock_quantity || 0;
-                        const statusType = getStatusType(stock, demand);
-                        const styles = getStatusStyles(statusType);
+
+                        const isPackaging = ingredient.unit === 'un' || ingredient.unit === 'unidade';
+                        const mainColor = isPackaging ? '#61888c' : '#5F98A1';
+                        const Icon = getIngredientIcon(ingredient.name);
+
+                        // Check if package info exists
+                        const hasPackageInfo = ingredient.package_qty && ingredient.package_qty > 0;
+
+                        // Check if selected
+                        const isSelected = selectedIngredients.includes(ingredient.id);
 
                         return (
-                            <Card key={ingredient.id} className="group hover:scale-[1.01] transition-all duration-200">
+                            <Card
+                                key={ingredient.id}
+                                className={cn(
+                                    "group hover:shadow-md transition-all duration-200 relative overflow-hidden bg-card/50 hover:bg-card border-border/60",
+                                    isSelected && "border-primary ring-1 ring-primary/20 bg-primary/5"
+                                )}
+                                onClick={() => toggleSelect(ingredient.id)}
+                            >
                                 <CardContent className="p-3">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <Checkbox
-                                                checked={selectedIngredients.includes(ingredient.id)}
-                                                onCheckedChange={() => toggleSelect(ingredient.id)}
-                                            />
-                                            {(() => {
-                                                const Icon = getIngredientIcon(ingredient.name);
-                                                return <Icon className={`w-4 h-4 ${styles.icon}`} />;
-                                            })()}
-                                            <CardTitle className={`text-sm font-medium line-clamp-1 text-foreground`}>
-                                                {ingredient.name}
-                                            </CardTitle>
-                                        </div>
-                                    </div>
-                                    <div className="text-lg font-bold text-foreground/90">
-                                        R$ {ingredient.cost_per_unit.toFixed(2)}
-                                    </div>
-                                    <div className="flex items-center justify-between mt-2">
-                                        <div className="flex flex-col">
-                                            <p className={`text-xs font-semibold ${stock < 0 ? 'text-destructive' :
-                                                stock === 0 ? 'text-muted-foreground' :
-                                                    styles.text
-                                                }`}>
-                                                {Number(stock.toFixed(2))} {formatUnit(stock, ingredient.unit)}
-                                            </p>
-                                            {demand > 0 && (
-                                                <p className="text-[10px] text-orange-600">
-                                                    Op: {demand.toFixed(1)}
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        <QuickAddStock
-                                            ingredient={ingredient}
-                                            onSuccess={() => {
-                                                loadIngredients();
-                                                toast({ title: 'Estoque atualizado!' });
-                                            }}
+                                    {/* Selection Checkbox - Appears on hover or selected */}
+                                    <div
+                                        className={cn(
+                                            "absolute top-3 left-3 z-30 transition-all duration-200",
+                                            isSelected ? "opacity-100 scale-100" : "opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 pointer-events-none group-hover:pointer-events-auto"
+                                        )}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <Checkbox
+                                            checked={isSelected}
+                                            onCheckedChange={() => toggleSelect(ingredient.id)}
+                                            className="h-4 w-4 bg-background/80 backdrop-blur-sm border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                                         />
                                     </div>
-
-                                    <div className="mt-2 hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                                         <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="flex-1 h-7 text-xs"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-5 w-5 bg-background/80 hover:bg-background shadow-sm rounded-md"
                                             onClick={() => openEditDialog(ingredient)}
+                                            title="Editar"
                                         >
-                                            <Pencil className="w-3 h-3 mr-1" />
-                                            Editar
+                                            <Pencil className="w-3 h-3 text-muted-foreground" />
                                         </Button>
                                         <Button
                                             variant="ghost"
-                                            size="sm"
-                                            className="h-7 px-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                            size="icon"
+                                            className="h-5 w-5 bg-background/80 hover:bg-red-50 hover:text-red-500 shadow-sm rounded-md"
                                             onClick={() => handleDelete(ingredient.id)}
+                                            title="Excluir"
                                         >
                                             <Trash2 className="w-3 h-3" />
                                         </Button>
                                     </div>
-                                    <div className="mt-2 flex md:hidden">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="flex-1 h-7 text-xs"
-                                            onClick={() => openEditDialog(ingredient)}
+
+                                    {/* Header: Icon Larger, Name Next to it - Shifts on hover/selected */}
+                                    <div className={cn(
+                                        "flex items-center gap-3 mb-3 pr-12 transition-all duration-200 ease-out",
+                                        (isSelected) ? "translate-x-6" : "group-hover:translate-x-6"
+                                    )}>
+                                        <div className="shrink-0">
+                                            <Icon className="w-7 h-7" style={{ color: mainColor }} />
+                                        </div>
+                                        <CardTitle
+                                            className="text-base font-semibold leading-tight line-clamp-2 text-foreground"
+                                            title={ingredient.name}
                                         >
-                                            <Pencil className="w-3 h-3 mr-1" />
-                                            Editar
-                                        </Button>
+                                            {ingredient.name}
+                                        </CardTitle>
                                     </div>
+
+                                    {/* Info Grid */}
+                                    <div className="flex items-end justify-between pt-2 border-t border-dashed border-border/40 mt-auto min-h-[42px]">
+                                        <div className="flex flex-col w-full gap-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] text-muted-foreground font-medium">Estoque:</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span
+                                                        className={cn("font-medium text-xs transition-colors", stock < 0 ? "text-[#C76E60] font-bold" : "text-foreground/90")}
+                                                    >
+                                                        {Number(stock.toFixed(2))} <span className="text-[10px] text-muted-foreground">{ingredient.unit}</span>
+                                                    </span>
+
+                                                    {hasPackageInfo && (
+                                                        <div className="flex items-center gap-1 pl-2 border-l border-border/50">
+                                                            <Package className="w-3 h-3 text-muted-foreground/70" />
+                                                            <span className="text-[10px] text-muted-foreground">
+                                                                {ingredient.package_qty}x {ingredient.package_size}{ingredient.package_unit || ingredient.unit}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs text-muted-foreground font-medium">Custo:</span>
+                                                <span className="font-semibold text-sm text-foreground">R$ {ingredient.cost_per_unit.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity pl-2">
+                                            <QuickAddStock
+                                                ingredient={ingredient}
+                                                onSuccess={() => {
+                                                    loadIngredients();
+                                                    toast({ title: 'Estoque atualizado!' });
+                                                }}
+                                                minimal
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Demand Alert */}
+                                    {demand > 0 && (
+                                        <div className="mt-2 text-[10px] text-orange-600/90 bg-orange-50/50 px-2 py-1 rounded-sm flex items-center justify-center gap-1.5 font-medium border border-orange-100/50">
+                                            <TrendingUp className="w-3 h-3" />
+                                            Demanda: {demand.toFixed(1)}
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         );
@@ -819,7 +860,7 @@ const IngredientList = () => {
     );
 };
 
-const QuickAddStock = ({ ingredient, onSuccess }: { ingredient: Ingredient; onSuccess: () => void }) => {
+const QuickAddStock = ({ ingredient, onSuccess, minimal }: { ingredient: Ingredient; onSuccess: () => void; minimal?: boolean }) => {
     const { toast } = useToast();
     const [open, setOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -886,11 +927,14 @@ const QuickAddStock = ({ ingredient, onSuccess }: { ingredient: Ingredient; onSu
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
-                    variant="outline"
+                    variant={minimal ? "ghost" : "outline"}
                     size="icon"
-                    className="h-8 w-8 rounded-full bg-background border-border/60 text-primary shadow-sm transition-all duration-200 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+                    className={minimal
+                        ? "h-6 w-6 rounded-full text-muted-foreground hover:text-white hover:bg-[#5F98A1] transition-colors"
+                        : "h-8 w-8 rounded-full bg-background border-border/60 text-primary shadow-sm transition-all duration-200 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+                    }
                 >
-                    <Plus className="w-5 h-5" />
+                    <Plus className={minimal ? "w-4 h-4" : "w-5 h-5"} />
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-72 p-3" align="end" side="left">

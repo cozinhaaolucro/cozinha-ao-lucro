@@ -743,10 +743,10 @@ const Pedidos = () => {
                             {Object.entries(STATUS_COLUMNS).map(([status, config]) => {
                                 const count = filteredOrders.filter((o) => o.status === status).length;
                                 return (
-                                    <TabsTrigger key={status} value={status} className="text-xs px-1 h-10 flex flex-row items-center justify-center gap-1 font-medium bg-muted/50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-1">
-                                        <span>{config.label.split(' ')[0]}</span>
+                                    <TabsTrigger key={status} value={status} className="group text-xs px-1 min-h-10 h-auto py-2 flex flex-row items-center justify-center gap-1.5 font-medium bg-muted/50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-1 text-center whitespace-normal leading-tight">
+                                        <span>{config.label}</span>
                                         {count > 0 && (
-                                            <span className="bg-primary/10 text-primary data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-full px-1.5 py-0.5 text-[10px] font-bold">
+                                            <span className="bg-primary/10 text-primary group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white rounded-full px-1.5 py-0.5 text-[10px] font-bold">
                                                 {count}
                                             </span>
                                         )}
@@ -801,7 +801,7 @@ const Pedidos = () => {
                 <AlertDialog open={showDuplicateStockAlert} onOpenChange={setShowDuplicateStockAlert}>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
+                            <AlertDialogTitle className="flex items-center gap-2" style={{ color: '#C76E60' }}>
                                 <AlertCircle className="h-5 w-5" />
                                 Estoque Insuficiente
                             </AlertDialogTitle>
@@ -856,7 +856,11 @@ const Pedidos = () => {
                                         e.preventDefault();
                                         handleDuplicateAutoRestock();
                                     }}
-                                    className="bg-amber-600 hover:bg-[hsl(182,16%,55%)] hover:text-white"
+                                    className="hover:text-white transition-colors"
+                                    style={{
+                                        backgroundColor: '#2e5b60',
+                                        color: 'white'
+                                    }}
                                     disabled={isDuplicateRestocking}
                                 >
                                     {isDuplicateRestocking ? 'Atualizando...' : 'Regularizar e Criar'}
@@ -1027,7 +1031,7 @@ const Pedidos = () => {
                     ) : null}
                 </DragOverlay>
             </div>
-        </DndContext>
+        </DndContext >
     );
 };
 
@@ -1073,24 +1077,35 @@ const CardWithStyle = ({
             <CardHeader className="pb-1 pt-2.5 pl-4 pr-3">
                 <div className="text-sm flex items-start justify-between">
                     <div className="font-semibold flex flex-col gap-0.5" onClick={() => handleCustomerClick(order.customer)}>
-                        <span
-                            className="hover:underline cursor-pointer text-sm font-medium tracking-tight"
-                            style={{ color: 'hsl(var(--foreground))' }} // Text Main
-                        >
-                            {order.customer?.name || 'Cliente não informado'}
-                        </span>
+                        <div className="flex items-center gap-1">
+                            <span
+                                className="hover:underline cursor-pointer text-sm font-medium tracking-tight"
+                                style={{ color: 'hsl(var(--foreground))' }} // Text Main
+                            >
+                                {order.customer?.name || 'Cliente não informado'}
+                            </span>
+                            {order.customer?.phone && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-5 w-5 hover:bg-muted rounded-full transition-colors"
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => { e.stopPropagation(); handleWhatsApp(order); }}
+                                    title="WhatsApp"
+                                >
+                                    <Phone className="w-3 h-3 text-[#4C9E7C]" />
+                                </Button>
+                            )}
+                        </div>
                         <div className="text-[10px] uppercase tracking-wider font-semibold opacity-70" style={{ color: 'hsl(var(--muted-foreground))' }}>
                             #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
                         </div>
                     </div>
 
                     <div className={isMobile ? "flex gap-0.5" : "flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"}>
-                        <ActionIcon Icon={Copy} onClick={(e: any) => { e.stopPropagation(); handleDuplicate(order); }} color={baseColor} title="Duplicar" />
-                        <ActionIcon Icon={Pencil} onClick={(e: any) => { e.stopPropagation(); setEditingOrder(order); }} color={baseColor} title="Editar" />
-                        <ActionIcon Icon={Trash2} onClick={(e: any) => { e.stopPropagation(); if (confirm('Excluir?')) handleDeleteOrder(order.id); }} color={baseColor} title="Excluir" />
-                        {order.customer?.phone && (
-                            <ActionIcon Icon={Phone} onClick={(e: any) => { e.stopPropagation(); handleWhatsApp(order); }} color={baseColor} title="WhatsApp" />
-                        )}
+                        <ActionIcon Icon={Copy} onClick={(e: any) => { e.stopPropagation(); handleDuplicate(order); }} color="#9ca3af" title="Duplicar" />
+                        <ActionIcon Icon={Pencil} onClick={(e: any) => { e.stopPropagation(); setEditingOrder(order); }} color="#9ca3af" title="Editar" />
+                        <ActionIcon Icon={Trash2} onClick={(e: any) => { e.stopPropagation(); if (confirm('Excluir?')) handleDeleteOrder(order.id); }} color="#9ca3af" title="Excluir" />
                     </div>
                 </div>
             </CardHeader>
@@ -1098,10 +1113,10 @@ const CardWithStyle = ({
                 <div className="grid gap-1.5">
                     <div className="flex justify-between items-center text-xs">
                         <span className="flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: baseColor }}></span>
                             {order.delivery_date ? formatDate(order.delivery_date) : 'Sem data'}
                         </span>
-                        <span className="font-medium text-sm tracking-normal" style={{ color: baseColor }}>
+                        <span className="font-medium text-sm tracking-normal" style={{ color: '#2FBF71' }}>
                             R$
                             <span style={{ marginLeft: '4px' }}>
                                 {order.total_value.toFixed(2)}
@@ -1115,9 +1130,8 @@ const CardWithStyle = ({
                             variant="outline"
                             className="text-[10px] px-2 py-0.5 h-auto rounded-md border border-opacity-20 font-medium bg-opacity-10"
                             style={{
-                                backgroundColor: `hsla(var(--status-${statusKey}-base), 0.08)`,
-                                borderColor: `hsla(var(--status-${statusKey}-base), 0.25)`,
-                                color: baseColor
+                                color: 'hsl(var(--muted-foreground))',
+                                borderColor: 'hsl(var(--border))'
                             }}
                         >
                             {order.payment_method === 'credit_card' && 'Crédito'}
@@ -1133,7 +1147,13 @@ const CardWithStyle = ({
                             {order.delivery_method === 'delivery' ? 'Delivery' : 'Retirada'}
                         </Badge>
                         {isLate && (
-                            <Badge className="text-[10px] px-2 py-0.5 h-auto rounded-md bg-red-50 text-red-600 border border-red-100 hover:bg-red-50">
+                            <Badge
+                                className="text-[10px] px-2 py-0.5 h-auto rounded-md border text-white"
+                                style={{
+                                    backgroundColor: '#C76E60',
+                                    borderColor: '#C76E60'
+                                }}
+                            >
                                 Atrasado
                             </Badge>
                         )}
@@ -1143,7 +1163,7 @@ const CardWithStyle = ({
                         <div className="text-xs mt-1 pt-1.5 border-t border-border/40 text-left" style={{ color: 'hsl(var(--muted-foreground))' }}>
                             {order.items.slice(0, 3).map((item: any, idx: number) => (
                                 <p key={idx} className="line-clamp-1 flex items-center gap-1.5 py-0.5">
-                                    <span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0"></span>
+                                    <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: baseColor }}></span>
                                     <span className="font-medium text-foreground/80">{item.product_name}</span>
                                     <span className="opacity-60 text-[10px]">(x{item.quantity})</span>
                                 </p>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
 import { addDays, format, subDays } from "date-fns";
 import { DateRange } from "react-day-picker";
+import { ptBR } from "date-fns/locale";
 import { DateRangePicker } from "@/components/ui/date-picker";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -230,7 +231,7 @@ const Dashboard = () => {
             const cost = dayOrders.reduce((s, o) => s + getOrderCost(o), 0);
             const count = dayOrders.length;
             days.push({
-                date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', ''),
+                date: format(d, 'dd MMM', { locale: ptBR }).toLowerCase(),
                 revenue: rev,
                 profit: rev - cost,
                 ordersCount: count,
@@ -414,7 +415,7 @@ const Dashboard = () => {
                             <CardContent className="p-3 pt-2">
                                 <div className="text-lg font-bold text-foreground">R$ {totalRevenue.toFixed(2)}</div>
                                 <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                                    <span className="w-1 h-1 rounded-full bg-[#C9A34F]" /> Vendas brutas totais
+                                    Vendas brutas totais
                                 </p>
                             </CardContent>
                         </Card>
@@ -423,8 +424,8 @@ const Dashboard = () => {
                         <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
                                 <div className="flex items-center gap-2">
-                                    <div className="p-1.5 rounded-lg transition-colors bg-[#2FBF71]/10">
-                                        <Wallet className="h-4 w-4" style={{ color: '#2FBF71' }} />
+                                    <div className="p-1.5 rounded-lg transition-colors bg-[#4C9E7C]/10">
+                                        <Wallet className="h-4 w-4" style={{ color: '#4C9E7C' }} />
                                     </div>
                                     <CardTitle className="text-xs font-bold text-muted-foreground">Lucro Líquido</CardTitle>
                                     <UITooltip>
@@ -442,7 +443,7 @@ const Dashboard = () => {
                             <CardContent className="p-3 pt-2">
                                 <div className="text-lg font-bold text-foreground">R$ {totalProfit.toFixed(2)}</div>
                                 <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                                    <span className="w-1 h-1 rounded-full bg-[#2FBF71]" /> O que sobra no bolso
+                                    O que sobra no bolso
                                 </p>
                             </CardContent>
                         </Card>
@@ -470,7 +471,7 @@ const Dashboard = () => {
                             <CardContent className="p-3 pt-2">
                                 <div className="text-lg font-bold text-foreground">R$ {totalCost.toFixed(2)}</div>
                                 <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                                    <span className="w-1 h-1 rounded-full bg-[#68A9CA]" /> Gasto com ingredientes
+                                    Gasto com ingredientes
                                 </p>
                             </CardContent>
                         </Card>
@@ -498,7 +499,7 @@ const Dashboard = () => {
                             <CardContent className="p-3 pt-2">
                                 <div className="text-lg font-bold text-foreground">{profitMargin.toFixed(1)}%</div>
                                 <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                                    <span className="w-1 h-1 rounded-full bg-[#61888c]" /> Eficiência das vendas
+                                    Eficiência das vendas
                                 </p>
                             </CardContent>
                         </Card>

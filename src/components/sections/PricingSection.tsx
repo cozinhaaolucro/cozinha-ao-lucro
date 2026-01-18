@@ -41,7 +41,7 @@ const PricingSection = () => {
                                     <span className="text-6xl font-extrabold text-primary font-heading tracking-tight relative inline-block">R$ 39,90</span>
                                     <span className="text-muted-foreground font-medium">/mês</span>
                                 </div>
-                                <p className="text-sm text-emerald-600 font-bold mt-4 bg-emerald-500/10 inline-block px-4 py-1.5 rounded-full border border-emerald-500/20 shadow-sm animate-pulse-slow">
+                                <p className="text-sm text-[#2FBF71] font-bold mt-4 bg-[#2FBF71]/10 inline-block px-4 py-1.5 rounded-full border border-[#2FBF71]/20 shadow-sm animate-pulse-slow">
                                     7 Dias Grátis para Testar
                                 </p>
                             </CardHeader>

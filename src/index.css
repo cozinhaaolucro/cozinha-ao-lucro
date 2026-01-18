@@ -76,24 +76,26 @@
 
     /* STATUS COLORS (SaaS) */
     /* A Fazer (was Delivered Gold) */
+    /* STATUS COLORS (SaaS) */
+    /* A Fazer (Pending) - #C9A34F */
     --status-pending-base: 41 53% 55%;
     --status-pending-bg: 41 53% 92%;
 
-    /* Em Produção (was Pending Blue) - Lightened */
+    /* Em Produção (Preparing) - #68A9CA (HSL approx 200 48% 60%) */
     --status-preparing-base: 200 48% 60%;
     --status-preparing-bg: 200 48% 94%;
 
-    /* Pronto */
+    /* Pronto (Ready) - #4C9E7C (HSL approx 155 35% 46%) */
     --status-ready-base: 155 35% 46%;
     --status-ready-bg: 155 35% 92%;
 
-    /* Entregue (Light Blue) */
-    --status-delivered-base: 182 16% 55%;
-    --status-delivered-bg: 182 16% 96%;
+    /* Entregue (Delivered) - #5F98A1 (HSL approx 188 26% 50%) */
+    --status-delivered-base: 188 26% 50%;
+    --status-delivered-bg: 188 26% 94%;
 
-    /* Atrasado */
-    --status-late-base: 8 48% 58%;
-    --status-late-bg: 8 48% 92%;
+    /* Atrasado (Late) - #C76E60 (HSL approx 6 47% 58%) */
+    --status-late-base: 6 47% 58%;
+    --status-late-bg: 6 47% 92%;
 
     /* Shadows */
     /* Non-colored standard: HSL 210 15% 20% -> 210 15% 20% */

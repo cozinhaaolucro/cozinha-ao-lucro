@@ -148,7 +148,7 @@ export function DateRangePicker({
                         mode="range"
                         selected={internalDate}
                         onSelect={handleSelect}
-                        numberOfMonths={2}
+                        numberOfMonths={1}
                         locale={ptBR}
                     />
                     <div className="p-3 border-t border-border flex items-center justify-end gap-2 bg-muted/5">

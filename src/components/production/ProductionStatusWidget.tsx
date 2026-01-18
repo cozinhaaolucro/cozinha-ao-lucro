@@ -110,7 +110,7 @@ const ProductionStatusWidget = () => {
         }, [startDate]);
 
         return (
-            <div className="flex items-center gap-1 text-orange-500 font-mono font-bold text-sm">
+            <div className="flex items-center gap-1 text-red-500 font-mono font-bold text-sm">
                 <Flame className="w-3 h-3 animate-pulse" />
                 {elapsed} min
             </div>
@@ -131,7 +131,7 @@ const ProductionStatusWidget = () => {
 
     return (
         <>
-            <div className={`fixed top-4 left-4 z-40 md:left-auto md:top-auto md:bottom-8 md:right-28 md:translate-x-0 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`fixed bottom-36 right-4 z-30 md:left-auto md:top-auto md:bottom-8 md:right-28 md:translate-x-0 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <motion.div
                     layout
                     initial={{ width: 60, height: 60, borderRadius: 30 }}
@@ -223,9 +223,8 @@ const ProductionStatusWidget = () => {
                             Painel de Operações
                         </SheetTitle>
                         <div className="flex gap-2 text-sm text-muted-foreground">
-                            <span>{todoOrders.length} Fila</span>
                             <span>•</span>
-                            <span className="text-orange-500 font-medium">{inProgressOrders.length} Produzindo</span>
+                            <span className="text-red-500 font-medium">{inProgressOrders.length} Produzindo</span>
                             <span>•</span>
                             <span className="text-green-600 font-medium">{readyOrders.length} Prontos</span>
                         </div>
@@ -237,13 +236,13 @@ const ProductionStatusWidget = () => {
                             {/* IN PROGRESS SECTION */}
                             {inProgressOrders.length > 0 && (
                                 <div className="space-y-4">
-                                    <h3 className="text-sm font-bold uppercase tracking-wider text-orange-500 flex items-center gap-2">
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-red-500 flex items-center gap-2">
                                         <Flame className="w-4 h-4" />
                                         Em Produção ({inProgressOrders.length})
                                     </h3>
                                     {inProgressOrders.map(order => (
-                                        <Card key={order.id} className="border-orange-200 bg-orange-50/50 dark:bg-orange-950/20 overflow-hidden relative">
-                                            <div className="absolute top-0 left-0 h-1 bg-orange-500 w-full animate-progress-indeterminate"></div>
+                                        <Card key={order.id} className="border-red-200 bg-red-50/50 dark:bg-red-950/20 overflow-hidden relative">
+                                            <div className="absolute top-0 left-0 h-1 bg-red-500 w-full animate-progress-indeterminate"></div>
                                             <CardContent className="p-4 space-y-3">
                                                 <div className="flex justify-between items-start">
                                                     <div>
@@ -265,7 +264,7 @@ const ProductionStatusWidget = () => {
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        className="flex-1 bg-white border-orange-200 hover:bg-[hsl(182,16%,55%)] hover:text-white text-orange-700"
+                                                        className="flex-1 bg-white border-red-200 hover:bg-red-50 hover:text-red-700 text-red-700"
                                                         onClick={() => handleStatusUpdate(order.id, 'pending', 'preparing')}
                                                     >
                                                         <Pause className="w-4 h-4 mr-2" />
@@ -273,7 +272,7 @@ const ProductionStatusWidget = () => {
                                                     </Button>
                                                     <Button
                                                         size="sm"
-                                                        className="flex-[2] bg-orange-500 hover:bg-[hsl(182,16%,55%)] hover:text-white border-orange-600"
+                                                        className="flex-[2] bg-red-500 hover:bg-red-600 hover:text-white border-red-600"
                                                         onClick={() => handleStatusUpdate(order.id, 'ready', 'preparing')}
                                                     >
                                                         <CheckCircle className="w-4 h-4 mr-2" />

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 import { Plus, TrendingUp, Pencil, Download, Trash2, Copy, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { getProducts, deleteProduct, updateProduct, createProduct, getIngredients } from '@/lib/database';
 import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
@@ -36,13 +37,47 @@ type ProductWithIngredients = Product & {
     }>;
 };
 
+const OptimisticToggle = ({
+    isActive,
+    onToggle
+}: {
+    isActive: boolean;
+    onToggle: (newState: boolean) => void;
+}) => {
+    const [active, setActive] = useState(isActive);
+
+    useEffect(() => {
+        setActive(isActive);
+    }, [isActive]);
+
+    const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newState = e.target.checked;
+        setActive(newState);
+        onToggle(newState);
+    };
+
+    return (
+        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+            <label className="relative inline-flex items-center cursor-pointer scale-90">
+                <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={active}
+                    onChange={handleToggle}
+                />
+                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+        </div>
+    );
+};
+
 const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     // const [products, setProducts] = useState<ProductWithIngredients[]>([]); // Derived
     // const [ingredients, setIngredients] = useState<Ingredient[]>([]); // Derived
     const [editingProduct, setEditingProduct] = useState<ProductWithIngredients | null>(null);
     const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
     const [showAllIngredients, setShowAllIngredients] = useState(false);
-    const [hoveredProductId, setHoveredProductId] = useState<string | null>(null);
+    const [expandedProductIds, setExpandedProductIds] = useState<string[]>([]);
     const [orderDialogOpen, setOrderDialogOpen] = useState(false);
     const [productForOrder, setProductForOrder] = useState<string | null>(null);
 
@@ -67,6 +102,11 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
         refetchProducts();
         refetchIngredients();
     };
+
+    // Force refetch on mount to ensure fresh data after creation
+    useEffect(() => {
+        loadProducts();
+    }, []);
 
     // Remove manual loadProducts async function and effect
     // const loadProducts = async () ...
@@ -457,18 +497,30 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                         return (
                             <Card
                                 key={product.id}
-                                className="hover:shadow-lg transition-shadow group"
-                                onMouseEnter={() => setHoveredProductId(product.id)}
-                                onMouseLeave={() => setHoveredProductId(null)}
+                                className={`transition-all duration-200 group cursor-pointer relative overflow-hidden border ${expandedProductIds.includes(product.id) ? 'border-primary ring-1 ring-primary/20 shadow-md' : 'hover:shadow-md hover:border-border/80'}`}
+                                onClick={() => setExpandedProductIds(prev => prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id])}
                             >
                                 <CardHeader className="pb-3">
+                                    {/* Selection Checkbox - Appears on hover or selected */}
+                                    <div
+                                        className={cn(
+                                            "absolute top-10 left-6 z-30 transition-all duration-200",
+                                            selectedProducts.includes(product.id) ? "opacity-100 scale-100" : "opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 pointer-events-none group-hover:pointer-events-auto"
+                                        )}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <Checkbox
+                                            checked={selectedProducts.includes(product.id)}
+                                            onCheckedChange={() => toggleSelect(product.id)}
+                                            className="h-4 w-4 bg-background/80 backdrop-blur-sm border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                        />
+                                    </div>
                                     <div className="flex items-start justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <Checkbox
-                                                checked={selectedProducts.includes(product.id)}
-                                                onCheckedChange={() => toggleSelect(product.id)}
-                                                onClick={(e) => e.stopPropagation()}
-                                            />
+                                        <div className={cn(
+                                            "flex items-center gap-3 transition-all duration-200 ease-out",
+                                            selectedProducts.includes(product.id) ? "translate-x-12" : "group-hover:translate-x-12"
+                                        )}>
+
                                             {product.image_url ? (
                                                 <div className="w-16 h-16 rounded-md overflow-hidden bg-muted shadow-sm border border-gray-100">
                                                     <img
@@ -483,37 +535,30 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                 </div>
                                             )}
                                             <div>
-                                                <CardTitle className="text-lg line-clamp-1">{product.name}</CardTitle>
+                                                <div className="flex items-center gap-2">
+                                                    <CardTitle className="text-lg line-clamp-1">{product.name}</CardTitle>
+                                                    <OptimisticToggle
+                                                        isActive={product.active !== false}
+                                                        onToggle={async (newActive) => {
+                                                            const { error } = await updateProduct(product.id, { active: newActive }, null);
+                                                            if (error) {
+                                                                toast({ title: 'Erro ao atualizar status', variant: 'destructive' });
+                                                                loadProducts(); // Revert/Reload
+                                                            } else {
+                                                                // Silent success or eventual consistency
+                                                                // loadProducts(); // Optional: can keep it to sync fully
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
                                                 <div className="flex gap-2 mt-1">
-                                                    <Badge variant={margin >= 60 ? "default" : "secondary"}>
+                                                    <Badge className="text-white hover:bg-[#5F98A1]/90" style={{ backgroundColor: '#5F98A1' }}>
                                                         {margin.toFixed(0)}% margem
                                                     </Badge>
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <div onClick={(e) => e.stopPropagation()}>
-                                                <label className="relative inline-flex items-center cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="sr-only peer"
-                                                        checked={product.active !== false}
-                                                        onChange={async (e) => {
-                                                            const newActive = e.target.checked;
-                                                            // Optimistic update removed (requires mutation cache update)
-                                                            // setProducts(updatedProducts); -> Removed
-
-                                                            const { error } = await updateProduct(product.id, { active: newActive }, null);
-                                                            if (error) {
-                                                                toast({ title: 'Erro ao atualizar status', variant: 'destructive' });
-                                                            } else {
-                                                                loadProducts(); // Refetch to show new state
-                                                            }
-                                                        }}
-                                                    />
-                                                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-                                                </label>
-                                            </div>
                                             {/* Desktop: hover-only */}
                                             <div className="hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Button
@@ -547,7 +592,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                         </div>
                                     </div>
                                     {product.description && (
-                                        <p className="text-sm text-muted-foreground">{product.description}</p>
+                                        <p className="text-sm text-muted-foreground mt-2">{product.description}</p>
                                     )}
                                 </CardHeader>
                                 <CardContent className="space-y-3">
@@ -602,7 +647,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                         <TrendingUp className="w-3 h-3" />
                                                         Lucro:
                                                     </span>
-                                                    <span className={`font-bold ${profit > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                    <span className="font-bold" style={{ color: profit > 0 ? '#4C9E7C' : '#C76E60' }}>
                                                         R$ {profit.toFixed(2)}
                                                     </span>
                                                 </div>
@@ -619,7 +664,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
 
 
 
-                                    {(showAllIngredients || hoveredProductId === product.id) && product.product_ingredients.length > 0 && (
+                                    {(showAllIngredients || expandedProductIds.includes(product.id)) && product.product_ingredients.length > 0 && (
                                         <div className="text-xs text-muted-foreground border-t pt-2 animate-in slide-in-from-top-2 fade-in duration-200">
                                             <p className="font-medium mb-1">Ingredientes:</p>
                                             <ul className="space-y-0.5">
@@ -664,72 +709,72 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                         const hasStock = producibleUnits > 0;
 
                                         return (
-                                            <div className="flex justify-between items-center mt-2 pt-2 border-t border-dashed border-border/40">
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className={`text-xs font-medium gap-1.5 cursor-help ${hasStock
-                                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                                                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-                                                                    }`}
-                                                            >
-                                                                <Package className="w-3 h-3" />
-                                                                {hasStock
-                                                                    ? `${producibleUnits > 999 ? "999+" : producibleUnits} possíveis`
-                                                                    : "Adicione ingredientes"
-                                                                }
-                                                            </Badge>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent className="max-w-[280px]">
-                                                            {hasStock ? (
-                                                                <div className="space-y-2">
-                                                                    <p className="text-xs font-medium">
-                                                                        Para produzir {producibleUnits} unidade(s):
-                                                                    </p>
-                                                                    <div className="space-y-1">
-                                                                        {ingredientBreakdown.map((item, idx) => {
-                                                                            const display = getDisplayQuantity(item.totalUsage, item.unit, item.displayUnit, item.ingredient?.package_size);
-                                                                            return (
+                                            (showAllIngredients || expandedProductIds.includes(product.id)) && (
+                                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-dashed border-border/40 animate-in slide-in-from-top-2 fade-in duration-200">
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Badge
+                                                                    variant="secondary"
+                                                                    className={`text-xs font-bold gap-1.5 cursor-help transition-all border ${hasStock
+                                                                        ? 'bg-[#4C9E7C]/10 text-[#4C9E7C] border-[#4C9E7C]/20 hover:bg-[#4C9E7C]/20'
+                                                                        : 'bg-[#5F98A1]/10 text-[#5F98A1] border-[#5F98A1]/20 hover:bg-[#5F98A1]/20'
+                                                                        }`}
+                                                                >
+                                                                    <Package className="w-3 h-3" />
+                                                                    {hasStock
+                                                                        ? `${producibleUnits > 999 ? "999+" : producibleUnits} possíveis`
+                                                                        : "Adicione ingredientes"
+                                                                    }
+                                                                </Badge>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent className="max-w-[280px]">
+                                                                {hasStock ? (
+                                                                    <div className="space-y-2">
+                                                                        <p className="text-xs font-medium">
+                                                                            Para produzir {producibleUnits} unidade(s):
+                                                                        </p>
+                                                                        <div className="space-y-1">
+                                                                            {ingredientBreakdown.map((item, idx) => {
+                                                                                const display = getDisplayQuantity(item.totalUsage, item.unit, item.displayUnit, item.ingredient?.package_size);
+                                                                                return (
+                                                                                    <div key={idx} className="flex justify-between text-[10px] gap-4">
+                                                                                        <span className="truncate">{item.name}</span>
+                                                                                        <span className="font-mono whitespace-nowrap" style={{ color: '#4C9E7C' }}>
+                                                                                            {parseFloat(display.value.toFixed(2))} {display.unit}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="space-y-2">
+                                                                        <p className="text-xs font-medium">
+                                                                            Estoque atual:
+                                                                        </p>
+                                                                        <div className="space-y-1">
+                                                                            {ingredientBreakdown.map((item, idx) => (
                                                                                 <div key={idx} className="flex justify-between text-[10px] gap-4">
                                                                                     <span className="truncate">{item.name}</span>
-                                                                                    <span className="font-mono text-emerald-600 whitespace-nowrap">
-                                                                                        {parseFloat(display.value.toFixed(2))} {display.unit}
+                                                                                    <span className="font-mono text-muted-foreground whitespace-nowrap">
+                                                                                        {item.stock.toFixed(1)} {item.unit}
                                                                                     </span>
                                                                                 </div>
-                                                                            );
-                                                                        })}
+                                                                            ))}
+                                                                        </div>
+                                                                        <p className="text-[10px] text-muted-foreground pt-1 border-t">
+                                                                            Adicione ingredientes ao estoque.
+                                                                        </p>
                                                                     </div>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="space-y-2">
-                                                                    <p className="text-xs font-medium">
-                                                                        Estoque atual:
-                                                                    </p>
-                                                                    <div className="space-y-1">
-                                                                        {ingredientBreakdown.map((item, idx) => (
-                                                                            <div key={idx} className="flex justify-between text-[10px] gap-4">
-                                                                                <span className="truncate">{item.name}</span>
-                                                                                <span className="font-mono text-muted-foreground whitespace-nowrap">
-                                                                                    {item.stock.toFixed(1)} {item.unit}
-                                                                                </span>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                    <p className="text-[10px] text-muted-foreground pt-1 border-t">
-                                                                        Adicione ingredientes ao estoque.
-                                                                    </p>
-                                                                </div>
-                                                            )}
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
+                                                                )}
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
 
-                                                {(showAllIngredients || hoveredProductId === product.id) && (
                                                     <Button
                                                         size="sm"
-                                                        className="h-7 text-xs gap-1.5 animate-in fade-in zoom-in duration-200"
+                                                        className="h-7 text-xs gap-1.5"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             setProductForOrder(product.id);
@@ -739,8 +784,8 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                         <Plus className="w-3 h-3" />
                                                         Criar Pedido
                                                     </Button>
-                                                )}
-                                            </div>
+                                                </div>
+                                            )
                                         );
                                     })()}
                                 </CardContent>
@@ -784,39 +829,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                 )
             }
 
-            {/* Pagination Controls */}
-            {
-                totalCount > 0 && (
-                    <div className="flex items-center justify-between border-t pt-4 mt-4">
-                        <div className="text-sm text-muted-foreground">
-                            Mostrando {products.length} de {totalCount} produtos
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                                disabled={page === 1 || isLoading}
-                            >
-                                <ChevronDown className="h-4 w-4 rotate-90 mr-1" />
-                                Anterior
-                            </Button>
-                            <div className="text-sm font-medium min-w-[3rem] text-center">
-                                Pág. {page}
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage(p => p + 1)}
-                                disabled={products.length < limit || (page * limit) >= totalCount || isLoading}
-                            >
-                                Próximo
-                                <ChevronDown className="h-4 w-4 -rotate-90 ml-1" />
-                            </Button>
-                        </div>
-                    </div>
-                )
-            }
+
 
             <ProductBuilder
                 open={!!editingProduct}
@@ -848,7 +861,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                 }}
                 initialProductId={productForOrder}
             />
-        </div>
+        </div >
     );
 };
 

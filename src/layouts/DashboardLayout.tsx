@@ -182,12 +182,9 @@ const DashboardLayout = () => {
 
 
             <aside className="hidden md:flex w-52 flex-col border-r bg-card h-full overflow-y-auto">
-                <div className="p-6 border-b flex items-center gap-3 shrink-0">
-                    <UserAvatar size="md" clickable />
-                    <div className="flex-1 min-w-0">
-                        <span className="font-bold text-lg truncate block">{firstName}</span>
-                        <span className="text-xs text-muted-foreground">Plano Pro</span>
-                    </div>
+                <div className="p-6 border-b flex flex-col items-center justify-center shrink-0 gap-3">
+                    <img src="/images/logo-icon.png" alt="Ícone Cozinha ao Lucro" className="h-12 w-auto" />
+                    <img src="/images/logo-full.png" alt="Cozinha ao Lucro" className="h-16 w-auto" />
                 </div>
 
                 {/* Search Bar Removed as per user request */}
@@ -220,14 +217,22 @@ const DashboardLayout = () => {
                     })}
                 </nav>
 
-                <div className="p-4 border-t shrink-0">
-                    <div className="mb-4 px-4">
-                        <p className="text-sm font-medium truncate">{user?.email}</p>
+                <div className="p-4 border-t shrink-0 flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                        <UserAvatar size="md" clickable />
+                        <div className="flex-1 min-w-0">
+                            <span className="font-bold text-sm truncate block">{firstName}</span>
+                            <span className="text-xs text-muted-foreground">Plano Pro</span>
+                        </div>
                     </div>
-                    <Button variant="outline" className="w-full justify-start gap-2" onClick={handleSignOut}>
-                        <LogOut className="w-4 h-4" />
-                        Sair
-                    </Button>
+
+                    <div className="px-1">
+                        <p className="text-xs text-muted-foreground truncate mb-2">{user?.email}</p>
+                        <Button variant="outline" size="sm" className="w-full justify-start gap-2 h-8" onClick={handleSignOut}>
+                            <LogOut className="w-3 h-3" />
+                            Sair
+                        </Button>
+                    </div>
                 </div>
             </aside>
 
