@@ -74,28 +74,7 @@
 
     --radius: 0.75rem;
 
-    /* STATUS COLORS (SaaS) */
-    /* A Fazer (was Delivered Gold) */
-    /* STATUS COLORS (SaaS) */
-    /* A Fazer (Pending) - #C9A34F */
-    --status-pending-base: 41 53% 55%;
-    --status-pending-bg: 41 53% 92%;
 
-    /* Em Produção (Preparing) - #68A9CA (HSL approx 200 48% 60%) */
-    --status-preparing-base: 200 48% 60%;
-    --status-preparing-bg: 200 48% 94%;
-
-    /* Pronto (Ready) - #4C9E7C (HSL approx 155 35% 46%) */
-    --status-ready-base: 155 35% 46%;
-    --status-ready-bg: 155 35% 92%;
-
-    /* Entregue (Delivered) - #5F98A1 (HSL approx 188 26% 50%) */
-    --status-delivered-base: 188 26% 50%;
-    --status-delivered-bg: 188 26% 94%;
-
-    /* Atrasado (Late) - #C76E60 (HSL approx 6 47% 58%) */
-    --status-late-base: 6 47% 58%;
-    --status-late-bg: 6 47% 92%;
 
     /* Shadows */
     /* Non-colored standard: HSL 210 15% 20% -> 210 15% 20% */
@@ -107,15 +86,7 @@
       0 2px 4px -1px hsla(210, 15%, 20%, 0.06);
     /* Standard Card text says 10% opacity */
 
-    /* Sidebar Variables */
-    --sidebar-background: 60 5% 96%;
-    --sidebar-foreground: 210 9% 32%;
-    --sidebar-primary: 186 35% 28%;
-    --sidebar-primary-foreground: 38 35% 94%;
-    --sidebar-accent: 182 16% 55%;
-    --sidebar-accent-foreground: 38 35% 94%;
-    --sidebar-border: 60 5% 83%;
-    --sidebar-ring: 182 16% 55%;
+
   }
 
   .dark {

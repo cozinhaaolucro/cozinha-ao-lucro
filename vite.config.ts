@@ -217,35 +217,58 @@ function cssInliner(): Plugin {
 
       if (!htmlFile) return;
 
-      const cssFiles = Object.keys(bundle).filter((key) => key.endsWith('.css'));
-      let cssContent = '';
+      // Find CSS files referenced in the HTML
+      // Note: Vite injects <link rel="stylesheet" href="/assets/index-....css">
+      const cssLinkRegex = /<link[^>]*href="([^"]+\.css)"[^>]*>/g;
+      const linkedCssFiles: string[] = [];
+      let match;
 
-      // Extract all CSS content
-      for (const file of cssFiles) {
-        const cssAsset = bundle[file] as any;
-        cssContent += cssAsset.source;
-        // Remove the CSS file from the bundle so it doesn't get written to disk
-        delete bundle[file];
+      while ((match = cssLinkRegex.exec(htmlFile.source)) !== null) {
+        // match[1] will be like "/assets/index-C1234.css" or "./assets/.."
+        // We need to map this back to the bundle key.
+        // Bundle keys are typically "assets/index-C1234.css" (no leading slash or dot)
+        const href = match[1];
+        const bundleKey = href.replace(/^(\.\/|\/)/, '');
+        linkedCssFiles.push(bundleKey);
+      }
+
+      let cssContent = '';
+      const removedFiles: string[] = [];
+
+      // Only inline the files actually linked in index.html (Critical CSS)
+      for (const file of linkedCssFiles) {
+        if (bundle[file]) {
+          const cssAsset = bundle[file] as any;
+          cssContent += cssAsset.source;
+          delete bundle[file];
+          removedFiles.push(file);
+        }
       }
 
       if (cssContent) {
-        // Remove existing <link rel="stylesheet"> tags for the removed CSS files
-        for (const file of cssFiles) {
-          // Create a regex that matches the link tag pointing to this file.
-          // We match the filename strictly to be safe.
-          // Vite output filenames usually don't have paths in the bundle key, but in HTML they might include assets/
-          const escapedFile = file.replace(/\./g, '\\.');
-          const reg = new RegExp(`<link[^>]*href="[^"]*${escapedFile}"[^>]*>`, 'g');
+        // Define a function to escape regex special characters
+        const escapeRegExp = (string: string) => {
+          return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        };
+
+        // Remove <link> tags for inlined files
+        for (const file of removedFiles) {
+          // We need to be careful to match the specific href that was found earlier
+          // The simplest way might be to regex match the filename portion
+          const filename = path.basename(file);
+          const reg = new RegExp(`<link[^>]*href="[^"]*${escapeRegExp(filename)}"[^>]*>`, 'g');
           htmlFile.source = htmlFile.source.replace(reg, '');
         }
 
-        // Inject the collected CSS into a <style> tag in the <head>
+        // Inject inlined CSS
         htmlFile.source = htmlFile.source.replace(
           '</head>',
           `<style>${cssContent}</style></head>`
         );
 
-        console.log(`[css-inliner] Inlined ${cssContent.length} bytes of CSS`);
+        console.log(`[css-inliner] Inlined ${cssContent.length} bytes of CSS from ${removedFiles.join(', ')}`);
+      } else {
+        console.log('[css-inliner] No linked CSS files found to inline.');
       }
     },
   };
