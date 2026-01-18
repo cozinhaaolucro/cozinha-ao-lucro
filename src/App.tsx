@@ -5,13 +5,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
-import { App as CapacitorApp } from '@capacitor/app';
-import { supabase } from './lib/supabase';
-import { AuthProvider } from "./contexts/AuthContext";
-import { NotificationProvider } from "./contexts/NotificationContext";
 
 // Eager load critical pages
 import Index from "./pages/Index";
+
+// Lazy load Providers to isolate heavy dependencies (Supabase, Auth) from Landing Page
+const AppProviders = lazy(() => import("./AppProviders"));
 
 // Lazy load app pages for better performance
 const Login = lazy(() => import("./pages/auth/Login"));
@@ -59,51 +58,47 @@ const App = () => {
       <TooltipProvider delayDuration={300}>
         <Toaster />
         <Sonner />
-        <AuthProvider>
-          <NotificationProvider>
-            <BrowserRouter>
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public Landing Page - NO Auth Provider, NO Database Load */}
+              {Capacitor.isNativePlatform() ? (
+                <Route path="/" element={<Navigate to="/login" replace />} />
+              ) : (
+                <Route path="/" element={<Index />} />
+              )}
 
-                // ... inside Routes ...
+              {/* Wrapped Routes - Auth & Notification Providers applied here (Lazy Loaded) */}
+              <Route element={<AppProviders />}>
+                <Route path="/app" element={<DashboardLayout />}>
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="pedidos" element={<Pedidos />} />
+                  <Route path="clientes" element={<Clientes />} />
+                  <Route path="produtos" element={<Produtos />} />
+                  <Route path="agenda" element={<Agenda />} />
+                  <Route path="lista-inteligente" element={<SmartList />} />
+                  <Route path="aprender" element={<Aprender />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="cardapio-digital" element={<PublicMenuConfig />} />
+                  <Route path="perfil" element={<Navigate to="settings" replace />} />
+                </Route>
 
-                  {/* Redirect Native App directly to login */}
-                  {Capacitor.isNativePlatform() ? (
-                    <Route path="/" element={<Navigate to="/login" replace />} />
-                  ) : (
-                    <Route path="/" element={<Index />} />
-                  )}
-
-
-                  <Route path="/app" element={<DashboardLayout />}>
-                    <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="pedidos" element={<Pedidos />} />
-                    <Route path="clientes" element={<Clientes />} />
-                    <Route path="produtos" element={<Produtos />} />
-                    <Route path="agenda" element={<Agenda />} />
-                    <Route path="lista-inteligente" element={<SmartList />} />
-                    <Route path="aprender" element={<Aprender />} />
-                    <Route path="settings" element={<Settings />} />
-                    <Route path="cardapio-digital" element={<PublicMenuConfig />} />
-                    <Route path="perfil" element={<Navigate to="settings" replace />} />
-                  </Route>
-
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-
-                  <Route path="/menu/:userId" element={<PublicMenu />} />
-
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </NotificationProvider>
-        </AuthProvider>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/menu/:userId" element={<PublicMenu />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );
 };
+
+// Simple wrapper removed
+
 
 export default App;
 

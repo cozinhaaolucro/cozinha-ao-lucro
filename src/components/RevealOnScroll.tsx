@@ -1,4 +1,6 @@
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface RevealOnScrollProps {
     children: React.ReactNode;
@@ -8,8 +10,6 @@ interface RevealOnScrollProps {
     direction?: "up" | "down" | "left" | "right";
 }
 
-import { useIsMobile } from "@/hooks/use-mobile";
-
 export const RevealOnScroll = ({
     children,
     width = "100%",
@@ -18,39 +18,68 @@ export const RevealOnScroll = ({
     direction = "up"
 }: RevealOnScrollProps) => {
     const isMobile = useIsMobile();
+    const ref = useRef<HTMLDivElement>(null);
+    const [isVisible, setIsVisible] = useState(false);
+    const [hasAnimated, setHasAnimated] = useState(false);
 
-    // Optimization: Simplified variants and removed useAnimation hook causing reflows
-    // Use native viewport prop which uses IntersectionObserver efficiently
+    useEffect(() => {
+        // Mobile optimization: Always show immediately or with very simple logic
+        if (isMobile) {
+            setIsVisible(true);
+            setHasAnimated(true);
+            return;
+        }
 
-    // Mobile optimization: Reduced distance and simpler easing
-    const variants = {
-        hidden: {
-            opacity: isMobile ? 1 : 0, // Force visible on mobile
-            y: isMobile ? 0 : (direction === "up" ? 30 : direction === "down" ? -30 : 0),
-            x: isMobile ? 0 : (direction === "left" ? 30 : direction === "right" ? -30 : 0)
-        },
-        visible: {
-            opacity: 1,
-            y: 0,
-            x: 0,
-            transition: {
-                duration: 0.6, // Faster for better feel
-                delay: isMobile ? 0 : delay, // No delay on mobile
-                ease: "easeOut" as const // Simpler math than elastic
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && !hasAnimated) {
+                    setIsVisible(true);
+                    setHasAnimated(true);
+                    observer.unobserve(entry.target);
+                }
+            },
+            {
+                threshold: 0.1,
+                rootMargin: "-50px"
             }
-        },
+        );
+
+        const currentRef = ref.current;
+        if (currentRef) {
+            observer.observe(currentRef);
+        }
+
+        return () => {
+            if (currentRef) {
+                observer.unobserve(currentRef);
+            }
+        };
+    }, [isMobile, hasAnimated]);
+
+    // Directional transforms
+    const getTransform = () => {
+        if (isVisible || isMobile) return "translate-0";
+        switch (direction) {
+            case "up": return "translate-y-8";
+            case "down": return "-translate-y-8";
+            case "left": return "translate-x-8";
+            case "right": return "-translate-x-8";
+            default: return "translate-y-8";
+        }
     };
 
     return (
-        <div style={{ position: "relative", width }} className={className}>
-            <motion.div
-                variants={variants}
-                initial={isMobile ? "visible" : "hidden"} // Start visible on mobile
-                whileInView="visible"
-                viewport={{ once: true, margin: "-10%" }} // Trigger slightly before element is fully in view, once only
-            >
-                {children}
-            </motion.div>
+        <div
+            ref={ref}
+            style={{ width, transitionDelay: `${isMobile ? 0 : delay * 1000}ms` }}
+            className={cn(
+                "transition-all duration-700 ease-out will-change-[opacity,transform]",
+                isVisible || isMobile ? "opacity-100" : "opacity-0",
+                getTransform(),
+                className
+            )}
+        >
+            {children}
         </div>
     );
 };
