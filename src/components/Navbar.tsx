@@ -37,12 +37,12 @@ const Navbar = () => {
                 >
                     {/* Full Logo */}
                     <picture>
-                        <source media="(max-width: 640px)" srcSet="/images/logo-full_65.webp" />
+                        <source media="(max-width: 640px)" srcSet="/images/logo-full_114.webp" />
                         <img
-                            src="/images/logo-full_91.webp"
+                            src="/images/logo-full_65.webp"
                             alt="Cozinha ao Lucro"
-                            width={256}
-                            height={112}
+                            width={65}
+                            height={65}
                             className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 object-contain w-full h-full ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'
                                 }`}
                             style={{ imageRendering: 'auto' }}
@@ -51,12 +51,12 @@ const Navbar = () => {
 
                     {/* Icon Logo */}
                     <picture>
-                        <source media="(max-width: 640px)" srcSet="/images/logo-icon_65.webp" />
+                        <source media="(max-width: 640px)" srcSet="/images/logo-icon_114.webp" />
                         <img
-                            src="/images/logo-icon_91.webp"
+                            src="/images/logo-icon_65.webp"
                             alt="Icone"
-                            width={40}
-                            height={40}
+                            width={65}
+                            height={65}
                             className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto ${isScrolled ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'
                                 }`}
                             style={{ imageRendering: 'auto' }}
