@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+/* Font loaded via &lt;link rel="preload"&gt; in index.html for non-blocking */
 
 @tailwind base;
 @tailwind components;
@@ -668,4 +668,23 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* === MOBILE PERFORMANCE OPTIMIZATION === */
+/* Hide heavy blur effects on mobile to reduce GPU load */
+@media (max-width: 768px) {
+
+  [class*="blur-[100"],
+  [class*="blur-[120"],
+  [class*="blur-3xl"],
+  .backdrop-blur-md,
+  .backdrop-blur-xl {
+    display: none !important;
+  }
+
+  /* Reduce animation complexity on mobile */
+  .animate-pulse-slow,
+  .animate-float {
+    animation: none !important;
+  }
 }
