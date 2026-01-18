@@ -10,9 +10,9 @@ const Footer = () => {
                 <div className="flex flex-col items-center">
                     {/* Brand Logo */}
                     <img
-                        src="/logotipo_white.png"
+                        src="/images/logo-footer.png"
                         alt="Cozinha ao Lucro"
-                        className="h-20 w-auto mb-8 opacity-90"
+                        className="h-52 w-auto mb-8 opacity-90"
                     />
 
                     <div className="flex justify-center gap-4 mb-6">
