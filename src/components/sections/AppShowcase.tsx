@@ -121,11 +121,11 @@ const AppShowcase = () => {
                 <div className="grid lg:grid-cols-2 gap-16 items-center">
                     <RevealOnScroll direction="left">
                         <div className="space-y-8">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#C76E60]/10 text-[#C76E60] font-medium text-sm">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#2e5b60]/10 text-[#2e5b60] font-medium text-sm">
                                 Zero Desperdício
                             </div>
                             <h3 className="text-3xl md:text-4xl font-bold text-foreground">
-                                Controle de Estoque <span className="text-[#C76E60]">Inteligente</span>
+                                Controle de Estoque <span className="text-[#2e5b60]">Inteligente</span>
                             </h3>
                             <p className="text-lg text-muted-foreground leading-relaxed">
                                 Saiba exatamente o que tem na despensa. O sistema dá baixa automática nos ingredientes a cada venda realizada.
@@ -133,8 +133,8 @@ const AppShowcase = () => {
                             <ul className="space-y-4">
                                 {['Baixa automática de ingredientes', 'Alertas de estoque mínimo', 'Prevenção de perdas'].map((item, i) => (
                                     <li key={i} className="flex items-center gap-3 text-foreground/80">
-                                        <div className="w-6 h-6 rounded-full bg-[#C76E60]/20 flex items-center justify-center shrink-0">
-                                            <Check className="w-4 h-4 text-[#C76E60]" />
+                                        <div className="w-6 h-6 rounded-full bg-[#2e5b60]/20 flex items-center justify-center shrink-0">
+                                            <Check className="w-4 h-4 text-[#2e5b60]" />
                                         </div>
                                         {item}
                                     </li>
@@ -145,7 +145,7 @@ const AppShowcase = () => {
 
                     <RevealOnScroll direction="right" delay={0.2}>
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-l from-[#C76E60] to-[#C9A34F] rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                            <div className="absolute -inset-1 bg-gradient-to-l from-[#2e5b60] to-[#1a3c40] rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
                             <div className="relative rounded-2xl overflow-hidden border border-border shadow-2xl bg-card transform-gpu">
                                 <img
                                     src="/images/mockups/showcase_gestao.png"

@@ -24,7 +24,8 @@ const Index = () => {
       <BenefitsSection />
 
       {/* Interactive Quiz */}
-      <QuizSection />
+      {/* Quiz Section - Temporarily Disabled */}
+      {/* <QuizSection /> */}
 
       {/* Pricing */}
       <PricingSection />

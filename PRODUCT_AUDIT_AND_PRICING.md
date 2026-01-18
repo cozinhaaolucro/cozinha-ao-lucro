@@ -46,27 +46,24 @@ A estratégia definida é a **Paridade de Funcionalidades, Diferenciação por V
 
 Isso simplifica o desenvolvimento (não precisamos esconder botões) e foca na **escala** do cliente.
 
-### 🥉 Plano INICIAL: "Começando"
-**Valor:** R$ 39,90 / mês
-**Público:** Quem está validando o negócio ou tem volume baixo.
+### 1. Plano INICIAL ("Começando") - **R$ 49,90/mês**
+*Focado em pequenos negócios que precisam validar e organizar.*
 
-*   ✅ **Acesso a TUDO** (Cardápio, Estoque, Financeiro).
-*   ⚠️ **Limites Operacionais Mensais:**
-    *   Até **200 Pedidos** / mês.
-    *   Até **20 Produtos** no Cardápio.
-    *   Até **150 Clientes** no cadastro.
-*   *Racional:* Suficiente para quem fatura até ~R$ 3k/mês. Se passar disso, R$ 79 não será problema.
+*   **Limite de Pedidos:** 200 Pedidos/mês (Aprox. 7-10 por dia).
+*   **Limite de Itens:** 20 Produtos no Cardápio.
+*   **Limite de Clientes:** 150 Clientes cadastrados.
+*   **Funcionalidades:** Todas as essenciais (Cardápio, Gestão, Estoque).
 
-### 🥇 Plano ILIMITADO: "Sem Barreiras"
-**Valor:** R$ 79,90 / mês
-**Público:** Quem já opera profissionalmente e não quer se preocupar com contagem.
+### 2. Plano PREMIUM ("Sem Barreiras") - **R$ 97,00/mês**
+*Focado em negócios em expansão que não podem ter travas.*
 
-*   ✅ **Acesso a TUDO**.
-*   ♾️ **Operações ILIMITADAS:**
-    *   Pedidos infinitos.
-    *   Produtos infinitos.
-    *   Clientes infinitos.
-*   ✨ **Suporte Prioritário**.
+*   **Pedidos:** ILIMITADOS.
+*   **Produtos:** ILIMITADOS.
+*   **Clientes:** ILIMITADOS.
+*   **Diferenciais:**
+    *   Suporte Prioritário (WhatsApp Humanizado).
+    *   **Dica do Especialista:** Acesso ao módulo de I.A.
+    *   Selos de Conquista no Cardápio (Prova Social).
 
 ### 🛠️ Impacto na Engenharia (Metered Billing)
 Essa abordagem é mais simples que "Features Bloqueadas", mas exige contadores.

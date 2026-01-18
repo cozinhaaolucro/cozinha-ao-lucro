@@ -29,7 +29,7 @@ const HeroSection = () => {
                         <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight text-foreground tracking-tight [text-wrap:balance]">
                             Transforme sua cozinha em um negócio
                             <br className="hidden md:block" />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-teal-500 to-primary animate-shimmer bg-[length:200%_auto]">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#2D7A70] to-primary animate-shimmer bg-[length:200%_auto]">
                                 Realmente Lucrativo
                             </span>
                         </h1>
