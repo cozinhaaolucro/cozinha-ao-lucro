@@ -62,6 +62,8 @@ const AppShowcase = () => {
                             <div className="relative rounded-2xl overflow-hidden border border-border shadow-2xl bg-card transform-gpu">
                                 <img
                                     src="/images/mockups/showcase_precificacao.webp"
+                                    srcSet="/images/mockups/showcase_precificacao_306.webp 306w, /images/mockups/showcase_precificacao.webp 800w"
+                                    sizes="(max-width: 640px) 306px, 800px"
                                     alt="Tela de Precificação"
                                     width={800}
                                     height={600}
@@ -108,6 +110,8 @@ const AppShowcase = () => {
                                 <div className="relative rounded-[2.5rem] overflow-hidden border-8 border-background shadow-2xl bg-card transform-gpu">
                                     <img
                                         src="/images/mockups/showcase_compras_mobile.webp"
+                                        srcSet="/images/mockups/showcase_compras_mobile_284.webp 284w, /images/mockups/showcase_compras_mobile.webp 300w"
+                                        sizes="(max-width: 640px) 284px, 300px"
                                         alt="Lista de Compras Mobile"
                                         width={300}
                                         height={600}
@@ -153,6 +157,8 @@ const AppShowcase = () => {
                             <div className="relative rounded-2xl overflow-hidden border border-border shadow-2xl bg-card transform-gpu">
                                 <img
                                     src="/images/mockups/showcase_gestao.webp"
+                                    srcSet="/images/mockups/showcase_gestao_306.webp 306w, /images/mockups/showcase_gestao.webp 800w"
+                                    sizes="(max-width: 640px) 306px, 800px"
                                     alt="Gestão de Estoque"
                                     width={800}
                                     height={600}

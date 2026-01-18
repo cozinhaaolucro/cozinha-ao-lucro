@@ -38,6 +38,8 @@ const Navbar = () => {
                     {/* Full Logo */}
                     <img
                         src="/images/logo-full.webp"
+                        srcSet="/images/logo-full_65.webp 65w, /images/logo-full.webp 256w"
+                        sizes="(max-width: 640px) 65px, 256px"
                         alt="Cozinha ao Lucro"
                         width={256}
                         height={112}
@@ -49,6 +51,8 @@ const Navbar = () => {
                     {/* Icon Logo */}
                     <img
                         src="/images/logo-icon.webp"
+                        srcSet="/images/logo-icon_65.webp 65w, /images/logo-icon.webp 40w"
+                        sizes="(max-width: 640px) 65px, 40px"
                         alt="Icone"
                         width={40}
                         height={40}
