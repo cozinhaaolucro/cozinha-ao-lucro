@@ -79,7 +79,44 @@
       style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
 
-  <div id="root"></div>
+  <!-- LCP Optimization: Preload Hero Images -->
+  <link rel="preload" as="image" href="/images/mockups/hero_dashboard_desktop.png" fetchpriority="high">
+  <link rel="preload" as="image" href="/images/mockups/hero_mobile_pedidos.png" fetchpriority="high">
+
+  <div id="root">
+    <!-- Static App Shell for Instant LCP -->
+    <nav class="fixed top-0 left-0 right-0 z-50 py-3">
+      <div class="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between">
+        <div class="flex items-center h-20 w-48 relative">
+          <img src="/images/logo-full.png" alt="Cozinha ao Lucro" width="256" height="112"
+            class="object-contain w-full h-full" style="opacity:1">
+        </div>
+        <div class="hidden md:flex items-center gap-3">
+          <button class="text-sm font-medium px-4 py-2">Entrar</button>
+          <button class="text-sm font-medium bg-[#1F8F7B] text-white px-4 py-2 rounded-md">Começar Grátis</button>
+        </div>
+      </div>
+    </nav>
+    <section class="relative pt-32 pb-32 overflow-hidden">
+      <div class="container mx-auto px-4 relative z-10 text-center">
+        <div class="max-w-4xl mx-auto space-y-8 mb-16">
+          <h1 class="text-4xl font-bold leading-tight tracking-tight text-[#1a1a1a]">
+            Transforme sua cozinha em um negócio
+            <br class="hidden md:block" />
+            <span class="text-[#2D7A70]">Realmente Lucrativo</span>
+          </h1>
+          <p class="text-lg text-[#666] leading-relaxed max-w-2xl mx-auto">
+            Controlando custos, precificando certo e eliminando desperdícios em tempo real.
+          </p>
+          <div class="pt-4 flex justify-center gap-4">
+            <button class="bg-[#1F8F7B] text-white text-lg px-10 py-4 rounded-xl font-medium shadow-lg">
+              Ver meu lucro real
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

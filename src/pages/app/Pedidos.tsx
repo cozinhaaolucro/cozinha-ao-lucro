@@ -28,7 +28,7 @@ import EditOrderDialog from '@/components/orders/EditOrderDialog';
 import { useToast } from '@/hooks/use-toast';
 import { parseLocalDate, formatLocalDate } from '@/lib/dateUtils';
 import confetti from 'canvas-confetti'; // Keep if used or remove if unused, keeping for safety
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, useAnimation } from 'framer-motion';
 import ClientProfileDrawer from '@/components/crm/ClientProfileDrawer';
 import { formatUnit } from '@/lib/utils';
 import SendMessageDialog from '@/components/crm/SendMessageDialog';
@@ -870,134 +870,7 @@ const Pedidos = () => {
                     </AlertDialogContent>
                 </AlertDialog>
 
-                {/* Mobile Long-Press Action Sheet - Centered Modal */}
-                {longPressOrder && (
-                    <div
-                        className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 md:hidden"
-                        onClick={() => setLongPressOrder(null)}
-                    >
-                        <div
-                            className="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl animate-in zoom-in-95 duration-200"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="text-center mb-4">
-                                <div className="text-2xl font-bold text-primary">
-                                    #{longPressOrder.display_id ? String(longPressOrder.display_id).padStart(4, '0') : (longPressOrder.order_number || longPressOrder.id.slice(0, 4))}
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                    {longPressOrder.customer?.name || 'Sem cliente'}
-                                </p>
-                            </div>
-
-                            <div className="space-y-2">
-                                {/* Optimized Action Buttons logic using updateOrderStatus */}
-                                {longPressOrder.status === 'pending' && (
-                                    <Button
-                                        className="w-full bg-blue-600 hover:bg-blue-500"
-                                        onClick={async () => {
-                                            await updateOrderStatus(longPressOrder.id, 'preparing', longPressOrder.status);
-                                            toast({ title: '→ Em Produção - Estoque Deduzido' });
-                                            refetchOrders();
-                                            setLongPressOrder(null);
-                                        }}
-                                    >
-                                        Iniciar Produção →
-                                    </Button>
-                                )}
-                                {longPressOrder.status === 'preparing' && (
-                                    <>
-                                        <Button
-                                            className="w-full bg-green-600 hover:bg-green-500"
-                                            onClick={async () => {
-                                                await updateOrderStatus(longPressOrder.id, 'ready', longPressOrder.status);
-                                                toast({ title: '→ Pronto' });
-                                                refetchOrders();
-                                                setLongPressOrder(null);
-                                            }}
-                                        >
-                                            Marcar Pronto →
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            className="w-full"
-                                            onClick={async () => {
-                                                await updateOrderStatus(longPressOrder.id, 'pending', longPressOrder.status);
-                                                toast({ title: '← Voltou para A Fazer - Estoque Estornado' });
-                                                refetchOrders();
-                                                setLongPressOrder(null);
-                                            }}
-                                        >
-                                            ← Voltar para A Fazer
-                                        </Button>
-                                    </>
-                                )}
-                                {longPressOrder.status === 'ready' && (
-                                    <>
-                                        <Button
-                                            className="w-full bg-emerald-600 hover:bg-emerald-500"
-                                            onClick={async () => {
-                                                await updateOrderStatus(longPressOrder.id, 'delivered', longPressOrder.status);
-                                                toast({ title: '→ Entregue' });
-                                                refetchOrders();
-                                                setLongPressOrder(null);
-                                            }}
-                                        >
-                                            Marcar Entregue →
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            className="w-full"
-                                            onClick={async () => {
-                                                await updateOrderStatus(longPressOrder.id, 'preparing', longPressOrder.status);
-                                                toast({ title: '← Voltou para Produção' });
-                                                refetchOrders();
-                                                setLongPressOrder(null);
-                                            }}
-                                        >
-                                            ← Voltar para Produção
-                                        </Button>
-                                    </>
-                                )}
-                                {longPressOrder.status === 'delivered' && (
-                                    <Button
-                                        variant="outline"
-                                        className="w-full"
-                                        onClick={async () => {
-                                            await updateOrderStatus(longPressOrder.id, 'ready', longPressOrder.status);
-                                            toast({ title: '← Voltou para Pronto' });
-                                            refetchOrders();
-                                            setLongPressOrder(null);
-                                        }}
-                                    >
-                                        ← Voltar para Pronto
-                                    </Button>
-                                )}
-                            </div>
-                            <div className="mt-4 pt-4 border-t border-gray-100 flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    className="flex-1"
-                                    onClick={() => {
-                                        setLongPressOrder(null);
-                                        setEditingOrder(longPressOrder);
-                                    }}
-                                >
-                                    <Pencil className="w-4 h-4 mr-2" /> Editar
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    className="flex-1 text-destructive hover:bg-red-50"
-                                    onClick={() => {
-                                        if (confirm('Excluir?')) handleDeleteOrder(longPressOrder.id);
-                                        setLongPressOrder(null);
-                                    }}
-                                >
-                                    <Trash2 className="w-4 h-4 mr-2" /> Excluir
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {/* Long Press Modal Removed */}
 
                 <DragOverlay>
                     {activeOrder ? (
@@ -1051,22 +924,198 @@ const CardWithStyle = ({
     setEditingOrder,
     handleDeleteOrder,
     handleWhatsApp,
-    setLongPressOrder,
     isMobile,
-    longPressTimerRef,
     formatDate
 }: any) => {
+    const x = useMotionValue(0);
+    const controls = useAnimation();
+
+    // Visual cues logic
+    // Right Drag (Advance) -> Show arrow on Left (Opacity increases as we drag right)
+    const rightDragOpacity = useTransform(x, [0, 50], [0, 1]);
+    const rightDragScale = useTransform(x, [0, 50], [0.8, 1]);
+
+    // Left Drag (Back) -> No specific request for visual, but we allow the action. 
+    // We can add a subtle cue if needed, but user said "apenas para o avançar".
+
+    const handleDragEnd = async (_: any, info: any) => {
+        const offset = info.offset.x;
+        const velocity = info.velocity.x;
+        const threshold = 80;
+
+        if (offset > threshold || (offset > 20 && velocity > 200)) {
+            // Swipe Right -> Advance
+            const STATUS_FLOW = ['pending', 'preparing', 'ready', 'delivered'];
+            const currentIndex = STATUS_FLOW.indexOf(order.status);
+            if (currentIndex < STATUS_FLOW.length - 1) {
+                const nextStatus = STATUS_FLOW[currentIndex + 1] as any;
+                // Animate out
+                await controls.start({ x: 200, opacity: 0 });
+                await updateOrderStatus(order.id, nextStatus, order.status);
+                toast({ title: `Avançou para ${STATUS_COLUMNS[nextStatus as keyof typeof STATUS_COLUMNS].label}` });
+                refetchOrders();
+            } else {
+                controls.start({ x: 0 });
+            }
+        } else if (offset < -threshold || (offset < -20 && velocity < -200)) {
+            // Swipe Left -> Back
+            const STATUS_FLOW = ['pending', 'preparing', 'ready', 'delivered'];
+            const currentIndex = STATUS_FLOW.indexOf(order.status);
+            if (currentIndex > 0) {
+                const prevStatus = STATUS_FLOW[currentIndex - 1] as any;
+                // Animate out
+                await controls.start({ x: -200, opacity: 0 });
+                await updateOrderStatus(order.id, prevStatus, order.status);
+                toast({ title: `Voltou para ${STATUS_COLUMNS[prevStatus as keyof typeof STATUS_COLUMNS].label}` });
+                refetchOrders();
+            } else {
+                controls.start({ x: 0 });
+            }
+        } else {
+            // Snap back
+            controls.start({ x: 0 });
+        }
+    };
+
+    if (isMobile) {
+        return (
+            <div className="relative w-full touch-pan-y">
+                {/* Background Layer for Visual Cues */}
+                <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none z-0 overflow-hidden rounded-lg">
+                    {/* Advance Cue (Visible when dragging Right) */}
+                    <motion.div style={{ opacity: rightDragOpacity, scale: rightDragScale }} className="flex items-center text-primary font-bold gap-1 p-2 bg-primary/10 rounded-full">
+                        <ChevronRight className="w-6 h-6" strokeWidth={2.5} />
+                    </motion.div>
+                </div>
+
+                <motion.div
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.2}
+                    onDragEnd={handleDragEnd}
+                    style={{ x, touchAction: 'pan-y' }}
+                    animate={controls}
+                    className="relative z-10"
+                >
+                    <Card
+                        className={`transition-all cursor-move group relative border border-border/40 rounded-lg hover:border-border/80 ${activeId === order.id ? 'opacity-30' : ''}`}
+                        style={cardStyle}
+                    >
+                        <StockAlertBadge
+                            order={order}
+                            products={products}
+                            ingredients={ingredients}
+                            onStockUpdate={refetchOrders}
+                        />
+                        <CardHeader className="pb-1 pt-2.5 pl-4 pr-3">
+                            <div className="text-sm flex items-start justify-between">
+                                <div className="font-semibold flex flex-col gap-0.5" onClick={() => handleCustomerClick(order.customer)}>
+                                    <div className="flex items-center gap-1">
+                                        <span
+                                            className="hover:underline cursor-pointer text-sm font-medium tracking-tight"
+                                            style={{ color: 'hsl(var(--foreground))' }}
+                                        >
+                                            {order.customer?.name || 'Cliente não informado'}
+                                        </span>
+                                        {order.customer?.phone && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-5 w-5 hover:bg-muted rounded-full transition-colors"
+                                                onPointerDown={(e) => e.stopPropagation()}
+                                                onClick={(e) => { e.stopPropagation(); handleWhatsApp(order); }}
+                                                title="WhatsApp"
+                                            >
+                                                <Phone className="w-3 h-3 text-[#4C9E7C]" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div className="text-[10px] uppercase tracking-wider font-semibold opacity-70" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                        #{order.display_id ? String(order.display_id).padStart(4, '0') : (order.order_number || order.id.slice(0, 4))}
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-0.5">
+                                    <ActionIcon Icon={Copy} onClick={(e: any) => { e.stopPropagation(); handleDuplicate(order); }} color="#9ca3af" title="Duplicar" />
+                                    <ActionIcon Icon={Pencil} onClick={(e: any) => { e.stopPropagation(); setEditingOrder(order); }} color="#9ca3af" title="Editar" />
+                                    <ActionIcon Icon={Trash2} onClick={(e: any) => { e.stopPropagation(); if (confirm('Excluir?')) handleDeleteOrder(order.id); }} color="#9ca3af" title="Excluir" />
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-2 pb-2 pl-4 pr-3">
+                            <div className="grid gap-1.5">
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="flex items-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: baseColor }}></span>
+                                        {order.delivery_date ? formatDate(order.delivery_date) : 'Sem data'}
+                                    </span>
+                                    <span className="font-medium text-sm tracking-normal" style={{ color: '#2FBF71' }}>
+                                        R$
+                                        <span style={{ marginLeft: '4px' }}>
+                                            {order.total_value.toFixed(2)}
+                                        </span>
+                                    </span>
+                                </div>
+
+                                <div className="flex gap-1.5 flex-wrap items-center">
+                                    <Badge
+                                        variant="outline"
+                                        className="text-[10px] px-2 py-0.5 h-auto rounded-md border border-opacity-20 font-medium bg-opacity-10"
+                                        style={{
+                                            color: 'hsl(var(--muted-foreground))',
+                                            borderColor: 'hsl(var(--border))'
+                                        }}
+                                    >
+                                        {order.payment_method === 'credit_card' && 'Crédito'}
+                                        {order.payment_method === 'debit_card' && 'Débito'}
+                                        {order.payment_method === 'pix' && 'Pix'}
+                                        {order.payment_method === 'cash' && 'Dinheiro'}
+                                        {!order.payment_method && 'Pix'}
+                                    </Badge>
+                                    <Badge
+                                        variant="secondary"
+                                        className="text-[10px] px-2 py-0.5 h-auto rounded-md font-medium bg-muted text-muted-foreground hover:bg-muted"
+                                    >
+                                        {order.delivery_method === 'delivery' ? 'Delivery' : 'Retirada'}
+                                    </Badge>
+                                    {isLate && (
+                                        <Badge
+                                            className="text-[10px] px-2 py-0.5 h-auto rounded-md border text-white"
+                                            style={{
+                                                backgroundColor: '#C76E60',
+                                                borderColor: '#C76E60'
+                                            }}
+                                        >
+                                            Atrasado
+                                        </Badge>
+                                    )}
+                                </div>
+
+                                {order.items && order.items.length > 0 && (
+                                    <div className="text-xs mt-1 pt-1.5 border-t border-border/40 text-left" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                        {order.items.slice(0, 3).map((item: any, idx: number) => (
+                                            <p key={idx} className="line-clamp-1 flex items-center gap-1.5 py-0.5">
+                                                <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: baseColor }}></span>
+                                                <span className="font-medium text-foreground/80">{item.product_name}</span>
+                                                <span className="opacity-60 text-[10px]">(x{item.quantity})</span>
+                                            </p>
+                                        ))}
+                                        {order.items.length > 3 && <p className="text-[10px] italic opacity-50 pl-2.5 mt-0.5">+ {order.items.length - 3} itens...</p>}
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </div>
+        );
+    }
+
+    // Desktop Layout (unchanged)
     return (
         <Card
             className={`transition-all cursor-move group relative border border-border/40 rounded-lg hover:border-border/80 ${activeId === order.id ? 'opacity-30' : ''}`}
             style={cardStyle}
-            onTouchStart={() => {
-                longPressTimerRef.current = setTimeout(() => {
-                    setLongPressOrder(order);
-                }, 500);
-            }}
-            onTouchEnd={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); }}
-            onTouchMove={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); }}
         >
             <StockAlertBadge
                 order={order}
@@ -1102,7 +1151,7 @@ const CardWithStyle = ({
                         </div>
                     </div>
 
-                    <div className={isMobile ? "flex gap-0.5" : "flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"}>
+                    <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <ActionIcon Icon={Copy} onClick={(e: any) => { e.stopPropagation(); handleDuplicate(order); }} color="#9ca3af" title="Duplicar" />
                         <ActionIcon Icon={Pencil} onClick={(e: any) => { e.stopPropagation(); setEditingOrder(order); }} color="#9ca3af" title="Editar" />
                         <ActionIcon Icon={Trash2} onClick={(e: any) => { e.stopPropagation(); if (confirm('Excluir?')) handleDeleteOrder(order.id); }} color="#9ca3af" title="Excluir" />
@@ -1125,7 +1174,6 @@ const CardWithStyle = ({
                     </div>
 
                     <div className="flex gap-1.5 flex-wrap items-center">
-                        {/* Badge Pill Logic - More Professional Look */}
                         <Badge
                             variant="outline"
                             className="text-[10px] px-2 py-0.5 h-auto rounded-md border border-opacity-20 font-medium bg-opacity-10"

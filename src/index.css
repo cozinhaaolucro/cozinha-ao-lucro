@@ -674,17 +674,30 @@ body {
 /* Hide heavy blur effects on mobile to reduce GPU load */
 @media (max-width: 768px) {
 
+  /* Hide heavy background blobs only */
   [class*="blur-[100"],
   [class*="blur-[120"],
-  [class*="blur-3xl"],
-  .backdrop-blur-md,
-  .backdrop-blur-xl {
+  [class*="blur-3xl"] {
     display: none !important;
   }
 
-  /* Reduce animation complexity on mobile */
+  /* Disable backdrop blur on cards but KEEP them visible */
+  .backdrop-blur-md,
+  .backdrop-blur-xl,
+  [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    /* Ensure opacity is solid enough since blur is gone */
+    background-color: hsl(var(--background) / 0.95) !important;
+  }
+
+  /* Reduce animation complexity on mobile & Ensure immediate visibility */
   .animate-pulse-slow,
-  .animate-float {
+  .animate-float,
+  .animate-fade-in,
+  .animate-in {
     animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
