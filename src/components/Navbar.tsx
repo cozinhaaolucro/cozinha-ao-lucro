@@ -9,11 +9,34 @@ const Navbar = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 50);
+        // Performance optimization: Use IntersectionObserver instead of scroll listener
+        // to reduce main thread load (Total Blocking Time)
+        const sentinel = document.createElement('div');
+        sentinel.style.position = 'absolute';
+        sentinel.style.top = '0';
+        sentinel.style.left = '0';
+        sentinel.style.height = '1px';
+        sentinel.style.width = '100%';
+        sentinel.style.pointerEvents = 'none';
+        sentinel.style.visibility = 'hidden';
+        document.body.prepend(sentinel);
+
+        const observer = new IntersectionObserver(([entry]) => {
+            // If the top pixel is NOT intersecting (meaning it scrolled up and out),
+            // and boundingClientRect.top is negative, we are scrolled.
+            // Using rootMargin -50px means we trigger when top is 50px scrolled.
+            setIsScrolled(!entry.isIntersecting);
+        }, {
+            rootMargin: '-50px 0px 0px 0px',
+            threshold: 0
+        });
+
+        observer.observe(sentinel);
+
+        return () => {
+            observer.disconnect();
+            sentinel.remove();
         };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     const scrollToSection = (id: string) => {
