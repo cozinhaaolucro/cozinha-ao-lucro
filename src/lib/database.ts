@@ -71,7 +71,6 @@ export const getIngredients = async (page?: number, limit?: number) => {
 };
 
 export const createIngredient = async (ingredient: Omit<Ingredient, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    console.log('Creating ingredient:', ingredient);
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) {
         console.error('User not authenticated');
@@ -97,7 +96,6 @@ export const createIngredient = async (ingredient: Omit<Ingredient, 'id' | 'user
         .single();
 
     if (error) console.error('Error creating ingredient:', error);
-    else console.log('Ingredient created:', data);
 
     return { data, error };
 };
@@ -184,7 +182,6 @@ export const createProduct = async (
         console.error('Error creating product:', productError);
         return { data: null, error: productError };
     }
-    console.log('Product created:', productData);
 
     if (ingredients.length > 0) {
         const { error: ingredientsError } = await supabase
@@ -526,7 +523,6 @@ export const createOrder = async (
     order: Omit<Order, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
     items: Array<Omit<OrderItem, 'id' | 'order_id'>>
 ) => {
-    console.log('Creating order:', order, 'Items:', items);
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return { data: null, error: new Error('Usuário não autenticado') };
 
@@ -540,7 +536,6 @@ export const createOrder = async (
         console.error('Error creating order:', orderError);
         return { data: null, error: orderError };
     }
-    console.log('Order created:', orderData);
 
     const { error: itemsError } = await supabase
         .from('order_items')
