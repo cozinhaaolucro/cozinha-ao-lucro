@@ -112,27 +112,7 @@
     --input: 60 5% 83%;
     --ring: 182 16% 55%;
 
-    --status-pending-base: 41 53% 55%;
-    --status-pending-bg: 41 53% 92%;
-    --status-preparing-base: 200 48% 60%;
-    --status-preparing-bg: 200 48% 94%;
-    --status-ready-base: 155 35% 46%;
-    --status-ready-bg: 155 35% 92%;
-    --status-delivered-base: 220 10% 45%;
-    --status-delivered-bg: 220 10% 96%;
-    --status-late-base: 8 48% 58%;
-    --status-late-bg: 8 48% 92%;
-
     --shadow-color: 210 15% 20%;
-
-    --sidebar-background: 200 5% 97%;
-    --sidebar-foreground: 210 9% 32%;
-    --sidebar-primary: 186 35% 28%;
-    --sidebar-primary-foreground: 200 5% 98%;
-    --sidebar-accent: 182 16% 55%;
-    --sidebar-accent-foreground: 200 5% 98%;
-    --sidebar-border: 200 5% 85%;
-    --sidebar-ring: 182 16% 55%;
   }
 }
 

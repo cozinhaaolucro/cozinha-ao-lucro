@@ -316,7 +316,6 @@ export default defineConfig(({ mode }) => {
             'animation': ['framer-motion'],
             'charts': ['recharts'],
             'date-fns': ['date-fns'],
-            'database': ['@supabase/supabase-js'],
           }
         }
       }
