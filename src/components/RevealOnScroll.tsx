@@ -1,5 +1,4 @@
-import { useEffect, useRef } from "react";
-import { motion, useInView, useAnimation, Variant } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface RevealOnScrollProps {
     children: React.ReactNode;
@@ -11,41 +10,40 @@ interface RevealOnScrollProps {
 
 export const RevealOnScroll = ({
     children,
-    width = "100%", // Changed default to 100% to fix grid alignment
+    width = "100%",
     delay = 0,
     className = "",
     direction = "up"
 }: RevealOnScrollProps) => {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: true, margin: "-75px" });
-    const mainControls = useAnimation();
+    // Optimization: Simplified variants and removed useAnimation hook causing reflows
+    // Use native viewport prop which uses IntersectionObserver efficiently
 
-    useEffect(() => {
-        if (isInView) {
-            mainControls.start("visible");
-        }
-    }, [isInView, mainControls]);
-
+    // Mobile optimization: Reduced distance and simpler easing
     const variants = {
         hidden: {
             opacity: 0,
-            y: direction === "up" ? 75 : direction === "down" ? -75 : 0,
-            x: direction === "left" ? 75 : direction === "right" ? -75 : 0,
+            y: direction === "up" ? 30 : direction === "down" ? -30 : 0,
+            x: direction === "left" ? 30 : direction === "right" ? -30 : 0
         },
         visible: {
             opacity: 1,
             y: 0,
             x: 0,
-            transition: { duration: 0.8, delay: delay, ease: [0.25, 0.25, 0.25, 0.75] as [number, number, number, number] } // Elastic ease
+            transition: {
+                duration: 0.6, // Faster for better feel
+                delay: delay,
+                ease: "easeOut" // Simpler math than elastic
+            }
         },
     };
 
     return (
-        <div ref={ref} style={{ position: "relative", width }} className={className}>
+        <div style={{ position: "relative", width }} className={className}>
             <motion.div
                 variants={variants}
                 initial="hidden"
-                animate={mainControls}
+                whileInView="visible"
+                viewport={{ once: true, margin: "-10%" }} // Trigger slightly before element is fully in view, once only
             >
                 {children}
             </motion.div>

@@ -39,6 +39,8 @@ const Navbar = () => {
                     <img
                         src="/images/logo-full.png"
                         alt="Cozinha ao Lucro"
+                        width={256}
+                        height={112}
                         className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 object-contain w-full h-full ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'
                             }`}
                         style={{ imageRendering: 'auto' }}
@@ -48,6 +50,8 @@ const Navbar = () => {
                     <img
                         src="/images/logo-icon.png"
                         alt="Icone"
+                        width={40}
+                        height={40}
                         className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto ${isScrolled ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'
                             }`}
                         style={{ imageRendering: 'auto' }}

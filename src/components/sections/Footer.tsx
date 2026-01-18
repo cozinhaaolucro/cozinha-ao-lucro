@@ -13,6 +13,9 @@ const Footer = () => {
                         src="/images/logo-footer.png"
                         alt="Cozinha ao Lucro"
                         className="h-52 w-auto mb-8 opacity-90"
+                        width={260}
+                        height={208}
+                        loading="lazy"
                     />
 
                     <div className="flex justify-center gap-4 mb-6">
