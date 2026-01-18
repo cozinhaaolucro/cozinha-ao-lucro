@@ -82,6 +82,8 @@ const HeroSection = () => {
                         <div className="pt-10 rounded-2xl overflow-hidden bg-background">
                             <img
                                 src="/images/mockups/hero_dashboard_desktop.webp"
+                                srcSet="/images/mockups/hero_dashboard_desktop_mobile.webp 500w, /images/mockups/hero_dashboard_desktop.webp 1200w"
+                                sizes="(max-width: 640px) 90vw, (max-width: 1024px) 80vw, 1200px"
                                 alt="Dashboard Cozinha ao Lucro"
                                 width={1200}
                                 height={800}
