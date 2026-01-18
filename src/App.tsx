@@ -12,12 +12,13 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 
 // Eager load critical pages
 import Index from "./pages/Index";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import DashboardLayout from "./layouts/DashboardLayout";
 
 // Lazy load app pages for better performance
+const Login = lazy(() => import("./pages/auth/Login"));
+const Register = lazy(() => import("./pages/auth/Register"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const DashboardLayout = lazy(() => import("./layouts/DashboardLayout"));
+
 const Dashboard = lazy(() => import("./pages/app/Dashboard"));
 const Pedidos = lazy(() => import("./pages/app/Pedidos"));
 const Clientes = lazy(() => import("./pages/app/Clientes"));

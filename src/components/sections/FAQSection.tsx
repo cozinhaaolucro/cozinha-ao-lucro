@@ -67,10 +67,11 @@ const FAQSection = () => {
                 </RevealOnScroll>
 
                 <div className="max-w-3xl mx-auto">
-                    <Accordion type="single" collapsible className="space-y-4">
-                        {faqs.map((faq, index) => (
-                            <RevealOnScroll key={index} delay={index * 0.05}>
+                    <RevealOnScroll delay={0.2}>
+                        <Accordion type="single" collapsible className="space-y-4">
+                            {faqs.map((faq, index) => (
                                 <AccordionItem
+                                    key={index}
                                     value={`item-${index}`}
                                     className="group bg-card/40 backdrop-blur-sm shadow-sm rounded-2xl px-6 border border-white/10 transition-all duration-300 hover:bg-card/60 hover:shadow-lg hover:border-primary/20 data-[state=open]:bg-card/80 data-[state=open]:shadow-md data-[state=open]:border-primary/30"
                                 >
@@ -81,9 +82,9 @@ const FAQSection = () => {
                                         {faq.answer}
                                     </AccordionContent>
                                 </AccordionItem>
-                            </RevealOnScroll>
-                        ))}
-                    </Accordion>
+                            ))}
+                        </Accordion>
+                    </RevealOnScroll>
                 </div>
             </div>
         </section>
