@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Shield, Zap } from 'lucide-react';
 import { RevealOnScroll } from '@/components/RevealOnScroll';
 import { useNavigate } from 'react-router-dom';
-import { LeadFormDialog } from '@/components/LeadFormDialog';
+
 import { useState } from 'react';
 
 const PricingSection = () => {

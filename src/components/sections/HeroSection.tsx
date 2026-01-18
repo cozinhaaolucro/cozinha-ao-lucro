@@ -1,11 +1,15 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle, MessageCircle } from 'lucide-react';
-
 import { useNavigate } from 'react-router-dom';
-import { LeadFormDialog } from '@/components/LeadFormDialog';
+import { lazy, Suspense, useState } from 'react';
+
+// Lazy load dialog to save ~30kb from initial bundle
+const LeadFormDialog = lazy(() => import('@/components/LeadFormDialog').then(module => ({ default: module.LeadFormDialog })));
 
 const HeroSection = () => {
     const navigate = useNavigate();
+    const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
+
     return (
         <section className="relative pt-32 pb-32 md:pt-48 md:pb-40 overflow-hidden">
             {/* Background Atmosphere */}
@@ -46,16 +50,15 @@ const HeroSection = () => {
                             <ArrowRight className="ml-2 w-5 h-5" />
                         </Button>
 
-                        <LeadFormDialog>
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                className="h-auto px-8 py-8 w-full sm:w-auto text-lg border-2 hover:bg-primary hover:text-white hover:border-primary transition-all font-medium"
-                            >
-                                <MessageCircle className="w-5 h-5 mr-2" />
-                                Falar com Especialista
-                            </Button>
-                        </LeadFormDialog>
+                        <Button
+                            size="lg"
+                            variant="outline"
+                            onClick={() => setIsLeadFormOpen(true)}
+                            className="h-auto px-8 py-8 w-full sm:w-auto text-lg border-2 hover:bg-primary hover:text-white hover:border-primary transition-all font-medium"
+                        >
+                            <MessageCircle className="w-5 h-5 mr-2" />
+                            Falar com Especialista
+                        </Button>
                     </div>
 
                     <div className="flex items-center justify-center gap-6 pt-8 text-sm text-muted-foreground">
@@ -123,6 +126,15 @@ const HeroSection = () => {
                     <div className="absolute top-1/2 -right-20 w-32 h-32 bg-primary/20 rounded-full blur-3xl"></div>
                 </div>
             </div>
+
+            {/* Lazy Loaded Dialog */}
+            {isLeadFormOpen && (
+                <Suspense fallback={null}>
+                    <LeadFormDialog open={isLeadFormOpen} onOpenChange={setIsLeadFormOpen}>
+                        {/* No trigger needed here, controlled mode */}
+                    </LeadFormDialog>
+                </Suspense>
+            )}
         </section>
     );
 };

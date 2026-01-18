@@ -8,8 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface LeadFormDialogProps {
-    children: React.ReactNode;
+export interface LeadFormDialogProps {
+    children?: React.ReactNode;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
 declare global {
@@ -18,8 +20,13 @@ declare global {
     }
 }
 
-export function LeadFormDialog({ children }: LeadFormDialogProps) {
-    const [open, setOpen] = useState(false);
+export function LeadFormDialog({ children, open: controlledOpen, onOpenChange: controlledOnOpenChange }: LeadFormDialogProps) {
+    const [internalOpen, setInternalOpen] = useState(false);
+
+    const isControlled = controlledOpen !== undefined;
+    const open = isControlled ? controlledOpen : internalOpen;
+    const onOpenChange = isControlled ? controlledOnOpenChange : setInternalOpen;
+
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -48,11 +55,7 @@ export function LeadFormDialog({ children }: LeadFormDialogProps) {
                 });
             }
 
-            // 2. Simulate sending (or send to backend if available)
-            // Ideally this would go to a Supabase Edge Function or Table.
-            // For now, we simulate a delay and success, as requested "leads devem ir para o email"
-            // implying a backend process we might not have full control over here without server code.
-            // We will log it for debugging and show success.
+            // 2. Simulate sending
             console.log('Lead Submitted:', formData);
 
             await new Promise(resolve => setTimeout(resolve, 1500));
@@ -61,7 +64,9 @@ export function LeadFormDialog({ children }: LeadFormDialogProps) {
                 description: "Nossa equipe entrará em contato em breve."
             });
 
-            setOpen(false);
+            if (onOpenChange) {
+                onOpenChange(false);
+            }
             setFormData({ name: '', company: '', email: '', phone: '', message: '' });
 
         } catch (error) {
@@ -75,10 +80,12 @@ export function LeadFormDialog({ children }: LeadFormDialogProps) {
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                {children}
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            {children && (
+                <DialogTrigger asChild>
+                    {children}
+                </DialogTrigger>
+            )}
             <DialogContent className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-[90vw] max-w-[500px] h-auto bg-white border border-white/20 shadow-elegant p-3 rounded-xl gap-2">
                 <DialogHeader className="mb-0 space-y-0 p-0 text-left sm:text-center">
                     <DialogTitle className="text-base sm:text-xl font-bold text-primary leading-tight">Solicitar Contato</DialogTitle>
