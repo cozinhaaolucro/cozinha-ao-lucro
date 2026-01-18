@@ -160,7 +160,7 @@ const AppShowcase = () => {
                                 <picture>
                                     <source media="(max-width: 640px)" srcSet="/images/mockups/showcase_gestao_306.webp" />
                                     <img
-                                        src="/images/mockups/showcase_gestao.webp"
+                                        src="/images/mockups/showcase_gestao_562.webp"
                                         alt="Gestão de Estoque"
                                         width={800}
                                         height={600}

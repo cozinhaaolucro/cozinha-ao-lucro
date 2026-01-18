@@ -39,7 +39,7 @@ const Navbar = () => {
                     <picture>
                         <source media="(max-width: 640px)" srcSet="/images/logo-full_65.webp" />
                         <img
-                            src="/images/logo-full.webp"
+                            src="/images/logo-full_91.webp"
                             alt="Cozinha ao Lucro"
                             width={256}
                             height={112}
@@ -53,7 +53,7 @@ const Navbar = () => {
                     <picture>
                         <source media="(max-width: 640px)" srcSet="/images/logo-icon_65.webp" />
                         <img
-                            src="/images/logo-icon.webp"
+                            src="/images/logo-icon_91.webp"
                             alt="Icone"
                             width={40}
                             height={40}
