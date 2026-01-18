@@ -19,14 +19,15 @@ export const RevealOnScroll = ({
 }: RevealOnScrollProps) => {
     const isMobile = useIsMobile();
     const ref = useRef<HTMLDivElement>(null);
-    const [isVisible, setIsVisible] = useState(false);
-    const [hasAnimated, setHasAnimated] = useState(false);
+    // Optimization: Initialize state directly to avoid re-render effect
+    const [isVisible, setIsVisible] = useState(!!isMobile);
+    const [hasAnimated, setHasAnimated] = useState(!!isMobile);
 
     useEffect(() => {
-        // Mobile optimization: Always show immediately or with very simple logic
+        // Mobile optimization: Always show immediately
         if (isMobile) {
-            setIsVisible(true);
-            setHasAnimated(true);
+            if (!isVisible) setIsVisible(true);
+            if (!hasAnimated) setHasAnimated(true);
             return;
         }
 
