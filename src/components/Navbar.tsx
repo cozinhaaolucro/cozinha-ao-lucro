@@ -140,6 +140,7 @@ const Navbar = () => {
                     <button
                         className="p-2 text-foreground"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label="Abrir menu"
                     >
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>

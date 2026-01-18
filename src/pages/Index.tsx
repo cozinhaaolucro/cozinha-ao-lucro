@@ -18,29 +18,31 @@ const Index = () => {
     <div className="min-h-screen bg-background font-sans selection:bg-primary selection:text-primary-foreground">
       <Navbar />
 
-      {/* Hero with Mockups - Loaded Immediately for LCP */}
-      <HeroSection />
+      <main>
+        {/* Hero with Mockups - Loaded Immediately for LCP */}
+        <HeroSection />
 
-      {/* Below-fold sections loaded lazily */}
-      <Suspense fallback={<SectionFallback />}>
-        <AppShowcase />
-      </Suspense>
+        {/* Below-fold sections loaded lazily */}
+        <Suspense fallback={<SectionFallback />}>
+          <AppShowcase />
+        </Suspense>
 
-      <Suspense fallback={<SectionFallback />}>
-        <BenefitsSection />
-      </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <BenefitsSection />
+        </Suspense>
 
-      <Suspense fallback={<SectionFallback />}>
-        <PricingSection />
-      </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <PricingSection />
+        </Suspense>
 
-      <Suspense fallback={<SectionFallback />}>
-        <AuthoritySection />
-      </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <AuthoritySection />
+        </Suspense>
 
-      <Suspense fallback={<SectionFallback />}>
-        <FAQSection />
-      </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <FAQSection />
+        </Suspense>
+      </main>
 
       <Suspense fallback={<SectionFallback />}>
         <Footer />
