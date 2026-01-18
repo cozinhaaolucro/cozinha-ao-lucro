@@ -58,35 +58,26 @@ const AccordionTrigger = React.forwardRef<
   React.ButtonHTMLAttributes<HTMLButtonElement>
 >(({ className, children, ...props }, ref) => {
   const { value, onValueChange } = React.useContext(AccordionContext)
-  // Walk up to find the item value. In a real app we might use context for item too, 
-  // but for this compatible replacement we assume Trigger is inside Item.
-  // Actually, we need the item value to know if we are open.
-  // Let's create an ItemContext to be safe and cleaner.
+  const itemValue = React.useContext(ItemContext)
+  const isOpen = value === itemValue
 
   return (
-    <ItemContext.Consumer>
-      {(itemValue) => {
-        const isOpen = value === itemValue
-        return (
-          <h3 className="flex">
-            <button
-              ref={ref}
-              type="button"
-              onClick={() => onValueChange?.(itemValue)}
-              data-state={isOpen ? "open" : "closed"}
-              className={cn(
-                "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180",
-                className
-              )}
-              {...props}
-            >
-              {children}
-              <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-            </button>
-          </h3>
-        )
-      }}
-    </ItemContext.Consumer>
+    <h3 className="flex">
+      <button
+        ref={ref}
+        type="button"
+        onClick={() => onValueChange?.(itemValue)}
+        data-state={isOpen ? "open" : "closed"}
+        className={cn(
+          "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+      </button>
+    </h3>
   )
 })
 AccordionTrigger.displayName = "AccordionTrigger"
@@ -94,24 +85,22 @@ AccordionTrigger.displayName = "AccordionTrigger"
 const AccordionContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => (
-  <ItemContext.Consumer>
-    {(itemValue) => {
-      const { value } = React.useContext(AccordionContext)
-      const isOpen = value === itemValue
-      return (
-        <div
-          ref={ref}
-          data-state={isOpen ? "open" : "closed"}
-          className="overflow-hidden text-sm data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr] grid transition-[grid-template-rows] duration-300 ease-out"
-          {...props}
-        >
-          <div className={cn("pb-4 pt-0 min-h-0", className)}>{children}</div>
-        </div>
-      )
-    }}
-  </ItemContext.Consumer>
-))
+>(({ className, children, ...props }, ref) => {
+  const { value } = React.useContext(AccordionContext)
+  const itemValue = React.useContext(ItemContext)
+  const isOpen = value === itemValue
+
+  return (
+    <div
+      ref={ref}
+      data-state={isOpen ? "open" : "closed"}
+      className="overflow-hidden text-sm data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr] grid transition-[grid-template-rows] duration-300 ease-out"
+      {...props}
+    >
+      <div className={cn("pb-4 pt-0 min-h-0", className)}>{children}</div>
+    </div>
+  )
+})
 AccordionContent.displayName = "AccordionContent"
 
 // Helper context for Item -> Trigger/Content communication
