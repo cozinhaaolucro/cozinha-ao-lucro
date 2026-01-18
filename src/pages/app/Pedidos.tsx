@@ -79,7 +79,8 @@ const SortableOrderCard = ({ order, statusConfig, isMobile, draggedOrderId, ...p
         data: {
             type: 'Order',
             order
-        }
+        },
+        disabled: isMobile // Disable DnD on mobile to allow Swipe Actions
     });
 
     const style = {
@@ -204,11 +205,18 @@ const Pedidos = () => {
     const products = productsData?.products || [];
     const ingredients = ingredientsData?.ingredients || [];
 
+
     useEffect(() => {
         if (serverOrders) {
             setOrders(serverOrders);
         }
     }, [serverOrders]);
+
+    const onOptimisticUpdate = (orderId: string, newStatus: OrderStatus) => {
+        setOrders(prev => prev.map(o =>
+            o.id === orderId ? { ...o, status: newStatus } : o
+        ));
+    };
 
     // Removed manual syncing of products/ingredients state as hooks handle it now.
     // Removed refetchOrders calls.
@@ -554,6 +562,7 @@ const Pedidos = () => {
                                             longPressTimerRef={longPressTimerRef}
                                             formatDate={formatDate}
                                             order={order}
+                                            onOptimisticUpdate={onOptimisticUpdate}
                                         />
                                     </SortableOrderCard>
                                 ))
@@ -925,7 +934,8 @@ const CardWithStyle = ({
     handleDeleteOrder,
     handleWhatsApp,
     isMobile,
-    formatDate
+    formatDate,
+    onOptimisticUpdate
 }: any) => {
     const x = useMotionValue(0);
     const controls = useAnimation();
@@ -937,6 +947,7 @@ const CardWithStyle = ({
 
     // Left Drag (Back) -> No specific request for visual, but we allow the action. 
     // We can add a subtle cue if needed, but user said "apenas para o avançar".
+
 
     const handleDragEnd = async (_: any, info: any) => {
         const offset = info.offset.x;
@@ -951,6 +962,10 @@ const CardWithStyle = ({
                 const nextStatus = STATUS_FLOW[currentIndex + 1] as any;
                 // Animate out
                 await controls.start({ x: 200, opacity: 0 });
+
+                // Optimistic Update
+                onOptimisticUpdate(order.id, nextStatus);
+
                 await updateOrderStatus(order.id, nextStatus, order.status);
                 toast({ title: `Avançou para ${STATUS_COLUMNS[nextStatus as keyof typeof STATUS_COLUMNS].label}` });
                 refetchOrders();
@@ -965,6 +980,10 @@ const CardWithStyle = ({
                 const prevStatus = STATUS_FLOW[currentIndex - 1] as any;
                 // Animate out
                 await controls.start({ x: -200, opacity: 0 });
+
+                // Optimistic Update
+                onOptimisticUpdate(order.id, prevStatus);
+
                 await updateOrderStatus(order.id, prevStatus, order.status);
                 toast({ title: `Voltou para ${STATUS_COLUMNS[prevStatus as keyof typeof STATUS_COLUMNS].label}` });
                 refetchOrders();
@@ -976,6 +995,7 @@ const CardWithStyle = ({
             controls.start({ x: 0 });
         }
     };
+
 
     if (isMobile) {
         return (
