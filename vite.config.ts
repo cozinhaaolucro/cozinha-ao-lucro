@@ -205,6 +205,52 @@ function cdnPrefixImages(): Plugin {
   };
 }
 
+function cssInliner(): Plugin {
+  return {
+    name: 'vite-css-inliner',
+    apply: 'build',
+    enforce: 'post',
+    generateBundle(opts, bundle) {
+      const htmlFile = Object.values(bundle).find(
+        (file) => file.fileName === 'index.html' && file.type === 'asset'
+      ) as any;
+
+      if (!htmlFile) return;
+
+      const cssFiles = Object.keys(bundle).filter((key) => key.endsWith('.css'));
+      let cssContent = '';
+
+      // Extract all CSS content
+      for (const file of cssFiles) {
+        const cssAsset = bundle[file] as any;
+        cssContent += cssAsset.source;
+        // Remove the CSS file from the bundle so it doesn't get written to disk
+        delete bundle[file];
+      }
+
+      if (cssContent) {
+        // Remove existing <link rel="stylesheet"> tags for the removed CSS files
+        for (const file of cssFiles) {
+          // Create a regex that matches the link tag pointing to this file.
+          // We match the filename strictly to be safe.
+          // Vite output filenames usually don't have paths in the bundle key, but in HTML they might include assets/
+          const escapedFile = file.replace(/\./g, '\\.');
+          const reg = new RegExp(`<link[^>]*href="[^"]*${escapedFile}"[^>]*>`, 'g');
+          htmlFile.source = htmlFile.source.replace(reg, '');
+        }
+
+        // Inject the collected CSS into a <style> tag in the <head>
+        htmlFile.source = htmlFile.source.replace(
+          '</head>',
+          `<style>${cssContent}</style></head>`
+        );
+
+        console.log(`[css-inliner] Inlined ${cssContent.length} bytes of CSS`);
+      }
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   return {
@@ -217,6 +263,7 @@ export default defineConfig(({ mode }) => {
       mode === 'development' &&
       componentTagger(),
       cdnPrefixImages(),
+      cssInliner(),
     ].filter(Boolean),
     resolve: {
       alias: {
