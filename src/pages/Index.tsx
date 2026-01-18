@@ -1,43 +1,50 @@
+import { lazy, Suspense } from 'react';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/sections/HeroSection';
-import BenefitsSection from '@/components/sections/BenefitsSection';
-import QuizSection from '@/components/sections/QuizSection';
-import PricingSection from '@/components/sections/PricingSection';
-import AuthoritySection from '@/components/sections/AuthoritySection';
-import FAQSection from '@/components/sections/FAQSection';
-import Footer from '@/components/sections/Footer';
 
-import AppShowcase from '@/components/sections/AppShowcase';
+// Lazy load below-fold sections for better LCP
+const AppShowcase = lazy(() => import('@/components/sections/AppShowcase'));
+const BenefitsSection = lazy(() => import('@/components/sections/BenefitsSection'));
+const PricingSection = lazy(() => import('@/components/sections/PricingSection'));
+const AuthoritySection = lazy(() => import('@/components/sections/AuthoritySection'));
+const FAQSection = lazy(() => import('@/components/sections/FAQSection'));
+const Footer = lazy(() => import('@/components/sections/Footer'));
+
+// Minimal loading fallback (invisible, no jank)
+const SectionFallback = () => <div className="min-h-[200px]" />;
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background font-sans selection:bg-primary selection:text-primary-foreground">
       <Navbar />
 
-      {/* Hero with Mockups */}
+      {/* Hero with Mockups - Loaded Immediately for LCP */}
       <HeroSection />
 
-      {/* App Showcase (Features) */}
-      <AppShowcase />
+      {/* Below-fold sections loaded lazily */}
+      <Suspense fallback={<SectionFallback />}>
+        <AppShowcase />
+      </Suspense>
 
-      {/* Benefits Section - Platform Preview */}
-      <BenefitsSection />
+      <Suspense fallback={<SectionFallback />}>
+        <BenefitsSection />
+      </Suspense>
 
-      {/* Interactive Quiz */}
-      {/* Quiz Section - Temporarily Disabled */}
-      {/* <QuizSection /> */}
+      <Suspense fallback={<SectionFallback />}>
+        <PricingSection />
+      </Suspense>
 
-      {/* Pricing */}
-      <PricingSection />
+      <Suspense fallback={<SectionFallback />}>
+        <AuthoritySection />
+      </Suspense>
 
-      {/* Authority Block */}
-      <AuthoritySection />
+      <Suspense fallback={<SectionFallback />}>
+        <FAQSection />
+      </Suspense>
 
-      {/* FAQ */}
-      <FAQSection />
-
-      {/* Footer with Persona */}
-      <Footer />
+      <Suspense fallback={<SectionFallback />}>
+        <Footer />
+      </Suspense>
     </div>
   );
 };
