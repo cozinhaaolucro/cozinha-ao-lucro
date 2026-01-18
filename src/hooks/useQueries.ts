@@ -56,7 +56,7 @@ export function useOrders(filters?: { status?: string, startDate?: string, endDa
         queryFn: async () => {
             // If we have date filters, use the range
             if (filters?.startDate) {
-                const { data, error } = await getOrders(undefined, filters.startDate, filters.endDate);
+                const { data, error } = await getOrders(filters.status, filters.startDate, filters.endDate);
                 if (error) throw error;
                 return data as OrderWithDetails[];
             }

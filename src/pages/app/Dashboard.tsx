@@ -313,11 +313,11 @@ const Dashboard = () => {
                                     </div>
 
                                     <div className="space-y-1">
-                                        <h3 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
+                                        <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight" style={{ color: '#2FBF71' }}>
                                             R$ {totalRevenue.toFixed(2)}
                                         </h3>
                                         <p className="text-sm font-medium text-muted-foreground">
-                                            de <span className="text-foreground font-bold">R$ 10.000,00</span> projetados
+                                            de <span className="font-bold" style={{ color: '#2e5b60' }}>R$ 10.000,00</span> projetados
                                         </p>
                                     </div>
                                 </div>
@@ -326,7 +326,7 @@ const Dashboard = () => {
                                     <div className="flex justify-between items-end">
                                         <div className="flex flex-col">
                                             <span className="text-xs text-muted-foreground font-medium">Progresso</span>
-                                            <span className="text-lg font-bold text-primary">{((totalRevenue / 10000) * 100).toFixed(1)}%</span>
+                                            <span className="text-lg font-bold" style={{ color: '#2e5b60' }}>{((totalRevenue / 10000) * 100).toFixed(1)}%</span>
                                         </div>
                                         <div className="flex flex-col items-end">
                                             <span className="text-xs text-muted-foreground font-medium">Restante</span>
@@ -339,7 +339,7 @@ const Dashboard = () => {
                                             className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out flex items-center justify-end pr-1"
                                             style={{
                                                 width: `${Math.min(100, (totalRevenue / 10000) * 100)}%`,
-                                                background: 'linear-gradient(90deg, hsl(186, 35%, 28%) 0%, hsl(187, 29%, 58%) 100%)', // Primary to Secondary
+                                                background: 'linear-gradient(90deg, #2e5b60 0%, #5F98A1 100%)',
                                             }}
                                         >
                                             {/* Glow tip removed for minimalism */}
@@ -356,16 +356,16 @@ const Dashboard = () => {
 
                     {/* Dica do Especialista - Clean White */}
                     <Card className="overflow-hidden border border-border/60 shadow-elegant relative bg-white">
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-secondary to-primary/60" />
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#5F98A1] to-[#2e5b60]" />
 
                         {/* Subtle background decoration */}
                         <div className="absolute -right-6 -bottom-6 opacity-[0.03] text-primary">
-                            <Lightbulb className="w-32 h-32" />
+                            <Lightbulb className="w-32 h-32" style={{ color: '#2e5b60' }} />
                         </div>
 
                         <CardContent className="p-5 flex flex-col justify-center h-full space-y-3 relative">
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-secondary/10 rounded-full text-secondary">
+                                <div className="p-1.5 bg-[#5F98A1]/10 rounded-full text-[#5F98A1]">
                                     <Lightbulb className="w-4 h-4" />
                                 </div>
                                 <h3 className="font-semibold text-sm text-foreground">Dica do Especialista</h3>
@@ -391,12 +391,12 @@ const Dashboard = () => {
                 <TooltipProvider>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
-                        {/* Receita Total - Minimalist */}
+                        {/* Receita Total */}
                         <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
                                 <div className="flex items-center gap-2">
-                                    <div className="p-1.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                        <DollarSign className="h-4 w-4 text-primary" />
+                                    <div className="p-1.5 rounded-lg transition-colors bg-[#C9A34F]/10">
+                                        <DollarSign className="h-4 w-4" style={{ color: '#C9A34F' }} />
                                     </div>
                                     <CardTitle className="text-xs font-bold text-muted-foreground">Receita Total</CardTitle>
                                     <UITooltip>
@@ -414,17 +414,17 @@ const Dashboard = () => {
                             <CardContent className="p-3 pt-2">
                                 <div className="text-lg font-bold text-foreground">R$ {totalRevenue.toFixed(2)}</div>
                                 <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                                    <span className="w-1 h-1 rounded-full bg-primary" /> Vendas brutas totais
+                                    <span className="w-1 h-1 rounded-full bg-[#C9A34F]" /> Vendas brutas totais
                                 </p>
                             </CardContent>
                         </Card>
 
-                        {/* Lucro Líquido - Minimalist */}
+                        {/* Lucro Líquido */}
                         <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
                                 <div className="flex items-center gap-2">
-                                    <div className="p-1.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                        <Wallet className="h-4 w-4 text-primary" />
+                                    <div className="p-1.5 rounded-lg transition-colors bg-[#2FBF71]/10">
+                                        <Wallet className="h-4 w-4" style={{ color: '#2FBF71' }} />
                                     </div>
                                     <CardTitle className="text-xs font-bold text-muted-foreground">Lucro Líquido</CardTitle>
                                     <UITooltip>
@@ -442,17 +442,17 @@ const Dashboard = () => {
                             <CardContent className="p-3 pt-2">
                                 <div className="text-lg font-bold text-foreground">R$ {totalProfit.toFixed(2)}</div>
                                 <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                                    <span className="w-1 h-1 rounded-full bg-emerald-500" /> O que sobra no bolso
+                                    <span className="w-1 h-1 rounded-full bg-[#2FBF71]" /> O que sobra no bolso
                                 </p>
                             </CardContent>
                         </Card>
 
-                        {/* Custo Total - Minimalist */}
+                        {/* Custo Total */}
                         <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
                                 <div className="flex items-center gap-2">
-                                    <div className="p-1.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                        <CreditCard className="h-4 w-4 text-primary" />
+                                    <div className="p-1.5 rounded-lg transition-colors bg-[#68A9CA]/10">
+                                        <CreditCard className="h-4 w-4" style={{ color: '#68A9CA' }} />
                                     </div>
                                     <CardTitle className="text-xs font-bold text-muted-foreground">Custo Total</CardTitle>
                                     <UITooltip>
@@ -470,17 +470,17 @@ const Dashboard = () => {
                             <CardContent className="p-3 pt-2">
                                 <div className="text-lg font-bold text-foreground">R$ {totalCost.toFixed(2)}</div>
                                 <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                                    <span className="w-1 h-1 rounded-full bg-red-500" /> Gasto com ingredientes
+                                    <span className="w-1 h-1 rounded-full bg-[#68A9CA]" /> Gasto com ingredientes
                                 </p>
                             </CardContent>
                         </Card>
 
-                        {/* Margem Bruta - Minimalist */}
+                        {/* Margem Bruta */}
                         <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
                                 <div className="flex items-center gap-2">
-                                    <div className="p-1.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                        <TrendingUp className="h-4 w-4 text-primary" />
+                                    <div className="p-1.5 rounded-lg transition-colors bg-[#61888c]/10">
+                                        <TrendingUp className="h-4 w-4" style={{ color: '#61888c' }} />
                                     </div>
                                     <CardTitle className="text-xs font-bold text-muted-foreground">Margem Bruta</CardTitle>
                                     <UITooltip>
@@ -498,7 +498,7 @@ const Dashboard = () => {
                             <CardContent className="p-3 pt-2">
                                 <div className="text-lg font-bold text-foreground">{profitMargin.toFixed(1)}%</div>
                                 <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                                    <span className="w-1 h-1 rounded-full bg-financial" /> Eficiência das vendas
+                                    <span className="w-1 h-1 rounded-full bg-[#61888c]" /> Eficiência das vendas
                                 </p>
                             </CardContent>
                         </Card>
@@ -511,8 +511,6 @@ const Dashboard = () => {
             {/* Clean Charts Grid */}
             <div className="mt-4">
                 <div className="space-y-6">
-                    {/* Main Charts */}
-                    {/* Main Charts */}
                     {/* Main Charts */}
                     <div className="grid gap-4 md:grid-cols-3">
                         <RevenueChart data={dailyData} />
@@ -540,8 +538,8 @@ const Dashboard = () => {
                         <Card className="relative shadow-elegant overflow-hidden border border-border/60 z-10 bg-white">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-foreground">
-                                    <div className="p-1.5 bg-primary/10 rounded-lg">
-                                        <Package className="w-5 h-5 text-primary" />
+                                    <div className="p-1.5 bg-[#5F98A1]/10 rounded-lg">
+                                        <Package className="w-5 h-5 text-[#5F98A1]" />
                                     </div>
                                     Estoque vs Demanda
                                 </CardTitle>
@@ -555,9 +553,8 @@ const Dashboard = () => {
                                             .map(item => (
                                                 <div key={item.ingredient.id} className="flex items-center justify-between border-b border-border/40 pb-2 p-2 rounded hover:bg-muted/30 transition-colors duration-200 group">
                                                     <div className="flex items-center gap-3 flex-1">
-                                                        {item.status === 'sufficient' && <CheckCircle className="w-4 h-4 text-success group-hover:scale-110 transition-transform" />}
-                                                        {item.status === 'low' && <AlertCircle className="w-4 h-4 text-warning group-hover:scale-110 transition-transform" />}
-                                                        {item.status === 'critical' && <XCircle className="w-4 h-4 text-red-500 group-hover:scale-110 transition-transform" />}
+                                                        {item.status === 'sufficient' && <CheckCircle className="w-4 h-4 text-[#5F98A1] group-hover:scale-110 transition-transform" />}
+                                                        {(item.status === 'low' || item.status === 'critical') && <AlertCircle className="w-4 h-4 text-[#C76E60] group-hover:scale-110 transition-transform" />}
                                                         {item.status === 'unused' && <AlertCircle className="w-4 h-4 text-muted-foreground/40" />}
                                                         <div className="flex-1">
                                                             <p className="font-semibold text-sm text-foreground">{item.ingredient.name}</p>
@@ -570,10 +567,9 @@ const Dashboard = () => {
                                                         variant="outline"
                                                         className={cn(
                                                             "whitespace-nowrap border-0 font-bold",
-                                                            item.status === 'sufficient' ? 'bg-success/10 text-success' :
-                                                                item.status === 'low' ? 'bg-warning/10 text-warning' :
-                                                                    item.status === 'critical' ? 'bg-red-500/10 text-red-500' :
-                                                                        'bg-muted text-muted-foreground'
+                                                            item.status === 'sufficient' ? 'bg-[#5F98A1]/10 text-[#5F98A1]' :
+                                                                (item.status === 'low' || item.status === 'critical') ? 'bg-[#C76E60]/10 text-[#C76E60]' :
+                                                                    'bg-muted text-muted-foreground'
                                                         )}
                                                     >
                                                         {item.balance > 0 ? '+' : ''}{item.balance.toFixed(1)} {item.ingredient.unit}
@@ -620,7 +616,7 @@ const Dashboard = () => {
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className={`text-sm font-bold ${p.profit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                                    <div className={`text-sm font-bold`} style={{ color: p.profit >= 0 ? '#2FBF71' : '#C76E60' }}>
                                                         {p.profit > 0 ? '+' : ''}R$ {p.profit.toFixed(2)}
                                                     </div>
                                                     <div className="text-xs text-muted-foreground">R$ {p.revenue.toFixed(2)}</div>

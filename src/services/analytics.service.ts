@@ -199,14 +199,19 @@ export const AnalyticsService = {
         return ingredients.map(ing => {
             const reservedQty = reserved.get(ing.id) || 0;
             const demandQty = demand.get(ing.id) || 0;
-            const totalNeed = reservedQty + demandQty;
-            const balance = ing.stock_quantity - totalNeed;
+
+            // "Demand" is strictly what is needed for PENDING orders.
+            // "Reserved" (Preparing/Ready) is already deducted from ing.stock_quantity by DB triggers (now allowing negative stock).
+            // Therefore, Balance = Current Stock - Pending Demand.
+
+            const balance = ing.stock_quantity - demandQty;
 
             let status: StockDemandAnalysis['status'] = 'sufficient';
+
             if (demandQty === 0 && reservedQty === 0) {
                 status = 'unused';
             } else if (balance < 0) {
-                status = 'critical';
+                status = 'critical'; // We don't have enough for Pending orders (or we are already in debt)
             } else if (balance < (ing.min_stock_threshold || 5)) {
                 status = 'low';
             }

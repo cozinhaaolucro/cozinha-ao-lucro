@@ -73,7 +73,13 @@ const SmartList = () => {
     const { toast } = useToast();
 
     // Hooks
-    const { data: pendingOrdersData, isLoading: ordersLoading, refetch: refetchOrders } = useOrders({ status: 'pending' });
+    const today = new Date();
+    const next30Days = new Date();
+    next30Days.setDate(today.getDate() + 30);
+
+    const { data: pendingOrdersData, isLoading: ordersLoading, refetch: refetchOrders } = useOrders({
+        status: 'pending'
+    });
     const { data: ingredientsData, isLoading: ingredientsLoading, refetch: refetchIngredients } = useIngredients();
 
     const pendingOrders = pendingOrdersData || [];
@@ -102,19 +108,29 @@ const SmartList = () => {
             }
         });
 
+        const round = (num: number) => Math.round(num * 10000) / 10000;
+
         const list: ShoppingItem[] = [];
         ingredients.forEach(ing => {
-            const needed = neededMap.get(ing.id) || 0;
-            if (needed > 0 || ing.stock_quantity < 0) {
-                const toBuy = Math.max(0, needed - ing.stock_quantity);
-                list.push({
-                    ingredientId: ing.id,
-                    name: ing.name,
-                    unit: ing.unit,
-                    needed: Math.max(needed, toBuy),
-                    inStock: ing.stock_quantity,
-                    toBuy: toBuy
-                });
+            const rawNeeded = neededMap.get(ing.id) || 0;
+            const stock = round(ing.stock_quantity);
+            const needed = round(rawNeeded);
+
+            // Only suggest buying if needed > stock (with tolerance)
+            if (needed > stock || stock < 0) {
+                const diff = needed - stock;
+                const toBuy = diff > 0.0001 ? round(diff) : 0;
+
+                if (toBuy > 0) {
+                    list.push({
+                        ingredientId: ing.id,
+                        name: ing.name,
+                        unit: ing.unit,
+                        needed: round(Math.max(needed, toBuy)), // Visual help: if stock is negative, needed usually means "to buy"
+                        inStock: stock,
+                        toBuy: toBuy
+                    });
+                }
             }
         });
 
@@ -278,7 +294,7 @@ const SmartList = () => {
                                             <div>
                                                 <p className="font-semibold">{item.name}</p>
                                                 <div className="flex gap-2 text-xs text-muted-foreground mt-1">
-                                                    <span>Estoque: {item.inStock} {formatUnit(item.inStock, item.unit)}</span>
+                                                    <span>Estoque: {item.inStock.toFixed(2)} {formatUnit(item.inStock, item.unit)}</span>
                                                     <span>•</span>
                                                     <span>Necessário: {item.needed.toFixed(2)} {formatUnit(item.needed, item.unit)}</span>
                                                 </div>

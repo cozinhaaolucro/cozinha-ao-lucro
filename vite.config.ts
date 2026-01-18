@@ -237,5 +237,19 @@ export default defineConfig(({ mode }) => {
           : process.env.VITE_ENABLE_ROUTE_MESSAGING !== 'false'
       ),
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'ui-core': ['@radix-ui/react-slot', 'class-variance-authority', 'clsx', 'tailwind-merge'],
+            'animation': ['framer-motion'],
+            'charts': ['recharts'],
+            'date-fns': ['date-fns'],
+            'database': ['@supabase/supabase-js'],
+          }
+        }
+      }
+    }
   }
 });

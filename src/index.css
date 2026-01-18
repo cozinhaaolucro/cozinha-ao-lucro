@@ -87,9 +87,9 @@
     --status-ready-base: 155 35% 46%;
     --status-ready-bg: 155 35% 92%;
 
-    /* Entregue (Neutral Gray) */
-    --status-delivered-base: 220 10% 45%;
-    --status-delivered-bg: 220 10% 96%;
+    /* Entregue (Light Blue) */
+    --status-delivered-base: 182 16% 55%;
+    --status-delivered-bg: 182 16% 96%;
 
     /* Atrasado */
     --status-late-base: 8 48% 58%;
