@@ -10,7 +10,7 @@ const Footer = () => {
                 <div className="flex flex-col items-center">
                     {/* Brand Logo */}
                     <img
-                        src="/images/logo-footer.png"
+                        src="/images/logo-footer.webp"
                         alt="Cozinha ao Lucro"
                         className="h-52 w-auto mb-8 opacity-90"
                         width={260}

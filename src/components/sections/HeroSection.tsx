@@ -81,7 +81,7 @@ const HeroSection = () => {
 
                         <div className="pt-10 rounded-2xl overflow-hidden bg-background">
                             <img
-                                src="/images/mockups/hero_dashboard_desktop.png"
+                                src="/images/mockups/hero_dashboard_desktop.webp"
                                 alt="Dashboard Cozinha ao Lucro"
                                 width={1200}
                                 height={800}
@@ -102,7 +102,7 @@ const HeroSection = () => {
                             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[30%] h-[20px] bg-black rounded-b-xl z-20"></div>
 
                             <img
-                                src="/images/mockups/hero_mobile_pedidos.png"
+                                src="/images/mockups/hero_mobile_pedidos.webp"
                                 alt="App Mobile Pedidos"
                                 width={300}
                                 height={600}

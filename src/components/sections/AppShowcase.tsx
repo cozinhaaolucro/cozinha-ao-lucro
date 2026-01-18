@@ -61,7 +61,7 @@ const AppShowcase = () => {
                             <div className="absolute -inset-1 bg-gradient-to-r from-financial to-primary rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                             <div className="relative rounded-2xl overflow-hidden border border-border shadow-2xl bg-card transform-gpu">
                                 <img
-                                    src="/images/mockups/showcase_precificacao.png"
+                                    src="/images/mockups/showcase_precificacao.webp"
                                     alt="Tela de Precificação"
                                     width={800}
                                     height={600}
@@ -107,7 +107,7 @@ const AppShowcase = () => {
                                 <div className="absolute -inset-1 bg-gradient-to-tr from-primary to-accent rounded-[3rem] blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
                                 <div className="relative rounded-[2.5rem] overflow-hidden border-8 border-background shadow-2xl bg-card transform-gpu">
                                     <img
-                                        src="/images/mockups/showcase_compras_mobile.png"
+                                        src="/images/mockups/showcase_compras_mobile.webp"
                                         alt="Lista de Compras Mobile"
                                         width={300}
                                         height={600}
@@ -152,7 +152,7 @@ const AppShowcase = () => {
                             <div className="absolute -inset-1 bg-gradient-to-l from-[#2e5b60] to-[#1a3c40] rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
                             <div className="relative rounded-2xl overflow-hidden border border-border shadow-2xl bg-card transform-gpu">
                                 <img
-                                    src="/images/mockups/showcase_gestao.png"
+                                    src="/images/mockups/showcase_gestao.webp"
                                     alt="Gestão de Estoque"
                                     width={800}
                                     height={600}
