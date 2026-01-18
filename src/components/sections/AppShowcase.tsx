@@ -63,6 +63,8 @@ const AppShowcase = () => {
                                 <img
                                     src="/images/mockups/showcase_precificacao.png"
                                     alt="Tela de Precificação"
+                                    width={800}
+                                    height={600}
                                     loading="lazy"
                                     decoding="async"
                                     className="w-full h-auto object-cover transform transition-transform duration-700 hover:scale-105 will-change-transform"
@@ -107,6 +109,8 @@ const AppShowcase = () => {
                                     <img
                                         src="/images/mockups/showcase_compras_mobile.png"
                                         alt="Lista de Compras Mobile"
+                                        width={300}
+                                        height={600}
                                         loading="lazy"
                                         decoding="async"
                                         className="w-full h-auto object-cover will-change-transform hover:scale-105 transition-transform duration-500"
@@ -150,6 +154,8 @@ const AppShowcase = () => {
                                 <img
                                     src="/images/mockups/showcase_gestao.png"
                                     alt="Gestão de Estoque"
+                                    width={800}
+                                    height={600}
                                     loading="lazy"
                                     decoding="async"
                                     className="w-full h-auto object-cover transform transition-transform duration-700 hover:scale-105 will-change-transform"

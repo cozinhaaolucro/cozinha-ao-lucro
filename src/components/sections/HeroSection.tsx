@@ -87,6 +87,10 @@ const HeroSection = () => {
                                 <img
                                     src="/images/mockups/hero_dashboard_desktop.png"
                                     alt="Dashboard Cozinha ao Lucro"
+                                    width={1200}
+                                    height={800}
+                                    loading="eager"
+                                    fetchPriority="high"
                                     className="w-full h-auto object-cover"
                                 />
                             </div>
@@ -104,6 +108,9 @@ const HeroSection = () => {
                                 <img
                                     src="/images/mockups/hero_mobile_pedidos.png"
                                     alt="App Mobile Pedidos"
+                                    width={300}
+                                    height={600}
+                                    loading="eager"
                                     className="w-full h-auto object-cover"
                                 />
                             </div>
