@@ -60,17 +60,18 @@ const AppShowcase = () => {
                         <div className="relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-financial to-primary rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                             <div className="relative rounded-2xl overflow-hidden border border-border shadow-2xl bg-card transform-gpu">
-                                <img
-                                    src="/images/mockups/showcase_precificacao.webp"
-                                    srcSet="/images/mockups/showcase_precificacao_306.webp 306w, /images/mockups/showcase_precificacao.webp 800w"
-                                    sizes="(max-width: 640px) 306px, 800px"
-                                    alt="Tela de Precificação"
-                                    width={800}
-                                    height={600}
-                                    loading="lazy"
-                                    decoding="async"
-                                    className="w-full h-auto object-cover transform transition-transform duration-700 hover:scale-105 will-change-transform"
-                                />
+                                <picture>
+                                    <source media="(max-width: 640px)" srcSet="/images/mockups/showcase_precificacao_306.webp" />
+                                    <img
+                                        src="/images/mockups/showcase_precificacao.webp"
+                                        alt="Tela de Precificação"
+                                        width={800}
+                                        height={600}
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="w-full h-auto object-cover transform transition-transform duration-700 hover:scale-105 will-change-transform"
+                                    />
+                                </picture>
                             </div>
                         </div>
                     </RevealOnScroll>
@@ -108,17 +109,18 @@ const AppShowcase = () => {
                             <div className="relative max-w-[300px] mx-auto">
                                 <div className="absolute -inset-1 bg-gradient-to-tr from-primary to-accent rounded-[3rem] blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
                                 <div className="relative rounded-[2.5rem] overflow-hidden border-8 border-background shadow-2xl bg-card transform-gpu">
-                                    <img
-                                        src="/images/mockups/showcase_compras_mobile.webp"
-                                        srcSet="/images/mockups/showcase_compras_mobile_284.webp 284w, /images/mockups/showcase_compras_mobile.webp 300w"
-                                        sizes="(max-width: 640px) 284px, 300px"
-                                        alt="Lista de Compras Mobile"
-                                        width={300}
-                                        height={600}
-                                        loading="lazy"
-                                        decoding="async"
-                                        className="w-full h-auto object-cover will-change-transform hover:scale-105 transition-transform duration-500"
-                                    />
+                                    <picture>
+                                        <source media="(max-width: 640px)" srcSet="/images/mockups/showcase_compras_mobile_284.webp" />
+                                        <img
+                                            src="/images/mockups/showcase_compras_mobile.webp"
+                                            alt="Lista de Compras Mobile"
+                                            width={300}
+                                            height={600}
+                                            loading="lazy"
+                                            decoding="async"
+                                            className="w-full h-auto object-cover will-change-transform hover:scale-105 transition-transform duration-500"
+                                        />
+                                    </picture>
                                 </div>
                             </div>
                         </div>
@@ -155,17 +157,18 @@ const AppShowcase = () => {
                         <div className="relative group">
                             <div className="absolute -inset-1 bg-gradient-to-l from-[#2e5b60] to-[#1a3c40] rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
                             <div className="relative rounded-2xl overflow-hidden border border-border shadow-2xl bg-card transform-gpu">
-                                <img
-                                    src="/images/mockups/showcase_gestao.webp"
-                                    srcSet="/images/mockups/showcase_gestao_306.webp 306w, /images/mockups/showcase_gestao.webp 800w"
-                                    sizes="(max-width: 640px) 306px, 800px"
-                                    alt="Gestão de Estoque"
-                                    width={800}
-                                    height={600}
-                                    loading="lazy"
-                                    decoding="async"
-                                    className="w-full h-auto object-cover transform transition-transform duration-700 hover:scale-105 will-change-transform"
-                                />
+                                <picture>
+                                    <source media="(max-width: 640px)" srcSet="/images/mockups/showcase_gestao_306.webp" />
+                                    <img
+                                        src="/images/mockups/showcase_gestao.webp"
+                                        alt="Gestão de Estoque"
+                                        width={800}
+                                        height={600}
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="w-full h-auto object-cover transform transition-transform duration-700 hover:scale-105 will-change-transform"
+                                    />
+                                </picture>
                             </div>
                         </div>
                     </RevealOnScroll>

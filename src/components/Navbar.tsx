@@ -36,30 +36,32 @@ const Navbar = () => {
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
                     {/* Full Logo */}
-                    <img
-                        src="/images/logo-full.webp"
-                        srcSet="/images/logo-full_65.webp 65w, /images/logo-full.webp 256w"
-                        sizes="(max-width: 640px) 65px, 256px"
-                        alt="Cozinha ao Lucro"
-                        width={256}
-                        height={112}
-                        className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 object-contain w-full h-full ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'
-                            }`}
-                        style={{ imageRendering: 'auto' }}
-                    />
+                    <picture>
+                        <source media="(max-width: 640px)" srcSet="/images/logo-full_65.webp" />
+                        <img
+                            src="/images/logo-full.webp"
+                            alt="Cozinha ao Lucro"
+                            width={256}
+                            height={112}
+                            className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 object-contain w-full h-full ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'
+                                }`}
+                            style={{ imageRendering: 'auto' }}
+                        />
+                    </picture>
 
                     {/* Icon Logo */}
-                    <img
-                        src="/images/logo-icon.webp"
-                        srcSet="/images/logo-icon_65.webp 65w, /images/logo-icon.webp 40w"
-                        sizes="(max-width: 640px) 65px, 40px"
-                        alt="Icone"
-                        width={40}
-                        height={40}
-                        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto ${isScrolled ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'
-                            }`}
-                        style={{ imageRendering: 'auto' }}
-                    />
+                    <picture>
+                        <source media="(max-width: 640px)" srcSet="/images/logo-icon_65.webp" />
+                        <img
+                            src="/images/logo-icon.webp"
+                            alt="Icone"
+                            width={40}
+                            height={40}
+                            className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto ${isScrolled ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'
+                                }`}
+                            style={{ imageRendering: 'auto' }}
+                        />
+                    </picture>
                 </div>
 
                 {/* Desktop Menu - Minimal / Minibar */}

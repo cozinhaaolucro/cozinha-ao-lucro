@@ -80,17 +80,18 @@ const HeroSection = () => {
                         </div>
 
                         <div className="pt-10 rounded-2xl overflow-hidden bg-background">
-                            <img
-                                src="/images/mockups/hero_dashboard_desktop.webp"
-                                srcSet="/images/mockups/hero_dashboard_desktop_324.webp 324w, /images/mockups/hero_dashboard_desktop.webp 1200w"
-                                sizes="(max-width: 640px) 324px, 1200px"
-                                alt="Dashboard Cozinha ao Lucro"
-                                width={1200}
-                                height={800}
-                                loading="eager"
-                                fetchPriority="high"
-                                className="w-full h-auto object-cover"
-                            />
+                            <picture>
+                                <source media="(max-width: 640px)" srcSet="/images/mockups/hero_dashboard_desktop_324.webp" />
+                                <img
+                                    src="/images/mockups/hero_dashboard_desktop.webp"
+                                    alt="Dashboard Cozinha ao Lucro"
+                                    width={1200}
+                                    height={800}
+                                    loading="eager"
+                                    fetchPriority="high"
+                                    className="w-full h-auto object-cover"
+                                />
+                            </picture>
                         </div>
 
                         {/* Gloss Reflection */}
@@ -103,16 +104,17 @@ const HeroSection = () => {
                             {/* Dynamic Island / Notch Area */}
                             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[30%] h-[20px] bg-black rounded-b-xl z-20"></div>
 
-                            <img
-                                src="/images/mockups/hero_mobile_pedidos.webp"
-                                srcSet="/images/mockups/hero_mobile_pedidos_164.webp 164w, /images/mockups/hero_mobile_pedidos.webp 300w"
-                                sizes="(max-width: 640px) 164px, 300px"
-                                alt="App Mobile Pedidos"
-                                width={300}
-                                height={600}
-                                loading="eager"
-                                className="w-full h-auto object-cover"
-                            />
+                            <picture>
+                                <source media="(max-width: 640px)" srcSet="/images/mockups/hero_mobile_pedidos_164.webp" />
+                                <img
+                                    src="/images/mockups/hero_mobile_pedidos.webp"
+                                    alt="App Mobile Pedidos"
+                                    width={300}
+                                    height={600}
+                                    loading="eager"
+                                    className="w-full h-auto object-cover"
+                                />
+                            </picture>
                         </div>
                     </div>
 
