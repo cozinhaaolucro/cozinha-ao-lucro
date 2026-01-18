@@ -2,6 +2,40 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+// Shared Observer Manager (Singleton Pattern)
+// Saves memory and processing time by using one observer for all elements
+const observerMap = new Map<Element, (entry: IntersectionObserverEntry) => void>();
+let sharedObserver: IntersectionObserver | null = null;
+
+const getObserver = () => {
+    if (!sharedObserver) {
+        sharedObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                const callback = observerMap.get(entry.target);
+                if (callback && entry.isIntersecting) {
+                    callback(entry);
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: "-50px"
+        });
+    }
+    return sharedObserver;
+};
+
+const observe = (element: Element, callback: (entry: IntersectionObserverEntry) => void) => {
+    observerMap.set(element, callback);
+    getObserver().observe(element);
+};
+
+const unobserve = (element: Element) => {
+    observerMap.delete(element);
+    if (sharedObserver) {
+        sharedObserver.unobserve(element);
+    }
+};
+
 interface RevealOnScrollProps {
     children: React.ReactNode;
     width?: "fit-content" | "100%";
@@ -31,31 +65,25 @@ export const RevealOnScroll = ({
             return;
         }
 
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting && !hasAnimated) {
-                    setIsVisible(true);
-                    setHasAnimated(true);
-                    observer.unobserve(entry.target);
-                }
-            },
-            {
-                threshold: 0.1,
-                rootMargin: "-50px"
-            }
-        );
-
         const currentRef = ref.current;
-        if (currentRef) {
-            observer.observe(currentRef);
-        }
+        if (!currentRef) return;
+
+        // Register with shared observer
+        observe(currentRef, () => {
+            if (!hasAnimated) {
+                setIsVisible(true);
+                setHasAnimated(true);
+                // Cleanup self from observer once animated
+                unobserve(currentRef);
+            }
+        });
 
         return () => {
             if (currentRef) {
-                observer.unobserve(currentRef);
+                unobserve(currentRef);
             }
         };
-    }, [isMobile, hasAnimated]);
+    }, [isMobile, hasAnimated]); // Dependencies remain the same
 
     // Directional transforms
     const getTransform = () => {
