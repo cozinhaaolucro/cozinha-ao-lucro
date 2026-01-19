@@ -12,7 +12,7 @@ export const seedAccount = async () => {
         return;
     }
 
-    // 2. Check if this account has already been seeded (DB-level lock)
+    // 2. Fetch profile to check seeding status
     const { data: profile } = await supabase
         .from('profiles')
         .select('has_seeded')
@@ -20,20 +20,13 @@ export const seedAccount = async () => {
         .single();
 
     if (profile?.has_seeded) {
-        console.log('Account already seeded, skipping');
-        return;
+        console.log('Account flag says seeded, but we will verify integrity of presets...');
+        // We continue to ensure all presets exist (Idempotent run)
     }
 
-    // 3. Mark as seeding BEFORE we start (to prevent race conditions)
-    const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ has_seeded: true })
-        .eq('id', user.id);
+    // 3. (Optimistic lock removed to allow retries on failure)
+    // We already check for existing ingredients/products, so re-running is safe.
 
-    if (updateError) {
-        console.error('Failed to set has_seeded flag:', updateError);
-        // Continue anyway, but log the error
-    }
 
     console.log('Starting account seeding...');
 
@@ -105,7 +98,18 @@ export const seedAccount = async () => {
         }
         */
 
-        console.log('Account seeding completed successfully.');
+
+        // 7. Mark as seeded ONLY after successful completion
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ has_seeded: true })
+            .eq('id', user.id);
+
+        if (updateError) {
+            console.error('Failed to set has_seeded flag:', updateError);
+        } else {
+            console.log('Account seeding completed successfully.');
+        }
     } catch (error) {
         console.error('Seeding failed:', error);
         // Even if seeding fails, we keep has_seeded=true to prevent infinite retry loops

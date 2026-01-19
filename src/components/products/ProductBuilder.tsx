@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useOnboarding } from '@/contexts/OnboardingContext';
+import { OnboardingOverlay } from '@/components/onboarding/OnboardingOverlay';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -139,6 +141,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         hourly_rate: 0,
         is_highlight: false
     });
+    const { isActive: isOnboardingActive, currentStep, nextStep } = useOnboarding();
     const [isPriceManual, setIsPriceManual] = useState(false);
     const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
     const [openCombobox, setOpenCombobox] = useState(false);
@@ -472,7 +475,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
             }
         }
 
-        // 2. Upload Image (if any)
+        // 2. Upload Image (if any) or Use Preset
         let imageUrl = null;
         if (imageFile && user) {
             try {
@@ -495,6 +498,9 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                 setUploading(false);
                 return;
             }
+        } else if (imagePreview && !imagePreview.startsWith('blob:')) {
+            // Use existing external URL (e.g. from Preset)
+            imageUrl = imagePreview;
         }
 
         // 3. Create Product
@@ -554,6 +560,12 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
 
             if (!error) {
                 toast({ title: 'Produto criado com sucesso!' });
+
+                // Advance onboarding if active
+                if (isOnboardingActive && currentStep === 'create-button') {
+                    nextStep();
+                }
+
                 onSuccess();
                 resetForm();
             } else {
@@ -600,6 +612,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
             hourly_rate: 0,
             is_highlight: false
         });
+        setImagePreview(preset.image_url); // Load preset image
 
         // 2. Map ingredients
         const newSelectedIngredients: SelectedIngredient[] = [];
@@ -689,6 +702,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                 Limpar
             </Button>
             <Button
+                id="onboarding-create-product-btn"
                 type="submit"
                 className="flex-1"
                 disabled={uploading}
@@ -696,6 +710,12 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
             >
                 {uploading ? 'Salvando...' : (productToEdit ? 'Atualizar' : 'Criar Produto')}
             </Button>
+            <OnboardingOverlay
+                stepName="create-button"
+                targetId="onboarding-create-product-btn"
+                message="Tudo pronto! O custo foi calculado automaticamente. Clique para criar."
+                position="top"
+            />
         </div>
     );
 
@@ -872,19 +892,34 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     <Label className="text-base font-semibold">Ingredientes</Label>
 
                     {/* Presets Menu */}
-                    <DropdownMenu>
+                    <DropdownMenu onOpenChange={(open) => {
+                        if (open && isOnboardingActive && currentStep === 'new-product-form') {
+                            nextStep();
+                        }
+                    }}>
                         <DropdownMenuTrigger asChild>
-                            <Button type="button" variant="outline" size="sm" className="h-8 gap-1">
+                            <Button
+                                id="onboarding-step-3-trigger"
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-1"
+                            >
                                 <Calculator className="w-3.5 h-3.5" />
                                 <span className="sr-only sm:not-sr-only">Carregar Modelo</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuContent align="end" className="w-56" id="onboarding-template-list">
                             <DropdownMenuItem onClick={clearForm} className="text-destructive">
                                 Limpar Tudo
                             </DropdownMenuItem>
                             {PRESET_PRODUCTS.map((preset) => (
-                                <DropdownMenuItem key={preset.name} onClick={() => loadProductPreset(preset.name)}>
+                                <DropdownMenuItem key={preset.name} onClick={() => {
+                                    loadProductPreset(preset.name);
+                                    if (isOnboardingActive && currentStep === 'template-list') {
+                                        nextStep();
+                                    }
+                                }}>
                                     {preset.name}
                                 </DropdownMenuItem>
                             ))}
@@ -1108,7 +1143,23 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     </div>
                 </div>
             </DialogContent>
-        </Dialog>
+
+            {/* Onboarding Overlays */}
+            <OnboardingOverlay
+                stepName="new-product-form"
+                targetId="onboarding-step-3-trigger"
+                message="Para facilitar, vamos usar um modelo pronto de receita!"
+                position="left"
+                backdropClassName="bg-black/20"
+            />
+            <OnboardingOverlay
+                stepName="template-list"
+                targetId="onboarding-template-list"
+                message="Escolha um destes produtos populares para começar."
+                position="left"
+                backdropClassName="bg-black/20"
+            />
+        </Dialog >
     );
 };
 

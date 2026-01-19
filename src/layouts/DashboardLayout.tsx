@@ -51,9 +51,16 @@ import NewCustomerDialog from '@/components/customers/NewCustomerDialog';
 import ProductBuilder from '@/components/products/ProductBuilder';
 import ProductionStatusWidget from '@/components/production/ProductionStatusWidget'; // New Widget
 
+import { useOnboarding } from '@/contexts/OnboardingContext';
+import { OnboardingOverlay } from '@/components/onboarding/OnboardingOverlay';
+
+// ... imports remain ...
+
 const DashboardLayout = () => {
     const { signOut, user, profile, loading } = useAuth();
+    const { checkEligibility, isActive: isOnboardingActive, currentStep, nextStep } = useOnboarding();
     const navigate = useNavigate();
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -77,6 +84,12 @@ const DashboardLayout = () => {
     const hasActiveSubscription = profile?.subscription_status === 'active';
     const isBlocked = isTrialExpired && !hasActiveSubscription;
     const showBanner = !isBlocked && daysRemaining <= 3 && !hasActiveSubscription;
+
+    useEffect(() => {
+        if (user) {
+            checkEligibility();
+        }
+    }, [user, checkEligibility]);
 
     useEffect(() => {
         if (!loading && !user) {
@@ -198,6 +211,11 @@ const DashboardLayout = () => {
                                 key={item.path}
                                 id={item.id}
                                 to={item.path}
+                                onClick={() => {
+                                    if (item.id === 'nav-produtos' && isOnboardingActive && currentStep === 'dashboard-overview') {
+                                        nextStep();
+                                    }
+                                }}
                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-300 relative overflow-hidden group ${isSpecial
                                     ? 'bg-gradient-to-r from-blue-700 to-purple-800 text-white shadow-lg hover:shadow-blue-900/40 active:scale-[0.98] border border-white/10'
                                     : isActive(item.path)
@@ -441,6 +459,13 @@ const DashboardLayout = () => {
             </Dialog>
 
             {/* Command Palette Removed */}
+
+            <OnboardingOverlay
+                stepName="dashboard-overview"
+                targetId="nav-produtos"
+                message="Cadastre seu primeiro produto para começar a controlar seus custos e lucros."
+                position="right"
+            />
         </div >
     );
 };

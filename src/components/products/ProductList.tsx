@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { useOnboarding } from '@/contexts/OnboardingContext';
+import { OnboardingOverlay } from '@/components/onboarding/OnboardingOverlay';
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +12,7 @@ import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
 import { PRESET_PRODUCTS } from '@/data/presets';
 import type { Product, Ingredient } from '@/types/database';
 import ProductBuilder from './ProductBuilder';
-import ProductTemplateDialog from './ProductTemplateDialog';
+
 import NewOrderDialog from '../orders/NewOrderDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts, useIngredients } from '@/hooks/useQueries';
@@ -81,6 +83,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     const [orderDialogOpen, setOrderDialogOpen] = useState(false);
     const [productForOrder, setProductForOrder] = useState<string | null>(null);
 
+    const { isActive: isOnboardingActive, currentStep, nextStep, completeTour } = useOnboarding();
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -96,6 +99,13 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     const totalCount = productsData?.count || 0;
     const ingredients = ingredientsData?.ingredients || [];
     const isLoading = productsLoading || ingredientsLoading;
+
+    // Auto-advance step when product is created (product count > 0)
+    useEffect(() => {
+        if (isOnboardingActive && currentStep === 'create-button' && products.length > 0) {
+            nextStep(); // To success-moment
+        }
+    }, [products.length, isOnboardingActive, currentStep, nextStep]);
 
     // Helper to refresh everything
     const loadProducts = () => {
@@ -264,7 +274,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
         }
     };
 
-    const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+
 
     const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -447,9 +457,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                         <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
 
-                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setIsTemplateDialogOpen(true)} title="Biblioteca de Modelos">
-                        <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </Button>
+
 
                     <Button className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-4" onClick={onNewProduct}>
                         <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -482,14 +490,21 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                 <p className="text-muted-foreground text-sm max-w-xs mx-auto">
                                     Crie seu primeiro produto para começar a calcular seus lucros e gerenciar suas vendas com precisão.
                                 </p>
-                                <Button className="mt-4 gap-2" onClick={onNewProduct}>
+                                <Button
+                                    id="onboarding-new-product-empty"
+                                    className="mt-4 gap-2"
+                                    onClick={() => {
+                                        if (isOnboardingActive && currentStep === 'empty-product-list') nextStep();
+                                        onNewProduct();
+                                    }}
+                                >
                                     <Plus className="w-4 h-4" /> Criar Meu Primeiro Produto
                                 </Button>
                             </div>
                         </CardContent>
                     </Card>
                 ) : (
-                    products.map((product) => {
+                    products.map((product, idx) => {
                         const totalCost = calculateTotalCost(product);
                         const margin = product.selling_price ? calculateMargin(totalCost, product.selling_price) : 0;
                         const profit = (product.selling_price || 0) - totalCost;
@@ -647,7 +662,11 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                         <TrendingUp className="w-3 h-3" />
                                                         Lucro:
                                                     </span>
-                                                    <span className="font-bold" style={{ color: profit > 0 ? '#4C9E7C' : '#C76E60' }}>
+                                                    <span
+                                                        id={idx === 0 ? "onboarding-profit-display" : undefined}
+                                                        className="font-bold"
+                                                        style={{ color: profit > 0 ? '#4C9E7C' : '#C76E60' }}
+                                                    >
                                                         R$ {profit.toFixed(2)}
                                                     </span>
                                                 </div>
@@ -841,11 +860,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                 }}
             />
 
-            <ProductTemplateDialog
-                open={isTemplateDialogOpen}
-                onOpenChange={setIsTemplateDialogOpen}
-                onSuccess={loadProducts}
-            />
+
 
             <NewOrderDialog
                 open={orderDialogOpen}
@@ -860,6 +875,20 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                     toast({ title: "Pedido criado! Verifique na aba Pedidos." });
                 }}
                 initialProductId={productForOrder}
+            />
+            <OnboardingOverlay
+                stepName="empty-product-list"
+                targetId="onboarding-new-product-empty"
+                message="Vamos criar seu primeiro produto lucrativo."
+                position="bottom"
+            />
+            <OnboardingOverlay
+                stepName="success-moment"
+                targetId="onboarding-profit-display"
+                message="Parabéns! Veja o lucro previsto para cada venda."
+                position="left"
+                actionLabel="Concluir Tour"
+                onAction={completeTour}
             />
         </div >
     );
