@@ -196,9 +196,8 @@ const DashboardLayout = () => {
 
 
             <aside className="hidden md:flex w-52 flex-col border-r bg-card h-full overflow-y-auto">
-                <div className="p-6 border-b flex flex-col items-center justify-center shrink-0 gap-3">
-                    <img src="/images/logo-icon_65.webp" alt="Ícone Cozinha ao Lucro" className="h-12 w-auto" />
-                    <img src="/images/logo-full_256.webp" alt="Cozinha ao Lucro" className="h-16 w-auto" />
+                <div className="p-6 border-b flex flex-col items-center justify-center shrink-0">
+                    <img src="/images/logo-icon-2026.png" alt="Ícone Cozinha ao Lucro" className="h-24 w-auto drop-shadow-md" />
                 </div>
 
                 {/* Search Bar Removed as per user request */}

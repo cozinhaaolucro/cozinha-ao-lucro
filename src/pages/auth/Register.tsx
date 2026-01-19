@@ -99,7 +99,7 @@ const Register = () => {
             <Card className="w-full max-w-md border-primary/20 shadow-xl">
                 <CardHeader className="space-y-1 text-center">
                     <div className="flex justify-center mb-4">
-                        <img src="/images/logo-full_256.webp" alt="Cozinha ao Lucro" className="h-24 w-auto" />
+                        <img src="/images/logo-vertical-2026.png" alt="Cozinha ao Lucro" className="h-32 w-auto" />
                     </div>
                     <CardTitle className="text-2xl font-bold text-primary">Comece Agora</CardTitle>
                     <CardDescription>

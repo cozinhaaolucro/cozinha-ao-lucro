@@ -64,7 +64,7 @@ const PricingSection = () => {
                 </RevealOnScroll>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-7 max-w-4xl mx-auto items-stretch">
-                    {/* Plano Inicial */}
+                    {/* Plano PRO */}
                     <RevealOnScroll delay={0.1} className="h-full flex flex-col">
                         <Card className="flex-1 flex flex-col relative overflow-hidden bg-card/60 backdrop-blur-md border border-primary/20 shadow-xl shadow-primary/5 rounded-[2.5rem] transition-all duration-500 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 group px-6 py-8">
 
@@ -77,7 +77,7 @@ const PricingSection = () => {
 
                             {/* Increased top padding to prevent badge overlap */}
                             <CardHeader className="text-center p-0 mb-8 pt-6">
-                                <CardTitle className="text-xl font-bold text-foreground font-heading mb-3">Plano Inicial</CardTitle>
+                                <CardTitle className="text-xl font-bold text-foreground font-heading mb-3">Plano PRO</CardTitle>
                                 <p className="text-sm text-muted-foreground font-light mb-8">
                                     Para validar e organizar.
                                 </p>

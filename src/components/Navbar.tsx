@@ -9,34 +9,19 @@ const Navbar = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Performance optimization: Use IntersectionObserver instead of scroll listener
-        // to reduce main thread load (Total Blocking Time)
-        const sentinel = document.createElement('div');
-        sentinel.style.position = 'absolute';
-        sentinel.style.top = '0';
-        sentinel.style.left = '0';
-        sentinel.style.height = '1px';
-        sentinel.style.width = '100%';
-        sentinel.style.pointerEvents = 'none';
-        sentinel.style.visibility = 'hidden';
-        document.body.prepend(sentinel);
-
-        const observer = new IntersectionObserver(([entry]) => {
-            // If the top pixel is NOT intersecting (meaning it scrolled up and out),
-            // and boundingClientRect.top is negative, we are scrolled.
-            // Using rootMargin -50px means we trigger when top is 50px scrolled.
-            setIsScrolled(!entry.isIntersecting);
-        }, {
-            rootMargin: '-50px 0px 0px 0px',
-            threshold: 0
-        });
-
-        observer.observe(sentinel);
-
-        return () => {
-            observer.disconnect();
-            sentinel.remove();
+        const handleScroll = () => {
+            const scrollPosition = window.scrollY;
+            setIsScrolled(scrollPosition > 50);
         };
+
+        // Add event listener
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        // Initial check
+        handleScroll();
+
+        // Cleanup
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     const scrollToSection = (id: string) => {
@@ -54,37 +39,29 @@ const Navbar = () => {
             <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between pointer-events-none">
                 {/* Logo Transformation */}
                 <div
-                    className={`flex items-center cursor-pointer relative transition-all duration-500 z-10 pointer-events-auto ${isScrolled ? 'h-10 w-10' : 'h-20 w-48 md:h-28 md:w-64'
+                    className={`flex items-center cursor-pointer relative transition-all duration-500 z-10 pointer-events-auto ${isScrolled ? 'h-28 w-28' : 'h-20 w-48 md:h-28 md:w-64'
                         }`}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
                     {/* Full Logo */}
-                    <picture>
-                        <source media="(max-width: 640px)" srcSet="/images/logo-full_114.webp" />
+                    <div className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 w-full h-full flex items-center ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
                         <img
-                            src="/images/logo-full_65.webp"
+                            src="/images/logo-logotipo-2026.png"
                             alt="Cozinha ao Lucro"
-                            width={65}
-                            height={65}
-                            className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 object-contain w-full h-full ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'
-                                }`}
+                            className="object-contain w-full h-full"
                             style={{ imageRendering: 'auto' }}
                         />
-                    </picture>
+                    </div>
 
                     {/* Icon Logo */}
-                    <picture>
-                        <source media="(max-width: 640px)" srcSet="/images/logo-icon_114.webp" />
+                    <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 h-full w-auto flex items-center ${isScrolled ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'}`}>
                         <img
-                            src="/images/logo-icon_65.webp"
+                            src="/images/logo-icon-2026.png"
                             alt="Icone"
-                            width={65}
-                            height={65}
-                            className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 object-contain h-full w-auto ${isScrolled ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'
-                                }`}
+                            className="object-contain h-full w-auto"
                             style={{ imageRendering: 'auto' }}
                         />
-                    </picture>
+                    </div>
                 </div>
 
                 {/* Desktop Menu - Minimal / Minibar */}
