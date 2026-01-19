@@ -6,7 +6,7 @@ export { autoTable };
 
 export const addPdfHeader = (doc: jsPDF, title: string, subtitle?: string) => {
     // Images
-    const iconUrl = '/images/logo-icon.png';
+    const iconUrl = '/images/logo-icon-2026.png';
     const fullLogoUrl = '/images/logo-full.png';
 
     try {
