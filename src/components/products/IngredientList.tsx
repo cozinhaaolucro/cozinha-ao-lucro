@@ -1,1014 +1,254 @@
-import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Download, Upload, Package, FileSpreadsheet, FileDown, FileText, ChevronDown, TrendingUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { formatUnit, cn } from '@/lib/utils';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-    Drawer,
-    DrawerContent,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerDescription,
-} from "@/components/ui/drawer";
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { getIngredients, createIngredient, updateIngredient, deleteIngredient, getOrders, createStockMovement } from '@/lib/database';
-import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
-import { Badge } from '@/components/ui/badge';
-import type { Ingredient } from '@/types/database';
-import { useToast } from '@/hooks/use-toast';
-import BulkEditIngredientsDialog from './BulkEditIngredientsDialog';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { ScrollArea } from '@/components/ui/scroll-area';
+﻿import { useState, useEffect } from "react";
+import { Plus, Search, FileDown, Filter, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
+import { createIngredient, updateIngredient, deleteIngredient, getIngredients } from "@/lib/database";
+import { analyzeStockDemand } from "@/lib/stock-logic";
+import type { Ingredient } from "@/types/database";
+import { IngredientForm } from "@/components/ingredients/IngredientForm";
+import { IngredientCard } from "@/components/ingredients/IngredientCard";
+import * as XLSX from 'xlsx';
 
-import { presetIngredients } from '@/data/presetIngredients';
-import { getIngredientIcon } from '@/lib/ingredientIcons';
+// Pagination constants
+const ITEMS_PER_PAGE = 50;
 
-import { useIngredients } from '@/hooks/useQueries';
-
-const IngredientList = () => {
-    // Hooks and State
+export default function IngredientList() {
     const { toast } = useToast();
-    const isMobile = useIsMobile();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filter, setFilter] = useState<'all' | 'low_stock' | 'out_of_stock'>('all');
 
-    // Pagination State
-    const [page, setPage] = useState(1);
-    const [limit] = useState(24);
-
-    // React Query
-    const { data: ingredientsData, isLoading, refetch } = useIngredients(page, limit);
-    const ingredients = ingredientsData?.ingredients || [];
-    const totalCount = ingredientsData?.count || 0;
-
-    // Local State for UI
+    // Dialog States
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        if (searchParams.get('action') === 'new' && searchParams.get('tab') === 'ingredients') {
-            setIsDialogOpen(true);
-            searchParams.delete('action');
-            setSearchParams(searchParams, { replace: true });
-        }
-    }, [searchParams, setSearchParams]);
-
     const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
-    const [formData, setFormData] = useState({
-        name: '',
-        unit: 'kg' as 'kg' | 'litro' | 'unidade' | 'grama' | 'ml',
-        cost_per_unit: 0,
-        stock_quantity: 0,
-    });
-    // Removed duplicate toast declaration
 
+    // Demand Data
+    const [demandMap, setDemandMap] = useState<Record<string, number>>({});
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [loadingDemand, setLoadingDemand] = useState(false);
 
-    // Bulk Selection State
-    const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
-    const [isBulkEditDialogOpen, setIsBulkEditDialogOpen] = useState(false);
+    // Initial Load
+    useEffect(() => {
+        loadIngredients();
+    }, []);
 
-    // Package Mode State
-    const [packageMode, setPackageMode] = useState(false);
-    const [packageQty, setPackageQty] = useState(1);
-    const [packageSize, setPackageSize] = useState(0);
-    const [packageUnit, setPackageUnit] = useState<'g' | 'ml' | 'un' | 'kg' | 'l'>('g');
-    const [packageCost, setPackageCost] = useState(0);
+    // Load Data
+    const loadIngredients = async (silent = false) => {
+        if (!silent) setLoading(true);
+        try {
+            // Fetch ingredients
+            const { data: dbData, error } = await supabase
+                .from('ingredients')
+                .select('*')
+                .order('name');
 
-    // Load active orders once for demand calculation - keeping manual for now as it's secondary
-    // Or we could wrap this in a query too, but low priority.
+            if (error) throw error;
+            const loadedIngredients = dbData || [];
 
-    const loadIngredients = () => refetch(); // Alias for compatibility with existing functions
+            // Fetch Active Orders for Demand Calculation
+            const { data: orders } = await supabase
+                .from('orders')
+                .select('*, order_items(*)')
+                .neq('status', 'entregue')
+                .neq('status', 'cancelado');
 
-    const handlePresetSelect = (presetName: string) => {
-        const preset = presetIngredients.find(p => p.name === presetName);
-        if (preset) {
-            setFormData({
-                ...formData,
-                name: preset.name,
-                unit: preset.unit as any,
-                cost_per_unit: Number((preset.price * 1.15).toFixed(2)),
-            });
+            // Fetch Products with Recipes for Intelligent Stock
+            const { data: products } = await supabase
+                .from('products')
+                .select('*, product_ingredients(*, ingredient:ingredients(*))');
+
+            if (orders && products) {
+                const stockStatus = analyzeStockDemand(loadedIngredients, orders, products as any);
+                const newMap: Record<string, number> = {};
+                stockStatus.forEach(status => {
+                    // We map projected_balance if negative (deficit) OR typically users want "Total Required".
+                    // Let's use total_required to show "Demanda: 5 kg".
+                    // If we have 10kg and need 5kg, demand is 5.
+                    if (status.total_required > 0) {
+                        newMap[status.ingredient_id] = status.total_required;
+                    }
+                });
+                setDemandMap(newMap);
+            }
+
+            setIngredients(loadedIngredients);
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Erro ao carregar ingredientes", variant: "destructive" });
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleSubmit = async (e?: React.FormEvent) => {
-        if (e) e.preventDefault();
+    // Filter Logic
+    const filteredIngredients = ingredients.filter(ing => {
+        const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
+        if (!matchesSearch) return false;
 
-        // Calculate final stock quantity based on mode
-        const finalStockQuantity = packageMode
-            ? packageQty * packageSize
-            : formData.stock_quantity;
+        if (filter === 'low_stock') return ing.stock_quantity > 0 && ing.stock_quantity < 5; // Simplified Check
+        if (filter === 'out_of_stock') return ing.stock_quantity <= 0;
 
-        // Calculate final cost based on mode
-        const finalCostPerUnit = packageMode && packageSize > 0
-            ? packageCost / packageSize
-            : formData.cost_per_unit;
+        return true;
+    });
 
-        const submitData = {
-            ...formData,
-            cost_per_unit: finalCostPerUnit,
-            stock_quantity: finalStockQuantity,
-            // Use package unit when in package mode
-            unit: packageMode ? packageUnit : formData.unit,
-            // Persist package info
-            package_qty: packageMode ? packageQty : null,
-            package_size: packageMode ? packageSize : null,
-            package_unit: packageMode ? packageUnit : null
-        };
+    // CRUD Handlers
+    const handleSave = async (formData: any) => {
+        try {
+            const user = (await supabase.auth.getUser()).data.user;
+            if (!user) throw new Error("No user");
 
-        if (editingIngredient) {
-            const { error } = await updateIngredient(editingIngredient.id, submitData);
-            if (!error) {
-                toast({ title: 'Ingrediente atualizado' });
-                loadIngredients();
-                resetForm();
+            const payload = {
+                ...formData,
+                user_id: user.id
+            };
+
+            if (editingIngredient) {
+                await updateIngredient(editingIngredient.id, payload);
+                toast({ title: "Ingrediente atualizado!" });
             } else {
-                toast({
-                    title: 'Erro ao atualizar ingrediente',
-                    description: error.message,
-                    variant: 'destructive'
-                });
+                await createIngredient(payload);
+                toast({ title: "Ingrediente criado!" });
             }
-        } else {
-            const { error } = await createIngredient(submitData);
-            if (!error) {
-                toast({ title: 'Ingrediente criado' });
-                loadIngredients();
-                resetForm();
-            } else {
-                toast({
-                    title: 'Erro ao criar ingrediente',
-                    description: error.message,
-                    variant: 'destructive'
-                });
-            }
+
+            setIsDialogOpen(false);
+            setEditingIngredient(null);
+            loadIngredients();
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Erro ao salvar", variant: "destructive" });
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm('Tem certeza que deseja excluir este ingrediente?')) {
-            const { error } = await deleteIngredient(id);
-            if (!error) {
-                toast({ title: 'Ingrediente excluído' });
-                loadIngredients();
-            }
+        if (!confirm("Tem certeza que deseja excluir este ingrediente?")) return;
+        try {
+            await deleteIngredient(id);
+            toast({ title: "Ingrediente removido" });
+            loadIngredients();
+        } catch (error) {
+            toast({ title: "Erro ao remover", variant: "destructive" });
         }
     };
 
-    const resetForm = () => {
-        setFormData({ name: '', unit: 'kg', cost_per_unit: 0, stock_quantity: 0 });
+    // Export Logic
+    const exportToExcel = () => {
+        const ws = XLSX.utils.json_to_sheet(ingredients.map(i => ({
+            Nome: i.name,
+            Unidade: i.unit,
+            Cost: i.cost_per_unit,
+            Estoque: i.stock_quantity,
+            "Embalagem (Tamanho)": i.package_size || '-',
+            "Embalagem (Unidade)": i.package_unit || '-'
+        })));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Ingredientes");
+        XLSX.writeFile(wb, "ingredientes_cozinha_lucro.xlsx");
+    };
+
+    const openNew = () => {
         setEditingIngredient(null);
-        setPackageMode(false);
-        setPackageQty(1);
-        setPackageSize(0);
-        setPackageCost(0);
-        setPackageUnit('g');
-        setIsDialogOpen(false);
-    };
-
-    const openEditDialog = (ingredient: Ingredient) => {
-        setEditingIngredient(ingredient);
-        setFormData({
-            name: ingredient.name,
-            unit: (ingredient.unit === 'litro' ? 'l' : ingredient.unit === 'grama' ? 'g' : ingredient.unit === 'unidade' ? 'un' : ingredient.unit) as any,
-            cost_per_unit: ingredient.cost_per_unit,
-            stock_quantity: ingredient.stock_quantity || 0,
-        });
-
-        // Restore package info if available
-        if (ingredient.package_qty && ingredient.package_size) {
-            setPackageMode(true);
-            setPackageQty(ingredient.package_qty);
-            setPackageSize(ingredient.package_size);
-            setPackageUnit((ingredient.package_unit as any) || ingredient.unit);
-            setPackageCost(ingredient.cost_per_unit * ingredient.package_size);
-        } else {
-            setPackageMode(false);
-            setPackageQty(1);
-            setPackageSize(0);
-            setPackageUnit('g');
-            setPackageCost(0);
-        }
-
         setIsDialogOpen(true);
     };
 
-    // Bulk Actions
-    const toggleSelectAll = () => {
-        if (selectedIngredients.length === ingredients.length) {
-            setSelectedIngredients([]);
-        } else {
-            setSelectedIngredients(ingredients.map(i => i.id));
-        }
+    const openEdit = (ing: Ingredient) => {
+        setEditingIngredient(ing);
+        setIsDialogOpen(true);
     };
 
-    const toggleSelect = (id: string) => {
-        if (selectedIngredients.includes(id)) {
-            setSelectedIngredients(selectedIngredients.filter(sid => sid !== id));
-        } else {
-            setSelectedIngredients([...selectedIngredients, id]);
-        }
-    };
-
-    const handleBulkSave = async (updates: any) => {
-        let errorCount = 0;
-        for (const id of selectedIngredients) {
-            const { error } = await updateIngredient(id, updates);
-            if (error) errorCount++;
-        }
-
-        if (errorCount > 0) {
-            toast({ title: `Atualização concluída com ${errorCount} erros`, variant: 'destructive' });
-        } else {
-            toast({ title: 'Ingredientes atualizados com sucesso!' });
-            loadIngredients();
-            setSelectedIngredients([]);
-        }
-    };
-
-    const handleBulkDelete = async () => {
-        if (!confirm(`Excluir ${selectedIngredients.length} ingredientes?`)) return;
-
-        let errorCount = 0;
-        for (const id of selectedIngredients) {
-            const { error } = await deleteIngredient(id);
-            if (error) errorCount++;
-        }
-
-        if (errorCount > 0) {
-            toast({ title: 'Erro ao excluir alguns itens', variant: 'destructive' });
-        } else {
-            toast({ title: 'Ingredientes excluídos' });
-            loadIngredients();
-            setSelectedIngredients([]);
-        }
-    };
-
-    // ... Export/Import logic ...
-    const handleExport = (format: 'excel' | 'csv') => {
-        const dataToExport = ingredients.map(i => ({
-            Nome: i.name,
-            Unidade: i.unit,
-            'Custo/Unidade': Number(i.cost_per_unit.toFixed(2)),
-            Estoque: Number((i.stock_quantity || 0).toFixed(2))
-        }));
-        if (format === 'csv') {
-            exportToCSV(dataToExport, 'ingredientes_cozinha_ao_lucro');
-        } else {
-            exportToExcel(dataToExport, 'ingredientes_cozinha_ao_lucro');
-        }
-    };
-
-    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        try {
-            const data: any[] = await importFromExcel(file);
-            let successCount = 0;
-            let errorCount = 0;
-
-            for (const row of data) {
-                const name = row['Nome'] || row['name'] || row['Name'];
-                if (!name) continue;
-                const unit = (['kg', 'litro', 'unidade', 'grama', 'ml'].includes(row['Unidade']?.toLowerCase()) ? row['Unidade'].toLowerCase() : 'unidade') as Ingredient['unit'];
-
-                const { error } = await createIngredient({
-                    name: name,
-                    unit: unit,
-                    cost_per_unit: Number(row['Custo/Unidade'] || row['cost_per_unit'] || 0),
-                    stock_quantity: Number(row['Estoque'] || row['stock_quantity'] || 0),
-                } as any);
-
-                if (error) errorCount++;
-                else successCount++;
-            }
-            toast({ title: 'Importação concluída', description: `${successCount} sucesso, ${errorCount} erros.` });
-            loadIngredients();
-        } catch (error) {
-            toast({ title: 'Erro na importação', variant: 'destructive' });
-        }
-        e.target.value = '';
-    };
-
-    const [activeOrders, setActiveOrders] = useState<any[]>([]);
-
-    useEffect(() => {
-        const loadActiveOrders = async () => {
-            const { data } = await getOrders();
-            if (data) setActiveOrders(data.filter(o => ['pending', 'preparing'].includes(o.status)));
-        };
-        loadActiveOrders();
-    }, []);
-
-    const getDemand = (ingredientId: string) => {
-        let demand = 0;
-        activeOrders.forEach(order => {
-            order.items?.forEach((item: any) => {
-                item.product?.product_ingredients?.forEach((pi: any) => {
-                    if (pi.ingredient_id === ingredientId) demand += pi.quantity * item.quantity;
-                });
-            });
-        });
-        return demand;
-    };
-
-    const getStatusType = (stock: number, demand: number) => {
-        if (stock < 0) return 'critical';
-        if (demand === 0) return stock > 0 ? 'good' : 'neutral';
-        const ratio = stock / demand;
-        if (ratio >= 1) return 'good';
-        if (ratio >= 0.5) return 'warning';
-        return 'critical';
-    };
-
-    const getStatusStyles = (type: string) => {
-        // Standardize icon color to primary blue for consistency
-        const iconClass = 'text-primary';
-        switch (type) {
-            case 'good': return { text: 'text-emerald-700', icon: iconClass, bg: '' };
-            case 'warning': return { text: 'text-amber-700', icon: iconClass, bg: '' };
-            case 'critical': return { text: 'text-red-700', icon: iconClass, bg: '' };
-            default: return { text: 'text-muted-foreground', icon: iconClass, bg: '' };
-        }
-    };
-
-    // --- FORM CONTENT ---
-    const FormContent = (
-        <div className="space-y-6 pb-20 sm:pb-0">
-            <div className="space-y-4">
-                <div className="flex items-center gap-2 text-lg font-semibold border-b pb-2">
-                    <Package className="w-5 h-5 text-primary" />
-                    <h3>Detalhes do Ingrediente</h3>
-                </div>
-
-                {!editingIngredient && (
-                    <div className="space-y-2">
-                        <Label>Preencher com modelo (Opcional)</Label>
-                        <Select onValueChange={handlePresetSelect}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione um ingrediente padrão..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {presetIngredients.map((preset) => (
-                                    <SelectItem key={preset.name} value={preset.name}>
-                                        {preset.name} - R$ {(preset.price * 1.15).toFixed(2)}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                )}
-
-                <div>
-                    <Label htmlFor="name">Nome</Label>
+    return (
+        <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Header Toolbar */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-card p-4 rounded-lg border border-border/40 shadow-sm">
+                <div className="relative w-full sm:w-72">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Ex: Leite Condensado"
-                        required
-                        className="h-10"
+                        placeholder="Buscar ingredientes..."
+                        className="pl-9 bg-background/50"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label htmlFor="unit">Unidade</Label>
-                        <Select
-                            value={formData.unit}
-                            onValueChange={(value) => setFormData({ ...formData, unit: value as any })}
-                        >
-                            <SelectTrigger className="h-10">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="kg">Kg</SelectItem>
-                                <SelectItem value="l">Litro (l)</SelectItem>
-                                <SelectItem value="g">Grama (g)</SelectItem>
-                                <SelectItem value="ml">ML</SelectItem>
-                                <SelectItem value="un">Unidade</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <Label htmlFor="cost">{packageMode ? 'Custo total dos Pacotes (R$)' : `Custo / ${formData.unit} (R$)`}</Label>
-                        <Input
-                            id="cost"
-                            type="number"
-                            step="0.01"
-                            value={packageMode ? packageCost : formData.cost_per_unit}
-                            onChange={(e) => {
-                                const val = parseFloat(e.target.value) || 0;
-                                if (packageMode) {
-                                    setPackageCost(val);
-                                } else {
-                                    setFormData({ ...formData, cost_per_unit: val });
-                                }
-                            }}
-                            required
-                            className="h-10"
-                        />
-                    </div>
-                </div>
-
-                {/* Stock Entry Mode Toggle */}
-                <div className="space-y-4 p-3 bg-muted/10 rounded-lg border border-border/50">
-                    <div className="flex items-center justify-between">
-                        <Label className="text-sm font-medium">Modo de Entrada</Label>
-                        <div className="flex items-center gap-2">
-                            <span className={`text-xs ${!packageMode ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Direto</span>
-                            <Switch
-                                checked={packageMode}
-                                onCheckedChange={(checked) => {
-                                    setPackageMode(checked);
-                                    if (!checked) {
-                                        // Reset package values when switching back to direct
-                                        setPackageQty(1);
-                                        setPackageSize(0);
-                                    }
-                                }}
-                            />
-                            <span className={`text-xs ${packageMode ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Pacotes</span>
-                        </div>
-                    </div>
-
-                    {!packageMode ? (
-                        <div>
-                            <Label htmlFor="stock">Quantidade em Estoque</Label>
-                            <Input
-                                id="stock"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={formData.stock_quantity}
-                                onChange={(e) => setFormData({ ...formData, stock_quantity: parseFloat(e.target.value) || 0 })}
-                                placeholder="Ex: 5.5"
-                                className="h-10"
-                            />
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <Label htmlFor="packageQty">Qtd. de Pacotes</Label>
-                                    <Input
-                                        id="packageQty"
-                                        type="number"
-                                        step="1"
-                                        min="1"
-                                        value={packageQty}
-                                        onChange={(e) => setPackageQty(parseInt(e.target.value) || 1)}
-                                        placeholder="Ex: 3"
-                                        className="h-10"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="packageSize">Tamanho por Pacote</Label>
-                                    <div className="flex gap-2">
-                                        <Input
-                                            id="packageSize"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={packageSize}
-                                            onChange={(e) => setPackageSize(parseFloat(e.target.value) || 0)}
-                                            placeholder="Ex: 350"
-                                            className="h-10 flex-1"
-                                        />
-                                        <Select
-                                            value={packageUnit}
-                                            onValueChange={(value) => setPackageUnit(value as any)}
-                                        >
-                                            <SelectTrigger className="h-10 w-24">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="kg">Kg</SelectItem>
-                                                <SelectItem value="g">g</SelectItem>
-                                                <SelectItem value="l">L</SelectItem>
-                                                <SelectItem value="ml">ml</SelectItem>
-                                                <SelectItem value="un">un</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Live Preview */}
-                            <div className="flex items-center justify-between p-2 bg-emerald-50 rounded border border-emerald-200">
-                                <span className="text-xs text-emerald-700 font-medium flex items-center gap-1.5">
-                                    <Package className="w-3.5 h-3.5" />
-                                    Total calculado:
-                                </span>
-                                <span className="text-sm font-bold text-emerald-700">
-                                    {(packageQty * packageSize).toFixed(2)} {packageUnit}
-                                </span>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <p className="text-[10px] text-muted-foreground p-2 bg-muted/20 rounded border">
-                    Unidade de medida atual: <strong>{formData.unit}</strong>
-                </p>
-            </div>
-        </div>
-    );
-
-    const FooterButtons = (
-        <div className="flex items-center justify-between w-full gap-4 pt-2 border-t mt-auto bg-background/95 backdrop-blur">
-            <div className="flex gap-2 w-full justify-end">
-                <Button type="button" variant="ghost" onClick={resetForm}>
-                    Cancelar
-                </Button>
-                {editingIngredient && (
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className="text-destructive hover:text-destructive border-destructive/20 hover:bg-destructive/10"
-                        onClick={() => handleDelete(editingIngredient.id)}
-                    >
-                        Excluir
+                <div className="flex w-full sm:w-auto gap-2 overflow-x-auto pb-2 sm:pb-0">
+                    <Button variant="outline" size="sm" onClick={() => setFilter('all')} className={filter === 'all' ? 'bg-secondary' : ''}>
+                        Todos
                     </Button>
-                )}
-                <Button onClick={() => handleSubmit()} className={editingIngredient ? "px-6" : "px-6 flex-1 sm:flex-none"}>
-                    {editingIngredient ? 'Salvar Alterações' : 'Criar Ingrediente'}
-                </Button>
-            </div>
-        </div>
-    );
-
-    // --- RENDER ---
-    return (
-        <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-muted/20 p-3 sm:p-4 rounded-xl border border-border/50 shadow-sm border-l-4 border-l-primary/50">
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                    <div className="flex items-center gap-2">
-                        <Checkbox
-                            checked={ingredients.length > 0 && selectedIngredients.length === ingredients.length}
-                            onCheckedChange={toggleSelectAll}
-                        />
-                        <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
-                            {selectedIngredients.length} selecionados
-                        </span>
-                    </div>
-                    {selectedIngredients.length > 0 && (
-                        <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="text-xs sm:text-sm" onClick={() => setIsBulkEditDialogOpen(true)}>
-                                <Pencil className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                                <span className="hidden xs:inline">Editar</span>
-                            </Button>
-                            <Button variant="destructive" size="sm" className="text-xs sm:text-sm" onClick={handleBulkDelete}>
-                                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                                <span className="hidden xs:inline">Excluir</span>
-                            </Button>
-                        </div>
-                    )}
-                </div>
-                <div className="flex gap-2 ml-auto">
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".xlsx, .xls, .csv"
-                        className="hidden"
-                        onChange={handleImport}
-                    />
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 sm:h-9 sm:w-9"
-                        title="Importar Excel"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <Button variant="outline" size="sm" onClick={() => setFilter('out_of_stock')} className={filter === 'out_of_stock' ? 'bg-orange-100 text-orange-900 border-orange-200' : ''}>
+                        Em Falta
                     </Button>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" title="Exportar / Baixar Modelo">
-                                <Download className="w-3 h-3 sm:w-4 sm:h-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Planilha</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleExport('excel')}>
-                                <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (.xlsx)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('csv')}>
-                                <FileText className="w-4 h-4 mr-2" /> CSV (.csv)
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Template</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['Nome', 'Unidade', 'Custo/Unidade', 'Estoque'], 'ingredientes'))}>
-                                <FileDown className="w-4 h-4 mr-2" /> Modelo de Importação
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button onClick={() => setIsDialogOpen(true)} className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-4">
-                        <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span className="hidden xs:inline">Novo</span> Ingrediente
+
+                    <div className="h-4 w-px bg-border mx-1 hidden sm:block" />
+
+                    <Button variant="outline" size="icon" onClick={exportToExcel} title="Exportar Excel">
+                        <FileDown className="h-4 w-4" />
+                    </Button>
+                    <Button onClick={openNew} className="gap-2 whitespace-nowrap">
+                        <Plus className="h-4 w-4" />
+                        Novo Ingrediente
                     </Button>
                 </div>
             </div>
 
-            {ingredients.length === 0 ? (
-                <Card className="border-dashed">
-                    <CardContent className="p-12 text-center">
-                        <div className="flex flex-col items-center gap-2">
-                            <Plus className="w-12 h-12 text-muted-foreground/20" />
-                            <h3 className="font-bold text-lg">Sua dispensa está vazia</h3>
-                            <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-                                Cadastre seus ingredientes base (como farinha, açúcar, embalagens) para compor o custo dos seus produtos.
-                            </p>
-                            <Button className="mt-4 gap-2" onClick={() => setIsDialogOpen(true)}>
-                                <Plus className="w-4 h-4" /> Cadastrar Ingrediente
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+            {/* Grid */}
+            {loading ? (
+                <div className="flex justify-center py-20">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
             ) : (
-                <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
-                    {ingredients.map((ingredient) => {
-                        const demand = getDemand(ingredient.id);
-                        const stock = ingredient.stock_quantity || 0;
-
-                        const isPackaging = ingredient.unit === 'un' || ingredient.unit === 'unidade';
-                        const mainColor = isPackaging ? '#61888c' : '#5F98A1';
-                        const Icon = getIngredientIcon(ingredient.name);
-
-                        // Check if package info exists
-                        const hasPackageInfo = ingredient.package_qty && ingredient.package_qty > 0;
-
-                        // Check if selected
-                        const isSelected = selectedIngredients.includes(ingredient.id);
-
-                        return (
-                            <Card
-                                key={ingredient.id}
-                                className={cn(
-                                    "group hover:shadow-md transition-all duration-200 relative overflow-hidden bg-card/50 hover:bg-card border-border/60",
-                                    isSelected && "border-primary ring-1 ring-primary/20 bg-primary/5"
-                                )}
-                                onClick={() => toggleSelect(ingredient.id)}
-                            >
-                                <CardContent className="p-3">
-                                    {/* Selection Checkbox - Appears on hover or selected */}
-                                    <div
-                                        className={cn(
-                                            "absolute top-3 left-3 z-30 transition-all duration-200",
-                                            isSelected ? "opacity-100 scale-100" : "opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 pointer-events-none group-hover:pointer-events-auto"
-                                        )}
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        <Checkbox
-                                            checked={isSelected}
-                                            onCheckedChange={() => toggleSelect(ingredient.id)}
-                                            className="h-4 w-4 bg-background/80 backdrop-blur-sm border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                                        />
-                                    </div>
-                                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-5 w-5 bg-background/80 hover:bg-background shadow-sm rounded-md"
-                                            onClick={() => openEditDialog(ingredient)}
-                                            title="Editar"
-                                        >
-                                            <Pencil className="w-3 h-3 text-muted-foreground" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-5 w-5 bg-background/80 hover:bg-red-50 hover:text-red-500 shadow-sm rounded-md"
-                                            onClick={() => handleDelete(ingredient.id)}
-                                            title="Excluir"
-                                        >
-                                            <Trash2 className="w-3 h-3" />
-                                        </Button>
-                                    </div>
-
-                                    {/* Header: Icon Larger, Name Next to it - Shifts on hover/selected */}
-                                    <div className={cn(
-                                        "flex items-center gap-3 mb-3 pr-12 transition-all duration-200 ease-out",
-                                        (isSelected) ? "translate-x-6" : "group-hover:translate-x-6"
-                                    )}>
-                                        <div className="shrink-0">
-                                            <Icon className="w-7 h-7" style={{ color: mainColor }} />
-                                        </div>
-                                        <CardTitle
-                                            className="text-base font-semibold leading-tight line-clamp-2 text-foreground"
-                                            title={ingredient.name}
-                                        >
-                                            {ingredient.name}
-                                        </CardTitle>
-                                    </div>
-
-                                    {/* Info Grid */}
-                                    <div className="flex items-end justify-between pt-2 border-t border-dashed border-border/40 mt-auto min-h-[42px]">
-                                        <div className="flex flex-col w-full gap-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[10px] text-muted-foreground font-medium">Estoque:</span>
-                                                <div className="flex items-center gap-2">
-                                                    <span
-                                                        className={cn("font-medium text-xs transition-colors", stock < 0 ? "text-[#C76E60] font-bold" : "text-foreground/90")}
-                                                    >
-                                                        {Number(stock.toFixed(2))} <span className="text-[10px] text-muted-foreground">{ingredient.unit}</span>
-                                                    </span>
-
-                                                    {hasPackageInfo && (
-                                                        <div className="flex items-center gap-1 pl-2 border-l border-border/50">
-                                                            <Package className="w-3 h-3 text-muted-foreground/70" />
-                                                            <span className="text-[10px] text-muted-foreground">
-                                                                {ingredient.package_qty}x {ingredient.package_size}{ingredient.package_unit || ingredient.unit}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs text-muted-foreground font-medium">Custo:</span>
-                                                <span className="font-semibold text-sm text-foreground">R$ {ingredient.cost_per_unit.toFixed(2)}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity pl-2">
-                                            <QuickAddStock
-                                                ingredient={ingredient}
-                                                onSuccess={() => {
-                                                    loadIngredients();
-                                                    toast({ title: 'Estoque atualizado!' });
-                                                }}
-                                                minimal
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Demand Alert */}
-                                    {demand > 0 && (
-                                        <div className="mt-2 text-[10px] text-orange-600/90 bg-orange-50/50 px-2 py-1 rounded-sm flex items-center justify-center gap-1.5 font-medium border border-orange-100/50">
-                                            <TrendingUp className="w-3 h-3" />
-                                            Demanda: {demand.toFixed(1)}
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {filteredIngredients.map(ing => (
+                        <IngredientCard
+                            key={ing.id}
+                            ingredient={ing}
+                            demand={demandMap[ing.id] || 0}
+                            usageLevel={demandMap[ing.id] > 0 ? (demandMap[ing.id] > ing.stock_quantity ? 'high' : 'medium') : 'low'}
+                            isSelected={false}
+                            onSelect={() => { }} // Could be used for bulk selection in future
+                            onEdit={openEdit}
+                            onDelete={handleDelete}
+                            onRefresh={() => loadIngredients(true)} // Silent refresh
+                            isAdmin={true} // Default to true as user is owner
+                        />
+                    ))}
+                    {filteredIngredients.length === 0 && (
+                        <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground bg-muted/10 rounded-lg border border-dashed border-border/50">
+                            <Filter className="h-10 w-10 opacity-20 mb-2" />
+                            <p>Nenhum ingrediente encontrado com os filtros atuais.</p>
+                            {/* If filter is active, offer to clear */}
+                            {(filter !== 'all' || searchTerm) && (
+                                <Button variant="link" onClick={() => { setFilter('all'); setSearchTerm(''); }} className="mt-2">
+                                    Limpar filtros
+                                </Button>
+                            )}
+                        </div>
+                    )}
                 </div>
-            )
-            }
+            )}
 
-            {/* Pagination Controls */}
-            {
-                totalCount > 0 && (
-                    <div className="flex items-center justify-between border-t pt-4 mt-4">
-                        <div className="text-sm text-muted-foreground">
-                            Mostrando {ingredients.length} de {totalCount} ingredientes
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                                disabled={page === 1 || isLoading}
-                            >
-                                <ChevronDown className="h-4 w-4 rotate-90 mr-1" />
-                                Anterior
-                            </Button>
-                            <div className="text-sm font-medium min-w-[3rem] text-center">
-                                Pág. {page}
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage(p => p + 1)}
-                                disabled={ingredients.length < limit || (page * limit) >= totalCount || isLoading}
-                            >
-                                Próximo
-                                <ChevronDown className="h-4 w-4 -rotate-90 ml-1" />
-                            </Button>
-                        </div>
-                    </div>
-                )
-            }
+            {/* Dialog Form */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>{editingIngredient ? 'Editar Ingrediente' : 'Novo Ingrediente'}</DialogTitle>
+                        <DialogDescription>
+                            Configure os detalhes do ingrediente. O custo será calculado automaticamente para unidade base.
+                        </DialogDescription>
+                    </DialogHeader>
 
-            {
-                isMobile ? (
-                    <Drawer open={isDialogOpen} onOpenChange={(open) => {
-                        if (!open) resetForm();
-                        setIsDialogOpen(open);
-                    }}>
-                        <DrawerContent className="h-[90vh] flex flex-col">
-                            <DrawerHeader className="border-b pb-4">
-                                <DrawerTitle>{editingIngredient ? 'Editar Ingrediente' : 'Novo Ingrediente'}</DrawerTitle>
-                                <DrawerDescription>
-                                    {editingIngredient ? 'Faça alterações no ingrediente existente' : 'Cadastre um novo ingrediente para seu estoque'}
-                                </DrawerDescription>
-                            </DrawerHeader>
-                            <ScrollArea className="flex-1 overflow-y-auto">
-                                <div className="px-4 py-4 w-full max-w-md mx-auto">
-                                    {FormContent}
-                                </div>
-                            </ScrollArea>
-                            <div className="p-4 border-t mt-auto">
-                                {FooterButtons}
-                            </div>
-                        </DrawerContent>
-                    </Drawer>
-                ) : (
-                    <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                        if (!open) resetForm();
-                        setIsDialogOpen(open);
-                    }}>
-                        <DialogContent className="sm:max-w-[500px] flex flex-col p-0 max-h-[85vh]">
-                            <DialogHeader className="p-6 pb-2 border-b bg-background z-10 rounded-t-lg">
-                                <DialogTitle>{editingIngredient ? 'Editar Ingrediente' : 'Novo Ingrediente'}</DialogTitle>
-                            </DialogHeader>
-                            <ScrollArea className="flex-1 p-6 overflow-y-auto">
-                                {FormContent}
-                            </ScrollArea>
-                            <div className="p-4 border-t bg-muted/10 rounded-b-lg">
-                                {FooterButtons}
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                )
-            }
-
-            <BulkEditIngredientsDialog
-                open={isBulkEditDialogOpen}
-                onOpenChange={setIsBulkEditDialogOpen}
-                selectedCount={selectedIngredients.length}
-                onSave={handleBulkSave}
-            />
-        </div >
+                    {/* Render form only when dialog is open to reset state properly */}
+                    {isDialogOpen && (
+                        <IngredientForm
+                            initialData={editingIngredient}
+                            onSave={handleSave}
+                            onCancel={() => setIsDialogOpen(false)}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
+        </div>
     );
-};
-
-const QuickAddStock = ({ ingredient, onSuccess, minimal }: { ingredient: Ingredient; onSuccess: () => void; minimal?: boolean }) => {
-    const { toast } = useToast();
-    const [open, setOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-
-    // Mode: 'direct' or 'package'
-    const [mode, setMode] = useState<'direct' | 'package'>('direct');
-
-    // Direct inputs
-    const [directQty, setDirectQty] = useState('');
-
-    // Package inputs (defaults from ingredient if available)
-    const [packQty, setPackQty] = useState('1');
-    const [packSize, setPackSize] = useState(ingredient.package_size?.toString() || '');
-    const [packUnit, setPackUnit] = useState(ingredient.package_unit || ingredient.unit);
-
-    const handleAdd = async () => {
-        let finalQty = 0;
-
-        if (mode === 'direct') {
-            finalQty = parseFloat(directQty);
-        } else {
-            const pQty = parseFloat(packQty);
-            const pSize = parseFloat(packSize);
-            if (pQty > 0 && pSize > 0) {
-                finalQty = pQty * pSize;
-                // Basic unit conversion if needed (assuming packUnit matches ingredient unit base for now, 
-                // but if packUnit is 'g' and ingredient is 'kg', we might need conversion. 
-                // For simplicity in this quick add, we assume user inputs compatible values or system handles generic unit).
-                // Actually, let's respect the unit logic from the main form:
-                // If ingredient is KG and pack is G, simple math.
-                // NOTE: 'formatUnit' and backend logic usually expects base units. 
-                // Let's rely on simple multiplication for now, assuming user consistentcy.
-            }
-        }
-
-        if (!finalQty || finalQty <= 0) return;
-
-        setIsLoading(true);
-        try {
-            await createStockMovement({
-                ingredient_id: ingredient.id,
-                type: 'in',
-                quantity: finalQty,
-                reason: mode === 'package' ? `Adição Rápida: ${packQty}x ${packSize}${packUnit}` : 'Adição Rápida'
-            });
-
-            // Artificial delay to ensure DB trigger propagation before reload
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            setOpen(false);
-            setDirectQty('');
-            // Keep package settings for convenience? Or reset? Let's reset qty but keep size.
-            setPackQty('1');
-            onSuccess();
-        } catch (error) {
-            console.error(error);
-            toast({ title: 'Erro ao atualizar', variant: 'destructive' });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant={minimal ? "ghost" : "outline"}
-                    size="icon"
-                    className={minimal
-                        ? "h-6 w-6 rounded-full text-muted-foreground hover:text-white hover:bg-[#5F98A1] transition-colors"
-                        : "h-8 w-8 rounded-full bg-background border-border/60 text-primary shadow-sm transition-all duration-200 hover:bg-primary hover:text-primary-foreground hover:border-primary"
-                    }
-                >
-                    <Plus className={minimal ? "w-4 h-4" : "w-5 h-5"} />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-72 p-3" align="end" side="left">
-                <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 h-8 mb-3">
-                        <TabsTrigger value="direct" className="text-xs">Direto</TabsTrigger>
-                        <TabsTrigger value="package" className="text-xs">Pacotes</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="direct" className="space-y-3">
-                        <div className="flex gap-2 items-end">
-                            <div className="flex-1">
-                                <Label className="text-[10px] text-muted-foreground mb-1 block">Quantidade ({ingredient.unit})</Label>
-                                <Input
-                                    type="number"
-                                    placeholder="0.00"
-                                    value={directQty}
-                                    onChange={(e) => setDirectQty(e.target.value)}
-                                    className="h-8 text-sm"
-                                    autoFocus
-                                />
-                            </div>
-                            <Button size="sm" className="h-8 px-3" onClick={handleAdd} disabled={isLoading}>
-                                {isLoading ? <span className="animate-spin">...</span> : <Plus className="w-4 h-4" />}
-                            </Button>
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="package" className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                            <div>
-                                <Label className="text-[10px] text-muted-foreground mb-1 block">
-                                    {parseInt(packQty) === 1 ? 'Pacote' : 'Pacotes'}
-                                </Label>
-                                <Input
-                                    type="number"
-                                    value={packQty}
-                                    onChange={(e) => setPackQty(e.target.value)}
-                                    className="h-8 text-sm"
-                                />
-                            </div>
-                            <div>
-                                <Label className="text-[10px] text-muted-foreground mb-1 block">Tamanho</Label>
-                                <div className="flex relative">
-                                    <Input
-                                        type="number"
-                                        value={packSize}
-                                        onChange={(e) => setPackSize(e.target.value)}
-                                        className="h-8 text-sm pr-8"
-                                        placeholder="Ex: 500"
-                                    />
-                                    <span className="absolute right-2 top-2 text-[10px] text-muted-foreground">
-                                        {packUnit}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-2 border-t">
-                            <div className="text-[10px] text-muted-foreground">
-                                Total: <span className="font-bold text-foreground">
-                                    {(parseFloat(packQty || '0') * parseFloat(packSize || '0')).toFixed(2)} {packUnit}
-                                </span>
-                            </div>
-                            <Button size="sm" className="h-7 px-3 text-xs" onClick={handleAdd} disabled={isLoading}>
-                                {isLoading ? 'Adicionando...' : 'Adicionar'}
-                            </Button>
-                        </div>
-                    </TabsContent>
-                </Tabs>
-            </PopoverContent>
-        </Popover>
-    );
-};
-
-
-export default IngredientList;
+}

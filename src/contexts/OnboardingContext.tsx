@@ -26,21 +26,43 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const [isActive, setIsActive] = useState(false);
     const [currentStep, setCurrentStep] = useState<OnboardingStep>('dashboard-overview');
     const [hasChecked, setHasChecked] = useState(false);
+    // Fix: Add state to track if user explicitly dismissed the tour in this session
+    const [isDismissed, setIsDismissed] = useState(false);
 
-    const checkEligibility = async () => {
+    const completeTour = React.useCallback(async () => {
+        setIsActive(false);
+        setCurrentStep('completed');
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                localStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+                await supabase
+                    .from('profiles')
+                    .upsert({
+                        id: user.id,
+                        has_completed_onboarding: true
+                    }, { onConflict: 'id' });
+            }
+        } catch (error) {
+            console.error('Error completing tour:', error);
+        }
+    }, []);
+
+    // Fix: Wrap in useCallback to prevent infinite useEffect loops in consumers
+    const checkEligibility = React.useCallback(async () => {
+        // If already checked, active, or explicitly dismissed, stop.
+        if (hasChecked || isActive || isDismissed) return;
+
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            // 1. Local Persistence Check (User Scoped)
             const localPref = localStorage.getItem(`onboarding_completed_${user.id}`);
-
             if (localPref === 'true') {
                 setHasChecked(true);
                 return;
             }
 
-            // Check if user has completed onboarding before
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('has_completed_onboarding')
@@ -52,7 +74,6 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 return;
             }
 
-            // Check if user has any products
             const { count } = await supabase
                 .from('products')
                 .select('*', { count: 'exact', head: true })
@@ -62,7 +83,6 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 setIsActive(true);
                 setCurrentStep('dashboard-overview');
             } else {
-                // If they have products but flag wasn't set, set it now
                 await completeTour();
             }
         } catch (error) {
@@ -70,35 +90,14 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         } finally {
             setHasChecked(true);
         }
-    };
+    }, [hasChecked, isActive, isDismissed, completeTour]);
 
-    const completeTour = async () => {
+    const dismissTour = React.useCallback(() => {
         setIsActive(false);
-        setCurrentStep('completed');
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                // Persistent storage (User Scoped)
-                localStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+        setIsDismissed(true); // Prevent re-opening in this session
+    }, []);
 
-                // Database sync (Upsert to ensure row exists)
-                await supabase
-                    .from('profiles')
-                    .upsert({
-                        id: user.id,
-                        has_completed_onboarding: true
-                    }, { onConflict: 'id' });
-            }
-        } catch (error) {
-            console.error('Error completing tour:', error);
-        }
-    };
-
-    const dismissTour = () => {
-        setIsActive(false);
-    };
-
-    const nextStep = () => {
+    const nextStep = React.useCallback(() => {
         const steps: OnboardingStep[] = [
             'dashboard-overview',
             'empty-product-list',
@@ -114,11 +113,11 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         } else {
             completeTour();
         }
-    };
+    }, [currentStep, completeTour]);
 
-    const setStep = (step: OnboardingStep) => {
+    const setStep = React.useCallback((step: OnboardingStep) => {
         setCurrentStep(step);
-    };
+    }, []);
 
     return (
         <OnboardingContext.Provider value={{

@@ -1,8 +1,8 @@
-import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const exportToExcel = (data: any[], fileName: string) => {
+export const exportToExcel = async (data: any[], fileName: string) => {
+    const XLSX = await import('xlsx');
     const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
     const fileExtension = '.xlsx';
 
@@ -27,7 +27,8 @@ export const getValue = (row: any, keys: string[]): any => {
     return undefined;
 };
 
-export const importFromExcel = (file: File): Promise<any[]> => {
+export const importFromExcel = async (file: File): Promise<any[]> => {
+    const XLSX = await import('xlsx');
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
 
@@ -53,6 +54,7 @@ export const importFromExcel = (file: File): Promise<any[]> => {
 };
 
 export const exportToCSV = (data: any[], fileName: string) => {
+    // CSV export doesn't need heavy libraries
     const replacer = (_key: string, value: any) => value === null ? '' : value;
     const header = Object.keys(data[0]);
     const csv = [
@@ -64,7 +66,8 @@ export const exportToCSV = (data: any[], fileName: string) => {
     saveAs(csvData, fileName + '.csv');
 };
 
-export const downloadTemplate = (headers: string[], fileName: string, exampleRow?: Record<string, any>) => {
+export const downloadTemplate = async (headers: string[], fileName: string, exampleRow?: Record<string, any>) => {
+    const XLSX = await import('xlsx');
     // Create array-of-arrays format: first row is headers, second row is example data
     const aoaData: any[][] = [headers];
 

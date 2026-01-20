@@ -80,6 +80,12 @@
     /* Non-colored standard: HSL 210 15% 20% -> 210 15% 20% */
     --shadow-color: 210 15% 20%;
 
+    /* Status Colors (Kanban) */
+    --status-pending-base: 41 53% 55%;
+    --status-preparing-base: 186 35% 28%;
+    --status-ready-base: 168 22% 52%;
+    --status-delivered-base: 200 5% 40%;
+
     --shadow-elegant: 0 4px 12px hsla(210, 15%, 20%, 0.1);
     --shadow-hover: 0 6px 16px hsla(210, 15%, 20%, 0.14);
     --shadow-card: 0 4px 6px -1px hsla(210, 15%, 20%, 0.1),

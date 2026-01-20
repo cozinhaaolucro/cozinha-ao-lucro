@@ -4,7 +4,7 @@ import { OrderWithDetails, ProductWithIngredients, Ingredient } from '@/types/da
 
 // --- Kanban Specific Hook ---
 
-export function useKanbanOrders(dateRange?: { from: Date, to?: Date }) {
+export function useKanbanOrders(dateRange?: { from?: Date, to?: Date }) {
     return useQuery({
         queryKey: [QUERY_KEYS.orders, 'kanban', dateRange],
         queryFn: async () => {
@@ -35,7 +35,7 @@ export function useKanbanOrders(dateRange?: { from: Date, to?: Date }) {
                 return allOrders as OrderWithDetails[];
             }
         },
-        staleTime: 1000 * 30, // 30s for Kanban
+        staleTime: 0, // Always fetch fresh data on mount/navigation
     });
 }
 

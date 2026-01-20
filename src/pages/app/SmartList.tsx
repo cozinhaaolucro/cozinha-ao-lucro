@@ -1,16 +1,20 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from '@/hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileText, Download, CheckCircle2, AlertCircle } from 'lucide-react';
-import { getOrders, getIngredients, updateIngredient } from '@/lib/database';
+import { getOrders, getIngredients, updateIngredient, createStockMovement } from '@/lib/database';
 import type { OrderWithDetails, Ingredient } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import { useOrders, useIngredients } from '@/hooks/useQueries';
 import jsPDF from 'jspdf';
-import { addPdfHeader, addPdfFooter, autoTable } from '@/lib/pdfUtils';
-import { motion, useAnimation, PanInfo } from 'framer-motion';
+import autoTable from 'jspdf-autotable';
+import { addPdfHeader, addPdfFooter } from '@/lib/pdfUtils';
+import { motion, useAnimation } from 'framer-motion';
+import type { PanInfo } from 'framer-motion';
 
 type ShoppingItem = {
     ingredientId: string;
@@ -88,7 +92,7 @@ const SmartList = () => {
 
     // Calculation (Memoized)
     const items = useMemo(() => {
-        if (!pendingOrders.length || !ingredients.length) return [];
+        if (!ingredients.length) return [];
 
         const neededMap = new Map<string, number>();
 
@@ -137,10 +141,14 @@ const SmartList = () => {
         return list.sort((a, b) => b.toBuy - a.toBuy);
     }, [pendingOrders, ingredients]);
 
+    const queryClient = useQueryClient();
+
     // Manually refresh if needed (e.g. after swipe)
     const refreshData = () => {
-        refetchOrders();
-        refetchIngredients();
+        // Invalidate globally to update Stock/Overview pages too
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ingredients] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.orders] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.dashboard] });
     }
 
     // Remove calculateShoppingList
@@ -155,23 +163,19 @@ const SmartList = () => {
 
         // setLoading(true); -> Managed by hook
         try {
-            let updated = 0;
-            // Sequential update for safety
-            for (const item of itemsToBuy) {
-                const newStock = (item.inStock || 0) + item.toBuy;
+            // Parallelize updates for speed
+            const promises = itemsToBuy.map(item =>
+                createStockMovement({
+                    ingredient_id: item.ingredientId,
+                    type: 'in', // Compra / Entrada
+                    quantity: item.toBuy,
+                    reason: 'Compra Automática via Lista Inteligente'
+                })
+            );
 
-                const { error } = await updateIngredient(item.ingredientId, {
-                    stock_quantity: newStock
-                });
+            await Promise.all(promises);
 
-                if (error) {
-                    console.error(`Failed to update ${item.name} `, error);
-                } else {
-                    updated++;
-                }
-            }
-
-            toast({ title: 'Estoque atualizado!', description: `${updated} ingredientes repostos.` });
+            toast({ title: 'Estoque atualizado!', description: `${itemsToBuy.length} ingredientes repostos.` });
             refreshData(); // Refresh
         } catch (error) {
             console.error('Batch update error', error);

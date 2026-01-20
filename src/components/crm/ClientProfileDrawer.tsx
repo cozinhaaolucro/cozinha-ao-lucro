@@ -30,8 +30,8 @@ const ClientProfileDrawer = ({ customer, open, onOpenChange, onUpdate }: ClientP
             setFormData({
                 name: customer.name,
                 phone: customer.phone,
-                internal_notes: customer.internal_notes,
-                birth_date: customer.birth_date
+                notes: customer.notes,
+                // birth_date: customer.birth_date // Field not in DB
             });
             loadCustomerHistory();
         }
@@ -107,25 +107,12 @@ const ClientProfileDrawer = ({ customer, open, onOpenChange, onUpdate }: ClientP
                                 </div>
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="birth">Aniversário</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="birth"
-                                        type="date"
-                                        value={formData.birth_date || ''}
-                                        onChange={e => setFormData({ ...formData, birth_date: e.target.value })}
-                                        className="pl-10"
-                                    />
-                                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                </div>
-                            </div>
-                            <div className="grid gap-2">
                                 <Label htmlFor="notes">Notas Internas</Label>
                                 <Textarea
                                     id="notes"
                                     placeholder="Preferências, alergias, etc..."
-                                    value={formData.internal_notes || ''}
-                                    onChange={e => setFormData({ ...formData, internal_notes: e.target.value })}
+                                    value={formData.notes || ''}
+                                    onChange={e => setFormData({ ...formData, notes: e.target.value })}
                                     className="min-h-[150px]"
                                 />
                             </div>

@@ -15,12 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
-interface ExtendedProfile extends Profile {
-    logo_url?: string;
-    banner_url?: string;
-    color_theme?: string;
-    slug?: string | null;
-}
+
 
 interface CartItem {
     product: Product;
@@ -37,8 +32,8 @@ const PublicMenu = () => {
     const { toast } = useToast();
 
     // Data State
-    const [profile, setProfile] = useState<ExtendedProfile | null>(null);
-    const [products, setProducts] = useState<Product[]>([]);
+    const [profile, setProfile] = useState<Profile | null>(null);
+    const [products, setProducts] = useState<any[]>([]); // Using any[] to handle joined data
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -120,7 +115,7 @@ const PublicMenu = () => {
         console.log("Fetching products for:", profileId);
 
         // Fetch Products with Ingredients for detail view
-        let finalProducts = [];
+        let finalProducts: any[] = [];
 
         // Try fetching with ingredients first
         const { data: detailedProducts, error: detailedError } = await supabase

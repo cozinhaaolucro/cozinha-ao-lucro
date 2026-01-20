@@ -1,7 +1,9 @@
+/// <reference types="vitest" />
 // vite.config.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react-swc';
+import { VitePWA } from 'vite-plugin-pwa';
 import fs from 'node:fs/promises';
 import nodePath from 'node:path';
 import { componentTagger } from 'lovable-tagger';
@@ -287,6 +289,31 @@ export default defineConfig(({ mode }) => {
       componentTagger(),
       cdnPrefixImages(),
       cssInliner(),
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['images/logo-icon-2026.png', 'images/*.png', 'images/*.webp'],
+        manifest: {
+          name: 'Cozinha ao Lucro',
+          short_name: 'CozinhaLucro',
+          description: 'Gestão Inteligente para Confeiteiras e Marmiteiras',
+          theme_color: '#ffffff',
+          start_url: '/',
+          display: 'standalone',
+          background_color: '#ffffff',
+          icons: [
+            {
+              src: '/images/logo-icon-2026.png',
+              sizes: '192x192',
+              type: 'image/png'
+            },
+            {
+              src: '/images/logo-icon-2026.png',
+              sizes: '512x512',
+              type: 'image/png'
+            }
+          ]
+        }
+      }),
     ].filter(Boolean),
     resolve: {
       alias: {
@@ -319,6 +346,11 @@ export default defineConfig(({ mode }) => {
           }
         }
       }
+    },
+    test: {
+      globals: true,
+      environment: 'happy-dom',
+      setupFiles: ['./src/test/setup.ts'],
     }
   }
 });

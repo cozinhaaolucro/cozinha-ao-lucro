@@ -1,8 +1,4 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-
-// Re-export autoTable for convenience
-export { autoTable };
+import type jsPDF from 'jspdf';
 
 export const addPdfHeader = (doc: jsPDF, title: string, subtitle?: string) => {
     // Images

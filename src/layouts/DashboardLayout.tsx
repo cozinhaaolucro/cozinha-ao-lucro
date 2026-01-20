@@ -377,7 +377,13 @@ const DashboardLayout = () => {
                 {navItems.slice(0, 5).map((item) => (
                     <Link
                         key={item.path}
+                        id={`mobile-${item.id}`} // Prefix to avoid duplicate IDs with sidebar if both render
                         to={item.path}
+                        onClick={(e) => {
+                            if (item.id === 'nav-produtos' && isOnboardingActive && currentStep === 'dashboard-overview') {
+                                nextStep();
+                            }
+                        }}
                         className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 ${isActive(item.path)
                             ? 'text-primary'
                             : 'text-muted-foreground hover:text-foreground'

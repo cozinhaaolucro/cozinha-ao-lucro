@@ -9,11 +9,22 @@ interface DashboardInsightsProps {
     hasStock: boolean;
 }
 
+interface Insight {
+    title: string;
+    description: string;
+    action: string;
+    icon: React.ElementType;
+    path: string;
+    color: string;
+    bg: string;
+    border: string;
+}
+
 export const DashboardInsights = ({ hasProducts, hasOrders, hasStock }: DashboardInsightsProps) => {
     const navigate = useNavigate();
 
     // Determine the priority insight
-    let insight = null;
+    let insight: Insight | null = null;
 
     if (!hasProducts) {
         insight = {

@@ -9,7 +9,7 @@ export const PRESET_INGREDIENTS = [
     { name: 'Farinha de Trigo', unit: 'kg', cost_per_unit: 5.00, stock_quantity: 0 },
     { name: 'Açúcar Refinado', unit: 'kg', cost_per_unit: 4.50, stock_quantity: 0 },
     { name: 'Manteiga', unit: 'kg', cost_per_unit: 50.00, stock_quantity: 0 }, // R$ 10.00/200g -> 50.00/kg
-    { name: 'Ovos', unit: 'unidade', cost_per_unit: 1.00, stock_quantity: 0 }, // R$ 12.00/dz -> 1.00/un
+    { name: 'Ovos', unit: 'un', cost_per_unit: 1.00, stock_quantity: 0 }, // R$ 12.00/dz -> 1.00/un
     { name: 'Leite Integral', unit: 'l', cost_per_unit: 5.00, stock_quantity: 0 },
     { name: 'Chocolate Nobre Barra', unit: 'kg', cost_per_unit: 60.00, stock_quantity: 0 },
     { name: 'Granulado', unit: 'kg', cost_per_unit: 36.00, stock_quantity: 0 }, // R$ 18.00/500g -> 36.00/kg
@@ -17,16 +17,16 @@ export const PRESET_INGREDIENTS = [
     { name: 'Nutella', unit: 'kg', cost_per_unit: 71.40, stock_quantity: 0 }, // R$ 25.00/350g -> ~71.40/kg
 
     // Embalagens (Mantém unidade)
-    { name: 'Pote 250ml', unit: 'unidade', cost_per_unit: 0.80, stock_quantity: 0 },
-    { name: 'Copo Bolha', unit: 'unidade', cost_per_unit: 1.20, stock_quantity: 0 },
-    { name: 'Forminha Trufa', unit: 'unidade', cost_per_unit: 0.10, stock_quantity: 0 },
-    { name: 'Saquinho Geladinho', unit: 'unidade', cost_per_unit: 0.05, stock_quantity: 0 },
-    { name: 'Embalagem Marmita', unit: 'unidade', cost_per_unit: 1.50, stock_quantity: 0 },
+    { name: 'Pote 250ml', unit: 'un', cost_per_unit: 0.80, stock_quantity: 0 },
+    { name: 'Copo Bolha', unit: 'un', cost_per_unit: 1.20, stock_quantity: 0 },
+    { name: 'Forminha Trufa', unit: 'un', cost_per_unit: 0.10, stock_quantity: 0 },
+    { name: 'Saquinho Geladinho', unit: 'un', cost_per_unit: 0.05, stock_quantity: 0 },
+    { name: 'Embalagem Marmita', unit: 'un', cost_per_unit: 1.50, stock_quantity: 0 },
 
     // Salgados/Refeições
     { name: 'Arroz Integral', unit: 'kg', cost_per_unit: 6.00, stock_quantity: 0 },
     { name: 'Peito de Frango', unit: 'kg', cost_per_unit: 22.00, stock_quantity: 0 },
-    { name: 'Brócolis', unit: 'unidade', cost_per_unit: 8.00, stock_quantity: 0 },
+    { name: 'Brócolis', unit: 'un', cost_per_unit: 8.00, stock_quantity: 0 },
     { name: 'Batata Doce', unit: 'kg', cost_per_unit: 5.00, stock_quantity: 0 },
     { name: 'Carne Moída', unit: 'kg', cost_per_unit: 35.00, stock_quantity: 0 },
 ];

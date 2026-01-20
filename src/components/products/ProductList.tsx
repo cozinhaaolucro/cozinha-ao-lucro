@@ -35,7 +35,7 @@ import {
 type ProductWithIngredients = Product & {
     product_ingredients: Array<{
         quantity: number;
-        ingredient: Ingredient;
+        ingredient: Ingredient | null;
     }>;
 };
 
@@ -237,10 +237,12 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
             category: product.category || 'Geral'
         };
 
-        const ingredientsPayload = product.product_ingredients.map(pi => ({
-            ingredient_id: pi.ingredient.id,
-            quantity: pi.quantity
-        }));
+        const ingredientsPayload = product.product_ingredients
+            .filter(pi => pi.ingredient !== null)
+            .map(pi => ({
+                ingredient_id: pi.ingredient!.id,
+                quantity: pi.quantity
+            }));
 
         const { error } = await createProduct(productData, ingredientsPayload);
 
@@ -263,7 +265,10 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                 'Preço Venda': p.selling_price ? Number(p.selling_price.toFixed(2)) : 0,
                 'Custo Total': Number(totalCost.toFixed(2)),
                 'Lucro Estimado': Number(profit.toFixed(2)),
-                'Ingredientes': p.product_ingredients.map(pi => `${pi.ingredient.name} (${pi.quantity}${pi.ingredient.unit})`).join(', ')
+                'Ingredientes': p.product_ingredients
+                    .filter(pi => pi.ingredient !== null)
+                    .map(pi => `${pi.ingredient!.name} (${pi.quantity}${pi.ingredient!.unit})`)
+                    .join(', ')
             };
         });
 

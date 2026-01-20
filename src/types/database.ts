@@ -292,3 +292,23 @@ export type SystemError = {
     severity: string;
     created_at: string;
 };
+
+// ============================================================================
+// 15. USER SUBSCRIPTIONS (Assinaturas)
+// ============================================================================
+
+export type PlanType = 'free' | 'pro' | 'premium';
+
+export interface Subscription {
+    id: string;
+    user_id: string;
+    plan_id: PlanType;
+    status: 'active' | 'past_due' | 'canceled' | 'trialing';
+    current_period_end: string | null;
+}
+
+export interface UsageMetrics {
+    orders_count_month: number;
+    products_count_total: number;
+    customers_count_total: number;
+}

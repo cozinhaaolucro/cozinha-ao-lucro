@@ -601,7 +601,7 @@ const Dashboard = () => {
                                                     {products.find(prod => prod.name === p.name)?.image_url ? (
                                                         <div className="w-8 h-8 rounded overflow-hidden bg-muted ring-1 ring-border">
                                                             <img
-                                                                src={products.find(prod => prod.name === p.name)?.image_url}
+                                                                src={products.find(prod => prod.name === p.name)?.image_url || undefined}
                                                                 alt={p.name}
                                                                 className="w-full h-full object-cover"
                                                             />

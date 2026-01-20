@@ -17,6 +17,60 @@ import type {
     OrderStatusLog
 } from '@/types/database';
 
+import { PLANS, PlanType } from '@/config/plans';
+
+const checkUsageLimits = async (user_id: string, resource: 'products' | 'customers' | 'orders') => {
+    // 1. Get Subscription (mocked default to free if missing)
+    const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('plan_id')
+        .eq('user_id', user_id)
+        .single();
+
+    const planId = (sub?.plan_id as PlanType) || 'free';
+    const plan = PLANS[planId];
+
+    // If limit is infinity, return true immediately
+    if (plan.limits[resource] === Infinity) return { allowed: true };
+
+    // 2. Get Count
+    // For Orders, we check monthly count. For others, total count.
+    let count = 0;
+    if (resource === 'orders') {
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const { count: c } = await supabase
+            .from('orders')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user_id)
+            .gte('created_at', startOfMonth.toISOString());
+        count = c || 0;
+    } else {
+        const { count: c } = await supabase
+            .from(resource) // 'products' or 'customers'
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user_id);
+        count = c || 0;
+    }
+
+    if (count >= plan.limits[resource]) {
+        return { allowed: false, plan: planId, limit: plan.limits[resource] };
+    }
+
+    return { allowed: true };
+};
+
+// Helper for consistent auth checking
+const getAuthenticatedUser = async () => {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) {
+        return { user: null, error: error || new Error('Usuário não autenticado') };
+    }
+    return { user, error: null };
+};
+
 // Profiles
 export const getProfile = async () => {
     const { data, error } = await supabase
@@ -27,10 +81,13 @@ export const getProfile = async () => {
 };
 
 export const updateProfile = async (updates: Partial<Profile>) => {
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
+
     const { data, error } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('id', user.id)
         .select()
         .single();
     return { data, error };
@@ -38,10 +95,8 @@ export const updateProfile = async (updates: Partial<Profile>) => {
 
 // Ingredients
 export const getIngredients = async (page?: number, limit?: number) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) {
-        return { data: [], error: new Error('User not authenticated') };
-    }
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: [], error: authError };
 
     let query = supabase
         .from('ingredients')
@@ -58,24 +113,21 @@ export const getIngredients = async (page?: number, limit?: number) => {
     const { data, error } = await query;
 
     // Get count for pagination
-    let count = null;
+    let count: number | null = null;
     if (page !== undefined && limit !== undefined) {
         const countRes = await supabase
             .from('ingredients')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', user.id);
-        count = countRes.count;
+        count = countRes.count || 0;
     }
 
-    return { data, error, count };
+    return { data: data as Ingredient[] | null, error, count };
 };
 
 export const createIngredient = async (ingredient: Omit<Ingredient, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) {
-        console.error('User not authenticated');
-        return { data: null, error: new Error('Usuário não autenticado') };
-    }
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
 
     // Check for duplicates
     const { data: existing } = await supabase
@@ -101,27 +153,35 @@ export const createIngredient = async (ingredient: Omit<Ingredient, 'id' | 'user
 };
 
 export const updateIngredient = async (id: string, updates: Partial<Ingredient>) => {
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
+
     const { data, error } = await supabase
         .from('ingredients')
         .update(updates)
         .eq('id', id)
+        .eq('user_id', user.id) // Security check
         .select()
         .single();
     return { data, error };
 };
 
 export const deleteIngredient = async (id: string) => {
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { error: authError };
+
     const { error } = await supabase
         .from('ingredients')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id); // Security check
     return { error };
 };
 
 // Products
 export const getProducts = async (page?: number, limit?: number) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: null, error: new Error('User not authenticated') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
 
     let query = supabase
         .from('products')
@@ -143,21 +203,21 @@ export const getProducts = async (page?: number, limit?: number) => {
 
     const { data, error } = await query;
     // Get count for pagination
-    let count = null;
+    let count: number | null = null;
     if (page !== undefined && limit !== undefined) {
         const countRes = await supabase
             .from('products')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', user.id);
-        count = countRes.count;
+        count = countRes.count || 0;
     }
 
-    return { data, error, count };
+    return { data: data as Product[] | null, error, count };
 };
 
 export const getProductsCount = async () => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { count: 0, error: new Error('User not authenticated') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { count: 0, error: authError };
     const { count, error } = await supabase
         .from('products')
         .select('*', { count: 'exact', head: true })
@@ -169,8 +229,15 @@ export const createProduct = async (
     product: Omit<Product, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
     ingredients: Array<{ ingredient_id: string; quantity: number; display_unit?: string }>
 ) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: null, error: new Error('Usuário não autenticado') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
+
+    const limitCheck = await checkUsageLimits(user.id, 'products');
+    if (!limitCheck.allowed) {
+        return { data: null, error: { message: `Limite de produtos atingido no plano ${limitCheck.plan?.toUpperCase()}. Faça upgrade para continuar.` } };
+    }
+
+
 
     const { data: productData, error: productError } = await supabase
         .from('products')
@@ -206,11 +273,15 @@ export const updateProduct = async (
     updates: Partial<Omit<Product, 'id' | 'user_id' | 'created_at' | 'updated_at'>>,
     ingredients: Array<{ ingredient_id: string; quantity: number; display_unit?: string }> | null
 ) => {
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
+
     // 1. Update product details
     const { data: productData, error: productError } = await supabase
         .from('products')
         .update(updates)
         .eq('id', id)
+        .eq('user_id', user.id) // Security check
         .select()
         .single();
 
@@ -222,7 +293,8 @@ export const updateProduct = async (
         const { error: deleteError } = await supabase
             .from('product_ingredients')
             .delete()
-            .eq('product_id', id);
+            .eq('product_id', id); // Logic assumes ownership derived from product, but ideally we check product ownership first.
+        // Since we just updated the product with user_id check successfully, we hold ownership.
 
         if (deleteError) return { data: null, error: deleteError };
 
@@ -247,18 +319,23 @@ export const updateProduct = async (
 };
 
 export const deleteProduct = async (id: string) => {
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { error: authError };
+
     const { error } = await supabase
         .from('products')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id); // Security check
     return { error };
 };
 
 // Customers
 // Customers
+// Customers
 export const getCustomers = async (page?: number, limit?: number, search?: string, filters?: { startDate?: Date, endDate?: Date, onlyInactive?: boolean }) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: [], error: new Error('User not authenticated') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: [], error: authError };
 
     let query = supabase
         .from('customers')
@@ -293,7 +370,7 @@ export const getCustomers = async (page?: number, limit?: number, search?: strin
     const { data, error } = await query;
 
     // Get count for pagination
-    let count = null;
+    let count: number | null = null;
     if (page !== undefined && limit !== undefined) {
         let countQuery = supabase
             .from('customers')
@@ -316,15 +393,15 @@ export const getCustomers = async (page?: number, limit?: number, search?: strin
         }
 
         const countRes = await countQuery;
-        count = countRes.count;
+        count = countRes.count || 0;
     }
 
-    return { data, error, count };
+    return { data: data as Customer[] | null, error, count };
 };
 
 export const getCustomersCount = async () => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { count: 0, error: new Error('User not authenticated') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { count: 0, error: authError };
     const { count, error } = await supabase
         .from('customers')
         .select('*', { count: 'exact', head: true })
@@ -333,8 +410,15 @@ export const getCustomersCount = async () => {
 };
 
 export const createCustomer = async (customer: Omit<Customer, 'id' | 'user_id' | 'total_orders' | 'total_spent' | 'created_at' | 'updated_at'>) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: null, error: new Error('Usuário não autenticado') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
+
+    const limitCheck = await checkUsageLimits(user.id, 'customers');
+    if (!limitCheck.allowed) {
+        return { data: null, error: { message: `Limite de clientes atingido no plano ${limitCheck.plan?.toUpperCase()}. Faça upgrade para continuar.` } };
+    }
+
+
 
     const { data, error } = await supabase
         .from('customers')
@@ -346,8 +430,8 @@ export const createCustomer = async (customer: Omit<Customer, 'id' | 'user_id' |
 
 // Orders
 export const getOrders = async (status?: string, startDate?: string, endDate?: string, page?: number, limit?: number) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: [], error: new Error('User not authenticated') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: [], error: authError };
 
     let query = supabase
         .from('orders')
@@ -390,7 +474,7 @@ export const getOrders = async (status?: string, startDate?: string, endDate?: s
     const { data, error } = await query;
 
     // Get count if pagination is active
-    let count = null;
+    let count: number | null = null;
     if (page !== undefined && limit !== undefined) {
         let countQuery = supabase
             .from('orders')
@@ -402,15 +486,15 @@ export const getOrders = async (status?: string, startDate?: string, endDate?: s
         if (endDate) countQuery = countQuery.lte('delivery_date', endDate);
 
         const countRes = await countQuery;
-        count = countRes.count;
+        count = countRes.count || 0;
     }
 
     return { data: data as OrderWithDetails[] | null, error, count };
 };
 
 export const getOrdersByDateRange = async (startDate: string, endDate: string) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: [], error: new Error('User not authenticated') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: [], error: authError };
 
     const { data, error } = await supabase
         .from('orders')
@@ -434,8 +518,8 @@ export const getOrdersByDateRange = async (startDate: string, endDate: string) =
 };
 
 export const getActiveOrders = async () => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: [], error: new Error('User not authenticated') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: [], error: authError };
 
     const { data, error } = await supabase
         .from('orders')
@@ -453,9 +537,10 @@ export const getActiveOrders = async () => {
 };
 
 export const updateOrderStatus = async (orderId: string, newStatus: string, previousStatus?: string) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { error: new Error('Usuario não autenticado') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { error: authError };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: any = { status: newStatus };
 
     // Set production_started_at when moving to 'preparing'
@@ -477,7 +562,8 @@ export const updateOrderStatus = async (orderId: string, newStatus: string, prev
     const { error: updateError } = await supabase
         .from('orders')
         .update(updates)
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .eq('user_id', user.id); // Security check
 
     if (updateError) return { error: updateError };
 
@@ -523,8 +609,13 @@ export const createOrder = async (
     order: Omit<Order, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
     items: Array<Omit<OrderItem, 'id' | 'order_id'>>
 ) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: null, error: new Error('Usuário não autenticado') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
+
+    const limitCheck = await checkUsageLimits(user.id, 'orders');
+    if (!limitCheck.allowed) {
+        return { data: null, error: { message: `Limite de pedidos atingido no plano ${limitCheck.plan?.toUpperCase()}. Faça upgrade para continuar.` } };
+    }
 
     const { data: orderData, error: orderError } = await supabase
         .from('orders')
@@ -552,28 +643,40 @@ export const createOrder = async (
 };
 
 export const deleteOrder = async (id: string) => {
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { error: authError };
+
     const { error } = await supabase
         .from('orders')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id); // Security check
     return { error };
 };
 
 export const updateCustomer = async (id: string, updates: Partial<Customer>) => {
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
+
     const { data, error } = await supabase
         .from('customers')
         .update(updates)
         .eq('id', id)
+        .eq('user_id', user.id) // Security check
         .select()
         .single();
     return { data, error };
 };
 
 export const deleteCustomer = async (id: string) => {
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { error: authError };
+
     const { error } = await supabase
         .from('customers')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id); // Security check
     return { error };
 };
 
@@ -583,8 +686,8 @@ export const deleteCustomer = async (id: string) => {
 
 // Message Templates
 export const getMessageTemplates = async () => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: [], error: new Error('User not authenticated') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: [], error: authError };
 
     const { data, error } = await supabase
         .from('message_templates')
@@ -595,7 +698,7 @@ export const getMessageTemplates = async () => {
 };
 
 export const createMessageTemplate = async (template: Omit<MessageTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    const user = (await supabase.auth.getUser()).data.user;
+    const { user, error: authError } = await getAuthenticatedUser();
     const { data, error } = await supabase
         .from('message_templates')
         .insert({ ...template, user_id: user?.id })
@@ -605,26 +708,34 @@ export const createMessageTemplate = async (template: Omit<MessageTemplate, 'id'
 };
 
 export const updateMessageTemplate = async (id: string, updates: Partial<MessageTemplate>) => {
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
+
     const { data, error } = await supabase
         .from('message_templates')
         .update(updates)
         .eq('id', id)
+        .eq('user_id', user.id) // Security check
         .select()
         .single();
     return { data, error };
 };
 
 export const deleteMessageTemplate = async (id: string) => {
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { error: authError };
+
     const { error } = await supabase
         .from('message_templates')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id); // Security check
     return { error };
 };
 
 // Interaction Logs
 export const createInteractionLog = async (log: Omit<InteractionLog, 'id' | 'user_id' | 'sent_at'>) => {
-    const user = (await supabase.auth.getUser()).data.user;
+    const { user } = await getAuthenticatedUser();
     const { data, error } = await supabase
         .from('interaction_logs')
         .insert({ ...log, user_id: user?.id })
@@ -634,8 +745,8 @@ export const createInteractionLog = async (log: Omit<InteractionLog, 'id' | 'use
 };
 
 export const getInteractionLogs = async (customerId?: string, orderId?: string) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: [], error: new Error('User not authenticated') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: [], error: authError };
 
     let query = supabase
         .from('interaction_logs')
@@ -655,8 +766,8 @@ export const getInteractionLogs = async (customerId?: string, orderId?: string) 
 // ============================================================================
 
 export const getNotifications = async (unreadOnly = false) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: [], error: new Error('User not authenticated') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: [], error: authError };
 
     let query = supabase
         .from('notifications')
@@ -681,8 +792,8 @@ export const markNotificationAsRead = async (id: string) => {
 };
 
 export const markAllNotificationsAsRead = async () => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { error: new Error('Usuário não autenticado') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { error: authError };
 
     const { error } = await supabase
         .from('notifications')
@@ -705,8 +816,8 @@ export const getUnreadNotificationCount = async () => {
 // ============================================================================
 
 export const getStockMovements = async (ingredientId?: string, limit = 50) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: [], error: new Error('User not authenticated') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: [], error: authError };
 
     let query = supabase
         .from('stock_movements')
@@ -732,40 +843,30 @@ export const createStockMovement = async (movement: {
     quantity: number;
     reason?: string;
 }) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: null, error: new Error('Usuário não autenticado') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
 
+    // 1. Create History Record
     const { data, error } = await supabase
         .from('stock_movements')
         .insert({ ...movement, user_id: user.id })
         .select()
         .single();
 
-    if (!error && movement.type === 'in') {
-        // Adicionar ao estoque
-        const { error: rpcError } = await supabase.rpc('increment_stock', {
-            p_ingredient_id: movement.ingredient_id,
-            p_quantity: movement.quantity
-        });
-
-        if (rpcError) {
-            // Fallback se RPC não existir
-            updateIngredientStock(movement.ingredient_id, movement.quantity);
-        }
-    } else if (!error && (movement.type === 'out' || movement.type === 'loss')) {
-        // Subtrair do estoque
-        const { error: rpcError } = await supabase.rpc('decrement_stock', {
-            p_ingredient_id: movement.ingredient_id,
-            p_quantity: movement.quantity
-        });
-
-        if (rpcError) {
-            // Fallback
-            updateIngredientStock(movement.ingredient_id, -movement.quantity);
-        }
+    if (error) {
+        console.error("Error creating stock movement:", error);
+        return { data: null, error };
     }
 
-    return { data, error };
+    // 2. Update via Trigger
+    // We rely on the SQL Trigger 'on_stock_movement_insert' to update the stock.
+    // If the user reports that stock is NOT updating, it means the trigger is missing.
+    // But since they reported "Double", the trigger IS active.
+    // So we remove the manual update.
+
+    return { data, error: null };
+
+    return { data, error: null };
 };
 
 const updateIngredientStock = async (ingredientId: string, quantityDelta: number) => {
@@ -826,8 +927,8 @@ export const getPaymentHistory = async () => {
 // ============================================================================
 
 export const getLowStockIngredients = async () => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return { data: null, error: new Error('Usuário não autenticado') };
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
 
     const { data, error } = await supabase
         .from('ingredients')
@@ -842,7 +943,9 @@ export const getLowStockIngredients = async () => {
     return { data: filtered as Ingredient[] | null, error };
 };
 
+
 export const updateOrderPositions = async (updates: { id: string, status: string, position: number }[]) => {
+    // Legacy support or fallback if needed, but per plan we prefer RPC
     const promises = updates.map(update =>
         supabase
             .from('orders')
@@ -851,5 +954,16 @@ export const updateOrderPositions = async (updates: { id: string, status: string
     );
     const results = await Promise.all(promises);
     const error = results.find(r => r.error)?.error || null;
+    return { error };
+};
+
+export const updateKanbanPositions = async (updates: { id: string, status: string, position: number }[]) => {
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { error: authError };
+
+    const { error } = await supabase.rpc('update_kanban_positions', {
+        updates: updates
+    });
+
     return { error };
 };
