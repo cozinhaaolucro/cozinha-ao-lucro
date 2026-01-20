@@ -520,7 +520,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                 className={`transition-all duration-200 group cursor-pointer relative overflow-hidden border ${expandedProductIds.includes(product.id) ? 'border-primary ring-1 ring-primary/20 shadow-md' : 'hover:shadow-md hover:border-border/80'}`}
                                 onClick={() => setExpandedProductIds(prev => prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id])}
                             >
-                                <CardHeader className="pb-3">
+                                <CardHeader className="pb-1 p-4 sm:p-5">
                                     {/* Selection Checkbox - Appears on hover or selected */}
                                     <div
                                         className={cn(
@@ -542,7 +542,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                         )}>
 
                                             {product.image_url ? (
-                                                <div className="w-16 h-16 rounded-md overflow-hidden bg-muted shadow-sm border border-gray-100">
+                                                <div className="w-12 h-12 rounded-md overflow-hidden bg-muted shadow-sm border border-gray-100">
                                                     <img
                                                         src={product.image_url}
                                                         alt={product.name}
@@ -550,7 +550,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                     />
                                                 </div>
                                             ) : (
-                                                <div className="w-16 h-16 rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground font-medium border border-gray-100">
+                                                <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground font-medium border border-gray-100">
                                                     Foto
                                                 </div>
                                             )}
@@ -572,7 +572,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                     />
                                                 </div>
                                                 <div className="flex gap-2 mt-1">
-                                                    <Badge className="text-white hover:bg-[#5F98A1]/90" style={{ backgroundColor: '#5F98A1' }}>
+                                                    <Badge className="text-white hover:bg-[#5F98A1]/80 transition-colors backdrop-blur-sm" style={{ backgroundColor: 'rgba(95, 152, 161, 0.8)' }}>
                                                         {margin.toFixed(0)}% margem
                                                     </Badge>
                                                 </div>

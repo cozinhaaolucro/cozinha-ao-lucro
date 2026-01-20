@@ -41,7 +41,7 @@ export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
                                     cx="50%"
                                     cy="50%"
                                     innerRadius={50}
-                                    outerRadius={70}
+                                    outerRadius={65}
                                     paddingAngle={5}
                                     dataKey="value"
                                     stroke="none"

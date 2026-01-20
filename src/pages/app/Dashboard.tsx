@@ -296,7 +296,8 @@ const Dashboard = () => {
 
             {/* Premium Goal Progress */}
             <div className="mt-4">
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-3 md:gap-4 md:grid-cols-3">
+                    {/* Meta de Vendas - Neo-Glass Aurora Design */}
                     {/* Meta de Vendas - Neo-Glass Aurora Design */}
                     <Card className="md:col-span-2 relative overflow-hidden border border-border/60 shadow-elegant group bg-white">
                         {/* Subtle Premium Gradient Stroke - Top */}
@@ -305,12 +306,14 @@ const Dashboard = () => {
                         {/* Glass Overlay & Border */}
                         <div className="absolute inset-0 border border-transparent transition-colors duration-500 rounded-xl" />
 
-                        <CardContent className="p-6 relative z-10 flex flex-col justify-center h-full">
-                            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                                <div className="space-y-3 text-center md:text-left flex-1">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 mb-2">
-                                        <Target className="w-3.5 h-3.5 text-primary" />
-                                        <span className="text-xs font-bold text-primary uppercase tracking-wider">Meta Mensal</span>
+                        <CardContent className="p-4 md:p-6 relative z-10 flex flex-col justify-center h-full">
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
+                                <div className="w-full text-center md:text-left flex-1">
+                                    <div className="flex justify-between md:block items-center mb-1">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 mb-2">
+                                            <Target className="w-3.5 h-3.5 text-primary" />
+                                            <span className="text-xs font-bold text-primary uppercase tracking-wider">Meta Mensal</span>
+                                        </div>
                                     </div>
 
                                     <div className="space-y-1">
@@ -324,7 +327,7 @@ const Dashboard = () => {
                                 </div>
 
                                 <div className="flex-1 w-full max-w-sm space-y-4">
-                                    <div className="flex justify-between items-end">
+                                    <div className="flex justify-between items-end gap-2">
                                         <div className="flex flex-col">
                                             <span className="text-xs text-muted-foreground font-medium">Progresso</span>
                                             <span className="text-lg font-bold" style={{ color: '#2e5b60' }}>{((totalRevenue / 10000) * 100).toFixed(1)}%</span>
@@ -347,16 +350,39 @@ const Dashboard = () => {
                                         </div>
                                     </div>
 
-                                    <p className="text-center text-xs text-muted-foreground font-medium pt-1">
+                                    <p className="hidden md:block text-center text-xs text-muted-foreground font-medium pt-1">
                                         {totalRevenue >= 10000 ? "🎉 Meta atingida com sucesso!" : "Continue acelerando!"}
                                     </p>
+                                </div>
+                            </div>
+
+                            {/* Mobile Only: Embedded Expert Tip */}
+                            <div className="block md:hidden mt-4 pt-4 border-t border-border/60">
+                                <div className="flex items-start gap-3">
+                                    <div className="p-1.5 bg-[#5F98A1]/10 rounded-full text-[#5F98A1] shrink-0 mt-0.5">
+                                        <Lightbulb className="w-3.5 h-3.5" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="text-xs font-bold text-foreground">Dica Rápida</span>
+                                        <p className="text-xs text-muted-foreground leading-relaxed font-medium">
+                                            {totalProfit > 0 && profitMargin < 30 ? (
+                                                "Sua margem está abaixo de 30%. Avalie ajustar preços."
+                                            ) : totalRevenue > 5000 ? (
+                                                "Crie combos com seus produtos mais lucrativos."
+                                            ) : ingredients.some(i => (i.stock_quantity ?? 0) <= (i.min_stock_threshold ?? 5)) ? (
+                                                "Atenção ao estoque crítico! Reponha itens essenciais."
+                                            ) : (
+                                                "Reconquiste clientes inativos com um cupom especial."
+                                            )}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Dica do Especialista - Clean White */}
-                    <Card className="overflow-hidden border border-border/60 shadow-elegant relative bg-white">
+                    {/* Dica do Especialista - Desktop Only */}
+                    <Card className="hidden md:block overflow-hidden border border-border/60 shadow-elegant relative bg-white">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#5F98A1] to-[#2e5b60]" />
 
                         {/* Subtle background decoration */}
@@ -364,7 +390,7 @@ const Dashboard = () => {
                             <Lightbulb className="w-32 h-32" style={{ color: '#2e5b60' }} />
                         </div>
 
-                        <CardContent className="p-5 flex flex-col justify-center h-full space-y-3 relative">
+                        <CardContent className="p-4 md:p-5 flex flex-col justify-center h-full space-y-2 relative">
                             <div className="flex items-center gap-2">
                                 <div className="p-1.5 bg-[#5F98A1]/10 rounded-full text-[#5F98A1]">
                                     <Lightbulb className="w-4 h-4" />
@@ -390,7 +416,35 @@ const Dashboard = () => {
             {/* Financial cards */}
             <div className="mt-4">
                 <TooltipProvider>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-4">
+
+                        {/* Total Pedidos */}
+                        <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 rounded-lg transition-colors bg-[#61888c]/10">
+                                        <ShoppingCart className="h-4 w-4" style={{ color: '#61888c' }} />
+                                    </div>
+                                    <CardTitle className="text-xs font-bold text-muted-foreground">Total Pedidos</CardTitle>
+                                    <UITooltip>
+                                        <TooltipTrigger>
+                                            <Info className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom" className="bg-popover text-popover-foreground border-border shadow-lg">
+                                            <p className="w-64 text-xs">
+                                                Quantidade total de pedidos realizados no período selecionado.
+                                            </p>
+                                        </TooltipContent>
+                                    </UITooltip>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-3 pt-2">
+                                <div className="text-lg font-bold text-foreground">{orders.length}</div>
+                                <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                                    Volume de vendas
+                                </p>
+                            </CardContent>
+                        </Card>
 
                         {/* Receita Total */}
                         <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
@@ -476,33 +530,7 @@ const Dashboard = () => {
                             </CardContent>
                         </Card>
 
-                        {/* Margem Bruta */}
-                        <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
-                                <div className="flex items-center gap-2">
-                                    <div className="p-1.5 rounded-lg transition-colors bg-[#61888c]/10">
-                                        <TrendingUp className="h-4 w-4" style={{ color: '#61888c' }} />
-                                    </div>
-                                    <CardTitle className="text-xs font-bold text-muted-foreground">Margem Bruta</CardTitle>
-                                    <UITooltip>
-                                        <TooltipTrigger>
-                                            <Info className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
-                                        </TooltipTrigger>
-                                        <TooltipContent side="bottom" className="bg-popover text-popover-foreground border-border shadow-lg">
-                                            <p className="w-64 text-xs">
-                                                A porcentagem do seu faturamento que é lucro. Maiores margens indicam maior eficiência.
-                                            </p>
-                                        </TooltipContent>
-                                    </UITooltip>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="p-3 pt-2">
-                                <div className="text-lg font-bold text-foreground">{profitMargin.toFixed(1)}%</div>
-                                <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                                    Eficiência das vendas
-                                </p>
-                            </CardContent>
-                        </Card>
+
                     </div>
                 </TooltipProvider>
             </div>

@@ -191,7 +191,7 @@ const DashboardLayout = () => {
 
 
     return (
-        <div className="h-screen overflow-hidden bg-background flex flex-col md:flex-row">
+        <div className="h-[100dvh] overflow-hidden bg-background flex flex-col md:flex-row">
             {/* Desktop Sidebar */}
 
 
@@ -312,7 +312,7 @@ const DashboardLayout = () => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-40 md:pb-32 relative h-full">
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-32 relative safe-area-bottom">
                 {/* Loading State - apenas no conteúdo, não na sidebar */}
                 {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
