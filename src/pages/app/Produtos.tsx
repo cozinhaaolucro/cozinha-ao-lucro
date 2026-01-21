@@ -27,7 +27,7 @@ const Produtos = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-40">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Produtos e Precificação</h1>
                 <p className="text-muted-foreground">

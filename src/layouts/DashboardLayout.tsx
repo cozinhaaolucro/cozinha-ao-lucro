@@ -312,7 +312,7 @@ const DashboardLayout = () => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-32 relative safe-area-bottom">
+            <main className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 pb-32 md:pb-32 relative safe-area-bottom">
                 {/* Loading State - apenas no conteúdo, não na sidebar */}
                 {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
@@ -363,6 +363,9 @@ const DashboardLayout = () => {
                                 <Outlet />
                             </ErrorBoundary>
                         </PageTransition>
+
+                        {/* Explicit Spacer for Mobile Scroll - Forces content above Nav/FAB */}
+                        <div className="h-40 md:h-0 w-full shrink-0" />
                     </>
                 ) : null}
             </main>

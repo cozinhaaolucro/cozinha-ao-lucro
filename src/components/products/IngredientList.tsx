@@ -28,6 +28,7 @@ export default function IngredientList() {
 
     // Demand Data
     const [demandMap, setDemandMap] = useState<Record<string, number>>({});
+    const [usageMap, setUsageMap] = useState<Record<string, number>>({});
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [loadingDemand, setLoadingDemand] = useState(false);
 
@@ -69,10 +70,34 @@ export default function IngredientList() {
                     // Let's use total_required to show "Demanda: 5 kg".
                     // If we have 10kg and need 5kg, demand is 5.
                     if (status.total_required > 0) {
-                        newMap[status.ingredient_id] = status.total_required;
+                        newMap[status.ingredient.id] = status.total_required;
                     }
                 });
                 setDemandMap(newMap);
+
+                // Calculate Usage Map (Count of Active 'Preparing' Orders per Ingredient)
+                const usage: Record<string, number> = {};
+                orders.forEach(order => {
+                    // Only count orders in 'preparing' (Em Produção)
+                    if (order.status !== 'preparing') return;
+
+                    const usedIngredients = new Set<string>();
+                    // Cast to any to avoid strict typing issues with join tables in this quick context
+                    // or assume structure matches.
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    order.order_items?.forEach((item: any) => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const prod = products.find((p: any) => p.id === item.product_id);
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        prod?.product_ingredients?.forEach((pi: any) => {
+                            if (pi.ingredient_id) usedIngredients.add(pi.ingredient_id);
+                        });
+                    });
+                    usedIngredients.forEach(ingId => {
+                        usage[ingId] = (usage[ingId] || 0) + 1;
+                    });
+                });
+                setUsageMap(usage);
             }
 
             setIngredients(loadedIngredients);
@@ -205,7 +230,8 @@ export default function IngredientList() {
                             key={ing.id}
                             ingredient={ing}
                             demand={demandMap[ing.id] || 0}
-                            usageLevel={demandMap[ing.id] > 0 ? (demandMap[ing.id] > ing.stock_quantity ? 'high' : 'medium') : 'low'}
+                            activeOrdersCount={usageMap[ing.id] || 0}
+                            usageLevel={demandMap[ing.id] > ing.stock_quantity ? 'high' : 'low'}
                             isSelected={false}
                             onSelect={() => { }} // Could be used for bulk selection in future
                             onEdit={openEdit}

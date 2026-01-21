@@ -15,6 +15,7 @@ interface IngredientCardProps {
     onEdit: (ing: Ingredient) => void;
     onDelete: (id: string) => void;
     onRefresh?: () => void; // Optional refresh callback
+    activeOrdersCount?: number;
     isAdmin: boolean;
 }
 
@@ -27,6 +28,7 @@ export function IngredientCard({
     onEdit,
     onDelete,
     onRefresh,
+    activeOrdersCount = 0,
     isAdmin
 }: IngredientCardProps) {
     const stock = ingredient.stock_quantity;
@@ -46,16 +48,16 @@ export function IngredientCard({
                 <div className="flex justify-between items-start gap-2 mb-2">
                     <div className="flex items-center gap-2">
                         {/* Status Tag */}
-                        {demand > 0 ? (
+                        {activeOrdersCount > 0 ? (
                             <span className={cn(
                                 "text-[10px] px-1.5 py-0.5 rounded-full font-medium flex items-center gap-1 shadow-sm border",
                                 usageLevel === 'high'
                                     ? "bg-red-100 text-red-700 border-red-200"
                                     : usageLevel === 'medium'
                                         ? "bg-amber-100 text-amber-700 border-amber-200"
-                                        : "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                        : "bg-[#68A9CA]/15 text-[#68A9CA] border-[#68A9CA]/30"
                             )}>
-                                {usageLevel === 'high' ? 'Crítico' : usageLevel === 'medium' ? 'Atenção' : 'Ok'}
+                                Em uso ({activeOrdersCount})
                             </span>
                         ) : (
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-secondary text-secondary-foreground border border-border/50">

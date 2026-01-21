@@ -186,7 +186,7 @@ const Clientes = () => {
     };
 
     return (
-        <div className="space-y-6 relative">
+        <div className="space-y-6 relative pb-40">
             {selectedClients.length > 0 && createPortal(
                 <div className="fixed bottom-0 md:bottom-6 left-0 md:left-1/2 md:-translate-x-1/2 z-[100] bg-foreground text-background px-6 py-4 md:py-3 rounded-t-xl md:rounded-full shadow-[0_-5px_20px_rgba(0,0,0,0.1)] flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in w-full md:w-auto justify-center">
                     <span className="font-medium text-sm whitespace-nowrap">{selectedClients.length} selecionados</span>

@@ -241,7 +241,7 @@ const SmartList = () => {
     const itemsToBuy = items.filter(i => i.toBuy > 0);
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500 pb-40">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Lista Inteligente</h1>

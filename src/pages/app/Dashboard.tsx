@@ -563,7 +563,7 @@ const Dashboard = () => {
 
 
                     {/* Stock vs demand and top products */}
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-2 pb-40">
                         <Card className="relative shadow-elegant overflow-hidden border border-border/60 z-10 bg-white">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-foreground">
@@ -578,33 +578,32 @@ const Dashboard = () => {
                                     {stockAnalysis.length === 0 ? (
                                         <p className="text-sm text-muted-foreground text-center py-8">Nenhum ingrediente em uso</p>
                                     ) : (
-                                        stockAnalysis
-                                            .map(item => (
-                                                <div key={item.ingredient.id} className="flex items-center justify-between border-b border-border/40 pb-2 p-2 rounded hover:bg-muted/30 transition-colors duration-200 group">
-                                                    <div className="flex items-center gap-3 flex-1">
-                                                        {item.status === 'sufficient' && <CheckCircle className="w-4 h-4 text-[#5F98A1] group-hover:scale-110 transition-transform" />}
-                                                        {(item.status === 'low' || item.status === 'critical') && <AlertCircle className="w-4 h-4 text-[#C76E60] group-hover:scale-110 transition-transform" />}
-                                                        {item.status === 'unused' && <AlertCircle className="w-4 h-4 text-muted-foreground/40" />}
-                                                        <div className="flex-1">
-                                                            <p className="font-semibold text-sm text-foreground">{item.ingredient.name}</p>
-                                                            <p className="text-xs text-muted-foreground">
-                                                                Estoque: <span className="font-mono text-foreground/80">{item.stock.toFixed(2)}</span> / Demanda: <span className="font-mono text-foreground/80">{item.demand.toFixed(2)}</span>
-                                                            </p>
-                                                        </div>
+                                        stockAnalysis.map(item => (
+                                            <div key={item.ingredient.id} className="flex items-center justify-between border-b border-border/40 pb-2 p-2 rounded hover:bg-muted/30 transition-colors duration-200 group">
+                                                <div className="flex items-center gap-3 flex-1">
+                                                    {item.status === 'sufficient' && <CheckCircle className="w-4 h-4 text-[#5F98A1] group-hover:scale-110 transition-transform" />}
+                                                    {(item.status === 'low' || item.status === 'critical') && <AlertCircle className="w-4 h-4 text-[#C76E60] group-hover:scale-110 transition-transform" />}
+                                                    {item.status === 'unused' && <AlertCircle className="w-4 h-4 text-muted-foreground/40" />}
+                                                    <div className="flex-1">
+                                                        <p className="font-semibold text-sm text-foreground">{item.ingredient.name}</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Estoque: <span className="font-mono text-foreground/80">{item.stock.toFixed(2)}</span> / Demanda: <span className="font-mono text-foreground/80">{item.demand.toFixed(2)}</span>
+                                                        </p>
                                                     </div>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={cn(
-                                                            "whitespace-nowrap border-0 font-bold",
-                                                            item.status === 'sufficient' ? 'bg-[#5F98A1]/10 text-[#5F98A1]' :
-                                                                (item.status === 'low' || item.status === 'critical') ? 'bg-[#C76E60]/10 text-[#C76E60]' :
-                                                                    'bg-muted text-muted-foreground'
-                                                        )}
-                                                    >
-                                                        {item.balance > 0 ? '+' : ''}{item.balance.toFixed(1)} {item.ingredient.unit}
-                                                    </Badge>
                                                 </div>
-                                            ))
+                                                <Badge
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "whitespace-nowrap border-0 font-bold",
+                                                        item.status === 'sufficient' ? 'bg-[#5F98A1]/10 text-[#5F98A1]' :
+                                                            (item.status === 'low' || item.status === 'critical') ? 'bg-[#C76E60]/10 text-[#C76E60]' :
+                                                                'bg-muted text-muted-foreground'
+                                                    )}
+                                                >
+                                                    {item.balance > 0 ? '+' : ''}{item.balance.toFixed(1)} {item.ingredient.unit}
+                                                </Badge>
+                                            </div>
+                                        ))
                                     )}
                                 </div>
                             </CardContent>

@@ -1,7 +1,7 @@
 -- ============================================================================
--- RPC: UPDATE KANBAN POSITIONS
+-- RPC: UPDATE KANBAN POSITIONS (FIXED TIMER)
 -- Purpose: Efficiently update multiple order positions and statuses in a single transaction.
--- This avoids the "fanout" of N HTTP requests when reordering a column.
+--          AND handle timestamp updates for Production Timer logic.
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.update_kanban_positions(
@@ -25,14 +25,17 @@ BEGIN
             END,
             production_completed_at = CASE 
                 WHEN (item->>'status') = 'ready' AND status = 'preparing' THEN NOW() 
+                -- Fix: If skipping 'ready' and going straight to 'delivered', mark production as done
+                WHEN (item->>'status') = 'delivered' AND status = 'preparing' THEN NOW()
                 ELSE production_completed_at 
             END,
             delivered_at = CASE 
                 WHEN (item->>'status') = 'delivered' AND status != 'delivered' THEN NOW() 
                 ELSE delivered_at 
             END,
-
-            status = (item->>'status'), -- Status is TEXT with CHECK constraint
+            
+            -- Update Status and Position
+            status = (item->>'status'),
             position = (item->>'position')::int,
             updated_at = NOW()
         WHERE id = (item->>'id')::uuid

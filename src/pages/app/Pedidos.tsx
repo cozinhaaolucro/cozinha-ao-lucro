@@ -433,30 +433,32 @@ const Pedidos = () => {
             </div>
 
             {(isLoading && orders.length === 0) ? (
-                <div className="flex-1 flex items-center justify-center">
+                <div className="flex-1 flex items-center justify-center pb-40">
                     <div className="flex flex-col items-center gap-2">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                         <p className="text-sm text-muted-foreground animate-pulse">Carregando pedidos...</p>
                     </div>
                 </div>
             ) : (
-                <KanbanBoard
-                    orders={orders}
-                    setOrders={setOrders}
-                    filteredOrders={filteredOrders}
-                    isMobile={isMobile}
-                    products={products}
-                    ingredients={ingredients}
-                    refetchOrders={refetchOrders}
-                    handleCustomerClick={handleCustomerClick}
-                    handleDuplicate={handleDuplicate}
-                    setEditingOrder={setEditingOrder}
-                    handleDeleteOrder={handleDeleteOrder}
-                    handleWhatsApp={handleWhatsApp}
-                    setLongPressOrder={setLongPressOrder}
-                    longPressTimerRef={longPressTimerRef}
-                    onOptimisticUpdate={onOptimisticUpdate}
-                />
+                <div className="pb-40">
+                    <KanbanBoard
+                        orders={orders}
+                        setOrders={setOrders}
+                        filteredOrders={filteredOrders}
+                        isMobile={isMobile}
+                        products={products}
+                        ingredients={ingredients}
+                        refetchOrders={refetchOrders}
+                        handleCustomerClick={handleCustomerClick}
+                        handleDuplicate={handleDuplicate}
+                        setEditingOrder={setEditingOrder}
+                        handleDeleteOrder={handleDeleteOrder}
+                        handleWhatsApp={handleWhatsApp}
+                        setLongPressOrder={setLongPressOrder}
+                        longPressTimerRef={longPressTimerRef}
+                        onOptimisticUpdate={onOptimisticUpdate}
+                    />
+                </div>
             )}
 
             {isDialogOpen && (

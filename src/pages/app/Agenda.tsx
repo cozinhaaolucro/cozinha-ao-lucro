@@ -264,7 +264,7 @@ const Agenda = () => {
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-40">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">Agenda</h1>
