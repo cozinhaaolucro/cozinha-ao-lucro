@@ -19,24 +19,15 @@ const HeroSection = () => {
 
             <div className="container-max mobile-container relative z-10 text-center">
                 {/* Text Content - Rendered Immediately for LCP */}
-                <div className="max-w-4xl mx-auto space-y-8 mb-16 animate-fade-in">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm border border-primary/20 backdrop-blur-sm">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                        </span>
-                        Gestão Inteligente v2.0
-                    </div>
+                <div className="max-w-full mx-auto space-y-8 mb-16 animate-fade-in">
 
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight text-foreground tracking-tight [text-wrap:balance]">
-                        Transforme sua cozinha em um negócio
-                        <br className="hidden md:block" />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#2D7A70] to-primary animate-shimmer bg-[length:200%_auto]">
-                            Realmente Lucrativo
-                        </span>
+
+                    <h1 className="text-3xl md:text-6xl lg:text-7xl font-bold leading-tight text-foreground tracking-tight">
+                        Transforme sua cozinha em <br className="block md:hidden" />
+                        um <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#2D7A70] to-primary animate-shimmer bg-[length:200%_auto]">Negócio Lucrativo</span>
                     </h1>
 
-                    <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                    <p className="text-base md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
                         Controlando custos, precificando certo e eliminando desperdícios em tempo real.
                     </p>
 
@@ -44,7 +35,7 @@ const HeroSection = () => {
                         <Button
                             onClick={() => navigate('/register')}
                             size="lg"
-                            className="btn-primary btn-shine text-lg px-10 py-8 h-auto w-full sm:w-auto shadow-elegant hover:scale-105"
+                            className="btn-primary btn-shine text-base px-8 py-4 md:text-lg md:px-10 md:py-8 h-auto w-full sm:w-auto shadow-elegant hover:scale-105"
                         >
                             Ver meu lucro real
                             <ArrowRight className="ml-2 w-5 h-5" />
@@ -54,7 +45,7 @@ const HeroSection = () => {
                             size="lg"
                             variant="outline"
                             onClick={() => setIsLeadFormOpen(true)}
-                            className="h-auto px-8 py-8 w-full sm:w-auto text-lg border-2 hover:bg-primary hover:text-white hover:border-primary transition-all font-medium"
+                            className="h-auto px-6 py-4 md:px-8 md:py-8 w-full sm:w-auto text-base md:text-lg border-2 hover:bg-primary hover:text-white hover:border-primary transition-all font-medium"
                         >
                             <MessageCircle className="w-5 h-5 mr-2" />
                             Falar com Especialista

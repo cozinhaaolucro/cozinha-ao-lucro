@@ -7,7 +7,7 @@ const AppShowcase = lazy(() => import('@/components/sections/AppShowcase'));
 const BenefitsSection = lazy(() => import('@/components/sections/BenefitsSection'));
 const PricingSection = lazy(() => import('@/components/sections/PricingSection'));
 const AuthoritySection = lazy(() => import('@/components/sections/AuthoritySection'));
-const FAQSection = lazy(() => import('@/components/sections/FAQSection'));
+const FloatingFAQ = lazy(() => import('@/components/FloatingFAQ'));
 const Footer = lazy(() => import('@/components/sections/Footer'));
 
 // Minimal loading fallback (invisible, no jank)
@@ -39,13 +39,15 @@ const Index = () => {
           <AuthoritySection />
         </Suspense>
 
-        <Suspense fallback={<SectionFallback />}>
-          <FAQSection />
-        </Suspense>
+
       </main>
 
       <Suspense fallback={<SectionFallback />}>
         <Footer />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <FloatingFAQ />
       </Suspense>
     </div>
   );

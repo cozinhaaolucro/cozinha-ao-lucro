@@ -1,28 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
-    const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
-
-    useEffect(() => {
-        const handleScroll = () => {
-            const scrollPosition = window.scrollY;
-            setIsScrolled(scrollPosition > 50);
-        };
-
-        // Add event listener
-        window.addEventListener('scroll', handleScroll, { passive: true });
-
-        // Initial check
-        handleScroll();
-
-        // Cleanup
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
 
     const scrollToSection = (id: string) => {
         setIsMobileMenuOpen(false);
@@ -33,71 +16,41 @@ const Navbar = () => {
     };
 
     return (
-        <nav
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'py-2' : 'py-3'}`}
-        >
-            <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between pointer-events-none">
-                {/* Logo Transformation */}
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/10 h-16 flex items-center transition-all">
+            <div className="container-max flex items-center justify-between h-full">
+
+                {/* Logo Area */}
                 <div
-                    className={`flex items-center cursor-pointer relative transition-all duration-500 z-10 pointer-events-auto ${isScrolled ? 'h-28 w-28' : 'h-20 w-48 md:h-28 md:w-64'
-                        }`}
+                    className="h-full py-1 w-auto cursor-pointer flex items-center relative z-10"
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
-                    {/* Full Logo */}
-                    <div className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-500 w-full h-full flex items-center ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
-                        <img
-                            src="/images/logo-logotipo-2026.png"
-                            alt="Cozinha ao Lucro"
-                            className="object-contain w-full h-full"
-                            style={{ imageRendering: 'auto' }}
-                        />
-                    </div>
-
-                    {/* Icon Logo */}
-                    <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 h-full w-auto flex items-center ${isScrolled ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'}`}>
-                        <img
-                            src="/images/logo-icon-2026.png"
-                            alt="Icone"
-                            className="object-contain h-full w-auto"
-                            style={{ imageRendering: 'auto' }}
-                        />
-                    </div>
+                    <img
+                        src="/images/logo-logotipo-2026.png"
+                        alt="Cozinha ao Lucro"
+                        className="h-full w-auto object-contain scale-[2.0] origin-top-left -translate-y-6"
+                    />
                 </div>
 
-                {/* Desktop Menu - Minimal / Minibar */}
-                <div
-                    className={`hidden md:flex items-center gap-8 transition-all duration-500 pointer-events-auto
-                    ${isScrolled
-                            ? 'bg-white/80 backdrop-blur-md shadow-lg rounded-full px-8 py-3 border border-white/20'
-                            : 'bg-transparent p-0 border-transparent'
-                        }`}
-                >
-                    <div className="flex items-center gap-6">
-                        {[
-                            { label: 'Preços', id: 'precos' },
-                            { label: 'FAQ', id: 'faq' }
-                        ].map((item) => (
-                            <button
-                                key={item.label}
-                                onClick={() => scrollToSection(item.id)}
-                                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors font-heading tracking-wide"
-                            >
-                                {item.label}
-                            </button>
-                        ))}
-                    </div>
+                {/* Desktop Menu */}
+                <div className="hidden md:flex items-center gap-8">
+                    <button
+                        onClick={() => scrollToSection('precos')}
+                        className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                    >
+                        Preços
+                    </button>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                         <Button
                             variant="ghost"
                             onClick={() => navigate('/login')}
-                            className="text-sm font-medium"
+                            className="font-semibold text-sm text-muted-foreground hover:text-primary"
                         >
                             Entrar
                         </Button>
                         <Button
                             onClick={() => navigate('/register')}
-                            className="text-sm font-medium bg-primary hover:bg-primary/90"
+                            className="btn-primary px-5 py-2 h-9 text-sm"
                         >
                             Começar Grátis
                         </Button>
@@ -105,17 +58,9 @@ const Navbar = () => {
                 </div>
 
                 {/* Mobile Menu Actions */}
-                <div className="md:hidden flex items-center gap-2 pointer-events-auto">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate('/login')}
-                        className="text-muted-foreground hover:text-primary font-medium"
-                    >
-                        Entrar
-                    </Button>
+                <div className="md:hidden flex items-center gap-4">
                     <button
-                        className="p-2 text-foreground"
+                        className="p-2 text-foreground/80 hover:text-primary transition-colors"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         aria-label="Abrir menu"
                     >
@@ -125,33 +70,29 @@ const Navbar = () => {
 
                 {/* Mobile Menu Overlay */}
                 {isMobileMenuOpen && (
-                    <div className="absolute top-full left-0 right-0 bg-background/95 backdrop-blur-md shadow-lg p-6 md:hidden flex flex-col gap-3 border-t border-white/10 animate-in slide-in-from-top-2">
-                        {[
-                            { label: 'Preços', id: 'precos' },
-                            { label: 'FAQ', id: 'faq' }
-                        ].map((item) => (
-                            <button
-                                key={item.label}
-                                onClick={() => scrollToSection(item.id)}
-                                className="text-base font-medium text-foreground/90 hover:text-primary text-left py-3 border-b border-white/5"
+                    <div className="absolute top-[64px] left-0 right-0 bg-background/98 backdrop-blur-xl border-t border-border/10 p-6 md:hidden flex flex-col gap-4 shadow-2xl animate-in slide-in-from-top-2">
+                        <button
+                            onClick={() => scrollToSection('precos')}
+                            className="text-lg font-medium text-foreground py-4 border-b border-border/5 text-left"
+                        >
+                            Preços
+                        </button>
+
+                        <div className="flex flex-col gap-3 mt-2">
+                            <Button
+                                onClick={() => navigate('/register')}
+                                className="w-full btn-primary h-12 text-lg"
                             >
-                                {item.label}
-                            </button>
-                        ))}
-                        <div className="h-4"></div>
-                        <Button
-                            onClick={() => navigate('/register')}
-                            className="w-full btn-primary"
-                        >
-                            Começar Grátis
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            onClick={() => navigate('/login')}
-                            className="w-full hover:bg-white/5"
-                        >
-                            Entrar
-                        </Button>
+                                Começar Grátis
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => navigate('/login')}
+                                className="w-full h-12 text-lg border-2"
+                            >
+                                Entrar
+                            </Button>
+                        </div>
                     </div>
                 )}
             </div>
