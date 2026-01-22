@@ -32,7 +32,9 @@ const TestimonialsSection = () => {
     ];
 
     return (
-        <section id="depoimentos" className="section-padding scroll-mt-20 bg-background relative">
+        <section id="depoimentos" className="section-padding scroll-mt-20 bg-background relative overflow-hidden">
+            {/* Background Decor */}
+            <div className="absolute inset-0 bg-dot-pattern opacity-[0.2] pointer-events-none"></div>
             <div className="container-max">
                 <RevealOnScroll>
                     <div className="text-center mb-16">

@@ -45,10 +45,16 @@ const BenefitsSection = () => {
     ];
 
     return (
-        <section id="benefícios" className="section-padding bg-background relative overflow-hidden scroll-mt-20">
+        <section id="benefícios" className="section-padding bg-gradient-to-b from-background to-muted/20 relative overflow-hidden scroll-mt-20">
             {/* Ambient Background */}
+            {/* Ambient Background & Growth */}
             <div className="absolute inset-0 bg-noise opacity-[0.15] pointer-events-none"></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none mix-blend-multiply"></div>
+
+            {/* Visual Narrative: Growth (Rising Sunrise) */}
+            {/* Soft light rising from the bottom to represent growth/profit */}
+            <div className="absolute bottom-[-10%] left-1/2 -translate-x-1/2 w-[120%] h-[50%] bg-gradient-to-t from-primary/15 via-primary/5 to-transparent blur-[80px] animate-rise-slow mix-blend-screen"></div>
+            <div className="absolute bottom-[-20%] left-[20%] w-[60%] h-[60%] bg-secondary/10 blur-[100px] rounded-full animate-rise-slow" style={{ animationDelay: '2s' }}></div>
+            <div className="absolute bottom-[-20%] right-[20%] w-[60%] h-[60%] bg-financial/10 blur-[100px] rounded-full animate-rise-slow" style={{ animationDelay: '4s' }}></div>
 
             <div className="container-max relative z-10">
                 <RevealOnScroll>

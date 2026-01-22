@@ -75,7 +75,7 @@ export default {
 					foreground: 'hsl(var(--info-foreground))'
 				},
 				financial: {
-					DEFAULT: 'hsl(var(--financial))',
+					DEFAULT: '#75acb3', // Updated from old gold/yellow
 					foreground: 'hsl(var(--foreground))'
 				},
 				status: {
@@ -130,6 +130,17 @@ export default {
 				'subtle-pulse': {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.7' }
+				},
+				'rise-slow': {
+					'0%, 100%': { transform: 'translate3d(0, 0, 0) scale(1)', opacity: '0.8' },
+					'50%': { transform: 'translate3d(0, -30px, 0) scale(1.1)', opacity: '1' }
+				},
+				'aurora': {
+					'0%': { transform: 'translate3d(0, 0, 0) scale(1)' },
+					'25%': { transform: 'translate3d(20%, -10%, 0) scale(1.1)' },
+					'50%': { transform: 'translate3d(-15%, 15%, 0) scale(0.9)' },
+					'75%': { transform: 'translate3d(10%, 20%, 0) scale(1.05)' },
+					'100%': { transform: 'translate3d(0, 0, 0) scale(1)' }
 				}
 			},
 			animation: {
@@ -137,7 +148,9 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'shimmer': 'shimmer 3s linear infinite',
 				'float': 'float 6s ease-in-out infinite',
-				'subtle-pulse': 'subtle-pulse 4s ease-in-out infinite'
+				'subtle-pulse': 'subtle-pulse 3s ease-in-out infinite',
+				'rise-slow': 'rise-slow 8s ease-in-out infinite',
+				'aurora': 'aurora 18s ease-in-out infinite alternate',
 			},
 			boxShadow: {
 				'elegant': '0 4px 12px rgba(0, 0, 0, 0.1)', // Updated base elevation

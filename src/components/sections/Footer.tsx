@@ -3,7 +3,8 @@ import { Instagram, Facebook, Youtube } from 'lucide-react';
 const Footer = () => {
 
     return (
-        <footer className="bg-background text-foreground pt-16 relative">
+        <footer className="bg-background text-foreground pt-16 relative overflow-hidden">
+            <div className="absolute inset-0 bg-noise opacity-[0.15] pointer-events-none"></div>
             <div className="max-w-md mx-auto text-center relative px-6 pb-12">
                 <div className="flex flex-col items-center">
                     {/* Brand Logo */}

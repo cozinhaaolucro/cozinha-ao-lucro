@@ -16,8 +16,11 @@ const PricingSection = () => {
             <div className="absolute inset-0 bg-noise opacity-[0.15] pointer-events-none"></div>
             <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/pattern-grid.svg')] opacity-[0.015]"></div>
 
-            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary/5 rounded-full blur-[100px] pointer-events-none"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] spotlight-warm opacity-30 blur-[120px] pointer-events-none rounded-full"></div>
+
+            {/* Visual Narrative: The Reward (Pulsing Gold Core) */}
+            {/* Concentrated Gold Glow strictly behind the Premium Card */}
+            <div className="absolute top-[60%] md:top-1/2 left-1/2 md:left-[70%] -translate-x-1/2 -translate-y-1/2 w-[400px] md:w-[600px] h-[400px] md:h-[600px] bg-financial/25 blur-[100px] rounded-full animate-subtle-pulse mix-blend-screen pointer-events-none"></div>
 
             <div className="container-max relative z-10">
                 <RevealOnScroll>
@@ -135,9 +138,9 @@ const PricingSection = () => {
                                 <div className="mt-12">
                                     <Button
                                         onClick={() => navigate('/register')}
-                                        className="btn-primary w-full h-14 rounded-2xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-1 transition-all duration-300 font-bold text-base tracking-wide text-white"
+                                        className="w-full h-14 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-600 hover:to-emerald-500 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 font-bold text-sm md:text-base uppercase tracking-wider text-white"
                                     >
-                                        Começar Agora
+                                        ASSINE O PLANO BÁSICO
                                     </Button>
                                     <p className="text-[10px] text-center text-muted-foreground/60 mt-4 flex items-center justify-center gap-1.5 font-medium">
                                         <Shield className="w-3 h-3" />
@@ -150,7 +153,7 @@ const PricingSection = () => {
 
                     {/* Plano Premium (Renamed) */}
                     <RevealOnScroll delay={0.2} className="h-full flex flex-col">
-                        <Card className="flex-1 flex flex-col relative overflow-hidden bg-white/50 backdrop-blur-sm border border-border/40 shadow-lg shadow-gray-200/50 rounded-[2.5rem] transition-all duration-500 hover:border-primary/20 hover:bg-white/80 hover:shadow-xl group px-6 py-8">
+                        <Card className="flex-1 flex flex-col relative overflow-hidden bg-white/50 backdrop-blur-sm border border-financial/20 shadow-lg shadow-financial/5 rounded-[2.5rem] transition-all duration-500 hover:border-financial/40 hover:bg-white/80 hover:shadow-xl group px-6 py-8">
                             <div className="absolute top-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <span className="bg-secondary/10 text-secondary border border-secondary/20 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
                                     Sem Limites
@@ -215,10 +218,9 @@ const PricingSection = () => {
                                 <div className="mt-12">
                                     <Button
                                         onClick={() => navigate('/register')}
-                                        variant="outline"
-                                        className="w-full h-14 rounded-2xl border-2 border-transparent bg-secondary/5 text-secondary hover:bg-secondary hover:text-white hover:border-transparent transition-all duration-300 font-bold text-base tracking-wide"
+                                        className="w-full h-14 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 font-bold text-sm md:text-base uppercase tracking-wider text-white"
                                     >
-                                        Quero Ser Premium
+                                        ASSINE O PLANO PREMIUM
                                     </Button>
                                     <p className="text-[10px] text-center text-muted-foreground/60 mt-4 flex items-center justify-center gap-1.5 font-medium">
                                         <Shield className="w-3 h-3" />

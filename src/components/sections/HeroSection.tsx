@@ -13,8 +13,18 @@ const HeroSection = () => {
     return (
         <section className="relative pt-32 pb-32 md:pt-48 md:pb-40 overflow-hidden">
             {/* Background Atmosphere */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-[-20%] left-[50%] -translate-x-1/2 w-[80%] h-[60%] spotlight-warm opacity-40 blur-[120px] rounded-full mix-blend-screen animate-pulse-slow"></div>
+            {/* Background Atmosphere */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+                {/* Modern SaaS Gradient Mesh (Aurora) - No lines, just pure light */}
+
+                {/* Primary Deep Teal - Top Center (Base Atmosphere) */}
+                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[140%] h-[100%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-background/0 to-transparent blur-[100px] mix-blend-normal animate-aurora"></div>
+
+                {/* Financial Gold - Right Side (Strong) */}
+                <div className="absolute top-[-5%] right-[-5%] w-[70%] h-[80%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-financial/30 via-background/0 to-transparent blur-[100px] mix-blend-multiply opacity-90 animate-aurora" style={{ animationDelay: '2s' }}></div>
+
+                {/* Primary Teal - Left Side (Strong - Replaced Secondary) */}
+                <div className="absolute top-[-5%] left-[-5%] w-[70%] h-[80%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/40 via-background/0 to-transparent blur-[100px] mix-blend-multiply opacity-90 animate-aurora" style={{ animationDelay: '5s', animationDirection: 'reverse' }}></div>
             </div>
 
             <div className="container-max mobile-container relative z-10 text-center">
@@ -35,19 +45,17 @@ const HeroSection = () => {
                         <Button
                             onClick={() => navigate('/register')}
                             size="lg"
-                            className="btn-primary btn-shine text-base px-8 py-4 md:text-lg md:px-10 md:py-8 h-auto w-full sm:w-auto shadow-elegant hover:scale-105"
+                            className="bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-600 hover:to-emerald-500 text-white font-bold uppercase tracking-wide rounded-full text-xs sm:text-sm px-6 py-4 md:px-8 md:py-6 h-auto w-full sm:w-auto shadow-lg hover:scale-105 transition-all duration-300"
                         >
-                            Ver meu lucro real
-                            <ArrowRight className="ml-2 w-5 h-5" />
+                            QUERO LUCRAR COM MEU CARDÁPIO DIGITAL
                         </Button>
 
                         <Button
                             size="lg"
                             variant="outline"
                             onClick={() => setIsLeadFormOpen(true)}
-                            className="h-auto px-6 py-4 md:px-8 md:py-8 w-full sm:w-auto text-base md:text-lg border-2 hover:bg-primary hover:text-white hover:border-primary transition-all font-medium"
+                            className="h-auto px-6 py-4 md:px-8 md:py-6 w-full sm:w-auto text-sm md:text-base border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-full font-bold transition-all"
                         >
-                            <MessageCircle className="w-5 h-5 mr-2" />
                             Falar com Especialista
                         </Button>
                     </div>

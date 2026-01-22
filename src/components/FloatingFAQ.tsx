@@ -72,7 +72,7 @@ const FloatingFAQ = () => {
                 </div>
 
                 <div className="max-h-[60vh] overflow-y-auto p-4 custom-scrollbar">
-                    <Accordion type="single" collapsible className="space-y-2">
+                    <Accordion type="single" collapsible className="space-y-2" defaultValue="item-0">
                         {faqs.map((faq, index) => (
                             <AccordionItem
                                 key={index}

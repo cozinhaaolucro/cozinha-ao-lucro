@@ -9,9 +9,15 @@ const AppShowcase = () => {
     return (
         <section className="section-padding bg-muted/30 relative overflow-hidden">
             {/* Background Effects */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-[20%] right-[0%] w-[40%] h-[40%] bg-primary/5 blur-[100px] rounded-full transform-gpu will-change-transform"></div>
-                <div className="absolute bottom-[20%] left-[0%] w-[40%] h-[40%] bg-financial/5 blur-[100px] rounded-full transform-gpu will-change-transform"></div>
+            {/* Background Effects */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+                <div className="absolute top-0 left-0 w-full h-full bg-grid-pattern opacity-[0.03]"></div>
+
+                {/* Visual Narrative: The Bridge (Stream of Light) */}
+                <div className="absolute top-[-50%] left-[-20%] w-[150%] h-[200%] bg-gradient-to-br from-primary/10 via-transparent to-transparent -rotate-12 blur-3xl opacity-60 pointer-events-none"></div>
+                <div className="absolute top-[-20%] right-[-10%] w-[80%] h-[120%] bg-gradient-to-bl from-financial/10 via-transparent to-transparent rotate-12 blur-3xl opacity-40 pointer-events-none"></div>
+
+                {/* Skewed Connector Removed */}
             </div>
 
             <div className="container-max mobile-container relative z-10">
@@ -27,21 +33,27 @@ const AppShowcase = () => {
                 </RevealOnScroll>
 
 
-                {/* Feature 2: Lista de Compras (Reversed) */}
-                <div className="grid lg:grid-cols-2 gap-16 items-center">
-                    <RevealOnScroll direction="right" className="lg:order-2">
+                <div className="grid lg:grid-cols-2 gap-16 items-center relative">
+                    {/* Connecting Flow Line (Desktop only) */}
+                    <div className="hidden lg:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none z-0 opacity-20">
+                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full stroke-primary/30 fill-none" strokeWidth="0.5">
+                            <path d="M10,50 C30,40 50,60 70,50" vectorEffect="non-scaling-stroke" />
+                        </svg>
+                    </div>
+
+                    <RevealOnScroll direction="right" className="lg:order-2 relative z-10">
                         <div className="space-y-8">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm">
-                                Organização Total
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm border border-primary/20 backdrop-blur-sm">
+                                Vendas no Automático
                             </div>
                             <h3 className="text-3xl md:text-4xl font-bold text-foreground">
-                                Lista de Compras <span className="text-primary">Gerada Automaticamente</span>
+                                Seu Cardápio Digital <span className="text-primary">Profissional e Irresistível</span>
                             </h3>
                             <p className="text-lg text-muted-foreground leading-relaxed">
-                                Com base nos seus pedidos, o sistema gera a lista exata do que você precisa comprar. Evite idas desnecessárias ao mercado.
+                                Transforme visitantes em clientes fiéis. Tenha um link exclusivo para divulgar no Instagram e WhatsApp, permitindo que seus clientes façam pedidos sozinhos, sem erros e sem taxas de marketplace.
                             </p>
                             <ul className="space-y-4">
-                                {['Agrupamento por setor', 'Checklist interativo', 'Histórico de compras'].map((item, i) => (
+                                {['Sem taxas por pedido (100% seu)', 'Atendimento agilizado no WhatsApp', 'Fotos que dão água na boca'].map((item, i) => (
                                     <li key={i} className="flex items-center gap-3 text-foreground/80">
                                         <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
                                             <Check className="w-4 h-4 text-primary" />
@@ -53,24 +65,24 @@ const AppShowcase = () => {
                         </div>
                     </RevealOnScroll>
 
-                    <RevealOnScroll direction="left" className="lg:order-1" delay={0.2}>
+                    <RevealOnScroll direction="left" className="lg:order-1 relative z-10" delay={0.2}>
                         <div className="relative group perspective-1000">
+                            {/* Glassmorphism Backdrop */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[110%] bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 -z-10 transform -rotate-6"></div>
+
                             {/* Mobile Mockup Style */}
                             <div className="relative max-w-[300px] mx-auto">
                                 <div className="absolute -inset-1 bg-gradient-to-tr from-primary to-accent rounded-[3rem] blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
                                 <div className="relative rounded-[2.5rem] overflow-hidden border-8 border-background shadow-2xl bg-card transform-gpu">
-                                    <picture>
-                                        <source media="(max-width: 640px)" srcSet="/images/mockups/showcase_compras_mobile_284.webp" />
-                                        <img
-                                            src="/images/mockups/showcase_compras_mobile.webp"
-                                            alt="Lista de Compras Mobile"
-                                            width={300}
-                                            height={600}
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="w-full h-auto object-cover will-change-transform hover:scale-105 transition-transform duration-500"
-                                        />
-                                    </picture>
+                                    <img
+                                        src="/images/mockups/cardapio_digital.png"
+                                        alt="Cardápio Digital Mobile"
+                                        width={300}
+                                        height={600}
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="w-full h-auto object-cover will-change-transform hover:scale-105 transition-transform duration-500"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -82,12 +94,10 @@ const AppShowcase = () => {
                     <Button
                         onClick={() => navigate('/register')}
                         size="lg"
-                        className="btn-primary w-full sm:w-auto text-lg sm:text-xl px-8 sm:px-12 py-6 sm:py-8 h-auto shadow-elegant hover:scale-105 transition-transform duration-300 whitespace-normal bg-gradient-to-r from-primary to-primary/90"
+                        className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 w-full sm:w-auto text-white font-bold text-lg px-8 py-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
                     >
-                        <span className="flex items-center justify-center gap-2">
-                            Quero Organizar Minha Cozinha Agora
-                            <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
-                        </span>
+                        Conheça o Cardápio Digital
+                        <ArrowRight className="ml-2 w-5 h-5 inline-block" />
                     </Button>
                 </div>
 

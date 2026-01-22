@@ -4,10 +4,10 @@ import { Quote } from 'lucide-react';
 const AuthoritySection = () => {
     return (
         <section className="section-padding bg-background relative overflow-hidden section-separator-top">
-            {/* Ambient Background */}
+            {/* Visual Narrative: Stability (Solid Ground) */}
             <div className="absolute inset-0 bg-noise opacity-[0.15] pointer-events-none"></div>
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none mix-blend-multiply"></div>
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[120px] pointer-events-none mix-blend-multiply"></div>
+
+            <div className="absolute inset-0 bg-noise opacity-[0.15] pointer-events-none"></div>
 
             <div className="container-max relative z-10">
                 <RevealOnScroll>

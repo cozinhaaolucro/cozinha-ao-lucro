@@ -1,4 +1,4 @@
-/* Font loaded via &lt;link rel="preload"&gt; in index.html for non-blocking */
+/* Font loaded via <link rel="preload"> in index.html for non-blocking */
 
 @tailwind base;
 @tailwind components;
@@ -196,6 +196,19 @@
 
   .bg-noise {
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+
+  .bg-grid-pattern {
+    background-size: 40px 40px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    mask-image: radial-gradient(circle at center, black 50%, transparent 90%);
+  }
+
+  .bg-dot-pattern {
+    background-image: radial-gradient(rgba(0, 0, 0, 0.15) 1px, transparent 1px);
+    background-size: 24px 24px;
+    mask-image: radial-gradient(circle at center, black 50%, transparent 90%);
   }
 
   .section-separator-top {
@@ -631,11 +644,12 @@ body {
 /* Hide heavy blur effects on mobile to reduce GPU load */
 @media (max-width: 768px) {
 
-  /* Hide heavy background blobs only */
+  /* Relaxed optimization: Only reduce opacity instead of hiding completely */
   [class*="blur-[100"],
   [class*="blur-[120"],
   [class*="blur-3xl"] {
-    display: none !important;
+    opacity: 0.5 !important;
+    filter: blur(40px) !important;
   }
 
   /* Disable backdrop blur on cards but KEEP them visible */
