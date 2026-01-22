@@ -62,7 +62,7 @@ const Navbar = () => {
                             onClick={() => navigate('/register')}
                             className="btn-primary px-5 py-2 h-9 text-sm"
                         >
-                            Começar Grátis
+                            Testar Grátis
                         </Button>
                     </div>
                 </div>
@@ -93,7 +93,7 @@ const Navbar = () => {
                                 onClick={() => navigate('/register')}
                                 className="w-full btn-primary h-12 text-lg"
                             >
-                                Começar Grátis
+                                Testar Grátis
                             </Button>
                             <Button
                                 variant="outline"

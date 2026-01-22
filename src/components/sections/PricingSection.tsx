@@ -140,7 +140,7 @@ const PricingSection = () => {
                                         onClick={() => navigate('/register')}
                                         className="w-full h-14 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-600 hover:to-emerald-500 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 font-bold text-sm md:text-base uppercase tracking-wider text-white"
                                     >
-                                        ASSINE O PLANO BÁSICO
+                                        Testar grátis por 7 dias
                                     </Button>
                                     <p className="text-[10px] text-center text-muted-foreground/60 mt-4 flex items-center justify-center gap-1.5 font-medium">
                                         <Shield className="w-3 h-3" />
@@ -220,7 +220,7 @@ const PricingSection = () => {
                                         onClick={() => navigate('/register')}
                                         className="w-full h-14 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 font-bold text-sm md:text-base uppercase tracking-wider text-white"
                                     >
-                                        ASSINE O PLANO PREMIUM
+                                        Testar grátis por 7 dias
                                     </Button>
                                     <p className="text-[10px] text-center text-muted-foreground/60 mt-4 flex items-center justify-center gap-1.5 font-medium">
                                         <Shield className="w-3 h-3" />

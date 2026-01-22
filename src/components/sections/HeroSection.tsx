@@ -47,8 +47,12 @@ const HeroSection = () => {
                             size="lg"
                             className="bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-600 hover:to-emerald-500 text-white font-bold uppercase tracking-wide rounded-full text-xs sm:text-sm px-6 py-4 md:px-8 md:py-6 h-auto w-full sm:w-auto shadow-lg hover:scale-105 transition-all duration-300"
                         >
-                            QUERO LUCRAR COM MEU CARDÁPIO DIGITAL
+                            Testar grátis por 7 dias
                         </Button>
+
+                        <div className="flex flex-col items-center gap-1 sm:hidden">
+                            <span className="text-[10px] text-muted-foreground font-medium">Sem cartão de crédito • Cancele quando quiser</span>
+                        </div>
 
                         <Button
                             size="lg"
@@ -56,16 +60,16 @@ const HeroSection = () => {
                             onClick={() => setIsLeadFormOpen(true)}
                             className="h-auto px-6 py-4 md:px-8 md:py-6 w-full sm:w-auto text-sm md:text-base border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-full font-bold transition-all"
                         >
-                            Falar com Especialista
+                            Ver como funciona
                         </Button>
                     </div>
 
                     <div className="flex items-center justify-center gap-6 pt-8 text-sm text-muted-foreground">
                         <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-primary" /> Sem cartão necessário
+                            <CheckCircle className="w-4 h-4 text-primary" /> Sem cartão de crédito
                         </div>
                         <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-primary" /> Setup em 2 minutos
+                            <CheckCircle className="w-4 h-4 text-primary" /> Acesso completo por 7 dias
                         </div>
                     </div>
                 </div>

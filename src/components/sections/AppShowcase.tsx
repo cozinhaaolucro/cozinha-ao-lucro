@@ -96,9 +96,12 @@ const AppShowcase = () => {
                         size="lg"
                         className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 w-full sm:w-auto text-white font-bold text-lg px-8 py-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
                     >
-                        Conheça o Cardápio Digital
+                        Testar grátis por 7 dias
                         <ArrowRight className="ml-2 w-5 h-5 inline-block" />
                     </Button>
+                    <p className="text-xs text-muted-foreground mt-4 font-medium opacity-80">
+                        Comece agora, cancele quando quiser.
+                    </p>
                 </div>
 
             </div>

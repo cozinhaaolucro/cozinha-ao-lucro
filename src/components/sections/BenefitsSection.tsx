@@ -1,9 +1,12 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { DollarSign, Users, Clock, TrendingUp, Shield, Award, Sparkles } from 'lucide-react';
 import { RevealOnScroll } from '@/components/RevealOnScroll';
 import { Tilt } from 'react-tilt';
+import { useNavigate } from 'react-router-dom';
 
 const BenefitsSection = () => {
+    const navigate = useNavigate();
     const benefits = [
         {
             icon: DollarSign,
@@ -96,6 +99,17 @@ const BenefitsSection = () => {
                             </RevealOnScroll>
                         </Tilt>
                     ))}
+                </div>
+
+                <div className="mt-16 text-center">
+                    <Button
+                        onClick={() => navigate('/register')}
+                        size="lg"
+                        className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 hover:border-primary/40 font-bold rounded-full px-8 py-6 h-auto text-lg transition-all duration-300"
+                    >
+                        Testar grátis por 7 dias
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-3">Sem compromisso.</p>
                 </div>
             </div>
         </section>
