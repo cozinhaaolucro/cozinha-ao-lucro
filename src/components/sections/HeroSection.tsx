@@ -58,7 +58,7 @@ const HeroSection = () => {
                             size="lg"
                             variant="outline"
                             onClick={() => setIsLeadFormOpen(true)}
-                            className="h-auto px-6 py-4 md:px-8 md:py-6 w-full sm:w-auto text-sm md:text-base border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-full font-bold transition-all"
+                            className="h-auto px-6 py-4 md:px-8 md:py-6 w-full sm:w-auto text-sm md:text-base border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-full font-bold transition-all"
                         >
                             Ver como funciona
                         </Button>
