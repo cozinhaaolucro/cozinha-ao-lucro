@@ -60,7 +60,7 @@ const Navbar = () => {
                         </Button>
                         <Button
                             onClick={() => navigate('/register')}
-                            className="btn-primary px-5 py-2 h-9 text-sm"
+                            className="bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,58%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,50%,1)] text-white font-bold px-5 py-2 h-9 text-sm shadow-md transition-all duration-300 hover:scale-105"
                         >
                             Testar Grátis
                         </Button>
@@ -91,7 +91,7 @@ const Navbar = () => {
                         <div className="flex flex-col gap-3 mt-2">
                             <Button
                                 onClick={() => navigate('/register')}
-                                className="w-full btn-primary h-12 text-lg"
+                                className="w-full bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,58%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,50%,1)] text-white font-bold h-12 text-lg shadow-md transition-all duration-300"
                             >
                                 Testar Grátis
                             </Button>

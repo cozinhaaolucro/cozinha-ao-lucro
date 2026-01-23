@@ -39,19 +39,19 @@ const HeroSection = () => {
     };
 
     return (
-        <section className="relative pt-32 pb-32 md:pt-20 md:pb-40 overflow-hidden">
+        <section className="relative pt-32 pb-32 md:pt-32 md:pb-40 overflow-hidden">
             {/* Background Atmosphere */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
                 {/* Modern SaaS Gradient Mesh (Aurora) - No lines, just pure light */}
 
-                {/* Primary Deep Teal - Top Center (Base Atmosphere) */}
-                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[140%] h-[100%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-background/0 to-transparent blur-[100px] mix-blend-normal animate-aurora"></div>
+                {/* Primary Deep Teal - Top Center (Base Atmosphere) - REPLACED with LIGHTER TONE */}
+                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[140%] h-[100%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[hsla(183,16%,55%,1)]/20 via-background/0 to-transparent blur-[100px] mix-blend-normal animate-aurora"></div>
 
                 {/* Financial Gold - Right Side (Strong) */}
                 <div className="absolute top-[-5%] right-[-5%] w-[70%] h-[80%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-financial/30 via-background/0 to-transparent blur-[100px] mix-blend-multiply opacity-90 animate-aurora" style={{ animationDelay: '2s' }}></div>
 
-                {/* Primary Teal - Left Side (Strong - Replaced Secondary) */}
-                <div className="absolute top-[-5%] left-[-5%] w-[70%] h-[80%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/40 via-background/0 to-transparent blur-[100px] mix-blend-multiply opacity-90 animate-aurora" style={{ animationDelay: '5s', animationDirection: 'reverse' }}></div>
+                {/* Primary Teal - Left Side (Strong - Replaced Secondary) - REPLACED with LIGHTER TONE */}
+                <div className="absolute top-[-5%] left-[-5%] w-[70%] h-[80%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[hsla(183,16%,55%,1)]/40 via-background/0 to-transparent blur-[100px] mix-blend-multiply opacity-90 animate-aurora" style={{ animationDelay: '5s', animationDirection: 'reverse' }}></div>
             </div>
 
             <div className="container-max mobile-container relative z-10 text-center">
@@ -72,7 +72,7 @@ const HeroSection = () => {
                         <Button
                             onClick={() => navigate('/register')}
                             size="lg"
-                            className="bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-600 hover:to-emerald-500 text-white font-bold uppercase tracking-wide rounded-full text-xs sm:text-sm px-6 py-4 md:px-8 md:py-6 h-auto w-full sm:w-auto shadow-lg hover:scale-105 transition-all duration-300"
+                            className="bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,58%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,50%,1)] text-white font-bold uppercase tracking-wide rounded-full text-xs sm:text-sm px-6 py-4 md:px-8 md:py-6 h-auto w-full sm:w-auto shadow-lg hover:scale-105 transition-all duration-300"
                         >
                             Testar grátis por 7 dias
                         </Button>

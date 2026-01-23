@@ -24,11 +24,11 @@ const Index = () => {
 
         {/* Below-fold sections loaded lazily */}
         <Suspense fallback={<SectionFallback />}>
-          <AppShowcase />
+          <BenefitsSection />
         </Suspense>
 
         <Suspense fallback={<SectionFallback />}>
-          <BenefitsSection />
+          <AppShowcase />
         </Suspense>
 
         <Suspense fallback={<SectionFallback />}>

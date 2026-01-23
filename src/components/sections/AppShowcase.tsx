@@ -94,7 +94,7 @@ const AppShowcase = () => {
                     <Button
                         onClick={() => navigate('/register')}
                         size="lg"
-                        className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 w-full sm:w-auto text-white font-bold text-lg px-8 py-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                        className="bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,58%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,50%,1)] w-full sm:w-auto text-white font-bold text-lg px-8 py-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
                     >
                         Testar grátis por 7 dias
                         <ArrowRight className="ml-2 w-5 h-5 inline-block" />

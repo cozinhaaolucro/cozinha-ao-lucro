@@ -105,7 +105,7 @@ const BenefitsSection = () => {
                     <Button
                         onClick={() => navigate('/register')}
                         size="lg"
-                        className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 hover:border-primary/40 font-bold rounded-full px-8 py-6 h-auto text-lg transition-all duration-300"
+                        className="bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,58%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,50%,1)] text-white border-0 font-bold rounded-full px-8 py-6 h-auto text-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                     >
                         Testar grátis por 7 dias
                     </Button>
