@@ -147,7 +147,7 @@ export const createIngredient = async (ingredient: Omit<Ingredient, 'id' | 'user
         .select()
         .single();
 
-    if (error) console.error('Error creating ingredient:', error);
+    // if (error) console.error('Error creating ingredient:', error);
 
     return { data, error };
 };
@@ -246,7 +246,7 @@ export const createProduct = async (
         .single();
 
     if (productError || !productData) {
-        console.error('Error creating product:', productError);
+        // console.error('Error creating product:', productError);
         return { data: null, error: productError };
     }
 
@@ -624,7 +624,7 @@ export const createOrder = async (
         .single();
 
     if (orderError || !orderData) {
-        console.error('Error creating order:', orderError);
+        // console.error('Error creating order:', orderError);
         return { data: null, error: orderError };
     }
 

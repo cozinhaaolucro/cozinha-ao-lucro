@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 
 // Lazy load Providers to isolate heavy dependencies (Supabase, Auth) from Landing Page
 const AppProviders = lazy(() => import("./AppProviders"));
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 // Lazy load app pages for better performance
 const Login = lazy(() => import("./pages/auth/Login"));
@@ -70,7 +71,12 @@ const App = () => {
 
               {/* Wrapped Routes - Auth & Notification Providers applied here (Lazy Loaded) */}
               <Route element={<AppProviders />}>
-                <Route path="/app" element={<DashboardLayout />}>
+                {/* Protected App Routes */}
+                <Route path="/app" element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }>
                   <Route path="dashboard" element={<Dashboard />} />
                   <Route path="pedidos" element={<Pedidos />} />
                   <Route path="clientes" element={<Clientes />} />
