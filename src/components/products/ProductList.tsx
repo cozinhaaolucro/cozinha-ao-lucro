@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { Plus, TrendingUp, Pencil, Download, Trash2, Copy, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
+import { Plus, TrendingUp, Pencil, Download, Trash2, Copy, ChevronDown, ChevronUp, Eye, EyeOff, Phone } from 'lucide-react';
 import { getProducts, deleteProduct, updateProduct, createProduct, getIngredients, importProductsBatch } from '@/lib/database';
 import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
 import { PRESET_PRODUCTS } from '@/data/presets';
@@ -24,7 +24,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Upload, Image as ImageIcon, FileSpreadsheet, FileText, Info, FileDown, Package } from 'lucide-react';
+import { Upload, Image as ImageIcon, FileSpreadsheet, FileText, Info, FileDown, Package, Circle, Box } from 'lucide-react';
 import {
     Tooltip,
     TooltipContent,
@@ -604,14 +604,13 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                         <p className="text-sm text-muted-foreground mt-2">{product.description}</p>
                                     )}
                                 </CardHeader>
-                                <CardContent className="space-y-3">
+                                <CardContent className="space-y-1.5 pl-4 pr-3 pb-2">
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div className="flex items-center justify-between text-sm cursor-help hover:bg-muted/30 p-1 -mx-1 rounded transition-colors">
                                                     <span className="text-muted-foreground flex items-center gap-1">
                                                         Custo
-                                                        <Info className="w-3 h-3 opacity-50" />
                                                     </span>
                                                     <span className="font-medium">R$ {totalCost.toFixed(2)}</span>
                                                 </div>
@@ -642,7 +641,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                             </TooltipContent>
                                         </Tooltip>
 
-                                        <div className="flex items-center justify-between text-sm">
+                                        <div className="flex items-center justify-between text-sm mt-1">
                                             <span className="text-muted-foreground">Preço de Venda:</span>
                                             <span className="font-bold text-primary">
                                                 R$ {(product.selling_price || 0).toFixed(2)}
@@ -659,7 +658,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                     <span
                                                         id={idx === 0 ? "onboarding-profit-display" : undefined}
                                                         className="font-bold"
-                                                        style={{ color: profit > 0 ? '#4C9E7C' : '#C76E60' }}
+                                                        style={{ color: profit > 0 ? '#2FBF71' : '#C76E60' }}
                                                     >
                                                         R$ {profit.toFixed(2)}
                                                     </span>
@@ -679,14 +678,25 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
 
                                     {(showAllIngredients || expandedProductIds.includes(product.id)) && product.product_ingredients.length > 0 && (
                                         <div className="text-xs text-muted-foreground border-t pt-2 animate-in slide-in-from-top-2 fade-in duration-200">
-                                            <p className="font-medium mb-1">Ingredientes:</p>
-                                            <ul className="space-y-0.5">
+                                            <p className="font-medium mb-1.5 opacity-90">Ingredientes:</p>
+                                            <ul className="grid gap-1.5">
                                                 {product.product_ingredients.map((pi, idx) => {
                                                     if (!pi.ingredient) return null;
                                                     const display = getDisplayQuantity(pi.quantity, pi.ingredient.unit, pi.display_unit, pi.ingredient.package_size);
+
+                                                    // Icon Logic
+                                                    // Removed colored dots as per user request
+
                                                     return (
-                                                        <li key={idx}>
-                                                            • {pi.ingredient.name} ({display.value < 0.01 ? display.value.toExponential(1) : parseFloat(display.value.toFixed(3))} {display.unit})
+                                                        <li key={idx} className="flex items-center justify-between text-[11px]">
+                                                            <div className="flex items-center gap-1.5 overflow-hidden">
+                                                                <span className="truncate opacity-90">{pi.ingredient.name}</span>
+                                                            </div>
+                                                            <div className="bg-muted-foreground/10 px-1.5 py-0.5 rounded text-foreground font-medium whitespace-nowrap" style={{ backgroundColor: 'rgba(0,0,0,0.05)' }}>
+                                                                <span className="text-[10px] opacity-70" style={{ color: 'inherit' }}>
+                                                                    {display.value < 0.01 ? display.value.toExponential(1) : parseFloat(display.value.toFixed(3))} {display.unit}
+                                                                </span>
+                                                            </div>
                                                         </li>
                                                     );
                                                 })}
@@ -730,7 +740,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                                 <Badge
                                                                     variant="secondary"
                                                                     className={`text-xs font-bold gap-1.5 cursor-help transition-all border ${hasStock
-                                                                        ? 'bg-[#4C9E7C]/10 text-[#4C9E7C] border-[#4C9E7C]/20 hover:bg-[#4C9E7C]/20'
+                                                                        ? 'bg-[#2FBF71]/10 text-[#2FBF71] border-[#2FBF71]/20 hover:bg-[#2FBF71]/20'
                                                                         : 'bg-[#5F98A1]/10 text-[#5F98A1] border-[#5F98A1]/20 hover:bg-[#5F98A1]/20'
                                                                         }`}
                                                                 >
@@ -753,7 +763,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                                                 return (
                                                                                     <div key={idx} className="flex justify-between text-[10px] gap-4">
                                                                                         <span className="truncate">{item.name}</span>
-                                                                                        <span className="font-mono whitespace-nowrap" style={{ color: '#4C9E7C' }}>
+                                                                                        <span className="font-mono whitespace-nowrap" style={{ color: '#2FBF71' }}>
                                                                                             {parseFloat(display.value.toFixed(2))} {display.unit}
                                                                                         </span>
                                                                                     </div>

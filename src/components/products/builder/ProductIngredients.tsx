@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Calculator, Plus, PackageCheck, Trash2, Check } from 'lucide-react';
+import { Calculator, Plus, PackageCheck, Trash2, Check, Cookie, Cake, Square, IceCream, Coffee, Utensils, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Ingredient } from '@/types/database';
 import { SelectedIngredient } from './types';
@@ -71,16 +71,27 @@ export const ProductIngredients = ({
                         <DropdownMenuItem onClick={clearForm} className="text-destructive">
                             Limpar Tudo
                         </DropdownMenuItem>
-                        {PRESET_PRODUCTS.map((preset) => (
-                            <DropdownMenuItem key={preset.name} onClick={() => {
-                                loadProductPreset(preset.name);
-                                if (isOnboardingActive && currentStep === 'template-list') {
-                                    nextStep();
-                                }
-                            }}>
-                                {preset.name}
-                            </DropdownMenuItem>
-                        ))}
+                        {PRESET_PRODUCTS.map((preset) => {
+                            let Icon = Cookie; // Default
+                            if (preset.icon === 'cake') Icon = Cake;
+                            if (preset.icon === 'square') Icon = Square;
+                            if (preset.icon === 'ice-cream') Icon = IceCream;
+                            if (preset.icon === 'cup') Icon = Coffee;
+                            if (preset.icon === 'utensils') Icon = Utensils;
+                            if (preset.icon === 'circle') Icon = Circle;
+
+                            return (
+                                <DropdownMenuItem key={preset.name} onClick={() => {
+                                    loadProductPreset(preset.name);
+                                    if (isOnboardingActive && currentStep === 'template-list') {
+                                        nextStep();
+                                    }
+                                }} className="cursor-pointer gap-2">
+                                    <Icon className="w-4 h-4 text-primary/70" />
+                                    <span>{preset.name.split(':')[0].split('(')[0]}</span>
+                                </DropdownMenuItem>
+                            );
+                        })}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>

@@ -12,16 +12,16 @@ interface RevenueMetricsProps {
 export const RevenueMetrics = ({ ordersCount, totalRevenue, totalProfit, totalCost }: RevenueMetricsProps) => {
     return (
         <TooltipProvider>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-4 mt-4">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-2 lg:grid-cols-4 mt-2">
 
                 {/* Total Pedidos */}
                 <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-2 py-1.5 bg-transparent border-none shadow-none">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded-lg transition-colors bg-[#61888c]/10">
-                                <ShoppingCart className="h-4 w-4" style={{ color: '#61888c' }} />
+                            <div className="p-1 rounded-lg transition-colors bg-[#61888c]/10">
+                                <ShoppingCart className="h-3.5 w-3.5" style={{ color: '#61888c' }} />
                             </div>
-                            <CardTitle className="text-xs font-bold text-muted-foreground">Total Pedidos</CardTitle>
+                            <CardTitle className="text-[11px] font-bold text-muted-foreground">Total Pedidos</CardTitle>
                             <Tooltip>
                                 <TooltipTrigger>
                                     <Info className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
@@ -32,20 +32,20 @@ export const RevenueMetrics = ({ ordersCount, totalRevenue, totalProfit, totalCo
                             </Tooltip>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-3 pt-2">
-                        <div className="text-lg font-bold text-foreground">{ordersCount}</div>
-                        <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">Volume de vendas</p>
+                    <CardContent className="px-2 pb-1.5 pt-1">
+                        <div className="text-base font-bold text-foreground">{ordersCount}</div>
+                        <p className="text-[9px] text-muted-foreground font-medium flex items-center gap-1">Volume de vendas</p>
                     </CardContent>
                 </Card>
 
                 {/* Receita Total */}
                 <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-2 py-1.5 bg-transparent border-none shadow-none">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded-lg transition-colors bg-[#C9A34F]/10">
-                                <DollarSign className="h-4 w-4" style={{ color: '#C9A34F' }} />
+                            <div className="p-1 rounded-lg transition-colors bg-[#C9A34F]/10">
+                                <DollarSign className="h-3.5 w-3.5" style={{ color: '#C9A34F' }} />
                             </div>
-                            <CardTitle className="text-xs font-bold text-muted-foreground">Receita Total</CardTitle>
+                            <CardTitle className="text-[11px] font-bold text-muted-foreground">Receita Total</CardTitle>
                             <Tooltip>
                                 <TooltipTrigger>
                                     <Info className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
@@ -56,20 +56,20 @@ export const RevenueMetrics = ({ ordersCount, totalRevenue, totalProfit, totalCo
                             </Tooltip>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-3 pt-2">
-                        <div className="text-lg font-bold text-foreground">R$ {totalRevenue.toFixed(2)}</div>
-                        <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">Vendas brutas totais</p>
+                    <CardContent className="px-2 pb-1.5 pt-1">
+                        <div className="text-base font-bold text-foreground">R$ {totalRevenue.toFixed(2)}</div>
+                        <p className="text-[9px] text-muted-foreground font-medium flex items-center gap-1">Vendas brutas totais</p>
                     </CardContent>
                 </Card>
 
                 {/* Lucro Líquido */}
                 <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-2 py-1.5 bg-transparent border-none shadow-none">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded-lg transition-colors bg-[#4C9E7C]/10">
-                                <Wallet className="h-4 w-4" style={{ color: '#4C9E7C' }} />
+                            <div className="p-1 rounded-lg transition-colors bg-[#2FBF71]/10">
+                                <Wallet className="h-3.5 w-3.5" style={{ color: '#2FBF71' }} />
                             </div>
-                            <CardTitle className="text-xs font-bold text-muted-foreground">Lucro Líquido</CardTitle>
+                            <CardTitle className="text-[11px] font-bold text-muted-foreground">Lucro Líquido</CardTitle>
                             <Tooltip>
                                 <TooltipTrigger>
                                     <Info className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
@@ -80,20 +80,20 @@ export const RevenueMetrics = ({ ordersCount, totalRevenue, totalProfit, totalCo
                             </Tooltip>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-3 pt-2">
-                        <div className="text-lg font-bold text-foreground">R$ {totalProfit.toFixed(2)}</div>
-                        <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">O que sobra no bolso</p>
+                    <CardContent className="px-2 pb-1.5 pt-1">
+                        <div className="text-base font-bold text-foreground">R$ {totalProfit.toFixed(2)}</div>
+                        <p className="text-[9px] text-muted-foreground font-medium flex items-center gap-1">O que sobra no bolso</p>
                     </CardContent>
                 </Card>
 
                 {/* Custo Total */}
                 <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 p-3 bg-transparent border-none shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-2 py-1.5 bg-transparent border-none shadow-none">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded-lg transition-colors bg-[#68A9CA]/10">
-                                <CreditCard className="h-4 w-4" style={{ color: '#68A9CA' }} />
+                            <div className="p-1 rounded-lg transition-colors bg-[#68A9CA]/10">
+                                <CreditCard className="h-3.5 w-3.5" style={{ color: '#68A9CA' }} />
                             </div>
-                            <CardTitle className="text-xs font-bold text-muted-foreground">Custo Total</CardTitle>
+                            <CardTitle className="text-[11px] font-bold text-muted-foreground">Custo Total</CardTitle>
                             <Tooltip>
                                 <TooltipTrigger>
                                     <Info className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
@@ -104,9 +104,9 @@ export const RevenueMetrics = ({ ordersCount, totalRevenue, totalProfit, totalCo
                             </Tooltip>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-3 pt-2">
-                        <div className="text-lg font-bold text-foreground">R$ {totalCost.toFixed(2)}</div>
-                        <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">Gasto com ingredientes</p>
+                    <CardContent className="px-2 pb-1.5 pt-1">
+                        <div className="text-base font-bold text-foreground">R$ {totalCost.toFixed(2)}</div>
+                        <p className="text-[9px] text-muted-foreground font-medium flex items-center gap-1">Gasto com ingredientes</p>
                     </CardContent>
                 </Card>
             </div>

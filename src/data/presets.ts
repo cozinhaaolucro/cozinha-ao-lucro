@@ -38,6 +38,7 @@ export const PRESET_PRODUCTS = [
         selling_price: 120.00, // ~R$ 2.40/unidade se vendida solta, mas aqui é o cento/batch
         active: true,
         image_url: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=800&q=80',
+        icon: 'cookie',
         ingredients: [
             { name: 'Leite Condensado', quantity: 0.395 }, // 1 lata (395g)
             { name: 'Creme de Leite', quantity: 0.200 }, // 1 caixa (200g)
@@ -53,6 +54,7 @@ export const PRESET_PRODUCTS = [
         selling_price: 12.00,
         active: true,
         image_url: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=80',
+        icon: 'cake',
         ingredients: [
             { name: 'Farinha de Trigo', quantity: 0.050 }, // 50g
             { name: 'Ovos', quantity: 1 }, // 1 ovo
@@ -69,6 +71,7 @@ export const PRESET_PRODUCTS = [
         selling_price: 8.00,
         active: true,
         image_url: 'https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=800&q=80',
+        icon: 'square',
         ingredients: [
             { name: 'Chocolate Nobre Barra', quantity: 0.050 }, // 50g
             { name: 'Manteiga', quantity: 0.010 }, // 10g
@@ -83,6 +86,7 @@ export const PRESET_PRODUCTS = [
         selling_price: 5.00,
         active: true,
         image_url: 'https://images.unsplash.com/photo-1506459225024-1428097a7e18?w=800&q=80', // Sorvete placeholder
+        icon: 'ice-cream',
         ingredients: [
             { name: 'Leite Integral', quantity: 0.100 }, // 100ml
             { name: 'Leite Condensado', quantity: 0.050 }, // 50g
@@ -95,6 +99,7 @@ export const PRESET_PRODUCTS = [
         selling_price: 18.00,
         active: true,
         image_url: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800&q=80',
+        icon: 'cup',
         ingredients: [
             { name: 'Copo Bolha', quantity: 1 },
             { name: 'Chocolate Nobre Barra', quantity: 0.050 }, // 50g
@@ -109,6 +114,7 @@ export const PRESET_PRODUCTS = [
         selling_price: 22.00,
         active: true,
         image_url: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=800&q=80',
+        icon: 'utensils',
         ingredients: [
             { name: 'Peito de Frango', quantity: 0.150 }, // 150g
             { name: 'Batata Doce', quantity: 0.100 }, // 100g
@@ -122,6 +128,7 @@ export const PRESET_PRODUCTS = [
         selling_price: 90.00, // ~R$ 3.00/unidade nesse lote
         active: true,
         image_url: 'https://images.unsplash.com/photo-1511381939415-e44015466834?w=800&q=80', // Robust Truffles URL
+        icon: 'circle',
         ingredients: [
             { name: 'Chocolate Nobre Barra', quantity: 0.500 }, // 500g (casca + ganache)
             { name: 'Creme de Leite', quantity: 0.200 }, // 200g (ganache)

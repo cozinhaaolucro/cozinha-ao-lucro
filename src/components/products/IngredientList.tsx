@@ -3,26 +3,30 @@ import { Plus, Search, FileDown, Filter, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from "@/components/ui/drawer";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { createIngredient, updateIngredient, deleteIngredient, getIngredients } from "@/lib/database";
+import { createIngredient, updateIngredient, deleteIngredient } from "@/lib/database";
 import { analyzeStockDemand } from "@/lib/stock-logic";
 import type { Ingredient } from "@/types/database";
 import { IngredientForm } from "@/components/ingredients/IngredientForm";
 import { IngredientCard } from "@/components/ingredients/IngredientCard";
 import * as XLSX from 'xlsx';
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Pagination constants
 const ITEMS_PER_PAGE = 50;
 
 export default function IngredientList() {
     const { toast } = useToast();
+    const isMobile = useIsMobile();
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filter, setFilter] = useState<'all' | 'low_stock' | 'out_of_stock'>('all');
 
-    // Dialog States
+    // Dialog/Drawer States
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
 
@@ -66,24 +70,17 @@ export default function IngredientList() {
                 const stockStatus = analyzeStockDemand(loadedIngredients, orders, products as any);
                 const newMap: Record<string, number> = {};
                 stockStatus.forEach(status => {
-                    // We map projected_balance if negative (deficit) OR typically users want "Total Required".
-                    // Let's use total_required to show "Demanda: 5 kg".
-                    // If we have 10kg and need 5kg, demand is 5.
                     if (status.total_required > 0) {
                         newMap[status.ingredient.id] = status.total_required;
                     }
                 });
                 setDemandMap(newMap);
 
-                // Calculate Usage Map (Count of Active 'Preparing' Orders per Ingredient)
+                // Calculate Usage Map
                 const usage: Record<string, number> = {};
                 orders.forEach(order => {
-                    // Only count orders in 'preparing' (Em Produção)
                     if (order.status !== 'preparing') return;
-
                     const usedIngredients = new Set<string>();
-                    // Cast to any to avoid strict typing issues with join tables in this quick context
-                    // or assume structure matches.
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     order.order_items?.forEach((item: any) => {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -255,26 +252,50 @@ export default function IngredientList() {
                 </div>
             )}
 
-            {/* Dialog Form */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>{editingIngredient ? 'Editar Ingrediente' : 'Novo Ingrediente'}</DialogTitle>
-                        <DialogDescription>
-                            Configure os detalhes do ingrediente. O custo será calculado automaticamente para unidade base.
-                        </DialogDescription>
-                    </DialogHeader>
+            {/* Responsive Form Container */}
+            {isMobile ? (
+                <Drawer open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DrawerContent className="max-h-[95vh]">
+                        <DrawerHeader className="text-left">
+                            <DrawerTitle>{editingIngredient ? 'Editar Ingrediente' : 'Novo Ingrediente'}</DrawerTitle>
+                            <DrawerDescription>
+                                Configure os detalhes do ingrediente.
+                            </DrawerDescription>
+                        </DrawerHeader>
+                        <ScrollArea className="h-full overflow-y-auto px-4 pb-4">
+                            {/* Render form only when dialog is open to reset state properly */}
+                            {isDialogOpen && (
+                                <IngredientForm
+                                    initialData={editingIngredient}
+                                    onSave={handleSave}
+                                    onCancel={() => setIsDialogOpen(false)}
+                                />
+                            )}
+                            <div className="h-6" /> {/* Spacer */}
+                        </ScrollArea>
+                    </DrawerContent>
+                </Drawer>
+            ) : (
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle>{editingIngredient ? 'Editar Ingrediente' : 'Novo Ingrediente'}</DialogTitle>
+                            <DialogDescription>
+                                Configure os detalhes do ingrediente. O custo será calculado automaticamente para unidade base.
+                            </DialogDescription>
+                        </DialogHeader>
 
-                    {/* Render form only when dialog is open to reset state properly */}
-                    {isDialogOpen && (
-                        <IngredientForm
-                            initialData={editingIngredient}
-                            onSave={handleSave}
-                            onCancel={() => setIsDialogOpen(false)}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
+                        {/* Render form only when dialog is open to reset state properly */}
+                        {isDialogOpen && (
+                            <IngredientForm
+                                initialData={editingIngredient}
+                                onSave={handleSave}
+                                onCancel={() => setIsDialogOpen(false)}
+                            />
+                        )}
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
 }

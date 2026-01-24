@@ -8,8 +8,8 @@
     --status-preparing-base: 200 48% 60%;
     --status-preparing-bg: 200 48% 94%;
 
-    /* Pronto (Ready) - #4C9E7C (HSL approx 155 35% 46%) */
-    --status-ready-base: 155 35% 46%;
+    /* Pronto (Ready) - #2FBF71 (HSL approx 147 60% 47%) */
+    --status-ready-base: 147 60% 47%;
     --status-ready-bg: 155 35% 92%;
 
     /* Entregue (Delivered) - #5F98A1 (HSL approx 188 26% 50%) */

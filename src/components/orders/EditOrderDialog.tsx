@@ -325,7 +325,7 @@ const EditOrderDialog = ({ order, open, onOpenChange, onSuccess }: EditOrderDial
             <div className="bg-muted/30 p-3 rounded-lg border space-y-2">
                 <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Ações Rápidas (WhatsApp)</Label>
                 <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 border-opacity-50" style={{ color: '#4C9E7C', borderColor: '#4C9E7C', backgroundColor: 'rgba(76, 158, 124, 0.1)' }} onClick={() => sendWhatsAppUpdate('confirm')}>
+                    <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 border-opacity-50" style={{ color: '#2FBF71', borderColor: '#2FBF71', backgroundColor: 'rgba(76, 158, 124, 0.1)' }} onClick={() => sendWhatsAppUpdate('confirm')}>
                         <MessageCircle className="w-3.5 h-3.5" /> Confirmar
                     </Button>
                     <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 border-opacity-50" style={{ color: '#68A9CA', borderColor: '#68A9CA', backgroundColor: 'rgba(104, 169, 202, 0.1)' }} onClick={() => sendWhatsAppUpdate('dispatch')}>

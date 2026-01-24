@@ -442,7 +442,7 @@ const CustomerCard = ({ customer, isSelected, toggleSelect, isInactive, setEditi
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7 hover:text-[#4C9E7C] hover:bg-[#4C9E7C]/10 transition-colors"
+                                className="h-7 w-7 hover:text-[#2FBF71] hover:bg-[#2FBF71]/10 transition-colors"
                                 onClick={() => handleWhatsApp(customer.phone!, customer.name, isInactive)}
                                 title="WhatsApp"
                             >

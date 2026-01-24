@@ -5,7 +5,7 @@ interface CostBreakdownChartProps {
     data: { name: string; value: number }[];
 }
 
-const COLORS = ['#2e5b60', '#68A9CA', '#4C9E7C', '#61888c', '#5F98A1'];
+const COLORS = ['#2e5b60', '#68A9CA', '#2FBF71', '#61888c', '#5F98A1'];
 
 export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
     // Top 5 ingredients + text "Outros"

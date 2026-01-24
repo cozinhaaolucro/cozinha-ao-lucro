@@ -164,7 +164,7 @@ const KanbanCardContent = ({
                                                 onClick={(e) => { e.stopPropagation(); handleWhatsApp(order); }}
                                                 title="WhatsApp"
                                             >
-                                                <Phone className="w-3 h-3 text-[#4C9E7C]" />
+                                                <Phone className="w-3 h-3 text-[#2FBF71]" />
                                             </Button>
                                         )}
                                     </div>
@@ -215,7 +215,7 @@ const KanbanCardContent = ({
                                     onClick={(e) => { e.stopPropagation(); handleWhatsApp(order); }}
                                     title="WhatsApp"
                                 >
-                                    <Phone className="w-3 h-3 text-[#4C9E7C]" />
+                                    <Phone className="w-3 h-3 text-[#2FBF71]" />
                                 </Button>
                             )}
                         </div>
@@ -275,10 +275,11 @@ const CardBody = ({ order, baseColor, isLate }: { order: OrderWithDetails, baseC
             </Badge>
             {isLate && (
                 <Badge
-                    className="text-[10px] px-2 py-0.5 h-auto rounded-md border text-white"
+                    className="text-[10px] px-2 py-0.5 h-auto rounded-md border"
                     style={{
-                        backgroundColor: '#C76E60',
-                        borderColor: '#C76E60'
+                        backgroundColor: 'transparent',
+                        borderColor: '#C76E60',
+                        color: '#C76E60'
                     }}
                 >
                     Atrasado

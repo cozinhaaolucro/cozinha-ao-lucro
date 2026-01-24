@@ -246,7 +246,7 @@ const DashboardLayout = () => {
 
                     <div className="px-1">
                         <p className="text-xs text-muted-foreground truncate mb-2">{user?.email}</p>
-                        <Button variant="outline" size="sm" className="w-full justify-start gap-2 h-8" onClick={handleSignOut}>
+                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2 h-8 text-muted-foreground hover:text-primary" onClick={handleSignOut}>
                             <LogOut className="w-3 h-3" />
                             Sair
                         </Button>

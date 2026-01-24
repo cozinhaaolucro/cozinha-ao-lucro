@@ -1,13 +1,16 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { convertQuantity, getUnitOptions } from "@/components/products/builder/utils";
+import { convertQuantity } from "@/components/products/builder/utils";
 import type { Ingredient } from "@/types/database";
-import { Package, Scale, Calculator } from "lucide-react";
+import { Package, Scale, Calculator, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface IngredientFormProps {
     initialData?: Ingredient | null;
@@ -18,7 +21,7 @@ interface IngredientFormProps {
 export function IngredientForm({ initialData, onSave, onCancel }: IngredientFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Mode: 'simple' (Bulk/Unit) or 'package' ( Retail Package)
+    // Mode: 'simple' (Bulk/Unit) or 'package' (Retail Package)
     const [mode, setMode] = useState<'simple' | 'package'>('simple');
 
     // Form States
@@ -35,7 +38,6 @@ export function IngredientForm({ initialData, onSave, onCancel }: IngredientForm
     const [pkgPrice, setPkgPrice] = useState(""); // Cost of the PACKAGE
     const [pkgCount, setPkgCount] = useState("1"); // How many packages to add to stock
 
-    // Restore state from initialData if editing
     useEffect(() => {
         if (initialData) {
             setName(initialData.name);
@@ -45,12 +47,8 @@ export function IngredientForm({ initialData, onSave, onCancel }: IngredientForm
             if (initialData.package_size && initialData.package_size > 0) {
                 setMode('package');
                 setPkgSize(initialData.package_size.toString());
-                setPkgUnit(initialData.package_unit || initialData.unit); // Default to unit if pkg unit missing
-                setPkgCount(""); // Editing usually implies changing details, but we can't easily reverse-engineer "count" unless we assume stock is perfect multiple. Let's leave blank or 0 for stock adjustment? 
-                // Actually, for editing, we usually want to edit the METADATA (Cost/Size). Stock adjustment handles the Qty. 
-                // But current form handles both.
-                // Let's set pkgCount to 0 (no change) or try to calculate?
-                // Calculate current packages in stock:
+                setPkgUnit(initialData.package_unit || initialData.unit);
+                // Calculate current packages in stock
                 const pSize = initialData.package_size;
                 const pUnit = initialData.package_unit || initialData.unit;
                 const base = initialData.unit;
@@ -58,12 +56,9 @@ export function IngredientForm({ initialData, onSave, onCancel }: IngredientForm
                 const currentPkgs = sizeInBase > 0 ? initialData.stock_quantity / sizeInBase : 0;
                 setPkgCount(currentPkgs.toFixed(1));
 
-                // Calculate Pkg Price from CostPerUnit
-                // CostPerUnit (Base) * SizeInBase = PriceOfPackage
+                // Calculate Pkg Price
                 const calculatedPkgPrice = initialData.cost_per_unit * sizeInBase;
                 setPkgPrice(calculatedPkgPrice.toFixed(2));
-
-                // Set Simple Unit match (for fallback)
                 setSimpleUnit(initialData.unit);
             } else {
                 setMode('simple');
@@ -78,9 +73,7 @@ export function IngredientForm({ initialData, onSave, onCancel }: IngredientForm
         setIsSubmitting(true);
 
         try {
-            let finalData: any = {
-                name,
-            };
+            let finalData: any = { name };
 
             if (mode === 'simple') {
                 finalData = {
@@ -93,27 +86,17 @@ export function IngredientForm({ initialData, onSave, onCancel }: IngredientForm
                     package_qty: null
                 };
             } else {
-                // PACKAGE LOGIC - Source of Truth Calculation
                 const activePkgSize = parseFloat(pkgSize) || 0;
                 const activePkgPrice = parseFloat(pkgPrice) || 0;
                 const activePkgCount = parseFloat(pkgCount) || 0;
 
-                // Determine Base Unit
-                let baseUnit = 'kg'; // default
+                let baseUnit = 'kg';
                 if (['l', 'ml', 'litro', 'mililitro'].includes(pkgUnit.toLowerCase())) baseUnit = 'l';
-                if (['un', 'unidade'].includes(pkgUnit.toLowerCase())) baseUnit = 'un'; // Pack of Units
+                if (['un', 'unidade'].includes(pkgUnit.toLowerCase())) baseUnit = 'un';
 
-                // Convert Package Size to Base Unit
-                // e.g. 395g -> 0.395 kg
                 const conversionFactor = convertQuantity(1, pkgUnit, baseUnit);
                 const sizeInBase = activePkgSize * conversionFactor;
-
-                // Calculate Cost Per Base Unit
-                // Price 5.00 / 0.395kg = 12.66/kg
                 const costPerBase = sizeInBase > 0 ? activePkgPrice / sizeInBase : 0;
-
-                // Calculate Stock in Base Unit
-                // 5 Boxes * 0.395kg = 1.975 kg
                 const stockInBase = activePkgCount * sizeInBase;
 
                 finalData = {
@@ -123,9 +106,7 @@ export function IngredientForm({ initialData, onSave, onCancel }: IngredientForm
                     stock_quantity: stockInBase,
                     package_size: activePkgSize,
                     package_unit: pkgUnit,
-                    package_qty: activePkgCount, // Storing 'Last Input Quantity' as metadata? Or Total? 
-                    // The DB field package_qty is technically just metadata in the current schema (no stock movement logic here yet). 
-                    // Let's store it as metadata for the UI helper.
+                    package_qty: activePkgCount,
                 };
             }
 
@@ -138,41 +119,68 @@ export function IngredientForm({ initialData, onSave, onCancel }: IngredientForm
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-                <Label>Nome do Ingrediente</Label>
+        <form onSubmit={handleSubmit} className="space-y-6 py-2">
+
+            {/* Name Section */}
+            <div className="space-y-3">
+                <Label className="text-base font-semibold">Nome do Ingrediente</Label>
                 <Input
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    placeholder="Ex: Leite Condensado"
+                    placeholder="Ex: Leite Condensado, Farinha de Trigo..."
                     required
+                    className="h-11 text-base"
                 />
             </div>
 
-            <div className="bg-muted/30 p-4 rounded-lg border border-border/50 space-y-4">
-                <div className="flex items-center justify-between">
-                    <Label className="text-base font-medium flex items-center gap-2">
-                        {mode === 'simple' ? <Scale className="w-4 h-4" /> : <Package className="w-4 h-4" />}
-                        {mode === 'simple' ? 'Modo Simples (Granel/Unidade)' : 'Modo Pacote (Varejo)'}
-                    </Label>
-                    <Switch
-                        checked={mode === 'package'}
-                        onCheckedChange={(c) => setMode(c ? 'package' : 'simple')}
-                    />
+            {/* Mode Selection */}
+            <div className="space-y-3">
+                <Label className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Tipo de Compra</Label>
+                <div className="grid grid-cols-2 gap-4">
+                    <div
+                        className={cn(
+                            "cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-accent hover:border-accent-foreground/20",
+                            mode === 'simple' ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-background"
+                        )}
+                        onClick={() => setMode('simple')}
+                    >
+                        <div className="flex items-center gap-2 mb-1">
+                            <Scale className={cn("w-5 h-5", mode === 'simple' ? "text-primary" : "text-muted-foreground")} />
+                            <span className={cn("font-semibold", mode === 'simple' ? "text-foreground" : "text-muted-foreground")}>Granel / Unidade</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            Para itens pesados ou contados (kg, g, un). Ex: Frutas, Carnes.
+                        </p>
+                    </div>
+
+                    <div
+                        className={cn(
+                            "cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-accent hover:border-accent-foreground/20",
+                            mode === 'package' ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-background"
+                        )}
+                        onClick={() => setMode('package')}
+                    >
+                        <div className="flex items-center gap-2 mb-1">
+                            <Package className={cn("w-5 h-5", mode === 'package' ? "text-primary" : "text-muted-foreground")} />
+                            <span className={cn("font-semibold", mode === 'package' ? "text-foreground" : "text-muted-foreground")}>Embalagem Fechada</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            Para itens industriais (Lata, Caixa, Garrafa). O sistema calcula o custo base.
+                        </p>
+                    </div>
                 </div>
+            </div>
 
-                <p className="text-xs text-muted-foreground">
-                    {mode === 'simple'
-                        ? 'Ideal para itens comprados a granel, por peso ou itens únicos (ex: kg de farinha, dúzias).'
-                        : 'Ideal para itens comprados em embalagens fechadas (ex: lata de 395g, garrafa de 500ml).'}
-                </p>
+            <Separator />
 
+            {/* Dynamic Content */}
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 {mode === 'simple' ? (
-                    <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="grid grid-cols-2 gap-5">
                         <div className="space-y-2">
-                            <Label>Unidade Base</Label>
+                            <Label>Unidade de Medida</Label>
                             <Select value={simpleUnit} onValueChange={setSimpleUnit}>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-10">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -185,11 +193,11 @@ export function IngredientForm({ initialData, onSave, onCancel }: IngredientForm
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label>Custo ({simpleUnit})</Label>
+                            <Label>Custo por {simpleUnit}</Label>
                             <div className="relative">
-                                <span className="absolute left-3 top-2.5 text-xs text-muted-foreground">R$</span>
+                                <span className="absolute left-3 top-2.5 text-muted-foreground">R$</span>
                                 <Input
-                                    className="pl-8"
+                                    className="pl-9 h-10"
                                     type="number"
                                     step="0.01"
                                     value={simpleCost}
@@ -201,30 +209,33 @@ export function IngredientForm({ initialData, onSave, onCancel }: IngredientForm
                         <div className="space-y-2 col-span-2">
                             <Label>Estoque Atual ({simpleUnit})</Label>
                             <Input
+                                className="h-10 border-primary/20 focus-visible:ring-primary/40"
                                 type="number"
                                 step="0.001"
                                 value={simpleStock}
                                 onChange={e => setSimpleStock(e.target.value)}
                                 placeholder="0.00"
                             />
+                            <p className="text-[11px] text-muted-foreground">Quantidade total disponível no seu estoque.</p>
                         </div>
                     </div>
                 ) : (
-                    <div className="space-y-4 pt-2">
-                        <div className="flex gap-3">
-                            <div className="space-y-2 flex-1">
+                    <div className="space-y-5">
+                        <div className="grid grid-cols-[1fr_120px] gap-4">
+                            <div className="space-y-2">
                                 <Label>Tamanho da Embalagem</Label>
                                 <Input
                                     type="number"
                                     value={pkgSize}
                                     onChange={e => setPkgSize(e.target.value)}
                                     placeholder="Ex: 395"
+                                    className="h-10"
                                 />
                             </div>
-                            <div className="space-y-2 w-24">
+                            <div className="space-y-2">
                                 <Label>Unidade</Label>
                                 <Select value={pkgUnit} onValueChange={setPkgUnit}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="h-10">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -240,11 +251,11 @@ export function IngredientForm({ initialData, onSave, onCancel }: IngredientForm
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label className="text-primary font-medium">Preço da Embalagem</Label>
+                                <Label className="text-primary font-medium">Preço Pago (Unidade)</Label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-2.5 text-xs text-muted-foreground">R$</span>
+                                    <span className="absolute left-3 top-2.5 text-muted-foreground">R$</span>
                                     <Input
-                                        className="pl-8 border-primary/30 focus-visible:ring-primary/50"
+                                        className="pl-9 h-10 border-primary/30 focus-visible:ring-primary/50 bg-primary/5"
                                         type="number"
                                         step="0.01"
                                         value={pkgPrice}
@@ -254,66 +265,72 @@ export function IngredientForm({ initialData, onSave, onCancel }: IngredientForm
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label>Quantidade (Embalagens)</Label>
+                                <Label>Quantidade Comprada</Label>
                                 <Input
                                     type="number"
                                     value={pkgCount}
                                     onChange={e => setPkgCount(e.target.value)}
-                                    placeholder="0"
+                                    placeholder="Ex: 2"
+                                    className="h-10"
                                 />
                             </div>
                         </div>
 
-                        {/* Preview Calculation */}
-                        <div className="p-3 bg-secondary/30 rounded text-xs gap-2 flex flex-col border border-border/50">
-                            <div className="flex items-center gap-2 text-muted-foreground font-medium">
-                                <Calculator className="w-3 h-3" />
-                                <span>Simulação Automática:</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                                <div className="flex justify-between">
-                                    <span>Base:</span>
-                                    <span className="font-mono">{['g', 'ml'].includes(pkgUnit) ? (pkgUnit === 'g' ? 'kg' : 'l') : pkgUnit}</span>
+                        {/* Simulation Card */}
+                        <Card className="bg-muted/30 border-dashed border-border shadow-none">
+                            <CardContent className="p-3 pt-4 space-y-3">
+                                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                                    <Calculator className="w-4 h-4 text-primary" />
+                                    Cálculo Automático
                                 </div>
-                                <div className="flex justify-between">
-                                    <span>Custo Base:</span>
-                                    <span className="font-mono">
-                                        R$ {(() => {
-                                            const size = parseFloat(pkgSize) || 0;
-                                            const price = parseFloat(pkgPrice) || 0;
-                                            // Quick calc
-                                            let base = ['g', 'ml'].includes(pkgUnit) ? 1000 : 1;
-                                            if (pkgUnit === 'un') base = 1;
-                                            // if 1kg = 1000g. 395g. 395/1000 = 0.395 base.
-                                            let factor = 1;
-                                            if (['g', 'ml'].includes(pkgUnit)) factor = 0.001;
-
-                                            const sizeBase = size * factor;
-                                            return sizeBase > 0 ? (price / sizeBase).toFixed(2) : '0.00';
-                                        })()} / {['g', 'ml'].includes(pkgUnit) ? (pkgUnit === 'g' ? 'kg' : 'l') : pkgUnit}
-                                    </span>
+                                <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                                    <div className="flex justify-between items-center text-muted-foreground">
+                                        <span>Base Convertida:</span>
+                                        <span className="text-foreground font-mono">
+                                            {['g', 'ml'].includes(pkgUnit) ? (pkgUnit === 'g' ? 'kg' : 'l') : pkgUnit}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-muted-foreground">
+                                        <span>Custo Real:</span>
+                                        <span className="text-foreground font-mono font-medium">
+                                            R$ {(() => {
+                                                const size = parseFloat(pkgSize) || 0;
+                                                const price = parseFloat(pkgPrice) || 0;
+                                                let factor = 1;
+                                                if (['g', 'ml'].includes(pkgUnit)) factor = 0.001;
+                                                const sizeBase = size * factor;
+                                                return sizeBase > 0 ? (price / sizeBase).toFixed(2) : '0.00';
+                                            })()}
+                                            <span className="text-xs text-muted-foreground ml-1">/{['g', 'ml'].includes(pkgUnit) ? (pkgUnit === 'g' ? 'kg' : 'l') : pkgUnit}</span>
+                                        </span>
+                                    </div>
+                                    <div className="col-span-2 pt-2 mt-1 border-t flex justify-between items-center">
+                                        <span className="font-semibold text-primary">Estoque Total Gerado:</span>
+                                        <span className="font-bold text-lg">
+                                            {(() => {
+                                                const count = parseFloat(pkgCount) || 0;
+                                                const size = parseFloat(pkgSize) || 0;
+                                                let factor = 1;
+                                                if (['g', 'ml'].includes(pkgUnit)) factor = 0.001;
+                                                return (count * size * factor).toFixed(3);
+                                            })()}
+                                            <span className="text-sm font-normal text-muted-foreground ml-1">
+                                                {['g', 'ml'].includes(pkgUnit) ? (pkgUnit === 'g' ? 'kg' : 'l') : pkgUnit}
+                                            </span>
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between col-span-2 pt-1 border-t border-border/30 mt-1">
-                                    <span className="font-semibold text-primary">Estoque Total:</span>
-                                    <span className="font-bold">
-                                        {(() => {
-                                            const count = parseFloat(pkgCount) || 0;
-                                            const size = parseFloat(pkgSize) || 0;
-                                            let factor = 1;
-                                            if (['g', 'ml'].includes(pkgUnit)) factor = 0.001;
-                                            return (count * size * factor).toFixed(3);
-                                        })()} {['g', 'ml'].includes(pkgUnit) ? (pkgUnit === 'g' ? 'kg' : 'l') : pkgUnit}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
                     </div>
                 )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" type="button" onClick={onCancel}>Cancelar</Button>
-                <Button type="submit" disabled={isSubmitting}>
+            <div className="flex justify-end gap-3 pt-6 border-t mt-4">
+                <Button variant="outline" type="button" onClick={onCancel} className="h-10 px-6">
+                    Cancelar
+                </Button>
+                <Button type="submit" disabled={isSubmitting} className="h-10 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md">
                     {isSubmitting ? 'Salvando...' : (initialData ? 'Atualizar Ingrediente' : 'Criar Ingrediente')}
                 </Button>
             </div>

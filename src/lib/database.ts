@@ -987,3 +987,19 @@ export const updateKanbanPositions = async (updates: { id: string, status: strin
 
     return { error };
 };
+
+// ============================================================================
+// BATCH OPERATIONS
+// ============================================================================
+
+export const importProductsBatch = async (products: any[]) => {
+    const { user, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return { data: null, error: authError };
+
+    const { data, error } = await supabase.rpc('import_products_batch', {
+        p_user_id: user.id,
+        p_products: products
+    });
+
+    return { data, error };
+};

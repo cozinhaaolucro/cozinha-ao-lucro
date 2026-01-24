@@ -44,36 +44,19 @@ export function IngredientCard({
             onClick={() => onSelect(ingredient)}
         >
             <CardContent className="p-3 flex flex-col h-full min-h-[140px]">
-                {/* Header: Status + Actions */}
+                {/* Header: Name + Actions */}
                 <div className="flex justify-between items-start gap-2 mb-2">
                     <div className="flex items-center gap-2">
-                        {/* Status Tag */}
-                        {activeOrdersCount > 0 ? (
-                            <span className={cn(
-                                "text-[10px] px-1.5 py-0.5 rounded-full font-medium flex items-center gap-1 shadow-sm border",
-                                usageLevel === 'high'
-                                    ? "bg-red-100 text-red-700 border-red-200"
-                                    : usageLevel === 'medium'
-                                        ? "bg-amber-100 text-amber-700 border-amber-200"
-                                        : "bg-[#68A9CA]/15 text-[#68A9CA] border-[#68A9CA]/30"
-                            )}>
-                                Em uso ({activeOrdersCount})
-                            </span>
-                        ) : (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-secondary text-secondary-foreground border border-border/50">
-                                Sem Uso
-                            </span>
-                        )}
-
-                        {hasPackageInfo && (
-                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-border/30">
-                                <Package className="w-3 h-3" />
-                                <span>{ingredient.package_size}{ingredient.package_unit || ingredient.unit}</span>
-                            </div>
-                        )}
+                        {/* Type Icon */}
+                        <div className="text-muted-foreground mr-1">
+                            {hasPackageInfo ? <Package className="w-4 h-4" /> : <div className="w-3 h-3 rounded-full border-2 border-current opacity-60 ml-0.5" />}
+                        </div>
+                        <CardTitle className="text-sm font-semibold leading-tight line-clamp-2 text-foreground" title={ingredient.name}>
+                            {ingredient.name}
+                        </CardTitle>
                     </div>
 
-                    {/* Actions (Edit/Delete) - Only visible on hover or if admin */}
+                    {/* Actions */}
                     {isAdmin && (
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onEdit(ingredient)}>
@@ -86,10 +69,32 @@ export function IngredientCard({
                     )}
                 </div>
 
-                {/* Name */}
-                <CardTitle className="text-sm font-semibold leading-tight line-clamp-2 text-foreground mb-auto" title={ingredient.name}>
-                    {ingredient.name}
-                </CardTitle>
+                {/* Status Badges (Moved below Name) */}
+                <div className="flex items-center gap-2 mb-auto">
+                    {activeOrdersCount > 0 ? (
+                        <span className={cn(
+                            "text-[10px] px-1.5 py-0.5 rounded-full font-medium flex items-center gap-1 shadow-sm border",
+                            usageLevel === 'high'
+                                ? "bg-red-100 text-red-700 border-red-200"
+                                : usageLevel === 'medium'
+                                    ? "bg-amber-100 text-amber-700 border-amber-200"
+                                    : "bg-[#68A9CA]/15 text-[#68A9CA] border-[#68A9CA]/30"
+                        )}>
+                            Em uso ({activeOrdersCount})
+                        </span>
+                    ) : (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-secondary text-secondary-foreground border border-border/50">
+                            Sem Uso
+                        </span>
+                    )}
+
+                    {hasPackageInfo && (
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-border/30">
+                            <Package className="w-3 h-3" />
+                            <span>{ingredient.package_size}{ingredient.package_unit || ingredient.unit}</span>
+                        </div>
+                    )}
+                </div>
 
                 {/* Info Grid */}
                 <div className="flex items-end justify-between pt-2 border-t border-dashed border-border/40 mt-3">
@@ -117,7 +122,6 @@ export function IngredientCard({
                                                 const baseUnit = ingredient.unit;
                                                 const sizeInBase = convertQuantity(pSize, pUnit, baseUnit);
                                                 const packagesCount = sizeInBase > 0 ? stock / sizeInBase : 0;
-                                                // e.g. "2.0 pcts"
                                                 return `${Number(packagesCount.toFixed(1))} ${packagesCount === 1 ? 'pct' : 'pcts'}`;
                                             })()}
                                         </span>
@@ -126,12 +130,12 @@ export function IngredientCard({
                             </div>
                         </div>
 
-                        {/* Cost Display */}
+                        {/* Cost Display - Increased Size */}
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] text-muted-foreground font-medium w-12 shrink-0">Custo:</span>
-                            <span className="font-semibold text-xs text-foreground">
+                            <span className="font-bold text-sm text-foreground">
                                 R$ {ingredient.cost_per_unit.toFixed(2)}
-                                <span className="text-[9px] font-normal text-muted-foreground ml-0.5">/{ingredient.unit}</span>
+                                <span className="text-[10px] font-normal text-muted-foreground ml-0.5">/{ingredient.unit}</span>
                             </span>
                         </div>
                     </div>
