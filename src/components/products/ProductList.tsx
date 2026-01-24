@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Plus, TrendingUp, Pencil, Download, Trash2, Copy, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
-import { getProducts, deleteProduct, updateProduct, createProduct, getIngredients } from '@/lib/database';
+import { getProducts, deleteProduct, updateProduct, createProduct, getIngredients, importProductsBatch } from '@/lib/database';
 import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
 import { PRESET_PRODUCTS } from '@/data/presets';
 import type { Product, Ingredient } from '@/types/database';
@@ -261,11 +261,6 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
             const profit = (p.selling_price || 0) - totalCost;
             return {
                 'ID': p.display_id ? String(p.display_id).padStart(3, '0') : '',
-                Nome: p.name,
-                Descrição: p.description || '',
-                'Preço Venda': p.selling_price ? Number(p.selling_price.toFixed(2)) : 0,
-                'Custo Total': Number(totalCost.toFixed(2)),
-                'Lucro Estimado': Number(profit.toFixed(2)),
                 'Ingredientes': p.product_ingredients
                     .filter(pi => pi.ingredient !== null)
                     .map(pi => `${pi.ingredient!.name} (${pi.quantity}${pi.ingredient!.unit})`)
@@ -288,78 +283,71 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
 
         try {
             const data = await importFromExcel(file);
-            const { data: allIngredients } = await getIngredients(); // Pre-load ingredients
-
-            let importedCount = 0;
-            let errorCount = 0;
+            // Prepare Payload for Batch RPC
+            const batchPayload = [];
 
             for (const row of data) {
-                // Basic validation and mapping
                 const name = row['Nome'] || row['name'] || row['Name'];
                 if (!name) continue;
 
-                // Parse Ingredients if present
-                // Format matches export: "Leite (2litro), Ovo (12unidade)"
+                // Ingredients
                 const ingredientsPayload: any[] = [];
                 const ingredientsStr = row['Ingredientes'] || row['ingredients'] || '';
 
-                if (ingredientsStr && allIngredients) {
+                // Client-side parsing of ingredients string to clean JSON for RPC
+                if (ingredientsStr) {
                     const parts = ingredientsStr.split(',').map((s: string) => s.trim());
                     for (const part of parts) {
                         try {
-                            // Regex to capture Name and Quantity+Unit inside parens
-                            // Example: "Leite Condensado (2kg)" -> Name: "Leite Condensado", QtyUnit: "2kg"
-                            // We need to be careful with regex.
-                            // Let's try matching the last parenthesis group
                             const match = part.match(/^(.*)\s\(([\d\.]+)(.*)\)$/);
                             if (match) {
-                                const iName = match[1].trim();
-                                const qty = parseFloat(match[2]);
-                                // unit is match[3] but we rely on the ingredient's default unit usually, 
-                                // or we can check if it matches. For now, we trust the ingredient name mapping.
-
-                                const ingredient = allIngredients.find(i => i.name.toLowerCase() === iName.toLowerCase());
-                                if (ingredient) {
-                                    ingredientsPayload.push({
-                                        ingredient_id: ingredient.id,
-                                        quantity: qty
-                                    });
-                                }
+                                ingredientsPayload.push({
+                                    name: match[1].trim(),
+                                    quantity: parseFloat(match[2])
+                                });
                             }
-                        } catch (e) {
-                            console.warn("Failed to parse ingredient part:", part);
-                        }
+                        } catch (e) { /* ignore */ }
                     }
                 }
 
-                const productData = {
+                batchPayload.push({
+                    id: row['UUID'] || null, // If explicit UUID provided
+                    display_id: row['ID'] ? parseInt(row['ID']) : null, // Display ID for sync
                     name: name,
-                    description: row['Descrição'] || row['description'] || row['Description'] || '',
-                    selling_price: parseFloat(row['Preço Venda'] || row['selling_price'] || row['Price'] || '0'),
-                    preparation_time_minutes: 30, // Default
-                    active: true,
-                    image_url: null,
+                    description: row['Descrição'] || row['description'] || '',
+                    selling_price: parseFloat(row['Preço Venda'] || row['selling_price'] || '0'),
                     selling_unit: 'unidade',
-                    hourly_rate: 0,
-                    is_highlight: false,
-                    category: 'Importado'
-                };
-
-                const { error } = await createProduct(productData, ingredientsPayload);
-                if (error) {
-                    console.error("Error importing row", row, error);
-                    errorCount++;
-                } else {
-                    importedCount++;
-                }
+                    ingredients: ingredientsPayload
+                });
             }
 
-            toast({
-                title: 'Importação concluída',
-                description: `${importedCount} produtos importados. ${errorCount} erros.`,
-                variant: errorCount > 0 ? 'destructive' : 'default'
-            });
-            loadProducts();
+            if (batchPayload.length > 0) {
+                const { data: result, error } = await importProductsBatch(batchPayload);
+
+                if (error) {
+                    console.error("Batch Import Error:", error);
+                    toast({ title: 'Erro na importação em lote', description: error.message, variant: 'destructive' });
+                } else {
+                    // @ts-ignore
+                    const count = result?.count || 0;
+                    // @ts-ignore
+                    const errors = result?.errors || [];
+
+                    toast({
+                        title: 'Importação Concluída',
+                        description: `${count} produtos processados. ${errors.length} erros.`,
+                        variant: errors.length > 0 ? 'warning' : 'default'
+                    });
+
+                    if (errors.length > 0) {
+                        console.warn("Import Errors:", errors);
+                    }
+
+                    loadProducts();
+                }
+            } else {
+                toast({ title: 'Nenhum dado válido encontrado para importar.', variant: 'warning' });
+            }
 
         } catch (error) {
             console.error("Import error", error);
