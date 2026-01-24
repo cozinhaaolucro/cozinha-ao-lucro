@@ -33,26 +33,46 @@ const checkUsageLimits = async (user_id: string, resource: 'products' | 'custome
     // If limit is infinity, return true immediately
     if (plan.limits[resource] === Infinity) return { allowed: true };
 
-    // 2. Get Count
-    // For Orders, we check monthly count. For others, total count.
+    // 2. Get Count via optimized Server-Side RPC
+    // Instead of 3 sequential round-trips with "count", we use one single DB function.
+    // Falls back to direct count if RPC fails (resilience)
     let count = 0;
-    if (resource === 'orders') {
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
 
-        const { count: c } = await supabase
-            .from('orders')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', user_id)
-            .gte('created_at', startOfMonth.toISOString());
-        count = c || 0;
-    } else {
-        const { count: c } = await supabase
-            .from(resource) // 'products' or 'customers'
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', user_id);
-        count = c || 0;
+    try {
+        const { data: metrics, error } = await supabase.rpc('get_resource_usage', { p_user_id: user_id });
+
+        if (!error && metrics && metrics.length > 0) {
+            const m = metrics[0];
+            if (resource === 'orders') count = Number(m.orders_month_count);
+            else if (resource === 'products') count = Number(m.products_count);
+            else if (resource === 'customers') count = Number(m.customers_count);
+        } else {
+            // Fallback to legacy count if RPC is missing/fails
+            // eslint-disable-next-line
+            console.warn('RPC unavailable, falling back to slow count', error);
+            if (resource === 'orders') {
+                const startOfMonth = new Date();
+                startOfMonth.setDate(1);
+                startOfMonth.setHours(0, 0, 0, 0);
+                const { count: c } = await supabase
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', user_id)
+                    .gte('created_at', startOfMonth.toISOString());
+                count = c || 0;
+            } else {
+                const { count: c } = await supabase
+                    .from(resource)
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', user_id);
+                count = c || 0;
+            }
+        }
+    } catch (e) {
+        // Fallback for unexpected JS errors
+        console.error('Usage check error', e);
+        // Fail open or closed? Here we fail open to avoid blocking user mistakenly if system is buggy
+        // but for now let's keep it checking.
     }
 
     if (count >= plan.limits[resource]) {

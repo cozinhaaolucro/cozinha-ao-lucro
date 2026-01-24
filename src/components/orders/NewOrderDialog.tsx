@@ -25,6 +25,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DatePicker } from "@/components/ui/date-picker";
 import { parseLocalDate, formatDateForInput } from '@/lib/dateUtils';
+import { useStockCheck } from '@/hooks/useStockCheck';
 
 type NewOrderDialogProps = {
     open: boolean;
@@ -58,7 +59,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess, initialProductId }: New
     const [creatingCustomer, setCreatingCustomer] = useState(false);
 
     // Stock Alert State
-    const [missingIngredients, setMissingIngredients] = useState<Array<{ id: string; name: string; missing: number; current: number; reserved: number; needed: number; unit: string }>>([]);
+    const [missingIngredients, setMissingIngredients] = useState<Array<{ id: string; name: string; missing: number; current: number; reserved?: number; needed: number; unit: string }>>([]);
     const [showStockAlert, setShowStockAlert] = useState(false);
     const [isRestocking, setIsRestocking] = useState(false);
     const [pendingSubmit, setPendingSubmit] = useState(false);
@@ -139,61 +140,10 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess, initialProductId }: New
         return itemsTotal + (Number(formData.delivery_fee) || 0);
     };
 
+    const { checkStockAvailability } = useStockCheck();
+
     const calculateMissingStock = async () => {
-        // 1. Identificar todos os ingredientes necessários para este pedido
-        const needed = new Map<string, { name: string; qty: number; unit: string }>();
-        const ingredientIds = new Set<string>();
-
-        items.forEach(item => {
-            const product = products.find(p => p.id === item.product_id);
-            if (product?.product_ingredients) {
-                product.product_ingredients.forEach((pi: any) => {
-                    const ing = pi.ingredient;
-                    if (ing) {
-                        const total = (pi.quantity * item.quantity);
-                        const existing = needed.get(ing.id) || { name: ing.name, qty: 0, unit: ing.unit };
-                        existing.qty += total;
-                        needed.set(ing.id, existing);
-                        ingredientIds.add(ing.id);
-                    }
-                });
-            }
-        });
-
-        if (ingredientIds.size === 0) return [];
-
-        // 2. Buscar dados FRESCOS de estoque do banco para esses ingredientes
-        // Isso evita problemas com cache local desatualizado
-        const { data: freshIngredients } = await supabase
-            .from('ingredients')
-            .select('id, stock_quantity, name, unit')
-            .in('id', Array.from(ingredientIds));
-
-        const stockMap = new Map<string, number>();
-        freshIngredients?.forEach((ing: any) => {
-            stockMap.set(ing.id, ing.stock_quantity);
-        });
-
-        // 3. Verificar falta comparando Necessidade vs Estoque Fresco
-        const missing: any[] = [];
-        needed.forEach((val, key) => {
-            const currentStock = stockMap.get(key) || 0;
-
-            // Estoque atual já reflete deduções de pedidos em produção (via trigger SQL)
-            if (val.qty > currentStock) {
-                missing.push({
-                    id: key,
-                    name: val.name,
-                    missing: val.qty - currentStock,
-                    current: currentStock,
-                    reserved: 0,
-                    needed: val.qty,
-                    unit: val.unit
-                });
-            }
-        });
-
-        return missing;
+        return await checkStockAvailability(items, products);
     };
 
     const handleAutoRestock = async () => {
@@ -623,9 +573,9 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess, initialProductId }: New
                                         </div>
                                         <div className="text-xs text-muted-foreground flex gap-4">
                                             <span>Disponível: {Math.max(0, item.current).toFixed(2)}</span>
-                                            {item.reserved > 0 && (
+                                            {(item.reserved || 0) > 0 && (
                                                 <span className="text-red-600">
-                                                    Reservado: {item.reserved.toFixed(2)}
+                                                    Reservado: {item.reserved?.toFixed(2) || '0.00'}
                                                 </span>
                                             )}
                                             <span>Este pedido: {item.needed.toFixed(2)}</span>
