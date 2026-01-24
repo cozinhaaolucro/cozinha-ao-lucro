@@ -60,6 +60,7 @@ export type Ingredient = {
 export type Product = {
     id: string;
     user_id: string;
+    display_id?: number;
     name: string;
     description: string | null;
     selling_price: number;

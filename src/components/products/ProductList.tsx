@@ -260,6 +260,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
             const totalCost = calculateTotalCost(p);
             const profit = (p.selling_price || 0) - totalCost;
             return {
+                'ID': p.display_id ? String(p.display_id).padStart(3, '0') : '',
                 Nome: p.name,
                 Descrição: p.description || '',
                 'Preço Venda': p.selling_price ? Number(p.selling_price.toFixed(2)) : 0,
@@ -424,7 +425,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuLabel>Template</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['Nome', 'Descrição', 'Preço Venda', 'Ingredientes'], 'produtos'))}>
+                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['ID', 'Nome', 'Descrição', 'Preço Venda', 'Ingredientes'], 'produtos'))}>
                                 <FileDown className="w-4 h-4 mr-2" /> Modelo de Importação
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -441,7 +442,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                             <DropdownMenuItem onClick={() => handleExport('excel')}>Planilha Excel</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleExport('csv')}>Planilha CSV</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['Nome', 'Descrição', 'Preço Venda', 'Ingredientes'], 'produtos'))}>Template</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['ID', 'Nome', 'Descrição', 'Preço Venda', 'Ingredientes'], 'produtos'))}>Template</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
 
