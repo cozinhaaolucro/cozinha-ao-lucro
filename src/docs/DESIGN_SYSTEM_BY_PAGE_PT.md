@@ -13,9 +13,9 @@ Todas as cores **DEVEM** ser utilizadas via variáveis CSS definidas no `index.c
 
 | Função | Nome | Variável CSS | Cor Visual (Valor) |
 | :--- | :--- | :--- | :--- |
-| **Primária** | Azul Escuro | `--primary` | `hsl(186 35% 28%)` |
-| **Secundária** | Azul Claro | `--secondary` | `hsl(187 29% 58%)` |
-| **Acento** | Ciano Mudo | `--accent` | `hsl(182 16% 55%)` |
+| **Primária** | Azul Escuro | `--primary` | hsla(186, 35%, 28%, 1.00) |
+| **Secundária** | Azul Claro | `--secondary` | hsla(187, 29%, 58%, 1.00) |
+| **Acento** | Ciano Mudo | `--accent` | `hsla(183, 16%, 55%, 1.00)` |
 | **Financeiro** | Dourado | `--financial` | `hsl(41 53% 55%)` |
 | **Destrutivo** | Vermelho | `--destructive` | `hsl(8 48% 58%)` |
 | **Sucesso** | Verde | `--success` | `hsl(168 22% 52%)` |
