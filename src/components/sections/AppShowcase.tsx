@@ -9,52 +9,31 @@ const AppShowcase = () => {
     return (
         <section className="section-padding bg-muted/30 relative overflow-hidden">
             {/* Background Effects */}
-            {/* Background Effects */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
                 <div className="absolute top-0 left-0 w-full h-full bg-grid-pattern opacity-[0.03]"></div>
-
                 {/* Visual Narrative: The Bridge (Stream of Light) */}
                 <div className="absolute top-[-50%] left-[-20%] w-[150%] h-[200%] bg-gradient-to-br from-primary/10 via-transparent to-transparent -rotate-12 blur-3xl opacity-60 pointer-events-none"></div>
                 <div className="absolute top-[-20%] right-[-10%] w-[80%] h-[120%] bg-gradient-to-bl from-financial/10 via-transparent to-transparent rotate-12 blur-3xl opacity-40 pointer-events-none"></div>
-
-                {/* Skewed Connector Removed */}
             </div>
 
             <div className="container-max mobile-container relative z-10">
-                <RevealOnScroll>
-                    <div className="text-center mb-24 max-w-3xl mx-auto">
-                        <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground tracking-tight">
-                            O controle profissional que sua cozinha merece
-                        </h2>
-                        <p className="text-xl text-muted-foreground leading-relaxed">
-                            Esqueça planilhas complexas e cadernos bagunçados. O Cozinha ao Lucro centraliza toda a gestão do seu negócio em uma interface linda e intuitiva.
-                        </p>
-                    </div>
-                </RevealOnScroll>
+                <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
-
-                <div className="grid lg:grid-cols-2 gap-16 items-center relative">
-                    {/* Connecting Flow Line (Desktop only) */}
-                    <div className="hidden lg:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none z-0 opacity-20">
-                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full stroke-primary/30 fill-none" strokeWidth="0.5">
-                            <path d="M10,50 C30,40 50,60 70,50" vectorEffect="non-scaling-stroke" />
-                        </svg>
-                    </div>
-
-                    <RevealOnScroll direction="right" className="lg:order-2 relative z-10">
+                    {/* Left Column: Content */}
+                    <RevealOnScroll className="order-2 lg:order-1 text-left">
                         <div className="space-y-8">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm border border-primary/20 backdrop-blur-sm">
-                                Vendas no Automático
+                            <div>
+                                <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground tracking-tight leading-tight">
+                                    O controle profissional que <span className="text-primary">sua cozinha merece</span>
+                                </h2>
+                                <p className="text-lg text-muted-foreground leading-relaxed">
+                                    Esqueça planilhas complexas e cadernos bagunçados. Centralize gestão, estoque e vendas em uma única plataforma inteligente.
+                                </p>
                             </div>
-                            <h3 className="text-3xl md:text-4xl font-bold text-foreground">
-                                Seu Cardápio Digital <span className="text-primary">Profissional e Irresistível</span>
-                            </h3>
-                            <p className="text-lg text-muted-foreground leading-relaxed">
-                                Transforme visitantes em clientes fiéis. Tenha um link exclusivo para divulgar no Instagram e WhatsApp, permitindo que seus clientes façam pedidos sozinhos, sem erros e sem taxas de marketplace.
-                            </p>
+
                             <ul className="space-y-4">
-                                {['Sem taxas por pedido (100% seu)', 'Atendimento agilizado no WhatsApp', 'Fotos que dão água na boca'].map((item, i) => (
-                                    <li key={i} className="flex items-center gap-3 text-foreground/80">
+                                {['Lista de Compras Inteligente', 'Cardápio Digital Automático', 'Controle de Estoque em Tempo Real'].map((item, i) => (
+                                    <li key={i} className="flex items-center gap-3 text-foreground/90 font-medium">
                                         <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
                                             <Check className="w-4 h-4 text-primary" />
                                         </div>
@@ -62,48 +41,59 @@ const AppShowcase = () => {
                                     </li>
                                 ))}
                             </ul>
+
+                            <div className="pt-4">
+                                <Button
+                                    onClick={() => navigate('/register')}
+                                    size="lg"
+                                    className="bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,45%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,40%,1)] text-white font-bold text-lg px-8 py-6 h-auto rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 w-full sm:w-auto"
+                                >
+                                    Começar Agora
+                                    <ArrowRight className="ml-2 w-5 h-5 inline-block" />
+                                </Button>
+                                <p className="text-xs text-muted-foreground mt-3 font-medium opacity-80 pl-4">
+                                    Teste grátis de 7 dias. Sem compromisso.
+                                </p>
+                            </div>
                         </div>
                     </RevealOnScroll>
 
-                    <RevealOnScroll direction="left" className="lg:order-1 relative z-10" delay={0.2}>
-                        <div className="relative group perspective-1000">
-                            {/* Glassmorphism Backdrop */}
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[110%] bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 -z-10 transform -rotate-6"></div>
+                    {/* Right Column: Dual Visuals (Placeholders) */}
+                    <RevealOnScroll className="order-1 lg:order-2 relative" delay={0.2}>
+                        <div className="relative h-[400px] md:h-[500px] w-full">
+                            {/* Abstract decorative blob behind */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-primary/20 to-secondary/20 blur-[60px] rounded-full pointer-events-none"></div>
 
-                            {/* Mobile Mockup Style */}
-                            <div className="relative max-w-[300px] mx-auto">
-                                <div className="absolute -inset-1 bg-gradient-to-tr from-primary to-accent rounded-[3rem] blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
-                                <div className="relative rounded-[2.5rem] overflow-hidden border-8 border-background shadow-2xl bg-card transform-gpu">
-                                    <img
-                                        src="/images/mockups/cardapio_digital.png"
-                                        alt="Cardápio Digital Mobile"
-                                        width={300}
-                                        height={600}
-                                        loading="lazy"
-                                        decoding="async"
-                                        className="w-full h-auto object-cover will-change-transform hover:scale-105 transition-transform duration-500"
-                                    />
+                            {/* Card 1: Lista Inteligente (Top Left) */}
+                            <div className="absolute top-8 left-[5%] md:left-[15%] z-20 w-[45%] shadow-2xl rounded-2xl animate-float" style={{ animationDuration: '6s' }}>
+                                <div className="bg-white/90 backdrop-blur-xl border border-white/40 p-1 rounded-2xl">
+                                    {/* Placeholder Image Area */}
+                                    <div className="bg-muted/50 rounded-xl aspect-[4/3] flex items-center justify-center border border-dashed border-muted-foreground/20">
+                                        <span className="text-muted-foreground font-medium text-sm">Lista Inteligente (Img)</span>
+                                    </div>
+                                    <div className="p-3">
+                                        <div className="h-2 w-1/3 bg-muted rounded mb-2"></div>
+                                        <div className="h-2 w-2/3 bg-muted rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Card 2: Cardápio (Bottom Right) */}
+                            <div className="absolute bottom-8 right-[5%] md:right-[15%] z-30 w-[45%] shadow-2xl rounded-2xl animate-float" style={{ animationDuration: '7s', animationDelay: '1s' }}>
+                                <div className="bg-white/90 backdrop-blur-xl border border-white/40 p-1 rounded-2xl">
+                                    {/* Placeholder Image Area */}
+                                    <div className="bg-muted/50 rounded-xl aspect-[4/3] flex items-center justify-center border border-dashed border-muted-foreground/20">
+                                        <span className="text-muted-foreground font-medium text-sm">Cardápio Digital (Img)</span>
+                                    </div>
+                                    <div className="p-3">
+                                        <div className="h-2 w-1/2 bg-muted rounded mb-2"></div>
+                                        <div className="h-2 w-3/4 bg-muted rounded"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </RevealOnScroll>
                 </div>
-
-
-                <div className="mt-24 text-center px-4">
-                    <Button
-                        onClick={() => navigate('/register')}
-                        size="lg"
-                        className="bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,58%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,50%,1)] w-full sm:w-auto text-white font-bold text-lg px-8 py-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
-                    >
-                        Testar grátis por 7 dias
-                        <ArrowRight className="ml-2 w-5 h-5 inline-block" />
-                    </Button>
-                    <p className="text-xs text-muted-foreground mt-4 font-medium opacity-80">
-                        Comece agora, cancele quando quiser.
-                    </p>
-                </div>
-
             </div>
         </section>
     );

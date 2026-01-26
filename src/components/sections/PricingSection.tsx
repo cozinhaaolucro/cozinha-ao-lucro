@@ -25,7 +25,7 @@ const PricingSection = () => {
             <div className="container-max relative z-10">
                 <RevealOnScroll>
                     <div className="text-center mb-12">
-                        <span className="text-sm font-semibold text-primary tracking-widest uppercase mb-3 block">Simples & Transparente</span>
+
                         <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground font-heading">
                             Planos que crescem <span className="text-primary relative inline-block effect-shine px-1 -mx-1 align-bottom">com você</span>
                         </h2>
@@ -86,12 +86,12 @@ const PricingSection = () => {
                                 </p>
                                 {/* Price Display */}
                                 <div className="flex items-center justify-center gap-4 translate-x-2 relative transition-all duration-300">
-                                    <span className="text-sm text-muted-foreground font-light mt-4">R$</span>
-                                    <span className="text-7xl font-extrabold text-foreground font-heading tracking-wider leading-none">
+                                    <span className="text-xl text-muted-foreground/80 font-bold mt-2">R$</span>
+                                    <span className="text-7xl font-black text-foreground font-heading tracking-wider leading-none">
                                         {billingCycle === 'monthly' ? '39' : '334'}
                                     </span>
                                     <div className="flex flex-col items-start -ml-1 mt-3">
-                                        <span className="text-xl font-bold text-foreground leading-none">
+                                        <span className="text-3xl font-black text-foreground leading-none">
                                             {billingCycle === 'monthly' ? ',90' : ',80'}
                                         </span>
                                         <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
@@ -138,7 +138,7 @@ const PricingSection = () => {
                                 <div className="mt-12">
                                     <Button
                                         onClick={() => navigate('/register')}
-                                        className="w-full h-14 rounded-full bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,58%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,50%,1)] shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 font-bold text-sm md:text-base uppercase tracking-wider text-white"
+                                        className="w-full h-14 rounded-full bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,45%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,40%,1)] shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 font-bold text-sm md:text-base uppercase tracking-wider text-white"
                                     >
                                         Testar grátis por 7 dias
                                     </Button>
@@ -166,12 +166,12 @@ const PricingSection = () => {
                                     Liberdade total para crescer.
                                 </p>
                                 <div className="flex items-center justify-center gap-4 translate-x-2 relative transition-all duration-300">
-                                    <span className="text-sm text-muted-foreground font-light mt-4">R$</span>
-                                    <span className="text-7xl font-extrabold text-foreground font-heading tracking-wider leading-none">
+                                    <span className="text-xl text-muted-foreground/80 font-bold mt-2">R$</span>
+                                    <span className="text-7xl font-black text-foreground font-heading tracking-wider leading-none">
                                         {billingCycle === 'monthly' ? '79' : '642'}
                                     </span>
                                     <div className="flex flex-col items-start -ml-1 mt-3">
-                                        <span className="text-xl font-bold text-foreground leading-none">
+                                        <span className="text-3xl font-black text-foreground leading-none">
                                             {billingCycle === 'monthly' ? ',90' : ',00'}
                                         </span>
                                         <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
@@ -218,7 +218,7 @@ const PricingSection = () => {
                                 <div className="mt-12">
                                     <Button
                                         onClick={() => navigate('/register')}
-                                        className="w-full h-14 rounded-full bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,58%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,50%,1)] shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 font-bold text-sm md:text-base uppercase tracking-wider text-white"
+                                        className="w-full h-14 rounded-full bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,45%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,40%,1)] shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 font-bold text-sm md:text-base uppercase tracking-wider text-white"
                                     >
                                         Testar grátis por 7 dias
                                     </Button>
