@@ -288,8 +288,8 @@ const Dashboard = () => {
                         </CardContent>
                     </Card>
 
-                    {/* Dica do Especialista - Desktop Only */}
-                    <Card className="hidden md:block overflow-hidden border border-border/60 shadow-elegant relative bg-white">
+                    {/* Dica do Especialista - Visible on Mobile too now */}
+                    <Card className="block overflow-hidden border border-border/60 shadow-elegant relative bg-white">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#5F98A1] to-[#2e5b60]" />
                         <div className="absolute -right-6 -bottom-6 opacity-[0.03] text-primary">
                             <Lightbulb className="w-32 h-32" style={{ color: '#2e5b60' }} />
