@@ -13,7 +13,7 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
                 <CardDescription className="text-muted-foreground">Acompanhe o desempenho financeiro diário.</CardDescription>
             </CardHeader>
             <CardContent className="relative z-10">
-                <div className="h-[200px]">
+                <div className="h-[350px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>

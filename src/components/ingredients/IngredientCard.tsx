@@ -5,6 +5,7 @@ import type { Ingredient } from "@/types/database";
 import { convertQuantity } from "@/components/products/builder/utils";
 import { Package, TrendingUp, Edit2, Trash2 } from "lucide-react";
 import { IngredientQuickAdd } from "./IngredientQuickAdd";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface IngredientCardProps {
     ingredient: Ingredient;
@@ -17,6 +18,7 @@ interface IngredientCardProps {
     onRefresh?: () => void; // Optional refresh callback
     activeOrdersCount?: number;
     isAdmin: boolean;
+    selectionMode?: boolean;
 }
 
 export function IngredientCard({
@@ -29,7 +31,8 @@ export function IngredientCard({
     onDelete,
     onRefresh,
     activeOrdersCount = 0,
-    isAdmin
+    isAdmin,
+    selectionMode
 }: IngredientCardProps) {
     const stock = ingredient.stock_quantity;
     const hasPackageInfo = !!(ingredient.package_size && ingredient.package_size > 0);
@@ -47,9 +50,24 @@ export function IngredientCard({
                 {/* Header: Name + Actions */}
                 <div className="flex justify-between items-start gap-2 mb-2">
                     <div className="flex items-center gap-2">
+                        {/* Checkbox */}
+                        <div
+                            className={cn(
+                                "flex items-center justify-center transition-all duration-200",
+                                (isSelected || selectionMode) ? "w-5 opacity-100 mr-1" : "w-0 opacity-0 overflow-hidden"
+                            )}
+                            onClick={(e) => { e.stopPropagation(); onSelect(ingredient); }}
+                        >
+                            <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => onSelect(ingredient)}
+                                className="h-4 w-4"
+                            />
+                        </div>
+
                         {/* Type Icon */}
-                        <div className="text-muted-foreground mr-1">
-                            {hasPackageInfo ? <Package className="w-4 h-4" /> : <div className="w-3 h-3 rounded-full border-2 border-current opacity-60 ml-0.5" />}
+                        <div className="mr-1">
+                            {hasPackageInfo ? <Package className="w-4 h-4 text-gray-700" /> : <div className="w-3 h-3 rounded-full border-2 border-[#C9A34F] bg-[#C9A34F]/20 ml-0.5" />}
                         </div>
                         <CardTitle className="text-sm font-semibold leading-tight line-clamp-2 text-foreground" title={ingredient.name}>
                             {ingredient.name}
@@ -83,7 +101,7 @@ export function IngredientCard({
                             Em uso ({activeOrdersCount})
                         </span>
                     ) : (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-secondary text-secondary-foreground border border-border/50">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-[#5F98A1]/10 text-[#5F98A1] border border-[#5F98A1]/20">
                             Sem Uso
                         </span>
                     )}
@@ -106,7 +124,7 @@ export function IngredientCard({
                                 {/* Primary: Base Unit */}
                                 <span className={cn(
                                     "font-medium text-xs transition-colors",
-                                    stock < 0 ? "text-destructive font-bold" : "text-foreground/90"
+                                    stock < 0 ? "text-destructive font-bold" : "text-[#5F98A1]"
                                 )}>
                                     {Number(stock.toFixed(2))} <span className="text-[10px] text-muted-foreground">{ingredient.unit}</span>
                                 </span>

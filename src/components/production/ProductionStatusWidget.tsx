@@ -110,7 +110,7 @@ const ProductionStatusWidget = () => {
         }, [startDate]);
 
         return (
-            <div className="flex items-center gap-1 text-red-500 font-mono font-bold text-sm">
+            <div className="flex items-center gap-1 text-[#c76e60] font-mono font-bold text-sm">
                 <Flame className="w-3 h-3 animate-pulse" />
                 {elapsed} min
             </div>
@@ -152,10 +152,10 @@ const ProductionStatusWidget = () => {
                     <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                         <div className="relative">
                             <div className="absolute inset-0 bg-blue-500 blur-lg opacity-10"></div>
-                            <div className="bg-gradient-to-br from-blue-600 to-purple-600 w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-blue-900/20 relative z-10 p-0">
-                                <ChefHat className="text-white w-6 h-6" />
+                            <div className="bg-[#3b82f680] w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-blue-900/20 relative z-10 p-0 backdrop-blur-sm">
+                                <ChefHat className="text-white w-7 h-7" />
                                 {activeOrders.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-neutral-900">
+                                    <span className="absolute -top-1 -right-1 bg-[#c76e60] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-neutral-900">
                                         {activeOrders.length}
                                     </span>
                                 )}
@@ -224,7 +224,7 @@ const ProductionStatusWidget = () => {
                         </SheetTitle>
                         <div className="flex gap-2 text-sm text-muted-foreground">
                             <span>•</span>
-                            <span className="text-red-500 font-medium">{inProgressOrders.length} Produzindo</span>
+                            <span className="text-[#c76e60] font-medium">{inProgressOrders.length} Produzindo</span>
                             <span>•</span>
                             <span className="text-green-600 font-medium">{readyOrders.length} Prontos</span>
                         </div>
@@ -236,13 +236,13 @@ const ProductionStatusWidget = () => {
                             {/* IN PROGRESS SECTION */}
                             {inProgressOrders.length > 0 && (
                                 <div className="space-y-4">
-                                    <h3 className="text-sm font-bold uppercase tracking-wider text-red-500 flex items-center gap-2">
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-[#c76e60] flex items-center gap-2">
                                         <Flame className="w-4 h-4" />
                                         Em Produção ({inProgressOrders.length})
                                     </h3>
                                     {inProgressOrders.map(order => (
-                                        <Card key={order.id} className="border-red-200 bg-red-50/50 dark:bg-red-950/20 overflow-hidden relative">
-                                            <div className="absolute top-0 left-0 h-1 bg-red-500 w-full animate-progress-indeterminate"></div>
+                                        <Card key={order.id} className="border-[#c76e60]/30 bg-[#c76e60]/5 dark:bg-[#c76e60]/20 overflow-hidden relative">
+                                            <div className="absolute top-0 left-0 h-1 bg-[#c76e60] w-full animate-progress-indeterminate"></div>
                                             <CardContent className="p-4 space-y-3">
                                                 <div className="flex justify-between items-start">
                                                     <div>
@@ -264,7 +264,7 @@ const ProductionStatusWidget = () => {
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        className="flex-1 bg-white border-red-200 hover:bg-red-50 hover:text-red-700 text-red-700"
+                                                        className="flex-1 bg-white border-[#c76e60]/30 hover:bg-[#c76e60]/10 hover:text-[#c76e60] text-[#c76e60]"
                                                         onClick={() => handleStatusUpdate(order.id, 'pending', 'preparing')}
                                                     >
                                                         <Pause className="w-4 h-4 mr-2" />
@@ -272,7 +272,7 @@ const ProductionStatusWidget = () => {
                                                     </Button>
                                                     <Button
                                                         size="sm"
-                                                        className="flex-[2] bg-red-500 hover:bg-red-600 hover:text-white border-red-600"
+                                                        className="flex-[2] bg-[#c76e60] hover:bg-[#c76e60]/90 hover:text-white border-[#c76e60]"
                                                         onClick={() => handleStatusUpdate(order.id, 'ready', 'preparing')}
                                                     >
                                                         <CheckCircle className="w-4 h-4 mr-2" />

@@ -96,7 +96,7 @@ const OperationsFAB = () => {
         }, [startDate]);
 
         return (
-            <div className="flex items-center gap-1 text-orange-500 font-mono font-bold">
+            <div className="flex items-center gap-1 text-[#c76e60] font-mono font-bold">
                 <Flame className="w-4 h-4 animate-pulse" />
                 {elapsed} min
             </div>
@@ -120,7 +120,7 @@ const OperationsFAB = () => {
                         <div className="relative flex flex-col items-center justify-center">
                             <ChefHat className="w-8 h-8" />
                             {totalActive > 0 && (
-                                <Badge className="absolute -top-1 -right-1 h-6 w-6 rounded-full p-0 flex items-center justify-center bg-red-500 border-2 border-white">
+                                <Badge className="absolute -top-1 -right-1 h-6 w-6 rounded-full p-0 flex items-center justify-center bg-[#c76e60] border-2 border-white">
                                     {totalActive}
                                 </Badge>
                             )}
@@ -136,7 +136,7 @@ const OperationsFAB = () => {
                         <div className="flex gap-2 text-sm text-muted-foreground">
                             <span>{todoOrders.length} Fila</span>
                             <span>•</span>
-                            <span className="text-orange-500 font-medium">{inProgressOrders.length} Produzindo</span>
+                            <span className="text-[#c76e60] font-medium">{inProgressOrders.length} Produzindo</span>
                             <span>•</span>
                             <span className="text-green-600 font-medium">{readyOrders.length} Prontos</span>
                         </div>
@@ -148,14 +148,14 @@ const OperationsFAB = () => {
                             {/* IN PROGRESS SECTION - HIGHLIGHTED */}
                             {inProgressOrders.length > 0 && (
                                 <div className="space-y-4">
-                                    <h3 className="text-sm font-bold uppercase tracking-wider text-orange-500 flex items-center gap-2">
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-[#c76e60] flex items-center gap-2">
                                         <Flame className="w-4 h-4" />
                                         Em Produção ({inProgressOrders.length})
                                     </h3>
                                     {inProgressOrders.map(order => (
-                                        <Card key={order.id} className="border-orange-200 bg-orange-50/50 dark:bg-orange-950/20 overflow-hidden relative">
+                                        <Card key={order.id} className="border-[#c76e60]/30 bg-[#c76e60]/5 dark:bg-[#c76e60]/10 overflow-hidden relative">
                                             {/* Progress Bar Animation */}
-                                            <div className="absolute top-0 left-0 h-1 bg-orange-500 w-full animate-progress-indeterminate"></div>
+                                            <div className="absolute top-0 left-0 h-1 bg-[#c76e60] w-full animate-progress-indeterminate"></div>
 
                                             <CardContent className="p-4 space-y-3">
                                                 <div className="flex justify-between items-start">
@@ -180,7 +180,7 @@ const OperationsFAB = () => {
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        className="flex-1 bg-white border-orange-200 hover:bg-[hsl(182,16%,55%)] hover:text-white text-orange-700"
+                                                        className="flex-1 bg-white border-[#c76e60]/30 hover:bg-[#c76e60]/10 hover:text-[#c76e60] text-[#c76e60]"
                                                         onClick={() => handleStatusUpdate(order.id, 'pending', 'preparing')}
                                                     >
                                                         <Pause className="w-4 h-4 mr-2" />
@@ -188,7 +188,7 @@ const OperationsFAB = () => {
                                                     </Button>
                                                     <Button
                                                         size="sm"
-                                                        className="flex-[2] bg-orange-500 hover:bg-[hsl(182,16%,55%)] hover:text-white border-orange-600"
+                                                        className="flex-[2] bg-[#c76e60] hover:bg-[#c76e60]/90 hover:text-white border-[#c76e60]"
                                                         onClick={() => handleStatusUpdate(order.id, 'ready', 'preparing')}
                                                     >
                                                         <CheckCircle className="w-4 h-4 mr-2" />

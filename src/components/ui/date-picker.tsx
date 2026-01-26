@@ -62,10 +62,12 @@ export function DateRangePicker({
     date,
     setDate,
     className,
+    minimal = false,
 }: {
     date: DateRange | undefined
     setDate: (date: DateRange | undefined) => void
     className?: string
+    minimal?: boolean
 }) {
     const [internalDate, setInternalDate] = React.useState<DateRange | undefined>(date);
     const [isOpen, setIsOpen] = React.useState(false);
@@ -106,41 +108,57 @@ export function DateRangePicker({
         <div className={cn("grid gap-2", className)}>
             <Popover open={isOpen} onOpenChange={handleOpenChange}>
                 <PopoverTrigger asChild>
-                    <Button
-                        id="date"
-                        variant={"outline"}
-                        className={cn(
-                            "w-full justify-start text-left font-normal bg-muted/10 border-input/60 hover:bg-muted/20 hover:border-primary/30 hover:text-foreground shadow-sm",
-                            !internalDate && "text-muted-foreground"
-                        )}
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
-                        {internalDate?.from ? (
-                            internalDate.to ? (
-                                <>
-                                    {format(internalDate.from, "dd/MM/y", { locale: ptBR })} -{" "}
-                                    {format(internalDate.to, "dd/MM/y", { locale: ptBR })}
-                                </>
+                    {minimal ? (
+                        <Button
+                            id="date"
+                            variant="outline"
+                            size="icon"
+                            className={cn(
+                                "h-9 w-9 bg-background border-input hover:bg-muted hover:text-primary transition-colors",
+                                !internalDate && "text-muted-foreground",
+                                internalDate?.from && "text-primary border-primary/50 bg-primary/5"
+                            )}
+                            title={internalDate?.from ? "Data selecionada" : "Selecione data"}
+                        >
+                            <CalendarIcon className="h-4 w-4" />
+                        </Button>
+                    ) : (
+                        <Button
+                            id="date"
+                            variant={"outline"}
+                            className={cn(
+                                "w-full justify-start text-left font-normal bg-muted/10 border-input/60 hover:bg-muted/20 hover:border-primary/30 hover:text-foreground shadow-sm",
+                                !internalDate && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                            {internalDate?.from ? (
+                                internalDate.to ? (
+                                    <>
+                                        {format(internalDate.from, "dd/MM/y", { locale: ptBR })} -{" "}
+                                        {format(internalDate.to, "dd/MM/y", { locale: ptBR })}
+                                    </>
+                                ) : (
+                                    <span>Selecione a data final</span>
+                                )
                             ) : (
-                                <span>Selecione a data final</span>
-                            )
-                        ) : (
-                            <span>Selecione um período</span>
-                        )}
+                                <span>Selecione um período</span>
+                            )}
 
-                        {internalDate?.from && (
-                            <div
-                                className="ml-auto hover:bg-destructive/10 p-1 rounded-full text-muted-foreground hover:text-destructive transition-colors ml-2"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setDate(undefined);
-                                    setInternalDate(undefined);
-                                }}
-                            >
-                                <X className="w-3 h-3" />
-                            </div>
-                        )}
-                    </Button>
+                            {internalDate?.from && (
+                                <div
+                                    className="ml-auto hover:bg-destructive/10 p-1 rounded-full text-muted-foreground hover:text-destructive transition-colors ml-2"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDate(undefined);
+                                        setInternalDate(undefined);
+                                    }}
+                                >
+                                    <X className="w-3 h-3" />
+                                </div>
+                            )}
+                        </Button>
+                    )}
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                     <Calendar

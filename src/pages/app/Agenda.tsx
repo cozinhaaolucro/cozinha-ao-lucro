@@ -172,7 +172,7 @@ const Agenda = () => {
         const colors = {
             pending: 'bg-[#C9A34F]',
             preparing: 'bg-[#68A9CA]',
-            ready: 'bg-[#2FBF71]',
+            ready: 'bg-[#4C9E7C]',
             delivered: 'bg-[#5F98A1]',
             late: 'bg-[#C76E60]',
             cancelled: 'bg-[#C76E60]'
@@ -279,6 +279,7 @@ const Agenda = () => {
                             setDateFilter(range);
                             if (range) setSelectedStatus(null);
                         }}
+                        minimal={true}
                     />
                     {(selectedStatus || dateFilter?.from) && (
                         <Button variant="outline" size="sm" onClick={clearFilters} className="gap-2 h-9">
@@ -379,7 +380,7 @@ const Agenda = () => {
                         </button>
                         <button
                             onClick={() => handleStatusClick('ready')}
-                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border shadow-sm ${selectedStatus === 'ready' ? 'bg-[#2FBF71] text-white border-[#2FBF71]' : 'bg-white text-[#2FBF71] border-[#2FBF71]/30 hover:border-[#2FBF71] hover:bg-[#2FBF71]/5'}`}
+                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border shadow-sm ${selectedStatus === 'ready' ? 'bg-[#4C9E7C] text-white border-[#4C9E7C]' : 'bg-white text-[#4C9E7C] border-[#4C9E7C]/30 hover:border-[#4C9E7C] hover:bg-[#4C9E7C]/5'}`}
                         >
                             <span className="w-1.5 h-1.5 rounded-full bg-current" />
                             Prontos
@@ -422,7 +423,7 @@ const Agenda = () => {
                                     key={order.id}
                                     className={`bg-white border border-border/60 rounded-lg p-2.5 hover:shadow-md transition-all cursor-pointer group flex items-center gap-3 ${order.status === 'pending' ? 'border-l-4 border-l-[#C9A34F]' :
                                         order.status === 'preparing' ? 'border-l-4 border-l-[#68A9CA]' :
-                                            order.status === 'ready' ? 'border-l-4 border-l-[#2FBF71]' :
+                                            order.status === 'ready' ? 'border-l-4 border-l-[#4C9E7C]' :
                                                 order.status === 'delivered' ? 'border-l-4 border-l-[#5F98A1]' :
                                                     'border-l-4 border-l-muted-foreground/40'
                                         }`}

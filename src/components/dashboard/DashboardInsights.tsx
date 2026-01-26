@@ -55,7 +55,7 @@ export const DashboardInsights = ({ hasProducts, hasOrders, hasStock }: Dashboar
             action: "Novo Pedido",
             path: "/app/pedidos",
             icon: TrendingUp,
-            color: "text-green-600",
+            color: "text-[#2FBF71]",
             bg: "bg-green-50",
             border: "border-green-200"
         };

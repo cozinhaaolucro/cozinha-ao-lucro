@@ -12,7 +12,7 @@ interface RevenueMetricsProps {
 export const RevenueMetrics = ({ ordersCount, totalRevenue, totalProfit, totalCost }: RevenueMetricsProps) => {
     return (
         <TooltipProvider>
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-2 lg:grid-cols-4 mt-2">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6 md:max-w-[80%] md:mx-auto mt-6">
 
                 {/* Total Pedidos */}
                 <Card className="relative overflow-hidden bg-white shadow-elegant border border-border/60 hover:shadow-hover transition-all duration-300 group">

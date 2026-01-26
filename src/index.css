@@ -31,14 +31,16 @@
     --popover-foreground: 210 9% 32%;
 
     --primary: 186 35% 28%;
+    /* #2e5b60 - Confirmed */
     --primary-foreground: 38 35% 94%;
     --primary-glow: 186 35% 35%;
     /* Generated logical glow */
     --primary-dark: 186 45% 20%;
 
-    --secondary: 187 29% 58%;
+    --secondary: 188 26% 50%;
+    /* #5F98A1 - Updated */
     --secondary-foreground: 38 35% 94%;
-    --secondary-light: 187 29% 68%;
+    --secondary-light: 188 26% 60%;
 
     --muted: 200 5% 90%;
     --muted-foreground: 200 3% 50%;
@@ -52,7 +54,8 @@
     --warning: 41 53% 55%;
     --warning-foreground: 210 9% 32%;
 
-    --success: 168 22% 52%;
+    --success: 147 61% 47%;
+    /* #2FBF71 - Updated Value Green */
     --success-foreground: 38 35% 94%;
 
     --destructive: 8 48% 58%;

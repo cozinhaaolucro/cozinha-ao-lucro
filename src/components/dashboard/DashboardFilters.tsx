@@ -17,7 +17,7 @@ export const DashboardFilters = ({ dateRange, setDateRange }: DashboardFiltersPr
                 <DateRangePicker
                     date={dateRange}
                     setDate={setDateRange}
-                    className="w-[300px]"
+                    minimal={true}
                 />
             </div>
         </div>

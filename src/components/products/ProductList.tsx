@@ -10,7 +10,7 @@ import { Plus, TrendingUp, Pencil, Download, Trash2, Copy, ChevronDown, ChevronU
 import { getProducts, deleteProduct, updateProduct, createProduct, getIngredients, importProductsBatch } from '@/lib/database';
 import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
 import { PRESET_PRODUCTS } from '@/data/presets';
-import type { Product, Ingredient } from '@/types/database';
+import type { Product, Ingredient, ProductWithIngredients } from '@/types/database';
 import ProductBuilder from './ProductBuilder';
 
 import NewOrderDialog from '../orders/NewOrderDialog';
@@ -32,12 +32,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-type ProductWithIngredients = Product & {
-    product_ingredients: Array<{
-        quantity: number;
-        ingredient: Ingredient | null;
-    }>;
-};
+
 
 const OptimisticToggle = ({
     isActive,
@@ -80,6 +75,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
     const [showAllIngredients, setShowAllIngredients] = useState(false);
     const [expandedProductIds, setExpandedProductIds] = useState<string[]>([]);
+    const [selectionMode, setSelectionMode] = useState(false);
     const [orderDialogOpen, setOrderDialogOpen] = useState(false);
     const [productForOrder, setProductForOrder] = useState<string | null>(null);
 
@@ -336,7 +332,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                     toast({
                         title: 'Importação Concluída',
                         description: `${count} produtos processados. ${errors.length} erros.`,
-                        variant: errors.length > 0 ? 'warning' : 'default'
+                        variant: errors.length > 0 ? 'destructive' : 'default'
                     });
 
                     if (errors.length > 0) {
@@ -346,7 +342,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                     loadProducts();
                 }
             } else {
-                toast({ title: 'Nenhum dado válido encontrado para importar.', variant: 'warning' });
+                toast({ title: 'Nenhum dado válido encontrado para importar.', variant: 'default' });
             }
 
         } catch (error) {
@@ -362,13 +358,22 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3 bg-muted/20 p-3 sm:p-4 rounded-xl border border-border/50 shadow-sm border-l-4 border-l-primary/50">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                    <div className="flex items-center gap-2">
-                        <Checkbox
-                            checked={products.length > 0 && selectedProducts.length === products.length}
-                            onCheckedChange={toggleSelectAll}
-                        />
-                        <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
-                            {selectedProducts.length} selecionados
+                    <div
+                        className="flex items-center gap-2 cursor-pointer group/select select-none bg-background/50 px-2 py-1 rounded-full border border-transparent hover:border-border/50 transition-all"
+                        onClick={() => setSelectionMode(!selectionMode)}
+                        onDoubleClick={(e) => {
+                            e.preventDefault();
+                            toggleSelectAll();
+                        }}
+                    >
+                        <div className={cn(
+                            "w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-colors",
+                            selectedProducts.length > 0 ? "border-primary bg-primary" : "border-muted-foreground/70 group-hover/select:border-primary py-0.5"
+                        )}>
+                            {selectedProducts.length > 0 && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                        </div>
+                        <span className="text-xs sm:text-sm text-muted-foreground group-hover/select:text-primary transition-colors font-medium">
+                            {selectedProducts.length > 0 ? `${selectedProducts.length} selecionados` : 'Selecionar'}
                         </span>
                     </div>
                     {selectedProducts.length > 0 && (
@@ -510,25 +515,22 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                 onClick={() => setExpandedProductIds(prev => prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id])}
                             >
                                 <CardHeader className="pb-1 p-4 sm:p-5">
-                                    {/* Selection Checkbox - Appears on hover or selected */}
-                                    <div
-                                        className={cn(
-                                            "absolute top-10 left-6 z-30 transition-all duration-200",
-                                            selectedProducts.includes(product.id) ? "opacity-100 scale-100" : "opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 pointer-events-none group-hover:pointer-events-auto"
-                                        )}
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        <Checkbox
-                                            checked={selectedProducts.includes(product.id)}
-                                            onCheckedChange={() => toggleSelect(product.id)}
-                                            className="h-4 w-4 bg-background/80 backdrop-blur-sm border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                                        />
-                                    </div>
                                     <div className="flex items-start justify-between">
-                                        <div className={cn(
-                                            "flex items-center gap-3 transition-all duration-200 ease-out",
-                                            selectedProducts.includes(product.id) ? "translate-x-12" : "group-hover:translate-x-12"
-                                        )}>
+                                        <div className="flex items-center gap-3 transition-all duration-200 ease-out">
+                                            {/* Selection Checkbox - Static on Left */}
+                                            <div
+                                                className={cn(
+                                                    "flex items-center justify-center transition-all duration-200",
+                                                    (selectedProducts.includes(product.id) || selectionMode) ? "w-6 opacity-100 mr-2" : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-100 group-hover:mr-2 overflow-hidden"
+                                                )}
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <Checkbox
+                                                    checked={selectedProducts.includes(product.id)}
+                                                    onCheckedChange={() => toggleSelect(product.id)}
+                                                    className="h-4 w-4 bg-background/80 backdrop-blur-sm border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                                />
+                                            </div>
 
                                             {product.image_url ? (
                                                 <div className="w-12 h-12 rounded-md overflow-hidden bg-muted shadow-sm border border-gray-100">
@@ -629,7 +631,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                                         ({display.value < 0.01 ? display.value.toExponential(1) : parseFloat(display.value.toFixed(3))} {display.unit})
                                                                     </span>
                                                                 </span>
-                                                                <span className="font-mono text-green-600">R$ {((pi.ingredient.cost_per_unit || 0) * pi.quantity).toFixed(2)}</span>
+                                                                <span className="font-mono text-[#2FBF71]">R$ {((pi.ingredient.cost_per_unit || 0) * pi.quantity).toFixed(2)}</span>
                                                             </div>
                                                         );
                                                     })}
@@ -714,18 +716,18 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                         const ingredientBreakdown = product.product_ingredients
                                             .filter(pi => pi.ingredient && pi.quantity)
                                             .map(pi => {
-                                                const ingredient = ingredients.find(i => i.id === pi.ingredient.id);
+                                                const ingredient = ingredients.find(i => i.id === pi.ingredient!.id);
                                                 const stock = ingredient?.stock_quantity || 0;
                                                 const usagePerUnit = pi.quantity;
                                                 const totalUsage = producibleUnits > 0 ? usagePerUnit * producibleUnits : 0;
                                                 return {
-                                                    name: pi.ingredient.name,
+                                                    name: pi.ingredient!.name,
                                                     usagePerUnit,
                                                     totalUsage,
                                                     stock,
-                                                    unit: pi.ingredient.unit,
+                                                    unit: pi.ingredient!.unit,
                                                     displayUnit: pi.display_unit,
-                                                    ingredient: pi.ingredient
+                                                    ingredient: pi.ingredient!
                                                 };
                                             });
 
@@ -857,7 +859,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
             <ProductBuilder
                 open={!!editingProduct}
                 onOpenChange={(open) => !open && setEditingProduct(null)}
-                productToEdit={editingProduct}
+                productToEdit={editingProduct || undefined}
                 onSuccess={() => {
                     loadProducts();
                     setEditingProduct(null);

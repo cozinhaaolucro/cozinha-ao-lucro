@@ -152,7 +152,7 @@ const KanbanCardContent = ({
                             <div className="text-sm flex items-start justify-between">
                                 <div className="font-semibold flex flex-col gap-0.5" onClick={() => handleCustomerClick(order.customer)}>
                                     <div className="flex items-center gap-1">
-                                        <span className="hover:underline cursor-pointer text-sm font-medium tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
+                                        <span className="hover:underline cursor-pointer text-lg font-bold tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
                                             {order.customer?.name || 'Cliente não informado'}
                                         </span>
                                         {order.customer?.phone && (
@@ -203,7 +203,7 @@ const KanbanCardContent = ({
                 <div className="text-sm flex items-start justify-between">
                     <div className="font-semibold flex flex-col gap-0.5" onClick={() => handleCustomerClick(order.customer)}>
                         <div className="flex items-center gap-1">
-                            <span className="hover:underline cursor-pointer text-sm font-medium tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
+                            <span className="hover:underline cursor-pointer text-lg font-bold tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
                                 {order.customer?.name || 'Cliente não informado'}
                             </span>
                             {order.customer?.phone && (
@@ -244,47 +244,45 @@ const CardBody = ({ order, baseColor, isLate }: { order: OrderWithDetails, baseC
                 <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: baseColor }}></span>
                 {order.delivery_date ? formatDate(order.delivery_date) : 'Sem data'}
             </span>
-            <span className="font-medium text-sm tracking-normal" style={{ color: '#2FBF71' }}>
-                R$
-                <span style={{ marginLeft: '4px' }}>
-                    {order.total_value.toFixed(2)}
-                </span>
-            </span>
         </div>
 
-        <div className="flex gap-1.5 flex-wrap items-center">
-            <Badge
-                variant="outline"
-                className="text-[10px] px-2 py-0.5 h-auto rounded-md border border-opacity-20 font-medium bg-opacity-10"
-                style={{
-                    color: 'hsl(var(--muted-foreground))',
-                    borderColor: 'hsl(var(--border))'
-                }}
-            >
-                {order.payment_method === 'credit_card' && 'Crédito'}
-                {order.payment_method === 'debit_card' && 'Débito'}
-                {order.payment_method === 'pix' && 'Pix'}
-                {order.payment_method === 'cash' && 'Dinheiro'}
-                {!order.payment_method && 'Pix'}
-            </Badge>
-            <Badge
-                variant="secondary"
-                className="text-[10px] px-2 py-0.5 h-auto rounded-md font-medium bg-muted text-muted-foreground hover:bg-muted"
-            >
-                {order.delivery_method === 'delivery' ? 'Delivery' : 'Retirada'}
-            </Badge>
-            {isLate && (
+        <div className="flex justify-between items-end gap-2">
+            <div className="flex gap-1.5 flex-wrap items-center">
                 <Badge
-                    className="text-[10px] px-2 py-0.5 h-auto rounded-md border"
+                    variant="outline"
+                    className="text-[10px] px-2 py-0.5 h-auto rounded-md border border-opacity-20 font-medium bg-opacity-10"
                     style={{
-                        backgroundColor: 'transparent',
-                        borderColor: '#C76E60',
-                        color: '#C76E60'
+                        color: 'hsl(var(--muted-foreground))',
+                        borderColor: 'hsl(var(--border))'
                     }}
                 >
-                    Atrasado
+                    {order.payment_method === 'credit_card' && 'Crédito'}
+                    {order.payment_method === 'debit_card' && 'Débito'}
+                    {order.payment_method === 'pix' && 'Pix'}
+                    {order.payment_method === 'cash' && 'Dinheiro'}
+                    {!order.payment_method && 'Pix'}
                 </Badge>
-            )}
+                <Badge
+                    variant="secondary"
+                    className="text-[10px] px-2 py-0.5 h-auto rounded-md font-medium bg-muted text-muted-foreground hover:bg-muted"
+                >
+                    {order.delivery_method === 'delivery' ? 'Delivery' : 'Retirada'}
+                </Badge>
+                {isLate && (
+                    <Badge
+                        className="text-xs px-0 py-0 h-auto border-none bg-transparent shadow-none hover:bg-transparent font-bold uppercase tracking-wider"
+                        style={{
+                            color: '#C76E60'
+                        }}
+                    >
+                        Atrasado
+                    </Badge>
+                )}
+            </div>
+
+            <span className="font-bold text-xl tracking-normal leading-none" style={{ color: '#2FBF71' }}>
+                R$ {order.total_value.toFixed(2)}
+            </span>
         </div>
 
         {order.items && order.items.length > 0 && (

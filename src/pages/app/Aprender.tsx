@@ -35,13 +35,7 @@ const Aprender = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {CONTENT.map((item) => (
                     <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
-                        <div className="h-48 overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
-                            <img
-                                src={item.cover}
-                                alt={item.title}
-                                className="h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                            />
-                        </div>
+
                         <CardHeader className="pb-2">
                             <CardTitle className="text-lg">{item.title}</CardTitle>
                             <p className="text-sm text-muted-foreground">{item.description}</p>

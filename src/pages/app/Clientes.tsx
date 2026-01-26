@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 import { Phone, Plus, Search, MessageCircle, Filter, Pencil, Trash2, X, Mail, Download, Upload, Users, FileSpreadsheet, FileDown, FileText, ChevronDown } from 'lucide-react';
 import { getCustomers, deleteCustomer, createCustomer } from '@/lib/database';
 import { exportToExcel, exportToCSV, importFromExcel, getValue } from '@/lib/excel';
@@ -35,6 +36,7 @@ const Clientes = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectionMode, setSelectionMode] = useState(false);
 
     const [page, setPage] = useState(1);
     const [limit] = useState(12);
@@ -270,42 +272,61 @@ const Clientes = () => {
                 </div>
             </div>
 
-            <div className="flex gap-4 items-center flex-wrap">
-                <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+            <div className="flex gap-2 items-center w-full">
+                <div className="relative flex-1 min-w-0">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                        placeholder="Buscar clientes..."
+                        placeholder="Buscar..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-10"
+                        className="pl-9 h-10 w-full"
                     />
                 </div>
                 <Button
                     variant={showInactive ? "default" : "outline"}
                     onClick={() => setShowInactive(!showInactive)}
+                    className="shrink-0 h-10 px-3 whitespace-nowrap"
                 >
-                    {showInactive ? 'Mostrar Todos' : 'Mostrar Inativos (30+ dias)'}
+                    {showInactive ? (
+                        <>
+                            <span className="sm:hidden">Todos</span>
+                            <span className="hidden sm:inline">Mostrar Todos</span>
+                        </>
+                    ) : (
+                        <>
+                            <span className="sm:hidden text-xs">Inativos</span>
+                            <span className="hidden sm:inline">Mostrar Inativos</span>
+                        </>
+                    )}
                 </Button>
             </div>
 
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-muted/20 p-4 rounded-xl border border-border/50 shadow-sm border-l-4 border-l-primary/50">
-                <div className="flex items-center gap-2">
-                    <Checkbox
-                        checked={selectedClients.length === filteredCustomers.length && filteredCustomers.length > 0}
-                        onCheckedChange={toggleSelectAll}
-                    />
-                    <span className="text-sm font-medium">Selecionar Todos</span>
+            <div className="flex items-center justify-between gap-4 py-2">
+                <div
+                    className="flex items-center gap-2 cursor-pointer group/select select-none px-2 py-1 rounded-full hover:bg-muted/50 transition-colors"
+                    onClick={() => setSelectionMode(!selectionMode)}
+                    onDoubleClick={(e) => {
+                        e.preventDefault();
+                        toggleSelectAll();
+                    }}
+                >
+                    <div className={cn(
+                        "w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-colors",
+                        selectedClients.length > 0 ? "border-primary bg-primary" : "border-muted-foreground/70 group-hover/select:border-primary"
+                    )}>
+                        {selectedClients.length > 0 && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                    </div>
+                    <span className="text-sm text-muted-foreground group-hover/select:text-primary transition-colors font-medium">
+                        {selectedClients.length > 0 ? `${selectedClients.length} selecionados` : 'Selecionar'}
+                    </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 w-full md:w-auto justify-end">
-                    <div className="flex items-center gap-2">
-                        <Filter className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm font-medium whitespace-nowrap hidden sm:inline">Último pedido:</span>
-                    </div>
+                <div className="flex items-center gap-2">
                     <DateRangePicker
                         date={dateFilter}
                         setDate={setDateFilter}
-                        className="w-full md:w-auto"
+                        className="w-auto"
+                        minimal={true}
                     />
                 </div>
             </div>
@@ -345,6 +366,7 @@ const Clientes = () => {
                                 setEditingCustomer={setEditingCustomer}
                                 refetchCustomers={refetchCustomers}
                                 handleWhatsApp={handleWhatsApp}
+                                selectionMode={selectionMode}
                             />
                         );
                     })
@@ -404,7 +426,7 @@ const Clientes = () => {
 };
 
 
-const CustomerCard = ({ customer, isSelected, toggleSelect, isInactive, setEditingCustomer, refetchCustomers, handleWhatsApp }: any) => {
+const CustomerCard = ({ customer, isSelected, toggleSelect, isInactive, setEditingCustomer, refetchCustomers, handleWhatsApp, selectionMode }: any) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     return (
@@ -415,12 +437,18 @@ const CustomerCard = ({ customer, isSelected, toggleSelect, isInactive, setEditi
             <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleSelect(customer.id)}
+                        <div
+                            className={cn(
+                                "flex items-center justify-center transition-all duration-200",
+                                (isSelected || selectionMode) ? "w-6 opacity-100 mr-1" : "w-0 opacity-0 overflow-hidden"
+                            )}
                             onClick={(e) => e.stopPropagation()}
-                            className="mr-1"
-                        />
+                        >
+                            <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleSelect(customer.id)}
+                            />
+                        </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                                 <h4 className="font-medium text-sm truncate">{customer.name}</h4>

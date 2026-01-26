@@ -193,26 +193,27 @@ const Pedidos = () => {
                 </div>
             </div>
 
-            {/* Date Filters */}
-            <div className="flex flex-wrap items-center gap-4 bg-muted/20 p-3 rounded-xl border border-border/50 shadow-sm w-fit border-l-4 border-l-primary/50">
+            {/* Filter Row */}
+            <div className="flex items-center justify-end gap-2 py-2">
                 <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-sm font-medium text-muted-foreground">Filtros:</span>
+                    <span className="text-sm font-medium text-muted-foreground hidden sm:inline">Filtrar por data:</span>
+                    <DateRangePicker
+                        date={dateFilter}
+                        setDate={setDateFilter}
+                        className="w-auto"
+                        minimal={true}
+                    />
+                    {(dateFilter?.from) && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-xs"
+                            onClick={() => setDateFilter(undefined)}
+                        >
+                            Limpar
+                        </Button>
+                    )}
                 </div>
-                <DateRangePicker
-                    date={dateFilter}
-                    setDate={setDateFilter}
-                    className="w-[250px]"
-                />
-                {(dateFilter?.from) && (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDateFilter(undefined)}
-                    >
-                        Limpar
-                    </Button>
-                )}
             </div>
 
             {(isLoading && orders.length === 0) ? (

@@ -20,7 +20,8 @@ import {
     Search,
     Command,
     Store,
-    FileText
+    FileText,
+    Package
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -156,9 +157,9 @@ const DashboardLayout = () => {
     const navItems = [
         { path: '/app/dashboard', label: 'Visão Geral', shortLabel: 'Visão', icon: LayoutDashboard, id: 'nav-dashboard' },
         { path: '/app/pedidos', label: 'Pedidos', shortLabel: 'Pedidos', icon: ShoppingBag, id: 'nav-pedidos' },
-        { path: '/app/clientes', label: 'Clientes', shortLabel: 'Clientes', icon: Users, id: 'nav-clientes' },
-        { path: '/app/produtos', label: 'Produtos', shortLabel: 'Produtos', icon: ShoppingBag, id: 'nav-produtos' },
+        { path: '/app/produtos', label: 'Produtos', shortLabel: 'Produtos', icon: Package, id: 'nav-produtos' },
         { path: '/app/agenda', label: 'Agenda', shortLabel: 'Agenda', icon: Calendar, id: 'nav-agenda' },
+        { path: '/app/clientes', label: 'Clientes', shortLabel: 'Clientes', icon: Users, id: 'nav-clientes' },
         { path: '/app/lista-inteligente', label: 'Lista Inteligente', shortLabel: 'Lista', icon: FileText, id: 'nav-smart-list' },
         { path: '/app/cardapio-digital', label: 'Cardápio Digital', shortLabel: 'Cardápio', icon: Store, id: 'nav-public-menu' },
         { path: '/app/aprender', label: 'Aprender', shortLabel: 'Aprender', icon: BookOpen, id: 'nav-aprender' },
@@ -387,12 +388,16 @@ const DashboardLayout = () => {
                                 nextStep();
                             }
                         }}
-                        className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 ${isActive(item.path)
+                        className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${isActive(item.path)
                             ? 'text-primary'
                             : 'text-muted-foreground hover:text-foreground'
                             }`}
                     >
-                        <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'fill-current' : ''}`} />
+                        <item.icon
+                            className="w-5 h-5"
+                            strokeWidth={isActive(item.path) ? 2.5 : 2}
+                            fill="transparent"
+                        />
                         <span className="text-[9px] font-medium text-center leading-tight">{item.shortLabel}</span>
                     </Link>
                 ))}            </nav>
