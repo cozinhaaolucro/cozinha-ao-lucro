@@ -174,13 +174,27 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess, initialProductId }: New
     };
 
     const processOrderCreation = async () => {
+        let orderTotalCost = 0;
+
         const orderItems = items.map((item) => {
             const product = products.find((p) => p.id === item.product_id)!;
+
+            // Calculate Cost Snapshot (CMV Real Logic)
+            // We calculate the cost at this exact moment and save it permanently to the order item.
+            const unitCost = product.product_ingredients?.reduce((acc, pi) => {
+                // @ts-ignore - Supabase types join variation
+                const ingCost = pi.ingredient?.cost_per_unit || 0;
+                return acc + (ingCost * pi.quantity);
+            }, 0) || 0;
+
+            orderTotalCost += unitCost * item.quantity;
+
             return {
                 product_id: item.product_id,
                 product_name: product.name,
                 quantity: item.quantity,
                 unit_price: product.selling_price || 0,
+                unit_cost: unitCost, // Saved Snapshot
                 subtotal: (product.selling_price || 0) * item.quantity,
             };
         });
@@ -193,6 +207,7 @@ const NewOrderDialog = ({ open, onOpenChange, onSuccess, initialProductId }: New
                 notes: formData.notes || null,
                 status: formData.status,
                 total_value: calculateTotal(),
+                total_cost: orderTotalCost, // Saved Total Cost
                 start_date: formData.start_date || null,
                 delivery_fee: Number(formData.delivery_fee) || 0,
                 order_number: `#${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
