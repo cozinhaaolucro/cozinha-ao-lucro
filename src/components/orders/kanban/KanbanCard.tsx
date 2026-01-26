@@ -280,7 +280,7 @@ const CardBody = ({ order, baseColor, isLate }: { order: OrderWithDetails, baseC
                 )}
             </div>
 
-            <span className="font-bold text-xl tracking-normal leading-none" style={{ color: '#2FBF71' }}>
+            <span className="font-bold text-[13px] tracking-normal leading-none" style={{ color: '#2FBF71' }}>
                 R$ {order.total_value.toFixed(2)}
             </span>
         </div>

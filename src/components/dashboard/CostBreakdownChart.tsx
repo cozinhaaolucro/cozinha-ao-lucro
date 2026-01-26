@@ -37,7 +37,7 @@ export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
                 {/* Chart Section - Centered */}
                 <div className="w-full flex justify-center items-center">
                     {/* Fixed Max Width Container to guarantee centering on mobile */}
-                    <div className="relative w-full max-w-[320px] h-[350px] mx-auto flex justify-center items-center">
+                    <div className="relative w-full max-w-[320px] h-[300px] mx-auto flex justify-center items-center">
                         {finalData.length === 0 ? (
                             <div className="flex items-center justify-center w-full h-full text-muted-foreground/50 text-sm">
                                 Sem dados de custo suficiente.
@@ -49,8 +49,8 @@ export const CostBreakdownChart = ({ data }: CostBreakdownChartProps) => {
                                         data={finalData}
                                         cx="50%"
                                         cy="50%"
-                                        innerRadius={94}
-                                        outerRadius={126}
+                                        innerRadius={80}
+                                        outerRadius={108}
                                         paddingAngle={5}
                                         dataKey="value"
                                         stroke="none"

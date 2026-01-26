@@ -151,8 +151,8 @@ const ProductionStatusWidget = () => {
                     {/* Collapsed State */}
                     <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                         <div className="relative">
-                            <div className="absolute inset-0 bg-blue-500 blur-lg opacity-10"></div>
-                            <div className="bg-[#3b82f680] w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-blue-900/20 relative z-10 p-0 backdrop-blur-sm">
+                            <div className="absolute inset-0 bg-blue-500/10 blur-lg"></div>
+                            <div className="bg-[#3b82f680] w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-blue-900/20 relative z-10 p-0">
                                 <ChefHat className="text-white w-7 h-7" />
                                 {activeOrders.length > 0 && (
                                     <span className="absolute -top-1 -right-1 bg-[#c76e60] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-neutral-900">
