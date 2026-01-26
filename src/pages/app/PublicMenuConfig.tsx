@@ -230,21 +230,20 @@ const PublicMenuConfig = () => {
 
                             {/* Slug */}
                             <div className="space-y-2">
-                                <Label htmlFor="slug">Link Personalizado (Subdomínio)</Label>
+                                <Label htmlFor="slug">Link Personalizado</Label>
                                 <div className="flex items-center gap-2">
+                                    <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline-block">
+                                        {window.location.host}/menu/
+                                    </span>
                                     <Input
                                         id="slug"
                                         name="slug"
                                         defaultValue={profile?.slug || ''}
                                         placeholder="seunegocio"
                                         pattern="^[a-z0-9-]+$"
-                                        className="text-right font-medium"
                                     />
-                                    <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline-block bg-muted/50 px-2 py-2 rounded-r-md -ml-2 border border-l-0 h-10 flex items-center">
-                                        .cozinhaaolucro.com.br
-                                    </span>
                                 </div>
-                                <p className="text-[10px] text-muted-foreground">O endereço do seu site será: https://<b>{profile?.slug || 'seu-nome'}</b>.cozinhaaolucro.com.br</p>
+                                <p className="text-[10px] text-muted-foreground">Apenas letras minúsculas, números e hífens.</p>
                             </div>
 
                             {/* Description */}
@@ -309,16 +308,11 @@ const PublicMenuConfig = () => {
                     <CardContent className="p-3 sm:p-6 pt-0 space-y-3">
                         <div className="bg-muted p-2 rounded-lg flex items-center justify-between gap-2">
                             <div className="truncate flex-1 font-mono text-xs bg-background p-1.5 rounded border">
-                                {profile?.slug
-                                    ? `https://${profile.slug}.cozinhaaolucro.com.br`
-                                    : `${window.location.origin}/menu/${user?.id}`}
+                                {window.location.origin}/menu/{profile?.slug || user?.id}
                             </div>
                             <Button
                                 onClick={() => {
-                                    const url = profile?.slug
-                                        ? `https://${profile.slug}.cozinhaaolucro.com.br`
-                                        : `${window.location.origin}/menu/${user?.id}`;
-                                    navigator.clipboard.writeText(url);
+                                    navigator.clipboard.writeText(`${window.location.origin}/menu/${profile?.slug || user?.id}`);
                                     toast.success('Link copiado!');
                                 }}
                                 size="sm"
@@ -331,27 +325,18 @@ const PublicMenuConfig = () => {
                         <div className="flex flex-col items-center text-center space-y-2">
                             <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white p-1 rounded-lg border shadow-sm">
                                 <img
-                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                                        profile?.slug
-                                            ? `https://${profile.slug}.cozinhaaolucro.com.br`
-                                            : `${window.location.origin}/menu/${user?.id}`
-                                    )}`}
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/menu/${profile?.slug || user?.id}`)}`}
                                     alt="QR Code"
                                     className="w-full h-full object-contain"
                                 />
                             </div>
-                            <Button variant="outline" className="w-full" onClick={() => {
-                                const url = profile?.slug
-                                    ? `https://${profile.slug}.cozinhaaolucro.com.br`
-                                    : `/menu/${user?.id}`;
-                                window.open(url, '_blank');
-                            }}>
+                            <Button variant="outline" className="w-full" onClick={() => window.open(`/menu/${profile?.slug || user?.id}`, '_blank')}>
                                 <Store className="w-4 h-4 mr-2" />
                                 Visualizar Cardápio Público
                             </Button>
                             {profile?.slug && (
                                 <p className="text-xs text-muted-foreground">
-                                    Seu subdomínio está ativo! (Pode levar alguns minutos para propagar)
+                                    Seu link personalizado está ativo!
                                 </p>
                             )}
                         </div>

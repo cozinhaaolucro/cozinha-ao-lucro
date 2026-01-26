@@ -54,27 +54,6 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  // Subdomain Detection Logic
-  const subdomain = (() => {
-    const host = window.location.hostname;
-    const parts = host.split('.');
-
-    // Localhost: sub.localhost
-    if (host.includes('localhost')) {
-      if (parts.length >= 2 && parts[0] !== 'www') return parts[0];
-      return null;
-    }
-
-    // Production: sub.domain.com.br (at least 3 parts for sub.domain.com or 4 for sub.domain.com.br)
-    // We assume anything with > 2 parts has a subdomain, but we exclude 'www', 'app'
-    if (parts.length >= 3) {
-      const sub = parts[0];
-      const reserved = ['www', 'app', 'dashboard', 'api', 'mail', 'smtp', 'ftp'];
-      if (!reserved.includes(sub)) return sub;
-    }
-    return null;
-  })();
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={300}>
@@ -83,49 +62,39 @@ const App = () => {
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              {/* If Subdomain exists, Root renders the Public Menu directly */}
-              {subdomain ? (
-                <>
-                  <Route path="/" element={<PublicMenu slugProp={subdomain} />} />
-                  <Route path="*" element={<PublicMenu slugProp={subdomain} />} />
-                </>
+              {/* Public Landing Page - NO Auth Provider, NO Database Load */}
+              {Capacitor.isNativePlatform() ? (
+                <Route path="/" element={<Navigate to="/login" replace />} />
               ) : (
-                <>
-                  {/* Standard Public Landing Page */}
-                  {Capacitor.isNativePlatform() ? (
-                    <Route path="/" element={<Navigate to="/login" replace />} />
-                  ) : (
-                    <Route path="/" element={<Index />} />
-                  )}
-
-                  {/* Wrapped Routes - Auth & Notification Providers applied here (Lazy Loaded) */}
-                  <Route element={<AppProviders />}>
-                    {/* Protected App Routes */}
-                    <Route path="/app" element={
-                      <ProtectedRoute>
-                        <DashboardLayout />
-                      </ProtectedRoute>
-                    }>
-                      <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="pedidos" element={<Pedidos />} />
-                      <Route path="clientes" element={<Clientes />} />
-                      <Route path="produtos" element={<Produtos />} />
-                      <Route path="agenda" element={<Agenda />} />
-                      <Route path="lista-inteligente" element={<SmartList />} />
-                      <Route path="aprender" element={<Aprender />} />
-                      <Route path="settings" element={<Settings />} />
-                      <Route path="cardapio-digital" element={<PublicMenuConfig />} />
-                      <Route path="perfil" element={<Navigate to="settings" replace />} />
-                    </Route>
-
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/menu/:userId" element={<PublicMenu />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Route>
-                </>
+                <Route path="/" element={<Index />} />
               )}
+
+              {/* Wrapped Routes - Auth & Notification Providers applied here (Lazy Loaded) */}
+              <Route element={<AppProviders />}>
+                {/* Protected App Routes */}
+                <Route path="/app" element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }>
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="pedidos" element={<Pedidos />} />
+                  <Route path="clientes" element={<Clientes />} />
+                  <Route path="produtos" element={<Produtos />} />
+                  <Route path="agenda" element={<Agenda />} />
+                  <Route path="lista-inteligente" element={<SmartList />} />
+                  <Route path="aprender" element={<Aprender />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="cardapio-digital" element={<PublicMenuConfig />} />
+                  <Route path="perfil" element={<Navigate to="settings" replace />} />
+                </Route>
+
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/menu/:userId" element={<PublicMenu />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
             </Routes>
           </Suspense>
         </BrowserRouter>
