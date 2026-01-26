@@ -24,6 +24,7 @@ import {
     Package
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
@@ -38,6 +39,20 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarProvider,
+    SidebarRail,
+    SidebarTrigger,
+    SidebarInset,
+    SidebarSeparator,
+} from "@/components/ui/sidebar"
 import { SubscriptionBlocker } from '@/components/subscription/SubscriptionBlocker';
 import { SpeedDial } from '@/components/layout/SpeedDial';
 
@@ -192,294 +207,296 @@ const DashboardLayout = () => {
 
 
     return (
-        <div className="h-[100dvh] overflow-hidden bg-background flex flex-col md:flex-row">
-            {/* Desktop Sidebar */}
-
-
-            <aside className="hidden md:flex w-52 flex-col border-r bg-card h-full overflow-y-auto">
-                <div className="p-6 border-b flex flex-col items-center justify-center shrink-0">
-                    <img src="/images/logo-icon-2026.png" alt="Ícone Cozinha ao Lucro" className="h-24 w-auto drop-shadow-md" />
-                </div>
-
-                {/* Search Bar Removed as per user request */}
-
-                <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
-                    {navItems.map((item) => {
-                        const isSpecial = item.id === 'nav-painel';
-                        return (
-                            <Link
-                                key={item.path}
-                                id={item.id}
-                                to={item.path}
-                                onClick={() => {
-                                    if (item.id === 'nav-produtos' && isOnboardingActive && currentStep === 'dashboard-overview') {
-                                        nextStep();
-                                    }
-                                }}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-300 relative overflow-hidden group ${isSpecial
-                                    ? 'bg-gradient-to-r from-blue-700 to-purple-800 text-white shadow-lg hover:shadow-blue-900/40 active:scale-[0.98] border border-white/10'
-                                    : isActive(item.path)
-                                        ? 'bg-primary text-primary-foreground shadow-md'
-                                        : 'hover:bg-muted text-muted-foreground hover:text-foreground hover:translate-x-1'
-                                    }`}
-                            >
-                                {isSpecial && (
-                                    <div className={`absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:animate-[shimmer_2s_infinite] pointer-events-none`} />
-                                )}
-                                <item.icon className="w-5 h-5" />
-                                <span className={`font-medium ${isSpecial ? 'font-bold' : ''}`}>{item.label}</span>
-                                {isSpecial && (
-                                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
-                                )}
-                            </Link>
-                        );
-                    })}
-                </nav>
-
-                <div className="p-4 border-t shrink-0 flex flex-col gap-4">
-                    <div className="flex items-center gap-3">
-                        <UserAvatar size="md" clickable />
-                        <div className="flex-1 min-w-0">
-                            <span className="font-bold text-sm truncate block">{firstName}</span>
-                            <span className="text-xs text-muted-foreground">Plano Pro</span>
-                        </div>
+        <SidebarProvider>
+            <Sidebar collapsible="icon">
+                <SidebarHeader>
+                    <div className="flex items-center justify-center py-4 group-data-[collapsible=icon]:py-2">
+                        <img
+                            src="/images/logo-icon-2026.png"
+                            alt="Ícone Cozinha ao Lucro"
+                            className="h-24 w-auto drop-shadow-md transition-all group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10"
+                        />
                     </div>
+                </SidebarHeader>
+                <SidebarContent>
+                    <SidebarMenu className="px-2">
+                        {navItems.map((item) => {
+                            const isSpecial = item.id === 'nav-dashboard'; // dashboard (Visão Geral) is usually the special one or 'painel'? In original code: item.id === 'nav-painel'. But navItems above says 'nav-dashboard'. Let's check original code. 
+                            // user code: { path: '/app/dashboard', label: 'Visão Geral', ... id: 'nav-dashboard' }
+                            // user code special check: const isSpecial = item.id === 'nav-painel'; -> wait, 'nav-dashboard' != 'nav-painel'.
+                            // It seems the "Special" styling (gradient) might have been targeting an ID that doesn't exist in the array shown in `navItems`.
+                            // Let's assume 'nav-dashboard' SHOULD be the special one or logic was stale. 
+                            // Actually, looking at the previous file content, `item.id === 'nav-painel'` was used but `navItems` had `nav-dashboard`. So the gradient was likely NOT applying?
+                            // Or maybe I missed where nav-painel was.
+                            // I will preserve the logic `const isSpecial = item.id === 'nav-painel';` but since I don't see 'nav-painel' in navItems, I will stick to the exact code logic as before or fix it if obvious.
+                            // However, the user screenshot showed the sidebar. If the first item "Visão Geral" had gradient, then `nav-dashboard` was intended.
+                            // I'll stick to generic SidebarMenuItem for now, and if "nav-painel" appears, apply special style.
 
-                    <div className="px-1">
-                        <p className="text-xs text-muted-foreground truncate mb-2">{user?.email}</p>
-                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2 h-8 text-muted-foreground hover:text-primary" onClick={handleSignOut}>
-                            <LogOut className="w-3 h-3" />
-                            Sair
-                        </Button>
-                    </div>
-                </div>
-            </aside>
+                            // Re-reading original `navItems`: `id: 'nav-dashboard'`...
+                            // Original check: `const isSpecial = item.id === 'nav-painel';`
+                            // So likely NO item was special in the current code? Or maybe I misread.
+                            // I will check the original file content again...
+                            // Line 208: `const isSpecial = item.id === 'nav-painel';`
+                            // Line 158: `id: 'nav-dashboard'`
+                            // So 'isSpecial' was false for everyone.
+                            // I'll implement standard SidebarMenuButton.
 
-            {/* Mobile Header */}
-            <header className="md:hidden h-16 border-b bg-card flex items-center justify-between px-4 sticky top-0 z-30">
-                <div className="flex items-center gap-3">
-                    <UserAvatar size="sm" clickable />
-                    <span className="font-bold text-lg">{firstName}</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-
-                    <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                        <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <Menu className="w-6 h-6" />
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className="p-0 w-72">
-                            <div className="p-6 border-b flex items-center gap-3">
-                                <UserAvatar size="md" />
-                                <div className="flex-1 min-w-0">
-                                    <span className="font-bold text-lg truncate block">{firstName}</span>
-                                    <span className="text-xs text-muted-foreground">Plano Pro</span>
-                                </div>
-                            </div>
-                            <nav className="flex-1 p-4 space-y-2">
-                                {navItems.map((item) => {
-                                    const isSpecial = item.id === 'nav-painel';
-                                    return (
-                                        <Link
-                                            key={item.path}
-                                            to={item.path}
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive(item.path)
-                                                ? isSpecial
-                                                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                                                    : 'bg-primary text-primary-foreground shadow-md'
-                                                : isSpecial
-                                                    ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                                                    : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                                                }`}
-                                        >
-                                            <item.icon className="w-5 h-5" />
-                                            <span className="font-medium">{item.label}</span>
+                            return (
+                                <SidebarMenuItem key={item.path}>
+                                    <SidebarMenuButton
+                                        asChild
+                                        tooltip={item.label}
+                                        isActive={isActive(item.path)}
+                                        onClick={() => {
+                                            if (item.id === 'nav-produtos' && isOnboardingActive && currentStep === 'dashboard-overview') {
+                                                nextStep();
+                                            }
+                                        }}
+                                        className={isActive(item.path) ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : ""}
+                                    >
+                                        <Link to={item.path}>
+                                            <item.icon />
+                                            <span>{item.label}</span>
                                         </Link>
-                                    );
-                                })}
-                                <div className="pt-4 mt-4 border-t">
-                                    <Button variant="ghost" className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={handleSignOut}>
-                                        <LogOut className="w-4 h-4" />
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            );
+                        })}
+                    </SidebarMenu>
+                </SidebarContent>
+                <SidebarFooter>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <SidebarMenuButton
+                                        size="lg"
+                                        className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                                    >
+                                        <UserAvatar size="sm" />
+                                        <div className="grid flex-1 text-left text-sm leading-tight">
+                                            <span className="truncate font-semibold">{firstName}</span>
+                                            <span className="truncate text-xs">Plano Pro</span>
+                                        </div>
+                                        {/* Chevrons could go here */}
+                                    </SidebarMenuButton>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                                    side="bottom"
+                                    align="end"
+                                    sideOffset={4}
+                                >
+                                    <DropdownMenuLabel className="p-0 font-normal">
+                                        <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                                            <UserAvatar size="sm" />
+                                            <div className="grid flex-1 text-left text-sm leading-tight">
+                                                <span className="truncate font-semibold">{firstName}</span>
+                                                <span className="truncate text-xs">{user?.email}</span>
+                                            </div>
+                                        </div>
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => setIsPhotoDialogOpen(true)}>
+                                        <Camera className="mr-2 h-4 w-4" />
+                                        Alterar Foto
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleSignOut}>
+                                        <LogOut className="mr-2 h-4 w-4" />
                                         Sair
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarFooter>
+                <SidebarRail />
+            </Sidebar>
+
+            <SidebarInset>
+                <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 sticky top-0 bg-background z-10 justify-between md:justify-start">
+                    {/* Mobile: Avatar + Name */}
+                    <div className="flex items-center gap-3 md:hidden">
+                        <UserAvatar size="sm" clickable />
+                        <span className="font-bold text-lg">{firstName}</span>
+                    </div>
+
+                    {/* Desktop: Trigger + Title */}
+                    <div className="hidden md:flex items-center gap-2 px-4">
+                        <SidebarTrigger className="-ml-1" />
+                        <Separator orientation="vertical" className="mr-2 h-4" />
+                        <span className="font-semibold text-sm">
+                            {navItems.find(i => isActive(i.path))?.label || 'Painel'}
+                        </span>
+                    </div>
+
+                    {/* Mobile: Trigger (Right Side) */}
+                    <div className="md:hidden">
+                        <SidebarTrigger />
+                    </div>
+                </header>
+
+                <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-32 md:pb-32 relative">
+                    {/* Loading State */}
+                    {loading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
+                            <div className="flex flex-col items-center gap-3">
+                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                <span className="text-sm text-muted-foreground">Carregando...</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {!isBlocked ? (
+                        <>
+                            {/* Subscription Banner */}
+                            {showBanner && (
+                                <div className="mb-6 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in slide-in-from-top-2">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-orange-200 flex items-center justify-center flex-shrink-0">
+                                            <Loader2 className="w-5 h-5 text-orange-700 animate-pulse" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-orange-900">
+                                                {isTrialExpired ? 'Seu período gratuito acabou!' : `Seu período gratuito acaba em ${daysRemaining} dias!`}
+                                            </h3>
+                                            <p className="text-sm text-orange-800">
+                                                {isTrialExpired ? 'Para continuar acessando seus dados e recursos, ative sua assinatura.' : 'Garanta o acesso contínuo às suas ferramentas de gestão.'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        onClick={async () => {
+                                            try {
+                                                const { iniciarPagamento } = await import('@/lib/pagamento');
+                                                await iniciarPagamento();
+                                            } catch (error) {
+                                                console.error('Erro ao iniciar pagamento:', error);
+                                            }
+                                        }}
+                                        className="bg-orange-600 hover:bg-[hsl(182,16%,55%)] hover:text-white border-0 shadow-lg shadow-orange-600/20 whitespace-nowrap"
+                                    >
+                                        Assinar Agora
                                     </Button>
                                 </div>
-                            </nav>
-                        </SheetContent>
-                    </Sheet>
-                </div>
-            </header>
+                            )}
 
-            {/* Main Content */}
-            <main className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 pb-32 md:pb-32 relative safe-area-bottom">
-                {/* Loading State - apenas no conteúdo, não na sidebar */}
-                {loading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
-                        <div className="flex flex-col items-center gap-3">
-                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                            <span className="text-sm text-muted-foreground">Carregando...</span>
-                        </div>
-                    </div>
-                )}
+                            <PageTransition key={location.pathname}>
+                                <ErrorBoundary>
+                                    <Outlet />
+                                </ErrorBoundary>
+                            </PageTransition>
 
-                {/* Content Logic: Mutually Exclusive */}
-                {!isBlocked ? (
-                    <>
-                        {/* Subscription Banner (Only for active users w/ generic trial ending soon) */}
-                        {showBanner && (
-                            <div className="mb-6 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in slide-in-from-top-2">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-orange-200 flex items-center justify-center flex-shrink-0">
-                                        <Loader2 className="w-5 h-5 text-orange-700 animate-pulse" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-orange-900">
-                                            {isTrialExpired ? 'Seu período gratuito acabou!' : `Seu período gratuito acaba em ${daysRemaining} dias!`}
-                                        </h3>
-                                        <p className="text-sm text-orange-800">
-                                            {isTrialExpired ? 'Para continuar acessando seus dados e recursos, ative sua assinatura.' : 'Garanta o acesso contínuo às suas ferramentas de gestão.'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <Button
-                                    onClick={async () => {
-                                        try {
-                                            const { iniciarPagamento } = await import('@/lib/pagamento');
-                                            await iniciarPagamento();
-                                        } catch (error) {
-                                            console.error('Erro ao iniciar pagamento:', error);
-                                        }
-                                    }}
-                                    className="bg-orange-600 hover:bg-[hsl(182,16%,55%)] hover:text-white border-0 shadow-lg shadow-orange-600/20 whitespace-nowrap"
-                                >
-                                    Assinar Agora
-                                </Button>
-                            </div>
-                        )}
+                            <div className="h-40 md:h-0 w-full shrink-0" />
+                        </>
+                    ) : null}
+                </main>
 
-                        <PageTransition key={location.pathname}>
-                            <ErrorBoundary>
-                                <Outlet />
-                            </ErrorBoundary>
-                        </PageTransition>
+                {/* Render Blocker */}
+                {isBlocked && <SubscriptionBlocker />}
 
-                        {/* Explicit Spacer for Mobile Scroll - Forces content above Nav/FAB */}
-                        <div className="h-40 md:h-0 w-full shrink-0" />
-                    </>
-                ) : null}
-            </main>
-
-            {/* Render Blocker OUTSIDE main if blocked */}
-            {isBlocked && <SubscriptionBlocker />}
-
-
-
-            {/* Mobile Bottom Nav */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t h-16 flex items-center justify-around z-30 px-2">
-                {navItems.slice(0, 5).map((item) => (
-                    <Link
-                        key={item.path}
-                        id={`mobile-${item.id}`} // Prefix to avoid duplicate IDs with sidebar if both render
-                        to={item.path}
-                        onClick={(e) => {
-                            if (item.id === 'nav-produtos' && isOnboardingActive && currentStep === 'dashboard-overview') {
-                                nextStep();
-                            }
-                        }}
-                        className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${isActive(item.path)
-                            ? 'text-primary'
-                            : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                    >
-                        <item.icon
-                            className="w-5 h-5"
-                            strokeWidth={isActive(item.path) ? 2.5 : 2}
-                            fill="transparent"
-                        />
-                        <span className="text-[9px] font-medium text-center leading-tight">{item.shortLabel}</span>
-                    </Link>
-                ))}            </nav>
-
-            <SpeedDial
-                onNewOrder={() => setIsOrderOpen(true)}
-                onNewClient={() => setIsClientOpen(true)}
-                onNewProduct={() => setIsProductOpen(true)}
-                onNewIngredient={() => navigate('/app/produtos?tab=ingredients&action=new')}
-            />
-
-            <ProductionStatusWidget />
-
-            <NewOrderDialog
-                open={isOrderOpen}
-                onOpenChange={setIsOrderOpen}
-                onSuccess={() => {
-                    setIsOrderOpen(false);
-                    if (location.pathname.includes('pedidos')) window.location.reload();
-                }}
-            />
-            <NewCustomerDialog
-                open={isClientOpen}
-                onOpenChange={setIsClientOpen}
-                onSuccess={() => {
-                    setIsClientOpen(false);
-                    if (location.pathname.includes('clientes')) window.location.reload();
-                }}
-            />
-            <ProductBuilder
-                open={isProductOpen}
-                onOpenChange={setIsProductOpen}
-                onSuccess={() => {
-                    setIsProductOpen(false);
-                    if (location.pathname.includes('produtos')) window.location.reload();
-                }}
-            />
-
-
-            {/* Photo Upload Dialog */}
-            <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>
-                <DialogContent className="max-w-sm">
-                    <DialogHeader>
-                        <DialogTitle>Alterar Foto do Perfil</DialogTitle>
-                    </DialogHeader>
-                    <div className="flex flex-col items-center gap-6 py-4">
-                        <div className="relative">
-                            <UserAvatar size="lg" />
-                            <div
-                                className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                <Camera className="w-6 h-6 text-white" />
-                            </div>
-                        </div>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handlePhotoUpload}
-                        />
-                        <Button
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={uploading}
-                            className="w-full"
+                {/* Mobile Bottom Nav */}
+                <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t h-16 flex items-center justify-around z-30 px-2 lg:hidden">
+                    {navItems.slice(0, 5).map((item) => (
+                        <Link
+                            key={item.path}
+                            id={`mobile-${item.id}`} // Prefix to avoid duplicate IDs with sidebar if both render
+                            to={item.path}
+                            onClick={(e) => {
+                                if (item.id === 'nav-produtos' && isOnboardingActive && currentStep === 'dashboard-overview') {
+                                    nextStep();
+                                }
+                            }}
+                            className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${isActive(item.path)
+                                ? 'text-primary'
+                                : 'text-muted-foreground hover:text-foreground'
+                                }`}
                         >
-                            {uploading ? 'Enviando...' : 'Escolher Nova Foto'}
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
+                            <item.icon
+                                className="w-5 h-5"
+                                strokeWidth={isActive(item.path) ? 2.5 : 2}
+                                fill="transparent"
+                            />
+                            <span className="text-[9px] font-medium text-center leading-tight">{item.shortLabel}</span>
+                        </Link>
+                    ))}
+                </nav>
 
-            {/* Command Palette Removed */}
+                <SpeedDial
+                    onNewOrder={() => setIsOrderOpen(true)}
+                    onNewClient={() => setIsClientOpen(true)}
+                    onNewProduct={() => setIsProductOpen(true)}
+                    onNewIngredient={() => navigate('/app/produtos?tab=ingredients&action=new')}
+                />
+                <ProductionStatusWidget />
 
-            <OnboardingOverlay
-                stepName="dashboard-overview"
-                targetId="nav-produtos"
-                message="Cadastre seu primeiro produto para começar a controlar seus custos e lucros."
-                position="right"
-            />
-        </div >
+                <NewOrderDialog
+                    open={isOrderOpen}
+                    onOpenChange={setIsOrderOpen}
+                    onSuccess={() => {
+                        setIsOrderOpen(false);
+                        if (location.pathname.includes('pedidos')) window.location.reload();
+                    }}
+                />
+                <NewCustomerDialog
+                    open={isClientOpen}
+                    onOpenChange={setIsClientOpen}
+                    onSuccess={() => {
+                        setIsClientOpen(false);
+                        if (location.pathname.includes('clientes')) window.location.reload();
+                    }}
+                />
+                <ProductBuilder
+                    open={isProductOpen}
+                    onOpenChange={setIsProductOpen}
+                    onSuccess={() => {
+                        setIsProductOpen(false);
+                        if (location.pathname.includes('produtos')) window.location.reload();
+                    }}
+                />
+
+                <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>
+                    <DialogContent className="max-w-sm">
+                        <DialogHeader>
+                            <DialogTitle>Alterar Foto do Perfil</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex flex-col items-center gap-6 py-4">
+                            <div className="relative">
+                                <UserAvatar size="lg" />
+                                <div
+                                    className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    <Camera className="w-6 h-6 text-white" />
+                                </div>
+                            </div>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handlePhotoUpload}
+                            />
+                            <Button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploading}
+                                className="w-full"
+                            >
+                                {uploading ? 'Enviando...' : 'Escolher Nova Foto'}
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                <OnboardingOverlay
+                    stepName="dashboard-overview"
+                    targetId="nav-produtos"
+                    message="Cadastre seu primeiro produto para começar a controlar seus custos e lucros."
+                    position="right"
+                />
+            </SidebarInset>
+        </SidebarProvider>
     );
 };
 
