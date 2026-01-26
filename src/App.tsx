@@ -30,6 +30,8 @@ const Aprender = lazy(() => import("./pages/app/Aprender"));
 const Settings = lazy(() => import("./pages/app/Settings"));
 const PublicMenuConfig = lazy(() => import("./pages/app/PublicMenuConfig"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const SystemLogs = lazy(() => import("./pages/admin/SystemLogs"));
+import { SystemErrorBoundary } from "./components/SystemErrorBoundary";
 
 
 // Loading fallback component
@@ -59,45 +61,50 @@ const App = () => {
       <TooltipProvider delayDuration={300}>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Public Landing Page - NO Auth Provider, NO Database Load */}
-              {Capacitor.isNativePlatform() ? (
-                <Route path="/" element={<Navigate to="/login" replace />} />
-              ) : (
-                <Route path="/" element={<Index />} />
-              )}
+        <SystemErrorBoundary>
+          <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public Landing Page - NO Auth Provider, NO Database Load */}
+                {Capacitor.isNativePlatform() ? (
+                  <Route path="/" element={<Navigate to="/login" replace />} />
+                ) : (
+                  <Route path="/" element={<Index />} />
+                )}
 
-              {/* Wrapped Routes - Auth & Notification Providers applied here (Lazy Loaded) */}
-              <Route element={<AppProviders />}>
-                {/* Protected App Routes */}
-                <Route path="/app" element={
-                  <ProtectedRoute>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }>
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="pedidos" element={<Pedidos />} />
-                  <Route path="clientes" element={<Clientes />} />
-                  <Route path="produtos" element={<Produtos />} />
-                  <Route path="agenda" element={<Agenda />} />
-                  <Route path="lista-inteligente" element={<SmartList />} />
-                  <Route path="aprender" element={<Aprender />} />
-                  <Route path="settings" element={<Settings />} />
-                  <Route path="cardapio-digital" element={<PublicMenuConfig />} />
-                  <Route path="perfil" element={<Navigate to="settings" replace />} />
+                {/* Wrapped Routes - Auth & Notification Providers applied here (Lazy Loaded) */}
+                <Route element={<AppProviders />}>
+                  {/* Protected App Routes */}
+                  <Route path="/app" element={
+                    <ProtectedRoute>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }>
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="pedidos" element={<Pedidos />} />
+                    <Route path="clientes" element={<Clientes />} />
+                    <Route path="produtos" element={<Produtos />} />
+                    <Route path="agenda" element={<Agenda />} />
+                    <Route path="lista-inteligente" element={<SmartList />} />
+                    <Route path="aprender" element={<Aprender />} />
+                    <Route path="settings" element={<Settings />} />
+                    <Route path="cardapio-digital" element={<PublicMenuConfig />} />
+                    <Route path="perfil" element={<Navigate to="settings" replace />} />
+                    {/* Admin Route - Hidden */}
+                    <Route path="logs" element={<SystemLogs />} />
+                  </Route>
+
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/menu/:userId" element={<PublicMenu />} />
+                  <Route path="/admin/logs" element={<Navigate to="/app/logs" replace />} /> {/* Shortcut */}
+                  <Route path="*" element={<NotFound />} />
                 </Route>
-
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/menu/:userId" element={<PublicMenu />} />
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </SystemErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
   );
