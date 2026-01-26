@@ -26,8 +26,9 @@ interface CartItem {
 // Regex to check if string is a valid UUID
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const PublicMenu = () => {
-    const { userId: identifier } = useParams<{ userId: string }>();
+const PublicMenu = ({ slugProp }: { slugProp?: string }) => {
+    const { userId: paramId } = useParams<{ userId: string }>();
+    const identifier = slugProp || paramId;
     const isMobile = useIsMobile();
     const { toast } = useToast();
 
