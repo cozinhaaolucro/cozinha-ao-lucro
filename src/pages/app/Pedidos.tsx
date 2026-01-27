@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Filter, Download, Upload, FileSpreadsheet, FileDown, FileText, AlertCircle, Search, X } from 'lucide-react';
+import { Plus, Filter, Download, FileSpreadsheet, FileText, AlertCircle, Search, X } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { updateOrderStatus, deleteOrder, getCustomers } from '@/lib/database';
 import { useOrderOperations } from '@/hooks/useOrderOperations';
-import { useOrderImport } from '@/hooks/useOrderImport';
 import { exportToExcel, exportToCSV } from '@/lib/excel';
 import {
     DropdownMenu,
@@ -83,7 +82,7 @@ const Pedidos = () => {
         onSuccess: refetchOrders
     });
 
-    const { handleImport, isImporting } = useOrderImport(refetchOrders);
+
 
     useEffect(() => {
         if (serverOrders) {
@@ -128,6 +127,7 @@ const Pedidos = () => {
             'Data Entrega': o.delivery_date ? new Date(o.delivery_date).toLocaleDateString('pt-BR') : '-',
             Items: o.items?.map(i => `${i.product_name} (${i.quantity})`).join(', ') || '',
             'Valor Total': Number(o.total_value.toFixed(2)),
+            'Data de Produção': o.production_completed_at ? new Date(o.production_completed_at).toLocaleDateString('pt-BR') : '-',
             CriadoEm: new Date(o.created_at).toLocaleDateString('pt-BR')
         }));
         if (format === 'csv') {
@@ -168,11 +168,6 @@ const Pedidos = () => {
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleExport('excel')}>Excel (.xlsx)</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleExport('csv')}>CSV (.csv)</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuLabel>Template</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['Cliente', 'Status', 'Data Entrega', 'Items', 'Valor Total'], 'pedidos'))}>
-                                    <FileDown className="w-4 h-4 mr-2" /> Modelo de Importação
-                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>

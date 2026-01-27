@@ -314,11 +314,16 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
 
         for (const si of selectedIngredients) {
             let ingredientId = si.ingredient_id;
+            let quantityToSave = si.quantity;
 
             if (si.is_virtual) {
                 const existing = ingredients.find(i => i.name.toLowerCase() === si.name.toLowerCase());
                 if (existing) {
                     ingredientId = existing.id;
+                    // Convert quantity from preset unit (si.unit) to DB ingredient unit (existing.unit)
+                    if (si.unit !== existing.unit) {
+                        quantityToSave = convertQuantity(si.quantity, si.unit, existing.unit, existing.package_size, existing.package_unit);
+                    }
                 } else {
                     // Normalize unit before creation to prevent DB errors
                     const rawUnit = si.unit.toLowerCase();
@@ -342,12 +347,18 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                     }
                     ingredientId = newIng.id;
                 }
+            } else {
+                // Non-virtual ingredient: check if preset unit differs from DB unit
+                const dbIngredient = ingredients.find(i => i.id === si.ingredient_id);
+                if (dbIngredient && si.unit !== dbIngredient.unit) {
+                    quantityToSave = convertQuantity(si.quantity, si.unit, dbIngredient.unit, dbIngredient.package_size, dbIngredient.package_unit);
+                }
             }
 
             if (ingredientId) {
                 finalIngredients.push({
                     ingredient_id: ingredientId,
-                    quantity: si.quantity,
+                    quantity: quantityToSave,
                     display_unit: si.display_unit
                 });
             }
@@ -455,48 +466,43 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         const newSelectedIngredients: SelectedIngredient[] = [];
 
         preset.ingredients.forEach((pi, index) => {
+            // Always get preset ingredient data to force units
+            const presetIng = PRESET_INGREDIENTS.find(i => i.name.toLowerCase() === pi.name.toLowerCase());
             const existingDb = ingredients.find(i => i.name.toLowerCase() === pi.name.toLowerCase());
 
-            if (existingDb) {
-                const isKg = (existingDb.unit as string) === 'kg' || (existingDb.unit as string) === 'kilograma';
-                const isL = (existingDb.unit as string) === 'l' || (existingDb.unit as string) === 'litro';
-                const useSubUnit = (isKg || isL) && pi.quantity < 1;
-                let displayUnit: string = existingDb.unit;
-                if (useSubUnit) displayUnit = isKg ? 'g' : 'ml';
-                const displayQty = convertQuantity(pi.quantity, existingDb.unit, displayUnit);
+            // Use preset unit/cost, not the database one
+            const unitToUse = presetIng?.unit || existingDb?.unit || 'un';
+            const costToUse = presetIng?.cost_per_unit || existingDb?.cost_per_unit || 0;
 
+            // Display unit matches preset unit since we standardized to g/ml
+            const displayUnit = unitToUse;
+            const displayQty = pi.quantity;
+
+            if (existingDb) {
+                // Existing ingredient in DB, but use preset unit/cost
                 newSelectedIngredients.push({
                     uniqueId: `${existingDb.id}_${Date.now()}_${index}`,
                     ingredient_id: existingDb.id,
                     name: existingDb.name,
-                    unit: existingDb.unit,
-                    cost: existingDb.cost_per_unit,
+                    unit: unitToUse,
+                    cost: costToUse,
                     quantity: pi.quantity,
                     display_unit: displayUnit,
-                    display_quantity: parseFloat(displayQty.toFixed(3)),
+                    display_quantity: displayQty,
                     is_virtual: false
                 });
-            } else {
-                const presetIng = PRESET_INGREDIENTS.find(i => i.name.toLowerCase() === pi.name.toLowerCase());
-                if (presetIng) {
-                    const isKg = (presetIng.unit as string) === 'kg';
-                    const isL = (presetIng.unit as string) === 'l' || (presetIng.unit as string) === 'litro';
-                    const useSubUnit = (isKg || isL) && pi.quantity < 1;
-                    let displayUnit: string = presetIng.unit;
-                    if (useSubUnit) displayUnit = isKg ? 'g' : 'ml';
-                    const displayQty = convertQuantity(pi.quantity, presetIng.unit, displayUnit);
-
-                    newSelectedIngredients.push({
-                        uniqueId: `virtual_${Date.now()}_${index}`,
-                        name: presetIng.name,
-                        unit: presetIng.unit,
-                        cost: Number((presetIng.cost_per_unit * 1.15).toFixed(2)),
-                        quantity: pi.quantity,
-                        display_unit: displayUnit,
-                        display_quantity: parseFloat(displayQty.toFixed(3)),
-                        is_virtual: true
-                    });
-                }
+            } else if (presetIng) {
+                // Virtual ingredient from preset
+                newSelectedIngredients.push({
+                    uniqueId: `virtual_${Date.now()}_${index}`,
+                    name: presetIng.name,
+                    unit: unitToUse,
+                    cost: Number((costToUse * 1.15).toFixed(4)), // 15% markup for new ingredients
+                    quantity: pi.quantity,
+                    display_unit: displayUnit,
+                    display_quantity: displayQty,
+                    is_virtual: true
+                });
             }
         });
 

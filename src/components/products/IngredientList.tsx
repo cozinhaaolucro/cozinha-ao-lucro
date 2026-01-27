@@ -1,9 +1,10 @@
 ﻿import { useState, useEffect } from "react";
-import { Plus, Search, FileDown, Filter, Loader2 } from "lucide-react";
+import { Plus, Search, FileDown, Filter, Loader2, Package, Milk, Candy, Wheat, Sparkles, Square, Egg, Cloud, CupSoda, Circle, Thermometer, Box, Drumstick, Leaf, Carrot, Beef } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from "@/components/ui/drawer";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { createIngredient, updateIngredient, deleteIngredient } from "@/lib/database";
@@ -14,6 +15,27 @@ import { IngredientCard } from "@/components/ingredients/IngredientCard";
 import * as XLSX from 'xlsx';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PRESET_INGREDIENTS } from "@/data/presets";
+
+// Icon mapping for preset ingredients
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+    'milk': Milk,
+    'candy': Candy,
+    'wheat': Wheat,
+    'sparkles': Sparkles,
+    'square': Square,
+    'egg': Egg,
+    'cloud': Cloud,
+    'package': Package,
+    'cup-soda': CupSoda,
+    'circle': Circle,
+    'thermometer-snowflake': Thermometer,
+    'box': Box,
+    'drumstick': Drumstick,
+    'leaf': Leaf,
+    'carrot': Carrot,
+    'beef': Beef,
+};
 
 // Pagination constants
 const ITEMS_PER_PAGE = 50;
@@ -169,9 +191,10 @@ export default function IngredientList() {
     // Export Logic
     const exportToExcel = () => {
         const ws = XLSX.utils.json_to_sheet(ingredients.map(i => ({
+            ID: i.id,
             Nome: i.name,
             Unidade: i.unit,
-            Cost: i.cost_per_unit,
+            Valor: i.cost_per_unit,
             Estoque: i.stock_quantity,
             "Embalagem (Tamanho)": i.package_size || '-',
             "Embalagem (Unidade)": i.package_unit || '-'
@@ -189,6 +212,32 @@ export default function IngredientList() {
     const openEdit = (ing: Ingredient) => {
         setEditingIngredient(ing);
         setIsDialogOpen(true);
+    };
+
+    const addPresetIngredient = async (preset: typeof PRESET_INGREDIENTS[0]) => {
+        // Check if ingredient already exists
+        const exists = ingredients.some(i => i.name.toLowerCase() === preset.name.toLowerCase());
+        if (exists) {
+            toast({ title: 'Ingrediente já existe!', variant: 'destructive' });
+            return;
+        }
+
+        try {
+            const user = (await supabase.auth.getUser()).data.user;
+            if (!user) throw new Error("No user");
+
+            await createIngredient({
+                name: preset.name,
+                unit: preset.unit as any,
+                cost_per_unit: preset.cost_per_unit,
+                stock_quantity: preset.stock_quantity
+            });
+            toast({ title: `${preset.name} adicionado!` });
+            loadIngredients();
+        } catch (error) {
+            console.error(error);
+            toast({ title: 'Erro ao adicionar ingrediente', variant: 'destructive' });
+        }
     };
 
     return (
@@ -234,6 +283,30 @@ export default function IngredientList() {
                     <Button variant="ghost" size="icon" onClick={exportToExcel} title="Exportar Excel" className="h-9 w-9 text-muted-foreground hover:text-foreground">
                         <FileDown className="h-4 w-4" />
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="gap-2 h-9 px-3 rounded-full font-medium">
+                                <Package className="h-4 w-4" />
+                                <span className="hidden sm:inline">Modelos</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-64 max-h-80 overflow-y-auto">
+                            {PRESET_INGREDIENTS.map((preset, idx) => {
+                                const IconComponent = ICON_MAP[preset.icon] || Package;
+                                return (
+                                    <DropdownMenuItem
+                                        key={idx}
+                                        onClick={() => addPresetIngredient(preset)}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <IconComponent className="h-4 w-4 text-muted-foreground" />
+                                        <span className="flex-1">{preset.name}</span>
+                                        <span className="text-xs text-muted-foreground">{preset.unit}</span>
+                                    </DropdownMenuItem>
+                                );
+                            })}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button onClick={openNew} className="gap-2 h-9 px-4 rounded-full font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
                         <Plus className="h-4 w-4" />
                         <span className="hidden sm:inline">Novo</span>

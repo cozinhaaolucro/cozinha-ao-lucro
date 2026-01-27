@@ -256,12 +256,18 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
         const dataToExport = products.map(p => {
             const totalCost = calculateTotalCost(p);
             const profit = (p.selling_price || 0) - totalCost;
+            const margin = p.selling_price ? calculateMargin(totalCost, p.selling_price) : 0;
             return {
                 'ID': p.display_id ? String(p.display_id).padStart(3, '0') : '',
+                'Nome': p.name,
                 'Ingredientes': p.product_ingredients
                     .filter(pi => pi.ingredient !== null)
                     .map(pi => `${pi.ingredient!.name} (${pi.quantity}${pi.ingredient!.unit})`)
-                    .join(', ')
+                    .join(', '),
+                'Preço Venda': p.selling_price,
+                'Custo': Number(totalCost.toFixed(2)),
+                'Lucro': Number(profit.toFixed(2)),
+                'Margem (%)': Number(margin.toFixed(0))
             };
         });
 
