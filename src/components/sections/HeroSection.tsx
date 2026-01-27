@@ -30,8 +30,8 @@ const HeroSection = () => {
             <div className="container-max mobile-container relative z-10 text-center flex flex-col items-center">
                 {/* Text Content */}
                 <div className="w-full max-w-[90vw] mx-auto space-y-6 mb-6 animate-fade-in order-1">
-                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground tracking-tight whitespace-nowrap">
-                        Transforme sua cozinha em um <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#2D7A70] to-primary animate-shimmer bg-[length:200%_auto]">Negócio Lucrativo</span>
+                    <h1 className="text-[1.65rem] sm:text-3xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground tracking-tight md:whitespace-nowrap">
+                        Transforme sua cozinha em<br className="md:hidden" /> um <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#2D7A70] to-primary animate-shimmer bg-[length:200%_auto]">Negócio Lucrativo</span>
                     </h1>
 
                     <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
