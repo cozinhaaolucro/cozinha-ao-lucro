@@ -14,6 +14,7 @@ import { generateWhatsAppLink, getDefaultTemplateForStatus, parseMessageTemplate
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useOrders } from '@/hooks/useQueries';
+import { HeaderAction } from '@/components/layout/HeaderAction';
 
 
 const Agenda = () => {
@@ -265,14 +266,8 @@ const Agenda = () => {
 
     return (
         <div className="space-y-4 pb-40">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold">Agenda</h1>
-                    <p className="text-sm text-muted-foreground">
-                        {dateFilter?.from && !dateFilter?.to ? 'Clique na data final do período' : 'Gerencie suas entregas'}
-                    </p>
-                </div>
-                <div className="flex gap-2">
+            <HeaderAction>
+                <div className="flex gap-2 items-center">
                     <DateRangePicker
                         date={dateFilter}
                         setDate={(range) => {
@@ -288,7 +283,7 @@ const Agenda = () => {
                         </Button>
                     )}
                 </div>
-            </div>
+            </HeaderAction>
 
             <div className="grid lg:grid-cols-[320px_1fr] gap-4 items-start">
                 <div className="space-y-4">

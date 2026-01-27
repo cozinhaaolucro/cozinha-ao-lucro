@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { OnboardingOverlay } from '@/components/onboarding/OnboardingOverlay';
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { Plus, TrendingUp, Pencil, Download, Trash2, Copy, ChevronDown, ChevronUp, Eye, EyeOff, Phone } from 'lucide-react';
+import { Plus, TrendingUp, Pencil, Download, Trash2, Copy, ChevronDown, ChevronUp, Eye, EyeOff, Phone, Search } from 'lucide-react';
 import { getProducts, deleteProduct, updateProduct, createProduct, getIngredients, importProductsBatch } from '@/lib/database';
 import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
 import { PRESET_PRODUCTS } from '@/data/presets';
@@ -354,133 +355,112 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
         e.target.value = '';
     };
 
+    const [searchTerm, setSearchTerm] = useState("");
+
+    // Filter Logic
+    const filteredProducts = products.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-muted/20 p-3 sm:p-4 rounded-xl border border-border/50 shadow-sm border-l-4 border-l-primary/50">
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                    <div
-                        className="flex items-center gap-2 cursor-pointer group/select select-none bg-background/50 px-2 py-1 rounded-full border border-transparent hover:border-border/50 transition-all"
-                        onClick={() => setSelectionMode(!selectionMode)}
-                        onDoubleClick={(e) => {
-                            e.preventDefault();
-                            toggleSelectAll();
-                        }}
-                    >
-                        <div className={cn(
-                            "w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-colors",
-                            selectedProducts.length > 0 ? "border-primary bg-primary" : "border-muted-foreground/70 group-hover/select:border-primary py-0.5"
-                        )}>
-                            {selectedProducts.length > 0 && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
-                        </div>
-                        <span className="text-xs sm:text-sm text-muted-foreground group-hover/select:text-primary transition-colors font-medium">
-                            {selectedProducts.length > 0 ? `${selectedProducts.length} selecionados` : 'Selecionar'}
-                        </span>
+            {/* Header Toolbar - Minimalist */}
+            <div className="flex items-center gap-4 w-full">
+                {/* Selection Trigger */}
+                <div
+                    className="flex items-center gap-2 cursor-pointer group/select select-none px-3 py-2 rounded-full hover:bg-muted/50 transition-colors shrink-0"
+                    onClick={() => setSelectionMode(!selectionMode)}
+                    onDoubleClick={(e) => {
+                        e.preventDefault();
+                        toggleSelectAll();
+                    }}
+                >
+                    <div className={cn(
+                        "w-4 h-4 rounded-full border flex items-center justify-center transition-colors",
+                        selectedProducts.length > 0 ? "border-primary bg-primary" : "border-muted-foreground/70 group-hover/select:border-primary"
+                    )}>
+                        {selectedProducts.length > 0 && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                     </div>
-                    {selectedProducts.length > 0 && (
-                        <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="text-xs sm:text-sm" onClick={() => {
-                                const productToDupe = products.find(p => p.id === selectedProducts[0]);
-                                if (productToDupe) handleDuplicateProduct(productToDupe);
-                                if (selectedProducts.length > 1) {
-                                    const remaining = selectedProducts.slice(1);
-                                    remaining.forEach(async id => {
-                                        const p = products.find(prod => prod.id === id);
-                                        if (p) await handleDuplicateProduct(p);
-                                    });
-                                }
-                            }}>
-                                <Copy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                                <span className="hidden xs:inline">Duplicar</span>
-                            </Button>
-                            <Button variant="destructive" size="sm" className="text-xs sm:text-sm" onClick={() => handleDelete()}>
-                                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                                <span className="hidden xs:inline">Excluir</span>
-                            </Button>
-                        </div>
-                    )}
+                    <span className="text-base text-muted-foreground group-hover/select:text-primary transition-colors font-medium hidden sm:inline">
+                        {selectedProducts.length > 0 ? `${selectedProducts.length}` : 'Selecionar'}
+                    </span>
                 </div>
 
-                <div className="flex gap-2 ml-auto">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="hidden sm:flex gap-2">
-                                <Download className="w-4 h-4" />
-                                Exportar
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Planilha</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleExport('excel')}>
-                                <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (.xlsx)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('csv')}>
-                                <FileText className="w-4 h-4 mr-2" /> CSV (.csv)
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Template</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['ID', 'Nome', 'Descrição', 'Preço Venda', 'Ingredientes'], 'produtos'))}>
-                                <FileDown className="w-4 h-4 mr-2" /> Modelo de Importação
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                {/* Bulk Actions (Dynamic) */}
+                {selectedProducts.length > 0 && (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
+                        <Button variant="outline" size="sm" className="h-8 text-xs bg-background" onClick={() => {
+                            const productToDupe = products.find(p => p.id === selectedProducts[0]);
+                            if (productToDupe) handleDuplicateProduct(productToDupe);
+                            if (selectedProducts.length > 1) {
+                                const remaining = selectedProducts.slice(1);
+                                remaining.forEach(async id => {
+                                    const p = products.find(prod => prod.id === id);
+                                    if (p) await handleDuplicateProduct(p);
+                                });
+                            }
+                        }}>
+                            <Copy className="w-3 h-3 mr-1" />
+                            Duplicar
+                        </Button>
+                        <Button variant="destructive" size="sm" className="h-8 text-xs" onClick={() => handleDelete()}>
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Excluir
+                        </Button>
+                    </div>
+                )}
 
-                    {/* Mobile Export Icon Only */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon" className="flex sm:hidden h-8 w-8">
-                                <Download className="w-3 h-3" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleExport('excel')}>Planilha Excel</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('csv')}>Planilha CSV</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['ID', 'Nome', 'Descrição', 'Preço Venda', 'Ingredientes'], 'produtos'))}>Template</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".xlsx, .xls, .csv"
-                        className="hidden"
-                        onChange={handleImport}
+                {/* Search */}
+                <div className="relative w-64">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar produtos..."
+                        className="pl-9 h-9 bg-transparent border-muted-foreground/30 focus:border-primary"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 sm:h-9 sm:w-9"
-                        title="Importar Excel"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </Button>
+                </div>
+
+                <div className="flex-1" />
+
+                {/* Right Actions */}
+                <div className="flex items-center gap-2">
+                    {/* Import/Export Group */}
+                    <div className="flex items-center text-muted-foreground">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-9 w-9 hover:text-foreground" title="Exportar">
+                                    <Download className="w-4 h-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleExport('excel')}>Excel (.xlsx)</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleExport('csv')}>CSV (.csv)</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
 
 
 
-                    <Button className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-4" onClick={onNewProduct}>
-                        <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span className="hidden xs:inline">Novo</span> Produto
-                    </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 hover:text-foreground"
+                            onClick={() => setShowAllIngredients(!showAllIngredients)}
+                            title={showAllIngredients ? "Ocultar detalhes" : "Mostrar detalhes"}
+                        >
+                            {showAllIngredients ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </Button>
+                    </div>
 
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 sm:h-9 sm:w-9"
-                        onClick={() => setShowAllIngredients(!showAllIngredients)}
-                        title={showAllIngredients ? "Ocultar detalhes" : "Mostrar detalhes"}
-                    >
-                        {showAllIngredients ? (
-                            <EyeOff className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                            <Eye className="w-4 h-4 text-muted-foreground" />
-                        )}
+                    <Button onClick={onNewProduct} className="gap-2 h-9 px-4 rounded-full font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm ml-2">
+                        <Plus className="h-4 w-4" />
+                        <span className="hidden sm:inline">Novo</span>
                     </Button>
                 </div>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                {products.length === 0 ? (
+                {filteredProducts.length === 0 ? (
                     <Card className="col-span-full border-dashed">
                         <CardContent className="p-12 text-center">
                             <div className="flex flex-col items-center gap-2">
@@ -503,7 +483,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                         </CardContent>
                     </Card>
                 ) : (
-                    products.map((product, idx) => {
+                    filteredProducts.map((product, idx) => {
                         const totalCost = calculateTotalCost(product);
                         const margin = product.selling_price ? calculateMargin(totalCost, product.selling_price) : 0;
                         const profit = (product.selling_price || 0) - totalCost;
@@ -681,7 +661,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                     {(showAllIngredients || expandedProductIds.includes(product.id)) && product.product_ingredients.length > 0 && (
                                         <div className="text-xs text-muted-foreground border-t pt-2 animate-in slide-in-from-top-2 fade-in duration-200">
                                             <p className="font-medium mb-1.5 opacity-90">Ingredientes:</p>
-                                            <ul className="grid gap-1.5">
+                                            <ul className="grid gap-1">
                                                 {product.product_ingredients.map((pi, idx) => {
                                                     if (!pi.ingredient) return null;
                                                     const display = getDisplayQuantity(pi.quantity, pi.ingredient.unit, pi.display_unit, pi.ingredient.package_size);
@@ -743,7 +723,7 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
                                                                     variant="secondary"
                                                                     className={`text-xs font-bold gap-1.5 cursor-help transition-all border ${hasStock
                                                                         ? 'bg-[#2FBF71]/10 text-[#2FBF71] border-[#2FBF71]/20 hover:bg-[#2FBF71]/20'
-                                                                        : 'bg-[#5F98A1]/10 text-[#5F98A1] border-[#5F98A1]/20 hover:bg-[#5F98A1]/20'
+                                                                        : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
                                                                         }`}
                                                                 >
                                                                     <Package className="w-3 h-3" />

@@ -11,6 +11,7 @@ import * as XLSX from 'xlsx';
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/ui/date-picker";
 import { useOrders, useProducts, useIngredients } from '@/hooks/useQueries';
+import { HeaderAction } from '@/components/layout/HeaderAction';
 
 interface ShoppingItem {
     ingredientId: string;
@@ -133,39 +134,25 @@ const ShoppingList = () => {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-40">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Lista de Compras Inteligente</h1>
-                    <p className="text-muted-foreground">Planeje suas compras com base nos pedidos agendados.</p>
-                </div>
+            <HeaderAction>
+                <DateRangePicker
+                    date={dateRange}
+                    setDate={setDateRange}
+                    minimal={true}
+                />
+            </HeaderAction>
+
+            <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
                 <div className="flex items-center gap-2">
+                    <div className="text-sm text-muted-foreground mr-2">
+                        {items.length} itens
+                    </div>
                     <Button variant="outline" onClick={exportList} disabled={items.length === 0}>
                         <Download className="w-4 h-4 mr-2" />
                         Exportar
                     </Button>
                 </div>
             </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        Período de Produção
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center gap-4">
-                        <DateRangePicker
-                            date={dateRange}
-                            setDate={setDateRange}
-                            className="w-[300px]"
-                        />
-                        <div className="flex-1 text-right text-sm text-muted-foreground items-center flex justify-end h-10">
-                            {items.length} itens listados
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
 
             <div className="grid md:grid-cols-2 gap-6">
                 {/* To Buy List */}

@@ -17,11 +17,14 @@ interface ProductBasicInfoProps {
     setFormData: React.Dispatch<React.SetStateAction<ProductFormData>>;
     imagePreview: string | null;
     handleImageSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    availableCategories: string[];
 }
 
-export const ProductBasicInfo = ({ formData, setFormData, imagePreview, handleImageSelect }: ProductBasicInfoProps) => {
+export const ProductBasicInfo = ({ formData, setFormData, imagePreview, handleImageSelect, availableCategories }: ProductBasicInfoProps) => {
     const [openCategoryCombobox, setOpenCategoryCombobox] = useState(false);
     const [categorySearch, setCategorySearch] = useState('');
+
+    const suggestions = Array.from(new Set([...CATEGORY_PRESETS, ...availableCategories])).sort();
 
     return (
         <Card className="border-none shadow-none sm:border sm:shadow-sm">
@@ -101,7 +104,7 @@ export const ProductBasicInfo = ({ formData, setFormData, imagePreview, handleIm
                                         </div>
                                     </CommandEmpty>
                                     <CommandGroup heading="Sugestões">
-                                        {CATEGORY_PRESETS.map((category) => (
+                                        {suggestions.map((category) => (
                                             <CommandItem
                                                 key={category}
                                                 value={category}

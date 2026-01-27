@@ -19,9 +19,15 @@ import {
     Monitor,
     Search,
     Command,
+    Check, // Added
     Store,
+    Layout, // Added
+    Wallet, // Added
+    Package,
     FileText,
-    Package
+    Layers,
+    ArrowRight,
+    CreditCard // Added
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -173,12 +179,12 @@ const DashboardLayout = () => {
         { path: '/app/dashboard', label: 'Visão Geral', shortLabel: 'Visão', icon: LayoutDashboard, id: 'nav-dashboard' },
         { path: '/app/pedidos', label: 'Pedidos', shortLabel: 'Pedidos', icon: ShoppingBag, id: 'nav-pedidos' },
         { path: '/app/produtos', label: 'Produtos', shortLabel: 'Produtos', icon: Package, id: 'nav-produtos' },
+        { path: '/app/estoque', label: 'Estoque', shortLabel: 'Estoque', icon: Layers, id: 'nav-estoque' },
         { path: '/app/agenda', label: 'Agenda', shortLabel: 'Agenda', icon: Calendar, id: 'nav-agenda' },
         { path: '/app/clientes', label: 'Clientes', shortLabel: 'Clientes', icon: Users, id: 'nav-clientes' },
         { path: '/app/lista-inteligente', label: 'Lista Inteligente', shortLabel: 'Lista', icon: FileText, id: 'nav-smart-list' },
         { path: '/app/cardapio-digital', label: 'Cardápio Digital', shortLabel: 'Cardápio', icon: Store, id: 'nav-public-menu' },
         { path: '/app/aprender', label: 'Aprender', shortLabel: 'Aprender', icon: BookOpen, id: 'nav-aprender' },
-        { path: '/app/settings', label: 'Configurações', shortLabel: 'Config', icon: Settings, id: 'nav-settings' },
     ];
 
     const isActive = (path: string) => location.pathname === path;
@@ -221,26 +227,6 @@ const DashboardLayout = () => {
                 <SidebarContent>
                     <SidebarMenu className="px-2">
                         {navItems.map((item) => {
-                            const isSpecial = item.id === 'nav-dashboard'; // dashboard (Visão Geral) is usually the special one or 'painel'? In original code: item.id === 'nav-painel'. But navItems above says 'nav-dashboard'. Let's check original code. 
-                            // user code: { path: '/app/dashboard', label: 'Visão Geral', ... id: 'nav-dashboard' }
-                            // user code special check: const isSpecial = item.id === 'nav-painel'; -> wait, 'nav-dashboard' != 'nav-painel'.
-                            // It seems the "Special" styling (gradient) might have been targeting an ID that doesn't exist in the array shown in `navItems`.
-                            // Let's assume 'nav-dashboard' SHOULD be the special one or logic was stale. 
-                            // Actually, looking at the previous file content, `item.id === 'nav-painel'` was used but `navItems` had `nav-dashboard`. So the gradient was likely NOT applying?
-                            // Or maybe I missed where nav-painel was.
-                            // I will preserve the logic `const isSpecial = item.id === 'nav-painel';` but since I don't see 'nav-painel' in navItems, I will stick to the exact code logic as before or fix it if obvious.
-                            // However, the user screenshot showed the sidebar. If the first item "Visão Geral" had gradient, then `nav-dashboard` was intended.
-                            // I'll stick to generic SidebarMenuItem for now, and if "nav-painel" appears, apply special style.
-
-                            // Re-reading original `navItems`: `id: 'nav-dashboard'`...
-                            // Original check: `const isSpecial = item.id === 'nav-painel';`
-                            // So likely NO item was special in the current code? Or maybe I misread.
-                            // I will check the original file content again...
-                            // Line 208: `const isSpecial = item.id === 'nav-painel';`
-                            // Line 158: `id: 'nav-dashboard'`
-                            // So 'isSpecial' was false for everyone.
-                            // I'll implement standard SidebarMenuButton.
-
                             return (
                                 <SidebarMenuItem key={item.path}>
                                     <SidebarMenuButton
@@ -267,47 +253,68 @@ const DashboardLayout = () => {
                 <SidebarFooter>
                     <SidebarMenu>
                         <SidebarMenuItem>
-
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <SidebarMenuButton
-                                        size="lg"
-                                        className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                                    >
-                                        <UserAvatar size="sm" />
-                                        <div className="grid flex-1 text-left text-sm leading-tight">
-                                            <span className="truncate font-semibold">{firstName}</span>
-                                            <span className="truncate text-xs">Plano Pro</span>
-                                        </div>
-                                        {/* Chevrons could go here */}
-                                    </SidebarMenuButton>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                                    side="bottom"
-                                    align="end"
-                                    sideOffset={4}
-                                >
-                                    <DropdownMenuLabel className="p-0 font-normal">
-                                        <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                            <SidebarMenuButton asChild tooltip="Assinatura" className="justify-center transition-colors hover:bg-muted/50">
+                                <Link to="/app/settings?tab=subscription">
+                                    <CreditCard />
+                                    <span>Assinatura</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <div className="flex items-center w-full gap-1">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <SidebarMenuButton
+                                            size="lg"
+                                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground flex-1 min-w-0"
+                                        >
                                             <UserAvatar size="sm" />
                                             <div className="grid flex-1 text-left text-sm leading-tight">
                                                 <span className="truncate font-semibold">{firstName}</span>
-                                                <span className="truncate text-xs">{user?.email}</span>
+                                                <span className="truncate text-xs">Plano Pro</span>
                                             </div>
-                                        </div>
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => setIsPhotoDialogOpen(true)}>
-                                        <Camera className="mr-2 h-4 w-4" />
-                                        Alterar Foto
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleSignOut}>
-                                        <LogOut className="mr-2 h-4 w-4" />
-                                        Sair
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                                            {/* Chevrons could go here */}
+                                        </SidebarMenuButton>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                        className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                                        side="bottom"
+                                        align="end"
+                                        sideOffset={4}
+                                    >
+                                        <DropdownMenuLabel className="p-0 font-normal">
+                                            <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                                                <UserAvatar size="sm" />
+                                                <div className="grid flex-1 text-left text-sm leading-tight">
+                                                    <span className="truncate font-semibold">{firstName}</span>
+                                                    <span className="truncate text-xs">{user?.email}</span>
+                                                </div>
+                                            </div>
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onClick={() => setIsPhotoDialogOpen(true)}>
+                                            <Camera className="mr-2 h-4 w-4" />
+                                            Alterar Foto
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={handleSignOut}>
+                                            <LogOut className="mr-2 h-4 w-4" />
+                                            Sair
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+
+                                {/* Settings Button */}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-muted-foreground"
+                                    asChild
+                                >
+                                    <Link to="/app/settings">
+                                        <Settings className="h-4 w-4" />
+                                    </Link>
+                                </Button>
+                            </div>
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarFooter>
@@ -315,25 +322,32 @@ const DashboardLayout = () => {
             </Sidebar>
 
             <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 sticky top-0 bg-background z-10 justify-between md:justify-start">
-                    {/* Mobile: Avatar + Name */}
-                    <div className="flex items-center gap-3 md:hidden">
-                        <UserAvatar size="sm" clickable />
-                        <span className="font-bold text-lg">{firstName}</span>
+                <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 sticky top-0 bg-background z-10">
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3 md:hidden">
+                            <SidebarTrigger />
+                            <UserAvatar size="sm" clickable />
+                            <span className="font-bold text-lg">{firstName}</span>
+                            <Link to="/app/settings?tab=subscription">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 ml-1 text-muted-foreground">
+                                    <CreditCard className="w-4 h-4" />
+                                </Button>
+                            </Link>
+                        </div>
+
+                        {/* Desktop: Trigger + Title */}
+                        <div className="hidden md:flex items-center gap-2 px-4">
+                            <SidebarTrigger className="-ml-1" />
+                            <Separator orientation="vertical" className="mr-2 h-4" />
+                            <span className="font-bold text-lg">
+                                {navItems.find(i => isActive(i.path))?.label || 'Painel'}
+                            </span>
+                        </div>
                     </div>
 
-                    {/* Desktop: Trigger + Title */}
-                    <div className="hidden md:flex items-center gap-2 px-4">
-                        <SidebarTrigger className="-ml-1" />
-                        <Separator orientation="vertical" className="mr-2 h-4" />
-                        <span className="font-semibold text-sm">
-                            {navItems.find(i => isActive(i.path))?.label || 'Painel'}
-                        </span>
-                    </div>
-
-                    {/* Mobile: Trigger (Right Side) */}
-                    <div className="md:hidden">
-                        <SidebarTrigger />
+                    <div className="flex items-center gap-2">
+                        {/* Action Portal Target */}
+                        <div id="header-actions" className="flex items-center gap-2" />
                     </div>
                 </header>
 

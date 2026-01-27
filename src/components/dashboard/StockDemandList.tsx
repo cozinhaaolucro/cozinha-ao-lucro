@@ -28,7 +28,7 @@ export const StockDemandList = ({ stockAnalysis }: StockDemandListProps) => {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="space-y-3">
                     {stockAnalysis.length === 0 ? (
                         <p className="text-sm text-muted-foreground text-center py-8">Nenhum ingrediente em uso</p>
                     ) : (

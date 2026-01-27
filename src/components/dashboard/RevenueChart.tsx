@@ -7,13 +7,13 @@ interface RevenueChartProps {
 
 export const RevenueChart = ({ data }: RevenueChartProps) => {
     return (
-        <Card className="col-span-2 relative shadow-elegant overflow-hidden border border-border/60 z-10 bg-white">
+        <Card className="relative shadow-elegant overflow-hidden border border-border/60 z-10 bg-white">
             <CardHeader className="relative z-10">
                 <CardTitle className="text-foreground">Receita x Custos</CardTitle>
                 <CardDescription className="text-muted-foreground">Acompanhe o desempenho financeiro diário.</CardDescription>
             </CardHeader>
             <CardContent className="relative z-10">
-                <div className="h-[300px]">
+                <div className="h-[200px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>

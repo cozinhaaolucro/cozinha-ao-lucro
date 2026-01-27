@@ -24,13 +24,7 @@ const CONTENT = [
 const Aprender = () => {
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                    <BookOpen className="w-8 h-8" />
-                    Aprender
-                </h1>
-                <p className="text-muted-foreground">Acesse materiais de estudo e dicas de crescimento</p>
-            </div>
+
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {CONTENT.map((item) => (

@@ -18,6 +18,7 @@ interface ProductIngredientsProps {
     selectedIngredients: SelectedIngredient[];
     ingredients: Ingredient[];
     addExistingIngredient: (ingredient: Ingredient) => void;
+    addNewIngredient: (data: { name: string; unit: any; cost: number }) => void;
     removeIngredient: (index: number) => void;
     updateIngredientDisplayQuantity: (index: number, newDisplayQty: number) => void;
     updateIngredientDisplayUnit: (index: number, newUnit: string) => void;
@@ -33,6 +34,7 @@ export const ProductIngredients = ({
     selectedIngredients,
     ingredients,
     addExistingIngredient,
+    addNewIngredient,
     removeIngredient,
     updateIngredientDisplayQuantity,
     updateIngredientDisplayUnit,
@@ -44,6 +46,21 @@ export const ProductIngredients = ({
     nextStep
 }: ProductIngredientsProps) => {
     const [openCombobox, setOpenCombobox] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isCreating, setIsCreating] = useState(false);
+    const [newIngData, setNewIngData] = useState({ unit: 'un', cost: 0 });
+
+    const handleCreateIngredient = () => {
+        addNewIngredient({
+            name: searchTerm,
+            unit: newIngData.unit,
+            cost: newIngData.cost
+        });
+        setOpenCombobox(false);
+        setIsCreating(false);
+        setNewIngData({ unit: 'un', cost: 0 });
+        setSearchTerm('');
+    };
 
     return (
         <div className="space-y-4">
@@ -187,7 +204,10 @@ export const ProductIngredients = ({
             )}
 
             <div className="flex gap-2">
-                <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                <Popover open={openCombobox} onOpenChange={(open) => {
+                    setOpenCombobox(open);
+                    if (!open) setIsCreating(false);
+                }}>
                     <PopoverTrigger asChild>
                         <Button
                             variant="outline"
@@ -198,37 +218,95 @@ export const ProductIngredients = ({
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[280px] p-0" align="start">
-                        <Command>
-                            <CommandInput placeholder="Buscar ingrediente..." />
-                            <CommandList className="max-h-[200px] overflow-y-auto">
-                                <CommandEmpty>Nenhum ingrediente encontrado.</CommandEmpty>
-                                <CommandGroup>
-                                    {ingredients.map((ingredient) => (
-                                        <CommandItem
-                                            key={ingredient.id}
-                                            value={ingredient.name}
-                                            onSelect={() => {
-                                                addExistingIngredient(ingredient);
-                                                setOpenCombobox(false);
-                                            }}
-                                        >
-                                            <Check
-                                                className={cn(
-                                                    "mr-2 h-4 w-4",
-                                                    selectedIngredients.some(si => si.ingredient_id === ingredient.id) ? "opacity-100" : "opacity-0"
-                                                )}
-                                            />
-                                            <div className="flex items-center justify-between w-full gap-2">
-                                                <span>{ingredient.name}</span>
-                                                <span className="text-xs text-muted-foreground tabular-nums">
-                                                    {ingredient.stock_quantity ? Number(ingredient.stock_quantity.toFixed(2)) : 0} {ingredient.unit}
-                                                </span>
-                                            </div>
-                                        </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                            </CommandList>
-                        </Command>
+                        {isCreating ? (
+                            <div className="p-4 space-y-3">
+                                <h4 className="font-medium text-sm">Novo Ingrediente</h4>
+                                <div className="space-y-2">
+                                    <Label className="text-xs">Nome</Label>
+                                    <Input value={searchTerm} readOnly className="h-8 bg-muted" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs">Unidade de Compra</Label>
+                                    <Select value={newIngData.unit} onValueChange={(val) => setNewIngData({ ...newIngData, unit: val })}>
+                                        <SelectTrigger className="h-8">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="un">Unidade (un)</SelectItem>
+                                            <SelectItem value="kg">Quilo (kg)</SelectItem>
+                                            <SelectItem value="g">Grama (g)</SelectItem>
+                                            <SelectItem value="l">Litro (l)</SelectItem>
+                                            <SelectItem value="ml">Mililitro (ml)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs">Custo por {newIngData.unit}</Label>
+                                    <Input
+                                        type="number"
+                                        className="h-8"
+                                        placeholder="0.00"
+                                        value={newIngData.cost || ''}
+                                        onChange={(e) => setNewIngData({ ...newIngData, cost: parseFloat(e.target.value) || 0 })}
+                                    />
+                                    <p className="text-[10px] text-muted-foreground">
+                                        Ex: Preço de 1 {newIngData.unit === 'un' ? 'Unidade' : newIngData.unit}
+                                    </p>
+                                </div>
+                                <div className="pt-2 flex gap-2">
+                                    <Button size="sm" variant="ghost" className="flex-1 h-8" onClick={() => setIsCreating(false)}>Voltar</Button>
+                                    <Button size="sm" className="flex-1 h-8" onClick={handleCreateIngredient}>Adicionar</Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <Command shouldFilter={false}>
+                                <CommandInput
+                                    placeholder="Buscar ingrediente..."
+                                    value={searchTerm}
+                                    onValueChange={setSearchTerm}
+                                />
+                                <CommandList className="max-h-[200px] overflow-y-auto">
+                                    <CommandEmpty>
+                                        <div className="p-2 text-center">
+                                            <p className="text-sm text-muted-foreground mb-2">Não encontrado.</p>
+                                            <Button
+                                                size="sm"
+                                                className="w-full"
+                                                onClick={() => setIsCreating(true)}
+                                            >
+                                                Criar "{searchTerm}"
+                                            </Button>
+                                        </div>
+                                    </CommandEmpty>
+                                    <CommandGroup>
+                                        {ingredients.filter(i => i.name.toLowerCase().includes(searchTerm.toLowerCase())).map((ingredient) => (
+                                            <CommandItem
+                                                key={ingredient.id}
+                                                value={ingredient.name}
+                                                onSelect={() => {
+                                                    addExistingIngredient(ingredient);
+                                                    setOpenCombobox(false);
+                                                    setSearchTerm('');
+                                                }}
+                                            >
+                                                <Check
+                                                    className={cn(
+                                                        "mr-2 h-4 w-4",
+                                                        selectedIngredients.some(si => si.ingredient_id === ingredient.id) ? "opacity-100" : "opacity-0"
+                                                    )}
+                                                />
+                                                <div className="flex items-center justify-between w-full gap-2">
+                                                    <span>{ingredient.name}</span>
+                                                    <span className="text-xs text-muted-foreground tabular-nums">
+                                                        {ingredient.stock_quantity ? Number(ingredient.stock_quantity.toFixed(2)) : 0} {ingredient.unit}
+                                                    </span>
+                                                </div>
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        )}
                     </PopoverContent>
                 </Popover>
             </div>

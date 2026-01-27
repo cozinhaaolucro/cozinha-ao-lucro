@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, Download, Upload, FileSpreadsheet, FileDown, FileText, AlertCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, Filter, Download, Upload, FileSpreadsheet, FileDown, FileText, AlertCircle, Search, X } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { updateOrderStatus, deleteOrder, getCustomers } from '@/lib/database';
 import { useOrderOperations } from '@/hooks/useOrderOperations';
@@ -30,6 +31,7 @@ import { KanbanBoard } from '@/components/orders/kanban/KanbanBoard';
 import { STATUS_COLUMNS } from '@/components/orders/kanban/constants';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@/hooks/useQueries';
+import { HeaderAction } from '@/components/layout/HeaderAction';
 
 const Pedidos = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -49,6 +51,8 @@ const Pedidos = () => {
     const { toast } = useToast();
     const isMobile = useIsMobile();
     const queryClient = useQueryClient();
+
+    const [searchTerm, setSearchTerm] = useState(""); // Added global search state
 
     // React Query Hooks
     const { data: serverOrders, refetch: refetchOrders, isLoading } = useKanbanOrders(dateFilter);
@@ -87,11 +91,6 @@ const Pedidos = () => {
         }
     }, [serverOrders]);
 
-    // Force refetch on mount to ensure fresh data every time we enter the page
-    useEffect(() => {
-        refetchOrders();
-    }, []);
-
     const onOptimisticUpdate = (orderId: string, newStatus: OrderStatus) => {
         setOrders(prev => prev.map(o =>
             o.id === orderId ? { ...o, status: newStatus } : o
@@ -113,10 +112,13 @@ const Pedidos = () => {
     // Filter Logic
     const filteredOrders = orders.filter((order) => {
         if (order.status === 'cancelled') return false;
-        // Date filtering is handled server-side in refetchOrders, but we also filter locally for optimistic updates if needed
-        // but since we replace local state with server state, local filter is redundant for dates unless we want client-side filtering on top.
-        // Effectively this just filters out cancelled orders.
-        return true;
+
+        const matchesSearch =
+            order.customer?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (order.items && order.items.some(i => i.product_name.toLowerCase().includes(searchTerm.toLowerCase())));
+
+        return matchesSearch;
     });
 
     const handleExport = async (format: 'excel' | 'csv') => {
@@ -136,71 +138,59 @@ const Pedidos = () => {
     };
 
     return (
-        <div className="space-y-6 h-full flex flex-col">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Pedidos</h1>
-                    <p className="text-sm text-muted-foreground">Visão Macro: Planejamento, Agendamento e Histórico de Todos os Pedidos.</p>
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                    <input
-                        type="file"
-                        id="pedidos-import-input"
-                        accept=".xlsx, .xls, .csv"
-                        className="hidden"
-                        onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            await handleImport(file);
-                            e.target.value = '';
-                        }}
+        <div className="h-full flex flex-col">
+            {/* Standardized Minimalist Toolbar */}
+            <div className="flex items-center gap-4 w-full mb-6">
+                {/* Search */}
+                <div className="relative w-64">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar cliente ou pedido..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9 h-9 bg-transparent border-muted-foreground/30 focus:border-primary"
                     />
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        title="Importar Excel"
-                        className="flex-1 sm:flex-none sm:w-10"
-                        onClick={() => document.getElementById('pedidos-import-input')?.click()}
-                        disabled={isImporting}
-                    >
-                        {isImporting ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Upload className="w-4 h-4" />}
-                    </Button>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon" className="flex-1 sm:flex-none" title="Exportar / Baixar Modelo">
-                                <Download className="w-4 h-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Planilha</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleExport('excel')}>
-                                <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (.xlsx)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('csv')}>
-                                <FileText className="w-4 h-4 mr-2" /> CSV (.csv)
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Template</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['Cliente', 'Status', 'Data Entrega', 'Items', 'Valor Total'], 'pedidos'))}>
-                                <FileDown className="w-4 h-4 mr-2" /> Modelo de Importação
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button className="gap-2 flex-[2] sm:flex-none" onClick={() => setIsDialogOpen(true)}>
-                        <Plus className="w-4 h-4" />
-                        Novo
+                </div>
+
+                <div className="flex-1" />
+
+                {/* Right Actions */}
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center text-muted-foreground">
+
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-9 w-9 hover:text-foreground" title="Exportar">
+                                    <Download className="w-4 h-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleExport('excel')}>Excel (.xlsx)</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleExport('csv')}>CSV (.csv)</DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuLabel>Template</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['Cliente', 'Status', 'Data Entrega', 'Items', 'Valor Total'], 'pedidos'))}>
+                                    <FileDown className="w-4 h-4 mr-2" /> Modelo de Importação
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    <Button className="gap-2 h-9 px-4 rounded-full font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm ml-2" onClick={() => setIsDialogOpen(true)}>
+                        <Plus className="h-4 w-4" />
+                        <span className="hidden sm:inline">Novo</span>
                     </Button>
                 </div>
             </div>
 
-            {/* Filter Row */}
-            <div className="flex items-center justify-end gap-2 py-2">
+            {/* Header Action: Date Picker */}
+            <HeaderAction>
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-muted-foreground hidden sm:inline">Filtrar por data:</span>
                     <DateRangePicker
                         date={dateFilter}
                         setDate={setDateFilter}
-                        className="w-auto"
+                        className="w-auto border-0 shadow-none p-0"
                         minimal={true}
                     />
                     {(dateFilter?.from) && (
@@ -214,7 +204,7 @@ const Pedidos = () => {
                         </Button>
                     )}
                 </div>
-            </div>
+            </HeaderAction>
 
             {(isLoading && orders.length === 0) ? (
                 <div className="flex-1 flex items-center justify-center pb-40">

@@ -25,6 +25,7 @@ import {
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/ui/date-picker";
 import { useCustomers } from '@/hooks/useQueries';
+import { HeaderAction } from '@/components/layout/HeaderAction';
 
 const Clientes = () => {
     const { toast } = useToast();
@@ -223,87 +224,11 @@ const Clientes = () => {
                 document.body
             )}
 
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
-                    <p className="text-muted-foreground">Gerencie sua base de clientes</p>
-                </div>
-                <div className="flex gap-2">
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".xlsx, .xls, .csv"
-                        className="hidden"
-                        onChange={handleImport}
-                    />
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        title="Importar Excel"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <Upload className="w-4 h-4" />
-                    </Button>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon" title="Exportar / Baixar Modelo">
-                                <Download className="w-4 h-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Planilha</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleExport('excel')}>
-                                <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (.xlsx)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('csv')}>
-                                <FileText className="w-4 h-4 mr-2" /> CSV (.csv)
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Template</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => import('@/lib/excel').then(mod => mod.downloadTemplate(['Nome', 'Email', 'Telefone', 'Endereço', 'Observações'], 'clientes'))}>
-                                <FileDown className="w-4 h-4 mr-2" /> Modelo de Importação
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
-                        <Plus className="w-4 h-4" />
-                        Novo Cliente
-                    </Button>
-                </div>
-            </div>
-
-            <div className="flex gap-2 items-center w-full">
-                <div className="relative flex-1 min-w-0">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Buscar..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="pl-9 h-10 w-full"
-                    />
-                </div>
-                <Button
-                    variant={showInactive ? "default" : "outline"}
-                    onClick={() => setShowInactive(!showInactive)}
-                    className="shrink-0 h-10 px-3 whitespace-nowrap"
-                >
-                    {showInactive ? (
-                        <>
-                            <span className="sm:hidden">Todos</span>
-                            <span className="hidden sm:inline">Mostrar Todos</span>
-                        </>
-                    ) : (
-                        <>
-                            <span className="sm:hidden text-xs">Inativos</span>
-                            <span className="hidden sm:inline">Mostrar Inativos</span>
-                        </>
-                    )}
-                </Button>
-            </div>
-
-            <div className="flex items-center justify-between gap-4 py-2">
+            {/* Standardized Minimalist Toolbar */}
+            <div className="flex items-center gap-4 w-full">
+                {/* Selection Trigger */}
                 <div
-                    className="flex items-center gap-2 cursor-pointer group/select select-none px-2 py-1 rounded-full hover:bg-muted/50 transition-colors"
+                    className="flex items-center gap-2 cursor-pointer group/select select-none px-3 py-2 rounded-full hover:bg-muted/50 transition-colors shrink-0"
                     onClick={() => setSelectionMode(!selectionMode)}
                     onDoubleClick={(e) => {
                         e.preventDefault();
@@ -311,25 +236,76 @@ const Clientes = () => {
                     }}
                 >
                     <div className={cn(
-                        "w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-colors",
+                        "w-4 h-4 rounded-full border flex items-center justify-center transition-colors",
                         selectedClients.length > 0 ? "border-primary bg-primary" : "border-muted-foreground/70 group-hover/select:border-primary"
                     )}>
                         {selectedClients.length > 0 && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                     </div>
-                    <span className="text-sm text-muted-foreground group-hover/select:text-primary transition-colors font-medium">
-                        {selectedClients.length > 0 ? `${selectedClients.length} selecionados` : 'Selecionar'}
+                    <span className="text-base text-muted-foreground group-hover/select:text-primary transition-colors font-medium hidden sm:inline">
+                        {selectedClients.length > 0 ? `${selectedClients.length}` : 'Selecionar'}
                     </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <DateRangePicker
-                        date={dateFilter}
-                        setDate={setDateFilter}
-                        className="w-auto"
-                        minimal={true}
+                {/* Search */}
+                <div className="relative w-64">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar por nome ou telefone..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-9 h-9 bg-transparent border-muted-foreground/30 focus:border-primary"
                     />
                 </div>
+
+                <div className="flex-1" />
+
+                {/* Right Actions */}
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant={showInactive ? "secondary" : "ghost"}
+                        size="sm"
+                        onClick={() => setShowInactive(!showInactive)}
+                        className="h-9 px-3 text-muted-foreground hover:text-foreground hidden sm:flex"
+                        title="Filtrar inativos"
+                    >
+                        <Filter className={cn("w-4 h-4 mr-2", showInactive && "text-primary")} />
+                        {showInactive ? "Inativos visíveis" : "Filtrar"}
+                    </Button>
+
+                    <div className="flex items-center text-muted-foreground">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-9 w-9 hover:text-foreground" title="Exportar">
+                                    <Download className="w-4 h-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleExport('excel')}>Excel (.xlsx)</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleExport('csv')}>CSV (.csv)</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+
+                    </div>
+
+                    <Button className="gap-2 h-9 px-4 rounded-full font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm ml-2" onClick={() => setIsDialogOpen(true)}>
+                        <Plus className="h-4 w-4" />
+                        <span className="hidden sm:inline">Novo</span>
+                    </Button>
+                </div>
             </div>
+
+
+
+            <HeaderAction>
+                <DateRangePicker
+                    date={dateFilter}
+                    setDate={setDateFilter}
+                    className="w-auto"
+                    minimal={true}
+                />
+            </HeaderAction>
+
 
             <div className="grid gap-3">
                 {filteredCustomers.length === 0 ? (
@@ -374,34 +350,36 @@ const Clientes = () => {
             </div>
 
             {/* Pagination Controls */}
-            {totalCount > 0 && (
-                <div className="flex items-center justify-between border-t pt-4 mt-4">
-                    <div className="text-sm text-muted-foreground">
-                        Mostrando {customers.length} de {totalCount} clientes
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPage(p => Math.max(1, p - 1))}
-                            disabled={page === 1 || loading}
-                        >
-                            Ant.
-                        </Button>
-                        <div className="text-sm font-medium min-w-[3rem] text-center">
-                            Pág. {page}
+            {
+                totalCount > 0 && (
+                    <div className="flex items-center justify-between border-t pt-4 mt-4">
+                        <div className="text-sm text-muted-foreground">
+                            Mostrando {customers.length} de {totalCount} clientes
                         </div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPage(p => p + 1)}
-                            disabled={customers.length < limit || (page * limit) >= totalCount || loading}
-                        >
-                            Próx.
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1 || loading}
+                            >
+                                Ant.
+                            </Button>
+                            <div className="text-sm font-medium min-w-[3rem] text-center">
+                                Pág. {page}
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={customers.length < limit || (page * limit) >= totalCount || loading}
+                            >
+                                Próx.
+                            </Button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <NewCustomerDialog
                 open={isDialogOpen}
@@ -421,7 +399,7 @@ const Clientes = () => {
                     setEditingCustomer(null);
                 }}
             />
-        </div>
+        </div >
     );
 };
 

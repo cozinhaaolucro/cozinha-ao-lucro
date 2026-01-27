@@ -48,7 +48,7 @@ export function IngredientCard({
         >
             <CardContent className="p-3 flex flex-col h-full min-h-[140px]">
                 {/* Header: Name + Actions */}
-                <div className="flex justify-between items-start gap-2 mb-2">
+                <div className="flex justify-between items-start gap-2 mb-auto">
                     <div className="flex items-center gap-2">
                         {/* Checkbox */}
                         <div
@@ -67,7 +67,7 @@ export function IngredientCard({
 
                         {/* Type Icon */}
                         <div className="mr-1">
-                            {hasPackageInfo ? <Package className="w-4 h-4 text-gray-700" /> : <div className="w-3 h-3 rounded-full border-2 border-[#C9A34F] bg-[#C9A34F]/20 ml-0.5" />}
+                            {hasPackageInfo ? <Package className="w-4 h-4 text-gray-700" /> : <div className="w-3 h-3 rounded-full border border-gray-700 bg-gray-700/20 ml-0.5" />}
                         </div>
                         <CardTitle className="text-sm font-semibold leading-tight line-clamp-2 text-foreground" title={ingredient.name}>
                             {ingredient.name}
@@ -87,7 +87,7 @@ export function IngredientCard({
                     )}
                 </div>
 
-                {/* Status Badges (Moved below Name) */}
+                {/* Status Badges (Restored) */}
                 <div className="flex items-center gap-2 mb-auto">
                     {activeOrdersCount > 0 ? (
                         <span className={cn(
@@ -107,7 +107,7 @@ export function IngredientCard({
                     )}
 
                     {hasPackageInfo && (
-                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-border/30">
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-transparent px-1.5 py-0.5 rounded border border-border">
                             <Package className="w-3 h-3" />
                             <span>{ingredient.package_size}{ingredient.package_unit || ingredient.unit}</span>
                         </div>
@@ -124,7 +124,7 @@ export function IngredientCard({
                                 {/* Primary: Base Unit */}
                                 <span className={cn(
                                     "font-medium text-xs transition-colors",
-                                    stock < 0 ? "text-destructive font-bold" : "text-[#5F98A1]"
+                                    stock < 0 ? "text-destructive font-bold" : "text-foreground"
                                 )}>
                                     {Number(stock.toFixed(2))} <span className="text-[10px] text-muted-foreground">{ingredient.unit}</span>
                                 </span>
@@ -167,14 +167,6 @@ export function IngredientCard({
                         />
                     </div>
                 </div>
-
-                {/* Demand Alert */}
-                {demand > 0 && (
-                    <div className="mt-2 text-[10px] text-orange-600/90 bg-orange-50/50 px-2 py-1 rounded-sm flex items-center justify-center gap-1.5 font-medium border border-orange-100/50">
-                        <TrendingUp className="w-3 h-3" />
-                        Demanda: {demand.toFixed(1)} {ingredient.unit}
-                    </div>
-                )}
             </CardContent>
         </Card>
     );

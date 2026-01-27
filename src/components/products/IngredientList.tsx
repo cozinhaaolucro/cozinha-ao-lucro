@@ -24,7 +24,6 @@ export default function IngredientList() {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const [filter, setFilter] = useState<'all' | 'low_stock' | 'out_of_stock'>('all');
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
 
@@ -108,15 +107,10 @@ export default function IngredientList() {
         }
     };
 
-    // Filter Logic
+    // Filter Logic (Search Only)
     const filteredIngredients = ingredients.filter(ing => {
         const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
-        if (!matchesSearch) return false;
-
-        if (filter === 'low_stock') return ing.stock_quantity > 0 && ing.stock_quantity < 5; // Simplified Check
-        if (filter === 'out_of_stock') return ing.stock_quantity <= 0;
-
-        return true;
+        return matchesSearch;
     });
 
     const toggleSelect = (id: string) => {
@@ -201,64 +195,49 @@ export default function IngredientList() {
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header Toolbar */}
             {/* Header Toolbar */}
-            <div className="flex flex-col gap-2 bg-card p-3 rounded-lg border border-border/40 shadow-sm">
-                {/* Row 1: Selection + Search */}
-                <div className="flex items-center gap-2 w-full">
-                    {/* Selection Trigger */}
-                    <div
-                        className="flex items-center gap-2 cursor-pointer group/select select-none px-2 py-1.5 rounded-full hover:bg-muted/50 transition-colors shrink-0"
-                        onClick={() => setSelectionMode(!selectionMode)}
-                        onDoubleClick={(e) => {
-                            e.preventDefault();
-                            toggleSelectAll();
-                        }}
-                    >
-                        <div className={`
-                            w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-colors
-                            ${selectedIngredients.length > 0 ? "border-primary bg-primary" : "border-muted-foreground/70 group-hover/select:border-primary"}
-                        `}>
-                            {selectedIngredients.length > 0 && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
-                        </div>
-                        <span className="text-sm text-muted-foreground group-hover/select:text-primary transition-colors font-medium hidden sm:inline">
-                            {selectedIngredients.length > 0 ? `${selectedIngredients.length}` : 'Selecionar'}
-                        </span>
+            <div className="flex items-center gap-4 w-full">
+                {/* Selection Trigger */}
+                <div
+                    className="flex items-center gap-2 cursor-pointer group/select select-none px-3 py-2 rounded-full hover:bg-muted/50 transition-colors shrink-0"
+                    onClick={() => setSelectionMode(!selectionMode)}
+                    onDoubleClick={(e) => {
+                        e.preventDefault();
+                        toggleSelectAll();
+                    }}
+                >
+                    <div className={`
+                        w-4 h-4 rounded-full border flex items-center justify-center transition-colors
+                        ${selectedIngredients.length > 0 ? "border-primary bg-primary" : "border-muted-foreground/70 group-hover/select:border-primary"}
+                    `}>
+                        {selectedIngredients.length > 0 && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                     </div>
-
-                    <div className="relative flex-1 min-w-0">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Buscar ingredientes..."
-                            className="pl-9 bg-background/50 w-full h-9"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
+                    <span className="text-base text-muted-foreground group-hover/select:text-primary transition-colors font-medium hidden sm:inline">
+                        {selectedIngredients.length > 0 ? `${selectedIngredients.length}` : 'Selecionar'}
+                    </span>
                 </div>
 
-                {/* Row 2: Filters + Actions */}
-                <div className="flex w-full gap-2 items-center justify-between overflow-x-auto pb-1">
-                    <div className="flex gap-2 items-center shrink-0">
-                        <Button variant="outline" size="sm" onClick={() => setFilter('all')} className={`h-8 text-xs ${filter === 'all' ? 'bg-secondary' : ''}`}>
-                            Todos
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => setFilter('out_of_stock')} className={`h-8 text-xs ${filter === 'out_of_stock' ? 'bg-orange-100 text-orange-900 border-orange-200' : ''}`}>
-                            Em Falta
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => setFilter('low_stock')} className={`h-8 text-xs px-2 ${filter === 'low_stock' ? 'bg-yellow-100 text-yellow-900 border-yellow-200' : ''}`}>
-                            <span className="sm:inline hidden">Baixo Estoque</span>
-                            <span className="sm:hidden">Alerta</span>
-                        </Button>
-                    </div>
+                {/* Search */}
+                <div className="relative w-64">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar ingredientes..."
+                        className="pl-9 h-9 bg-transparent border-muted-foreground/30 focus:border-primary"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
 
-                    <div className="flex gap-2 items-center pl-2 shrink-0">
-                        <Button variant="outline" size="icon" onClick={exportToExcel} title="Exportar Excel" className="h-8 w-8">
-                            <FileDown className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button onClick={openNew} className="gap-2 whitespace-nowrap h-8 text-xs px-3">
-                            <Plus className="h-3.5 w-3.5" />
-                            Novo Ingrediente
-                        </Button>
-                    </div>
+                <div className="flex-1" />
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={exportToExcel} title="Exportar Excel" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+                        <FileDown className="h-4 w-4" />
+                    </Button>
+                    <Button onClick={openNew} className="gap-2 h-9 px-4 rounded-full font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
+                        <Plus className="h-4 w-4" />
+                        <span className="hidden sm:inline">Novo</span>
+                    </Button>
                 </div>
             </div>
 
@@ -288,11 +267,11 @@ export default function IngredientList() {
                     {filteredIngredients.length === 0 && (
                         <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground bg-muted/10 rounded-lg border border-dashed border-border/50">
                             <Filter className="h-10 w-10 opacity-20 mb-2" />
-                            <p>Nenhum ingrediente encontrado com os filtros atuais.</p>
+                            <p>Nenhum ingrediente encontrado para "{searchTerm}".</p>
                             {/* If filter is active, offer to clear */}
-                            {(filter !== 'all' || searchTerm) && (
-                                <Button variant="link" onClick={() => { setFilter('all'); setSearchTerm(''); }} className="mt-2">
-                                    Limpar filtros
+                            {searchTerm && (
+                                <Button variant="link" onClick={() => setSearchTerm('')} className="mt-2">
+                                    Limpar busca
                                 </Button>
                             )}
                         </div>

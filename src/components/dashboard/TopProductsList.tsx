@@ -28,7 +28,7 @@ export const TopProductsList = ({ topProfitableProducts, products }: TopProducts
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="space-y-3">
                     {topProfitableProducts.length === 0 ? (
                         <p className="text-sm text-muted-foreground text-center py-8">Nenhuma venda no período</p>
                     ) : (

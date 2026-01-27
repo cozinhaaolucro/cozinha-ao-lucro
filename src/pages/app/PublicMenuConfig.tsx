@@ -134,10 +134,7 @@ const PublicMenuConfig = () => {
 
     return (
         <div className="space-y-6 max-w-5xl mx-auto pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Cardápio Digital</h1>
-                <p className="text-muted-foreground">Customize a aparência e informações do seu cardápio público.</p>
-            </div>
+            <div></div>
 
             <div className="space-y-6">
                 <Card>

@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Printer } from 'lucide-react';
 
-import { getIngredients, createProduct, createIngredient, updateProduct } from '@/lib/database';
+import { getIngredients, createProduct, createIngredient, updateProduct, getProducts } from '@/lib/database';
 import type { Ingredient, ProductWithIngredients, ProductIngredientWithDetails } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import { PRESET_PRODUCTS, PRESET_INGREDIENTS } from '@/data/presets';
@@ -34,6 +34,7 @@ type ProductBuilderProps = {
 const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: ProductBuilderProps) => {
     const isMobile = useIsMobile();
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+    const [availableCategories, setAvailableCategories] = useState<string[]>([]);
     const [formData, setFormData] = useState<ProductFormData>({
         name: '',
         description: '',
@@ -58,6 +59,7 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
     useEffect(() => {
         if (open) {
             loadIngredients();
+            loadCategories();
 
             if (productToEdit) {
                 setFormData({
@@ -113,11 +115,41 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
         }
     }, [totalCostForEffect, isPriceManual]);
 
+    const loadCategories = async () => {
+        const { data } = await getProducts();
+        if (data) {
+            const cats = Array.from(new Set(data.map(p => p.category).filter(Boolean))) as string[];
+            setAvailableCategories(cats);
+        }
+    };
+
     const loadIngredients = async () => {
         const { data, error } = await getIngredients();
         if (!error && data) {
             setIngredients(data);
         }
+    };
+
+    const addNewIngredient = (data: { name: string; unit: any; cost: number }) => {
+        const isPackage = false; // Simple creation assumes basic units initially
+        const normalizedUnit = data.unit === 'litro' ? 'l' : data.unit === 'grama' ? 'g' : data.unit === 'unidade' ? 'un' : data.unit;
+
+        setSelectedIngredients([
+            ...selectedIngredients,
+            {
+                uniqueId: `virtual_${Date.now()}_${Math.random()}`,
+                ingredient_id: '',
+                name: data.name,
+                unit: normalizedUnit,
+                cost: data.cost,
+                quantity: 1,
+                display_unit: normalizedUnit,
+                display_quantity: 1,
+                is_virtual: true,
+                package_size: null,
+                package_unit: null
+            }
+        ]);
     };
 
     const addExistingIngredient = (ingredient: Ingredient) => {
@@ -539,11 +571,13 @@ const ProductBuilder = ({ open, onOpenChange, onSuccess, productToEdit }: Produc
                 setFormData={setFormData}
                 imagePreview={imagePreview}
                 handleImageSelect={imageSelectHandler}
+                availableCategories={availableCategories}
             />
             <ProductIngredients
                 selectedIngredients={selectedIngredients}
                 ingredients={ingredients}
                 addExistingIngredient={addExistingIngredient}
+                addNewIngredient={addNewIngredient}
                 removeIngredient={removeIngredient}
                 updateIngredientDisplayQuantity={updateIngredientDisplayQuantity}
                 updateIngredientDisplayUnit={updateIngredientDisplayUnit}

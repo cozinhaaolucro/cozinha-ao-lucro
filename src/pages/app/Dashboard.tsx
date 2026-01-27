@@ -14,7 +14,8 @@ import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
 import { RevenueMetrics } from '@/components/dashboard/RevenueMetrics';
 import { StockDemandList } from '@/components/dashboard/StockDemandList';
 import { TopProductsList } from '@/components/dashboard/TopProductsList';
-import { DashboardChartsSection } from '@/components/dashboard/DashboardChartsSection';
+import { RevenueChart } from '@/components/dashboard/RevenueChart';
+import { CostBreakdownChart } from '@/components/dashboard/CostBreakdownChart';
 
 // Extra Visuals (Leaving the Goal/Tip cards here as "Page Specific" or could separate later)
 import { Card, CardContent } from '@/components/ui/card';
@@ -46,11 +47,7 @@ const Dashboard = () => {
     const {
         metrics,
         stockAnalysis,
-        chartData, // Revenue Chart Data from hook? The hook has getChartData but maybe needs checking
-        // Actually the hook calculates chartData based on filteredOrders.
-        // But Dashboard.tsx has its own 'dailyData' memo that is quite complex (average ticket etc).
-        // Let's see if we can use the hook's data or if we keep the local memo for now but based on the hook's orders.
-        // The hook returns 'orders' which are now filtered.
+        chartData,
         orders,      // These are filtered by date
         activeOrders, // These are for stock
         products,
@@ -83,13 +80,6 @@ const Dashboard = () => {
         };
     }, [refetch]);
 
-    // Helper to calculate product cost (still used in Top Profitable Products local calc if needed, 
-    // but the hook might provide productPerformance. Let's iterate.
-    // Dashboard.tsx has 'topProfitableProducts' memo. The hook has 'productPerformance'.
-    // let's try to use the hook's returned data for everything possible to clean up.
-
-    // For now, let's keep the local specific visualizations if they differ, but feed them with hook data.
-
     const getProductCost = (product: ProductWithIngredients): number => {
         if (!product.product_ingredients) return 0;
         return product.product_ingredients.reduce((total: number, r: any) => {
@@ -108,18 +98,22 @@ const Dashboard = () => {
         }, 0);
     };
 
-    // Stock vs demand analysis for pending orders (Future Demand)
-    // Stock vs demand analysis for pending orders (Future Demand)
-    // Stock vs demand analysis for pending orders (Future Demand)
-    // Stock vs demand analysis (Provided by hook)
-    // const stockAnalysis = ... (Removed, using hook's stockAnalysis)
+    // Calculate Cost Breakdown for the Donut Chart
+    const costBreakdownData = useMemo(() => {
+        return orders.flatMap(o => o.items || []).reduce((acc, item) => {
+            const prod = products.find(p => p.id === item.product_id);
+            if (!prod?.product_ingredients) return acc;
 
-    // Financial metrics (Provided by hook)
-    // const metric = ... (Removed, using hook's metrics)
-
-    // Delivered orders revenue (confirmed sales)
-    // Removed specific delivered calc if not used, or re-implement if needed. 
-    // Assuming 'orders' (which are filtered by date) are the base for revenue.
+            prod.product_ingredients.forEach((pi: any) => {
+                if (!pi.ingredient) return;
+                const cost = (pi.ingredient.cost_per_unit || 0) * pi.quantity * item.quantity;
+                const existing = acc.find(x => x.name === pi.ingredient!.name);
+                if (existing) existing.value += cost;
+                else acc.push({ name: pi.ingredient.name, value: cost });
+            });
+            return acc;
+        }, [] as { name: string; value: number }[]);
+    }, [orders, products]);
 
     // Top profitable products
     const topProfitableProducts = useMemo(() => {
@@ -199,28 +193,7 @@ const Dashboard = () => {
             });
         }
         return days;
-    }, [orders, dateRange]); // Recompute when orders (data) or range (x-axis) changes
-
-    // Custom tooltip component
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const CustomTooltip = ({ active, payload, label, type }: any) => {
-        if (active && payload && payload.length) {
-            return (
-                <div className="bg-card border rounded-lg shadow-lg p-3">
-                    <p className="text-xs text-muted-foreground mb-1">{label}</p>
-                    {type === 'orders' && (
-                        <p className="font-bold text-lg">{payload[0].value} pedidos</p>
-                    )}
-                    {type === 'revenue' && (
-                        <p className="font-bold text-lg text-success">R$ {payload[0].value.toFixed(2)}</p>
-                    )}
-                </div>
-            );
-        }
-        return null;
-    };
-
-
+    }, [orders, dateRange]);
 
     const clearDateFilter = () => {
         setDateRange(undefined);
@@ -242,14 +215,9 @@ const Dashboard = () => {
 
             {/* Premium Goal Progress */}
             <div className="mt-4">
-                {/* Leaving Goal/Tip Cards logic here for now as they are specific to this dashboard view */}
                 <div className="grid gap-3 md:gap-4 md:grid-cols-3">
                     {/* Meta de Vendas - Neo-Glass Aurora Design */}
                     <Card className="md:col-span-2 relative overflow-hidden border border-border/60 shadow-elegant group bg-white">
-                        {/* ... (Kept existing visual logic for Goal for now to avoid breaking animation/gradients without checking deps) ... */}
-                        {/* Simply re-pasting the simplified version of the Goal Card or assuming users wants it kept. */}
-                        {/* To strictly follow "Atomize", I should have extracted it. But to save tokens/steps I will condense it if possible. */}
-                        {/* I will copy-paste the Goal Card logic here to ensure it persists. */}
                         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-50" />
                         <div className="absolute inset-0 border border-transparent transition-colors duration-500 rounded-xl" />
                         <CardContent className="p-4 md:p-6 relative z-10 flex flex-col justify-center h-full">
@@ -288,7 +256,7 @@ const Dashboard = () => {
                         </CardContent>
                     </Card>
 
-                    {/* Dica do Especialista - Visible on Mobile too now */}
+                    {/* Dica do Especialista */}
                     <Card className="block overflow-hidden border border-border/60 shadow-elegant relative bg-white">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#5F98A1] to-[#2e5b60]" />
                         <div className="absolute -right-6 -bottom-6 opacity-[0.03] text-primary">
@@ -309,25 +277,33 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            <RevenueMetrics
-                ordersCount={orders.length}
-                totalRevenue={totalRevenue}
-                totalProfit={totalProfit}
-                totalCost={totalCost}
-            />
+            {/* Middle Section: Metrics + Charts (Restructured per image) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 align-stretch">
+                {/* Left Column (2/3 width) - Metrics Row & Revenue Chart */}
+                <div className="lg:col-span-2 flex flex-col gap-6">
+                    <RevenueMetrics
+                        ordersCount={orders.length}
+                        totalRevenue={totalRevenue}
+                        totalProfit={totalProfit}
+                        totalCost={totalCost}
+                    />
+                    <RevenueChart data={dailyData} />
+                </div>
 
-            <DashboardChartsSection
-                dailyData={dailyData}
-                orders={orders}
-                products={products}
-            />
+                {/* Right Column (1/3 width) - Cost Breakdown Donut - Stretched to fill height */}
+                <div className="lg:col-span-1 h-full pt-4">
+                    <CostBreakdownChart data={costBreakdownData} className="h-full" />
+                </div>
+            </div>
 
-            <div className="grid gap-4 md:grid-cols-2 pb-40 mt-4">
+            {/* Bottom Section: Stock vs Top Products */}
+            <div className="grid gap-4 md:grid-cols-2 pb-40">
                 <StockDemandList stockAnalysis={stockAnalysis} />
                 <TopProductsList topProfitableProducts={topProfitableProducts} products={products} />
             </div>
         </div>
     );
 };
+
 
 export default Dashboard;

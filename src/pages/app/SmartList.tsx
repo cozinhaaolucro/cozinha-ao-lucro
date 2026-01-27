@@ -243,12 +243,7 @@ const SmartList = () => {
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-40">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Lista Inteligente</h1>
-                    <p className="text-sm text-muted-foreground">
-                        Geração automática de compras baseada na demanda dos pedidos "A Fazer".
-                    </p>
-                </div>
+                <div></div>
                 <div className="flex items-center gap-4">
                     <Button variant="outline" onClick={handleDownloadPDF} disabled={loading || itemsToBuy.length === 0}>
                         <Download className="mr-2 h-4 w-4" />

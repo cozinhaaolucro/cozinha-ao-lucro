@@ -23,6 +23,7 @@ const Dashboard = lazy(() => import("./pages/app/Dashboard"));
 const Pedidos = lazy(() => import("./pages/app/Pedidos"));
 const Clientes = lazy(() => import("./pages/app/Clientes"));
 const Produtos = lazy(() => import("./pages/app/Produtos"));
+const Estoque = lazy(() => import("./pages/app/Estoque"));
 const Agenda = lazy(() => import("./pages/app/Agenda"));
 const SmartList = lazy(() => import("./pages/app/SmartList"));
 const PublicMenu = lazy(() => import("./pages/public/PublicMenu"));
@@ -84,6 +85,7 @@ const App = () => {
                     <Route path="pedidos" element={<Pedidos />} />
                     <Route path="clientes" element={<Clientes />} />
                     <Route path="produtos" element={<Produtos />} />
+                    <Route path="estoque" element={<Estoque />} />
                     <Route path="agenda" element={<Agenda />} />
                     <Route path="lista-inteligente" element={<SmartList />} />
                     <Route path="aprender" element={<Aprender />} />

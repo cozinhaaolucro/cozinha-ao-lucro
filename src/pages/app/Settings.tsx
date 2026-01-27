@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -29,7 +30,17 @@ const Settings = () => {
     const [uploading, setUploading] = useState(false);
     const [profile, setProfile] = useState<Profile | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [searchParams, setSearchParams] = useSearchParams();
 
+    const currentTab = searchParams.get('tab') || 'general';
+
+    const handleTabChange = (value: string) => {
+        setSearchParams(prev => {
+            const newParams = new URLSearchParams(prev);
+            newParams.set('tab', value);
+            return newParams;
+        });
+    };
 
     // Initial load of profile data
     useEffect(() => {
@@ -126,12 +137,9 @@ const Settings = () => {
 
     return (
         <div className="space-y-6 max-w-5xl mx-auto pb-40 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
-                <p className="text-muted-foreground">Gerencie sua conta e assinatura.</p>
-            </div>
+            <div></div>
 
-            <Tabs defaultValue="general" className="space-y-6">
+            <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
                 <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
                     <TabsTrigger value="general" className="gap-2">
                         <User className="w-4 h-4" />

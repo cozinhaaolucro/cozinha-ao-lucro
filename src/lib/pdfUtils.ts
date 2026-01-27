@@ -3,14 +3,10 @@ import type jsPDF from 'jspdf';
 export const addPdfHeader = (doc: jsPDF, title: string, subtitle?: string) => {
     // Images
     const iconUrl = '/images/logo-icon-2026.png';
-    const fullLogoUrl = '/images/logo-full.png';
 
     try {
         // Icon (Left)
         doc.addImage(iconUrl, 'PNG', 14, 10, 10, 10); // Square icon
-
-        // Full Logo (Right of Icon)
-        doc.addImage(fullLogoUrl, 'PNG', 26, 11, 35, 8); // Adjusted rectangular aspect ratio
     } catch (e) {
         console.warn('Logo load failed', e);
         // Fallback
