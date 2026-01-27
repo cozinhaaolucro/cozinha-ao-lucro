@@ -3,9 +3,45 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Ingredient } from "@/types/database";
 import { convertQuantity } from "@/components/products/builder/utils";
-import { Package, TrendingUp, Edit2, Trash2 } from "lucide-react";
+import { Package, Edit2, Trash2, Milk, Candy, Wheat, Sparkles, Square, Egg, Cloud, CupSoda, Circle, Box, Drumstick, Leaf, Carrot, Beef, Droplet, GlassWater, Cookie, Asterisk, Heart, Snowflake, Salad } from "lucide-react";
 import { IngredientQuickAdd } from "./IngredientQuickAdd";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PRESET_INGREDIENTS } from "@/data/presets";
+
+// Icon mapping for preset ingredients
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+    'milk': Milk,
+    'droplet': Droplet,
+    'candy': Candy,
+    'wheat': Wheat,
+    'sparkles': Sparkles,
+    'square': Square,
+    'egg': Egg,
+    'glass-water': GlassWater,
+    'cookie': Cookie,
+    'asterisk': Asterisk,
+    'cloud': Cloud,
+    'heart': Heart,
+    'package': Package,
+    'cup-soda': CupSoda,
+    'circle': Circle,
+    'snowflake': Snowflake,
+    'box': Box,
+    'salad': Salad,
+    'drumstick': Drumstick,
+    'leaf': Leaf,
+    'carrot': Carrot,
+    'beef': Beef,
+};
+
+// Get icon for ingredient by name
+const getIngredientIcon = (name: string): React.ComponentType<{ className?: string }> | null => {
+    const preset = PRESET_INGREDIENTS.find(p => p.name.toLowerCase() === name.toLowerCase());
+    if (preset?.icon && ICON_MAP[preset.icon]) {
+        return ICON_MAP[preset.icon];
+    }
+    return null;
+};
 
 interface IngredientCardProps {
     ingredient: Ingredient;
@@ -36,6 +72,7 @@ export function IngredientCard({
 }: IngredientCardProps) {
     const stock = ingredient.stock_quantity;
     const hasPackageInfo = !!(ingredient.package_size && ingredient.package_size > 0);
+    const PresetIcon = getIngredientIcon(ingredient.name);
 
     return (
         <Card
@@ -65,9 +102,15 @@ export function IngredientCard({
                             />
                         </div>
 
-                        {/* Type Icon */}
+                        {/* Type Icon - Preset icon or Package/Circle */}
                         <div className="mr-1">
-                            {hasPackageInfo ? <Package className="w-4 h-4 text-gray-700" /> : <div className="w-3 h-3 rounded-full border border-gray-700 bg-gray-700/20 ml-0.5" />}
+                            {PresetIcon ? (
+                                <PresetIcon className="w-4 h-4 text-primary/70" />
+                            ) : hasPackageInfo ? (
+                                <Package className="w-4 h-4 text-gray-700" />
+                            ) : (
+                                <div className="w-3 h-3 rounded-full border border-gray-700 bg-gray-700/20 ml-0.5" />
+                            )}
                         </div>
                         <CardTitle className="text-sm font-semibold leading-tight line-clamp-2 text-foreground" title={ingredient.name}>
                             {ingredient.name}
