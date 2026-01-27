@@ -4,27 +4,27 @@ import { Product, Ingredient } from '@/types/database';
 export const PRESET_INGREDIENTS = [
     // Básicos Confeitaria
     { name: 'Leite Condensado', unit: 'g', cost_per_unit: 0.0165, stock_quantity: 0, icon: 'milk' },
-    { name: 'Creme de Leite', unit: 'g', cost_per_unit: 0.0175, stock_quantity: 0, icon: 'milk' },
+    { name: 'Creme de Leite', unit: 'g', cost_per_unit: 0.0175, stock_quantity: 0, icon: 'droplet' },
     { name: 'Chocolate em Pó 50%', unit: 'g', cost_per_unit: 0.075, stock_quantity: 0, icon: 'candy' },
     { name: 'Farinha de Trigo', unit: 'g', cost_per_unit: 0.005, stock_quantity: 0, icon: 'wheat' },
     { name: 'Açúcar Refinado', unit: 'g', cost_per_unit: 0.0045, stock_quantity: 0, icon: 'sparkles' },
     { name: 'Manteiga', unit: 'g', cost_per_unit: 0.05, stock_quantity: 0, icon: 'square' },
     { name: 'Ovos', unit: 'un', cost_per_unit: 1.00, stock_quantity: 0, icon: 'egg' },
-    { name: 'Leite Integral', unit: 'ml', cost_per_unit: 0.005, stock_quantity: 0, icon: 'milk' },
-    { name: 'Chocolate Nobre Barra', unit: 'g', cost_per_unit: 0.06, stock_quantity: 0, icon: 'candy' },
-    { name: 'Granulado', unit: 'g', cost_per_unit: 0.036, stock_quantity: 0, icon: 'sparkles' },
+    { name: 'Leite Integral', unit: 'ml', cost_per_unit: 0.005, stock_quantity: 0, icon: 'glass-water' },
+    { name: 'Chocolate Nobre Barra', unit: 'g', cost_per_unit: 0.06, stock_quantity: 0, icon: 'cookie' },
+    { name: 'Granulado', unit: 'g', cost_per_unit: 0.036, stock_quantity: 0, icon: 'asterisk' },
     { name: 'Chantilly', unit: 'ml', cost_per_unit: 0.016, stock_quantity: 0, icon: 'cloud' },
-    { name: 'Nutella', unit: 'g', cost_per_unit: 0.0714, stock_quantity: 0, icon: 'candy' },
+    { name: 'Nutella', unit: 'g', cost_per_unit: 0.0714, stock_quantity: 0, icon: 'heart' },
 
     // Embalagens (Mantém unidade)
     { name: 'Pote 250ml', unit: 'un', cost_per_unit: 0.80, stock_quantity: 0, icon: 'package' },
     { name: 'Copo Bolha', unit: 'un', cost_per_unit: 1.20, stock_quantity: 0, icon: 'cup-soda' },
     { name: 'Forminha Trufa', unit: 'un', cost_per_unit: 0.10, stock_quantity: 0, icon: 'circle' },
-    { name: 'Saquinho Geladinho', unit: 'un', cost_per_unit: 0.05, stock_quantity: 0, icon: 'thermometer-snowflake' },
+    { name: 'Saquinho Geladinho', unit: 'un', cost_per_unit: 0.05, stock_quantity: 0, icon: 'snowflake' },
     { name: 'Embalagem Marmita', unit: 'un', cost_per_unit: 1.50, stock_quantity: 0, icon: 'box' },
 
     // Salgados/Refeições
-    { name: 'Arroz Integral', unit: 'g', cost_per_unit: 0.006, stock_quantity: 0, icon: 'wheat' },
+    { name: 'Arroz Integral', unit: 'g', cost_per_unit: 0.006, stock_quantity: 0, icon: 'salad' },
     { name: 'Peito de Frango', unit: 'g', cost_per_unit: 0.022, stock_quantity: 0, icon: 'drumstick' },
     { name: 'Brócolis', unit: 'un', cost_per_unit: 8.00, stock_quantity: 0, icon: 'leaf' },
     { name: 'Batata Doce', unit: 'g', cost_per_unit: 0.005, stock_quantity: 0, icon: 'carrot' },

@@ -220,7 +220,7 @@ const DashboardLayout = () => {
                         <img
                             src="/images/logo-icon-2026.png"
                             alt="Ícone Cozinha ao Lucro"
-                            className="h-24 w-auto drop-shadow-md transition-all group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10"
+                            className="h-20 w-auto drop-shadow-md transition-all group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10"
                         />
                     </div>
                 </SidebarHeader>

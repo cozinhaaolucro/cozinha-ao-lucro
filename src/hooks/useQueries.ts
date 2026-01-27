@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getOrders, getProducts, getIngredients, getCustomers } from '@/lib/database';
+import { supabase } from '@/lib/supabase';
 import { OrderWithDetails, ProductWithIngredients, Ingredient } from '@/types/database';
 
 // --- Kanban Specific Hook ---
@@ -117,6 +118,50 @@ export function useIngredients(page?: number, limit?: number) {
             return { ingredients: data as Ingredient[], count };
         },
         staleTime: 1000 * 60 * 10,
+    });
+}
+
+// Hook with demand data included (for Estoque page)
+export function useIngredientsWithDemand() {
+    return useQuery({
+        queryKey: [QUERY_KEYS.ingredients, 'with-demand'],
+        queryFn: async () => {
+            // Parallel fetch for all data
+            const [ingredientsResult, ordersResult, productsResult] = await Promise.all([
+                getIngredients(),
+                // Fetch Active Orders
+                supabase.from('orders').select('*, order_items(*)').neq('status', 'entregue').neq('status', 'cancelado'),
+                // Fetch Products with Recipes
+                supabase.from('products').select('*, product_ingredients(*, ingredient:ingredients(*))')
+            ]);
+
+            if (ingredientsResult.error) throw ingredientsResult.error;
+            const ingredients = ingredientsResult.data as Ingredient[];
+            const orders = ordersResult.data || [];
+            const products = productsResult.data || [];
+
+            // Calculate demand map
+            const demandMap: Record<string, number> = {};
+            const usageMap: Record<string, number> = {};
+
+            // Import stock logic inline to calculate demand
+            orders.forEach((order: any) => {
+                order.order_items?.forEach((item: any) => {
+                    const product = products.find((p: any) => p.id === item.product_id);
+                    product?.product_ingredients?.forEach((pi: any) => {
+                        if (pi.ingredient_id) {
+                            demandMap[pi.ingredient_id] = (demandMap[pi.ingredient_id] || 0) + (pi.quantity * item.quantity);
+                            if (order.status === 'preparing') {
+                                usageMap[pi.ingredient_id] = (usageMap[pi.ingredient_id] || 0) + 1;
+                            }
+                        }
+                    });
+                });
+            });
+
+            return { ingredients, demandMap, usageMap, count: ingredients.length };
+        },
+        staleTime: 1000 * 60 * 5, // 5 minutes
     });
 }
 

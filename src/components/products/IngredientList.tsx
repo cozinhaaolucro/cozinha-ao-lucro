@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from "react";
-import { Plus, Search, FileDown, Filter, Loader2, Package, Milk, Candy, Wheat, Sparkles, Square, Egg, Cloud, CupSoda, Circle, Thermometer, Box, Drumstick, Leaf, Carrot, Beef } from "lucide-react";
+import { Plus, Search, FileDown, Filter, Loader2, Package, Milk, Candy, Wheat, Sparkles, Square, Egg, Cloud, CupSoda, Circle, Box, Drumstick, Leaf, Carrot, Beef, Droplet, GlassWater, Cookie, Asterisk, Heart, Snowflake, Salad } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,21 +16,29 @@ import * as XLSX from 'xlsx';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PRESET_INGREDIENTS } from "@/data/presets";
+import { useIngredientsWithDemand, QUERY_KEYS } from "@/hooks/useQueries";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Icon mapping for preset ingredients
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
     'milk': Milk,
+    'droplet': Droplet,
     'candy': Candy,
     'wheat': Wheat,
     'sparkles': Sparkles,
     'square': Square,
     'egg': Egg,
+    'glass-water': GlassWater,
+    'cookie': Cookie,
+    'asterisk': Asterisk,
     'cloud': Cloud,
+    'heart': Heart,
     'package': Package,
     'cup-soda': CupSoda,
     'circle': Circle,
-    'thermometer-snowflake': Thermometer,
+    'snowflake': Snowflake,
     'box': Box,
+    'salad': Salad,
     'drumstick': Drumstick,
     'leaf': Leaf,
     'carrot': Carrot,
@@ -43,8 +51,14 @@ const ITEMS_PER_PAGE = 50;
 export default function IngredientList() {
     const { toast } = useToast();
     const isMobile = useIsMobile();
-    const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
+
+    // Use React Query for ingredient + demand data (all cached together)
+    const { data: ingredientsData, isLoading: loading } = useIngredientsWithDemand();
+    const ingredients = ingredientsData?.ingredients || [];
+    const demandMap = ingredientsData?.demandMap || {};
+    const usageMap = ingredientsData?.usageMap || {};
+
     const [searchTerm, setSearchTerm] = useState("");
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
@@ -53,80 +67,9 @@ export default function IngredientList() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
 
-    // Demand Data
-    const [demandMap, setDemandMap] = useState<Record<string, number>>({});
-    const [usageMap, setUsageMap] = useState<Record<string, number>>({});
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [loadingDemand, setLoadingDemand] = useState(false);
-
-    // Initial Load
-    useEffect(() => {
-        loadIngredients();
-    }, []);
-
-    // Load Data
-    const loadIngredients = async (silent = false) => {
-        if (!silent) setLoading(true);
-        try {
-            // Fetch ingredients
-            const { data: dbData, error } = await supabase
-                .from('ingredients')
-                .select('*')
-                .order('name');
-
-            if (error) throw error;
-            const loadedIngredients = dbData || [];
-
-            // Fetch Active Orders for Demand Calculation
-            const { data: orders } = await supabase
-                .from('orders')
-                .select('*, order_items(*)')
-                .neq('status', 'entregue')
-                .neq('status', 'cancelado');
-
-            // Fetch Products with Recipes for Intelligent Stock
-            const { data: products } = await supabase
-                .from('products')
-                .select('*, product_ingredients(*, ingredient:ingredients(*))');
-
-            if (orders && products) {
-                const stockStatus = analyzeStockDemand(loadedIngredients, orders, products as any);
-                const newMap: Record<string, number> = {};
-                stockStatus.forEach(status => {
-                    if (status.total_required > 0) {
-                        newMap[status.ingredient.id] = status.total_required;
-                    }
-                });
-                setDemandMap(newMap);
-
-                // Calculate Usage Map
-                const usage: Record<string, number> = {};
-                orders.forEach(order => {
-                    if (order.status !== 'preparing') return;
-                    const usedIngredients = new Set<string>();
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    order.order_items?.forEach((item: any) => {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const prod = products.find((p: any) => p.id === item.product_id);
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        prod?.product_ingredients?.forEach((pi: any) => {
-                            if (pi.ingredient_id) usedIngredients.add(pi.ingredient_id);
-                        });
-                    });
-                    usedIngredients.forEach(ingId => {
-                        usage[ingId] = (usage[ingId] || 0) + 1;
-                    });
-                });
-                setUsageMap(usage);
-            }
-
-            setIngredients(loadedIngredients);
-        } catch (error) {
-            console.error(error);
-            toast({ title: "Erro ao carregar ingredientes", variant: "destructive" });
-        } finally {
-            setLoading(false);
-        }
+    // Refetch function for after mutations
+    const loadIngredients = () => {
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ingredients] });
     };
 
     // Filter Logic (Search Only)
@@ -333,7 +276,7 @@ export default function IngredientList() {
                             selectionMode={selectionMode}
                             onEdit={openEdit}
                             onDelete={handleDelete}
-                            onRefresh={() => loadIngredients(true)} // Silent refresh
+                            onRefresh={() => loadIngredients()} // Invalidate query cache
                             isAdmin={true} // Default to true as user is owner
                         />
                     ))}

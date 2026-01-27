@@ -89,20 +89,9 @@ export function IngredientCard({
 
                 {/* Status Badges (Restored) */}
                 <div className="flex items-center gap-2 mb-auto">
-                    {activeOrdersCount > 0 ? (
-                        <span className={cn(
-                            "text-[10px] px-1.5 py-0.5 rounded-full font-medium flex items-center gap-1 shadow-sm border",
-                            usageLevel === 'high'
-                                ? "bg-red-100 text-red-700 border-red-200"
-                                : usageLevel === 'medium'
-                                    ? "bg-amber-100 text-amber-700 border-amber-200"
-                                    : "bg-[#68A9CA]/15 text-[#68A9CA] border-[#68A9CA]/30"
-                        )}>
+                    {activeOrdersCount > 0 && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium flex items-center gap-1 shadow-sm border bg-blue-50 text-blue-400 border-blue-100">
                             Em uso ({activeOrdersCount})
-                        </span>
-                    ) : (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-[#5F98A1]/10 text-[#5F98A1] border border-[#5F98A1]/20">
-                            Sem Uso
                         </span>
                     )}
 

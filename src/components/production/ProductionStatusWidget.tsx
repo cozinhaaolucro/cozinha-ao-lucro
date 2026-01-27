@@ -134,14 +134,14 @@ const ProductionStatusWidget = () => {
             <div className={`fixed bottom-36 right-4 z-30 md:left-auto md:top-auto md:bottom-8 md:right-28 md:translate-x-0 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <motion.div
                     layout
-                    initial={{ width: 60, height: 60, borderRadius: 30 }}
+                    initial={{ width: 56, height: 56, borderRadius: 28 }}
                     animate={{
-                        width: isHovered && !sheetOpen ? 300 : (activeOrders.length > 0 ? 70 : 60),
-                        height: isHovered && !sheetOpen ? 400 : (activeOrders.length > 0 ? 70 : 60),
-                        borderRadius: isHovered && !sheetOpen ? 16 : 35,
+                        width: isHovered && !sheetOpen ? 280 : 56,
+                        height: isHovered && !sheetOpen ? 360 : 56,
+                        borderRadius: isHovered && !sheetOpen ? 12 : 28,
                     }}
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    className={`bg-neutral-900 border border-neutral-800 shadow-2xl overflow-hidden relative cursor-pointer`}
+                    className={`bg-neutral-900/95 backdrop-blur-sm shadow-2xl overflow-hidden relative cursor-pointer`}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                     onClick={() => {
