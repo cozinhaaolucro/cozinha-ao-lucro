@@ -644,34 +644,77 @@ body {
 }
 
 /* === MOBILE PERFORMANCE OPTIMIZATION === */
-/* Hide heavy blur effects on mobile to reduce GPU load */
+/* Aggressive GPU optimization for mobile devices */
 @media (max-width: 768px) {
 
-  /* Relaxed optimization: Only reduce opacity instead of hiding completely */
+  /* Reduce blur intensity significantly */
   [class*="blur-[100"],
   [class*="blur-[120"],
+  [class*="blur-[150"],
+  [class*="blur-[60"],
+  [class*="blur-[40"],
   [class*="blur-3xl"] {
-    opacity: 0.5 !important;
-    filter: blur(40px) !important;
+    opacity: 0.3 !important;
+    filter: blur(20px) !important;
   }
 
-  /* Disable backdrop blur on cards but KEEP them visible */
+  /* Disable backdrop blur completely - major performance drain */
   .backdrop-blur-md,
   .backdrop-blur-xl,
+  .backdrop-blur-sm,
   [class*="backdrop-blur"] {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    /* Ensure opacity is solid enough since blur is gone */
-    background-color: hsl(var(--background) / 0.95) !important;
+    background-color: hsl(var(--background) / 0.98) !important;
   }
 
-  /* Reduce animation complexity on mobile & Ensure immediate visibility */
+  /* Disable all continuous/heavy animations on mobile */
+  .animate-pulse,
   .animate-pulse-slow,
   .animate-float,
-  .animate-fade-in,
-  .animate-in {
+  .animate-aurora,
+  .animate-shimmer,
+  .animate-subtle-pulse,
+  .animate-rise-slow,
+  [class*="animate-aurora"],
+  [class*="animate-float"],
+  [class*="animate-pulse"] {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  /* Keep entry animations but make them faster */
+  .animate-fade-in,
+  .animate-in {
+    animation-duration: 0.2s !important;
+  }
+
+  /* Disable will-change on mobile (can cause memory issues) */
+  * {
+    will-change: auto !important;
+  }
+
+  /* Reduce shadow complexity */
+  .shadow-2xl {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  }
+
+  /* Disable mix-blend-mode (expensive) */
+  [class*="mix-blend-"] {
+    mix-blend-mode: normal !important;
+  }
+
+  /* GPU-accelerate scrolling */
+  html, body {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Reduce transition durations */
+  [class*="transition-all"],
+  [class*="duration-500"],
+  [class*="duration-700"],
+  [class*="duration-1000"] {
+    transition-duration: 150ms !important;
   }
 }
