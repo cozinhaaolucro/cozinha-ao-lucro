@@ -78,14 +78,11 @@ const HeroSection = () => {
                         <Button
                             onClick={() => navigate('/register')}
                             size="lg"
-                            className="bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,45%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,40%,1)] text-white font-bold uppercase tracking-wide rounded-full text-sm px-8 py-6 h-auto w-full sm:w-auto shadow-lg hover:scale-105 transition-all duration-300"
+                            className="bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,45%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,40%,1)] text-white font-bold uppercase tracking-wide rounded-full text-sm px-8 py-3 sm:py-6 h-auto w-full sm:w-auto shadow-lg hover:scale-105 transition-all duration-300 flex flex-col items-center gap-1"
                         >
-                            Testar grátis por 7 dias
+                            <span className="text-center">Testar grátis por 7 dias</span>
+                            <span className="text-[8px] font-normal normal-case tracking-normal opacity-70 sm:hidden">Sem cartão de crédito • Cancele quando quiser</span>
                         </Button>
-
-                        <div className="flex flex-col items-center gap-1 sm:hidden">
-                            <span className="text-[10px] text-muted-foreground font-medium">Sem cartão de crédito • Cancele quando quiser</span>
-                        </div>
 
                         <Button
                             size="lg"
