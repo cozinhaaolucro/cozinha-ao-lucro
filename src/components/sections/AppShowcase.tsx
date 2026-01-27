@@ -59,15 +59,43 @@ const AppShowcase = () => {
                     </RevealOnScroll>
 
 
+
+
                     {/* Right Column: Visuals */}
                     <RevealOnScroll className="order-1 lg:order-2 relative" delay={0.2}>
-                        {/* Mobile: Single centered mockup */}
-                        <div className="md:hidden flex justify-center">
-                            <div className="w-[85%] max-w-[320px] shadow-2xl rounded-2xl">
-                                <div className="bg-white/90 backdrop-blur-xl border border-white/40 p-1 rounded-2xl overflow-hidden">
+                        {/* Mobile: Staggered overlapping layout */}
+                        <div className="md:hidden relative h-[320px] w-full">
+                            {/* Decorative blur */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] bg-gradient-to-tr from-primary/15 to-secondary/15 blur-[40px] rounded-full pointer-events-none"></div>
+
+                            {/* Card 1: Top left */}
+                            <div className="absolute top-0 left-0 w-[65%] shadow-xl rounded-2xl z-10">
+                                <div className="bg-white/95 backdrop-blur-xl border border-white/50 p-1 rounded-2xl overflow-hidden">
                                     <img
                                         src="/images/mockups/shopping-list.png"
                                         alt="Lista Inteligente"
+                                        className="w-full h-auto rounded-xl"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Card 2: Top right, overlapping */}
+                            <div className="absolute top-[30px] right-0 w-[58%] shadow-xl rounded-2xl z-20">
+                                <div className="bg-white/95 backdrop-blur-xl border border-white/50 p-1 rounded-2xl overflow-hidden">
+                                    <img
+                                        src="/images/mockups/cardapio-digital.png"
+                                        alt="Cardápio Digital"
+                                        className="w-full h-auto rounded-xl"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Card 3: Bottom center, overlapping both */}
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[70%] shadow-2xl rounded-2xl z-30">
+                                <div className="bg-white/95 backdrop-blur-xl border border-white/50 p-1 rounded-2xl overflow-hidden">
+                                    <img
+                                        src="/images/mockups/estoque.png"
+                                        alt="Controle de Estoque"
                                         className="w-full h-auto rounded-xl"
                                     />
                                 </div>
