@@ -18,13 +18,13 @@ const HeroSection = () => {
                 {/* Modern SaaS Gradient Mesh (Aurora) - No lines, just pure light */}
 
                 {/* Primary Deep Teal - Top Center (Base Atmosphere) - REPLACED with LIGHTER TONE */}
-                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[140%] h-[100%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[hsla(183,16%,55%,1)]/20 via-background/0 to-transparent blur-[100px] mix-blend-normal animate-aurora"></div>
+                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[140%] h-[100%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[hsla(183,16%,55%,1)]/10 via-background/0 to-transparent blur-[100px] mix-blend-normal animate-aurora"></div>
 
                 {/* Financial Gold - Right Side (Strong) */}
-                <div className="absolute top-[-5%] right-[-5%] w-[70%] h-[80%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-financial/30 via-background/0 to-transparent blur-[100px] mix-blend-multiply opacity-90 animate-aurora" style={{ animationDelay: '2s' }}></div>
+                <div className="absolute top-[-5%] right-[-5%] w-[70%] h-[80%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-financial/15 via-background/0 to-transparent blur-[100px] mix-blend-multiply opacity-80 animate-aurora" style={{ animationDelay: '2s' }}></div>
 
                 {/* Primary Teal - Left Side (Strong - Replaced Secondary) - REPLACED with LIGHTER TONE */}
-                <div className="absolute top-[-5%] left-[-5%] w-[70%] h-[80%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[hsla(183,16%,55%,1)]/40 via-background/0 to-transparent blur-[100px] mix-blend-multiply opacity-90 animate-aurora" style={{ animationDelay: '5s', animationDirection: 'reverse' }}></div>
+                <div className="absolute top-[-5%] left-[-5%] w-[70%] h-[80%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[hsla(183,16%,55%,1)]/20 via-background/0 to-transparent blur-[100px] mix-blend-multiply opacity-80 animate-aurora" style={{ animationDelay: '5s', animationDirection: 'reverse' }}></div>
             </div>
 
             <div className="container-max mobile-container relative z-10 text-center flex flex-col items-center">

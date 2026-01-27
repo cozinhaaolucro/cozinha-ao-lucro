@@ -12,8 +12,8 @@ const AppShowcase = () => {
             <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
                 <div className="absolute top-0 left-0 w-full h-full bg-grid-pattern opacity-[0.03]"></div>
                 {/* Visual Narrative: The Bridge (Stream of Light) */}
-                <div className="absolute top-[-50%] left-[-20%] w-[150%] h-[200%] bg-gradient-to-br from-primary/10 via-transparent to-transparent -rotate-12 blur-3xl opacity-60 pointer-events-none"></div>
-                <div className="absolute top-[-20%] right-[-10%] w-[80%] h-[120%] bg-gradient-to-bl from-financial/10 via-transparent to-transparent rotate-12 blur-3xl opacity-40 pointer-events-none"></div>
+                <div className="absolute top-[-50%] left-[-20%] w-[150%] h-[200%] bg-gradient-to-br from-primary/10 via-transparent to-transparent -rotate-12 blur-3xl opacity-30 pointer-events-none"></div>
+                <div className="absolute top-[-20%] right-[-10%] w-[80%] h-[120%] bg-gradient-to-bl from-financial/10 via-transparent to-transparent rotate-12 blur-3xl opacity-20 pointer-events-none"></div>
             </div>
 
             <div className="container-max mobile-container relative z-10">
@@ -66,7 +66,7 @@ const AppShowcase = () => {
                         {/* Mobile: Staggered overlapping layout */}
                         <div className="md:hidden relative h-[320px] w-full">
                             {/* Decorative blur */}
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] bg-gradient-to-tr from-primary/15 to-secondary/15 blur-[40px] rounded-full pointer-events-none"></div>
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] bg-gradient-to-tr from-primary/5 to-secondary/5 blur-[40px] rounded-full pointer-events-none"></div>
 
                             {/* Card 1: Top left */}
                             <div className="absolute top-0 left-0 w-[65%] shadow-xl rounded-2xl z-10">
@@ -108,7 +108,7 @@ const AppShowcase = () => {
                         {/* Desktop: Triple layout */}
                         <div className="hidden md:block relative h-[550px] w-full">
                             {/* Abstract decorative blob behind */}
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-primary/20 to-secondary/20 blur-[60px] rounded-full pointer-events-none"></div>
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-primary/10 to-secondary/10 blur-[60px] rounded-full pointer-events-none"></div>
 
                             {/* Card 1: Lista Inteligente (Top Left) */}
                             <div className="absolute top-0 left-[8%] z-20 w-[42%] shadow-2xl rounded-2xl animate-float" style={{ animationDuration: '6s' }}>
