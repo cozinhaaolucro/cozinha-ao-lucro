@@ -76,24 +76,24 @@ const BenefitsSection = () => {
                         {
                             icon: DollarSign,
                             title: "Preço certo antes de vender",
-                            desc: "Saiba exatamente quanto custa cada produto antes de definir o preço. Nada de vender bem e descobrir depois que não sobrou lucro.",
+                            desc: "Saiba exatamente quanto cada produto custa antes de definir o preço. Nada de vender bem e descobrir depois que não sobrou lucro.",
                             color: "text-emerald-500",
                             bg: "bg-muted/10"
                         }, {
                             icon: Users,
-                            title: "Mais clientes, sem bagunça",
+                            title: "Mais pedidos, sem perder margem",
                             desc: "Gerencie pedidos, prazos e produção sem perder o controle, mesmo com vários pedidos ao mesmo tempo.",
                             color: "text-blue-500",
                             bg: "bg-muted/10"
                         }, {
                             icon: Clock,
                             title: "Menos improviso na rotina",
-                            desc: "Pedidos organizados por status, datas claras e visão do que está em produção, pronto ou entregue.",
+                            desc: "Pedidos organizados por status e data, sem correria ou retrabalho.",
                             color: "text-amber-500",
                             bg: "bg-muted/10"
                         }, {
                             icon: TrendingUp,
-                            title: "Crescer sem perder o controle",
+                            title: "Crescer com visão do lucro",
                             desc: "Acompanhe faturamento, custos e lucro conforme o volume aumenta — sem depender de planilhas.",
                             color: "text-purple-500",
                             bg: "bg-muted/10"

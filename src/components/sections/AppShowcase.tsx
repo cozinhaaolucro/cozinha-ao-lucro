@@ -60,7 +60,7 @@ const AppShowcase = () => {
                                     <ArrowRight className="ml-2 w-5 h-5 inline-block" />
                                 </Button>
                                 <p className="text-xs text-muted-foreground mt-3 font-medium opacity-80 pl-4">
-                                    Teste grátis de 7 dias. Sem compromisso.
+                                    Cancele quando quiser.
                                 </p>
                             </div>
                         </div>

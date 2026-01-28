@@ -33,13 +33,12 @@ const HeroSection = () => {
                     <h1 className="text-[1.65rem] sm:text-3xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground tracking-tight md:whitespace-nowrap">
                         Pare de vender no escuro.<br className="hidden md:block" />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#2D7A70] to-primary animate-shimmer bg-[length:200%_auto]">
-                            Tenha clareza real do lucro
-                        </span><br className="hidden md:block" /> de cada pedido.
+                            Tenha clareza real do lucro.
+                        </span><br className="hidden md:block" />
                     </h1>
 
                     <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-                        Controle custos, precifique corretamente e acompanhe pedidos, estoque e clientes com base em fichas técnicas reais, não em achismos ou planilhas confusas.
-                    </p>
+                        Com fichas técnicas reais, você calcula custos, define preços corretos e acompanha pedidos, estoque e clientes — sem achismos ou planilhas confusas.                    </p>
 
                     {/* Apoio Visual */}
                     <p className="text-sm font-medium text-primary/80 bg-primary/5 py-2 px-4 rounded-full inline-block border border-primary/10">

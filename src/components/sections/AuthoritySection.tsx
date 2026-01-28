@@ -20,6 +20,7 @@ const AuthoritySection = () => {
                             "O Cozinha ao Lucro nasceu para resolver o maior problema de quem vende comida:
                             <span className="text-primary font-bold"> não saber se está realmente ganhando dinheiro.</span>
                             <br className="hidden md:block" />
+
                             Aqui, cada preço tem uma margem e cada venda traz clareza."
                         </h2>
                     </div>
