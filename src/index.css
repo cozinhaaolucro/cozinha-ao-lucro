@@ -1,0 +1,720 @@
+/* Font loaded via <link rel="preload"> in index.html for non-blocking */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+
+
+    /* 
+      Palette Rebrand (2026) - STRICT IMPLEMENTATION:
+      Background: Off White — HSL 60°, 5%, 98% (Neutral/Warm-ish Off White)
+      Primary: Dark Blue — HSL 186°, 35%, 28%
+      Secondary: Light Blue — HSL 182°, 16%, 55%
+      Financial: Gold — HSL 41°, 53%, 55%
+      Neutral/Icon: Grey — HSL 58°, 2%, 54%
+      Borders: Light Grey — HSL 60°, 5%, 83%
+      Text Main: HSL 210°, 9%, 32% (Kept for legibility as per Microdetails)
+    */
+
+    --background: 200 5% 98%;
+    --foreground: 210 9% 32%;
+    /* Main Text */
+
+    --card: 200 5% 99%;
+    /* Cool neutral card */
+    --card-foreground: 210 9% 32%;
+
+    --popover: 200 5% 98%;
+    --popover-foreground: 210 9% 32%;
+
+    --primary: 186 35% 28%;
+    /* #2e5b60 - Confirmed */
+    --primary-foreground: 38 35% 94%;
+    --primary-glow: 186 35% 35%;
+    /* Generated logical glow */
+    --primary-dark: 186 45% 20%;
+
+    --secondary: 188 26% 50%;
+    /* #5F98A1 - Updated */
+    --secondary-foreground: 38 35% 94%;
+    --secondary-light: 188 26% 60%;
+
+    --muted: 200 5% 90%;
+    --muted-foreground: 200 3% 50%;
+    /* Text Auxiliary / Neutral Icons */
+
+    --accent: 182 16% 55%;
+    --accent-foreground: 38 35% 94%;
+
+    --financial: 41 53% 55%;
+
+    --warning: 41 53% 55%;
+    --warning-foreground: 210 9% 32%;
+
+    --success: 147 61% 47%;
+    /* #2FBF71 - Updated Value Green */
+    --success-foreground: 38 35% 94%;
+
+    --destructive: 8 48% 58%;
+    --destructive-foreground: 38 35% 94%;
+
+    --info: 24 58% 56%;
+    --info-foreground: 38 35% 94%;
+
+    --icon-color: 58 2% 54%;
+    /* Neutral Icons */
+
+    --footer: 186 35% 20%;
+    /* Darker primary */
+    --footer-foreground: 38 35% 94%;
+
+    --border: 200 5% 85%;
+    --input: 200 5% 85%;
+    --ring: 182 16% 55%;
+
+    --radius: 0.75rem;
+
+
+
+    /* Shadows */
+    /* Non-colored standard: HSL 210 15% 20% -> 210 15% 20% */
+    --shadow-color: 210 15% 20%;
+
+    /* Status Colors (Kanban) */
+    --status-pending-base: 41 53% 55%;
+    --status-preparing-base: 186 35% 28%;
+    --status-ready-base: 168 22% 52%;
+    --status-delivered-base: 200 5% 40%;
+
+    --shadow-elegant: 0 4px 12px hsla(210, 15%, 20%, 0.1);
+    --shadow-hover: 0 6px 16px hsla(210, 15%, 20%, 0.14);
+    --shadow-card: 0 4px 6px -1px hsla(210, 15%, 20%, 0.1),
+      0 2px 4px -1px hsla(210, 15%, 20%, 0.06);
+    /* Standard Card text says 10% opacity */
+
+
+  }
+
+  .dark {
+    /* Identical to Light for now per request */
+    --background: 38 35% 94%;
+    --foreground: 210 9% 32%;
+    --card: 38 20% 98%;
+    --card-foreground: 210 9% 32%;
+    --popover: 38 35% 94%;
+    --popover-foreground: 210 9% 32%;
+    --primary: 186 35% 28%;
+    --primary-foreground: 38 35% 94%;
+    --secondary: 182 16% 55%;
+    --secondary-foreground: 38 35% 94%;
+    --muted: 60 5% 90%;
+    --muted-foreground: 58 2% 54%;
+    --accent: 182 16% 55%;
+    --accent-foreground: 38 35% 94%;
+    --financial: 41 53% 55%;
+    --destructive: 8 48% 58%;
+    --destructive-foreground: 38 35% 94%;
+    --border: 60 5% 83%;
+    --input: 60 5% 83%;
+    --ring: 182 16% 55%;
+
+    --shadow-color: 210 15% 20%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+    /* User requested: Off-white background with stronger spots (Green from buttons) and movement */
+    background-image:
+      radial-gradient(circle at 15% 50%, hsla(186, 35%, 28%, 0.03) 0%, transparent 25%),
+      radial-gradient(circle at 85% 30%, hsla(186, 35%, 28%, 0.02) 0%, transparent 25%);
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    /* Replaced Poppins with Plus Jakarta Sans for modern SaaS feel */
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    font-weight: 700;
+  }
+}
+
+@layer components {
+
+  /* Glassmorphism Utilities */
+  .glass-panel {
+    @apply bg-white/90 backdrop-blur-xl border border-white/60 shadow-card;
+  }
+
+  .glass-card {
+    @apply bg-white/60 backdrop-blur-md border border-white/50 shadow-lg hover:bg-white/80 transition-all duration-300 hover:shadow-xl hover:border-primary/20 hover:-translate-y-1;
+  }
+
+  .dark .glass-panel {
+    @apply bg-white/90 backdrop-blur-xl border border-white/60;
+  }
+
+  /* Premium Lighting Utilities */
+  .premium-card {
+    @apply bg-card border border-white/50 shadow-elegant transition-all duration-200 hover:shadow-floating hover:-translate-y-1 relative overflow-hidden;
+  }
+
+  .premium-card::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br from-white/60 to-transparent opacity-50 pointer-events-none;
+  }
+
+  .spotlight {
+    background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
+  }
+
+  .spotlight-warm {
+    background: radial-gradient(circle at 50% 50%, rgba(46, 95, 101, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(46, 95, 101, 0.15);
+  }
+
+  .inner-depth {
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+
+  .bg-grid-pattern {
+    background-size: 40px 40px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    mask-image: radial-gradient(circle at center, black 50%, transparent 90%);
+  }
+
+  .bg-dot-pattern {
+    background-image: radial-gradient(rgba(0, 0, 0, 0.15) 1px, transparent 1px);
+    background-size: 24px 24px;
+    mask-image: radial-gradient(circle at center, black 50%, transparent 90%);
+  }
+
+  .section-separator-top {
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 -10px 20px -10px rgba(0, 0, 0, 0.02);
+  }
+
+  .section-separator-bottom {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  /* Typography Utilities */
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#B8860B] via-[#FFD700] to-[#B8860B] bg-[length:200%_auto] animate-shimmer;
+  }
+
+  .text-gradient-primary {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    background-image: linear-gradient(to bottom, hsl(186, 35%, 32%), hsl(186, 35%, 24%));
+  }
+
+  /* Button Styles - STRICT IMPLEMENTATION */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground font-semibold px-8 py-4 rounded-xl shadow-elegant transition-all duration-200 ease-out;
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .btn-primary:active {
+    filter: brightness(0.94);
+    transform: translateY(0) scale(0.98);
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground font-semibold px-8 py-4 rounded-xl shadow-md transition-all duration-200 ease-out;
+  }
+
+  .btn-secondary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .btn-secondary:active {
+    filter: brightness(0.94);
+    transform: translateY(0) scale(0.98);
+  }
+
+  /* Link Styles */
+  a.link-standard {
+    color: hsl(182, 16%, 55%);
+    text-decoration: none;
+    transition: color 0.15s ease-out;
+  }
+
+  a.link-standard:hover {
+    color: hsl(182, 16%, 47%);
+    /* Darker by ~8% */
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+  }
+
+  /* Input Styles */
+  input,
+  textarea,
+  select {
+    @apply border-input transition-all duration-150 ease-out;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    @apply border-ring outline-none;
+    box-shadow: 0 0 0 3px rgba(100, 137, 138, 0.2);
+    /* Glow opacity moderate */
+  }
+
+  /* Layout Utilities */
+  .section-padding {
+    @apply py-24 px-4 md:px-8 lg:px-12;
+    /* Generous spacing */
+  }
+
+  .container-max {
+    @apply max-w-[1400px] mx-auto px-6 md:px-12 w-full;
+  }
+
+  .mobile-container {
+    @apply w-[90%] mx-auto md:w-full max-w-none;
+  }
+}
+
+
+/* Custom Animations */
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes shine {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+
+  1% {
+    opacity: 0.5;
+  }
+
+  40% {
+    left: 100%;
+    opacity: 0;
+  }
+
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+.effect-shine {
+  position: relative;
+  overflow: hidden;
+  /* Standard duration for chain synchronization */
+  --shine-duration: 5s;
+}
+
+.effect-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right,
+      transparent 0%,
+      rgba(255, 255, 255, 0.8) 50%,
+      transparent 100%);
+  transform: skewX(-20deg);
+  animation: shine var(--shine-duration) infinite ease-in-out;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Chain Sequence Delays */
+.shine-delay-1 {
+  animation-delay: 1.5s !important;
+  /* Force delay override */
+}
+
+.shine-delay-2 {
+  animation-delay: 3s !important;
+}
+
+.shine-delay-3 {
+  animation-delay: 4.5s !important;
+}
+
+/* Specific slow override for Authority/Quiz if needed, but keeping synced is better */
+.shine-slow {
+  --shine-duration: 7s;
+}
+
+/* Backward compatibility */
+.btn-shine {
+  @apply effect-shine;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shine-vertical {
+  0% {
+    top: -100%;
+    opacity: 0;
+  }
+
+  1% {
+    opacity: 0.5;
+  }
+
+  40% {
+    top: 100%;
+    opacity: 0;
+  }
+
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.effect-shine-vertical {
+  position: relative;
+  overflow: hidden;
+  --shine-duration: 5s;
+}
+
+.effect-shine-vertical::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(to bottom,
+      transparent 0%,
+      rgba(255, 255, 255, 0.8) 50%,
+      transparent 100%);
+  animation: shine-vertical var(--shine-duration) infinite ease-in-out;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.shine-slow {
+  --shine-duration: 8s !important;
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 3s linear infinite;
+}
+
+.animate-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+/* Smooth scrolling for the entire app */
+/* Smooth scrolling and Jitter Fix - Strict Force */
+html {
+  font-size: 13px;
+  /* 25% Global Zoom Out base */
+  scroll-behavior: smooth;
+  overflow-y: scroll !important;
+  /* Force scrollbar always visible to prevent jumping */
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  /* Prevent horizontal scroll causing jitter */
+  width: 100%;
+  position: relative;
+  /* Ensure stacking context */
+}
+
+/* Better focus states for accessibility */
+*:focus-visible {
+  @apply outline-2 outline-offset-2 outline-primary;
+}
+
+/* Optimize card hover transitions */
+.card-hover {
+  @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+}
+
+/* Subtle pulse animation for loading states */
+@keyframes subtle-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-subtle-pulse {
+  animation: subtle-pulse 4s ease-in-out infinite;
+}
+
+/* Reusable fade-in animation for staggered content */
+.animate-fade-in {
+  animation-name: fade-in;
+  animation-timing-function: ease-out;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+/* 3D Transform Utilities for Jitter Fix */
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* Pulse Slow */
+.animate-pulse-slow {
+  animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Gold Gradient Text - Refined/Elegant */
+.text-gold-gradient {
+  background: linear-gradient(to bottom right,
+      #C6930A,
+      #FDD984,
+      #D4Af37,
+      #FDE08D,
+      #C6930A);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 3px rgba(160, 116, 20, 0.25));
+}
+
+/* COMPREHENSIVE JITTER ELIMINATION */
+/* Using translate3d for stronger GPU offloading than translateZ */
+
+/* Base jitter-fix utility */
+.jitter-fix {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  perspective: 1000px;
+  will-change: transform, opacity;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Apply to all interactive/transforming elements */
+.btn-primary,
+.btn-secondary,
+.glass-card,
+.premium-card,
+.card-hover,
+button,
+[class*="hover:scale"] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  perspective: 1000px;
+  will-change: transform;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  isolation: isolate;
+}
+
+/* Links and images - softer treatment */
+a,
+img {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Transitioning elements need special care */
+[class*="transition"] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Stabilize text during transforms */
+html,
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* === MOBILE PERFORMANCE OPTIMIZATION === */
+/* Aggressive GPU optimization for mobile devices */
+@media (max-width: 768px) {
+
+  /* Reduce blur intensity significantly */
+  [class*="blur-[100"],
+  [class*="blur-[120"],
+  [class*="blur-[150"],
+  [class*="blur-[60"],
+  [class*="blur-[40"],
+  [class*="blur-3xl"] {
+    opacity: 0.3 !important;
+    filter: blur(20px) !important;
+  }
+
+  /* Disable backdrop blur completely - major performance drain */
+  .backdrop-blur-md,
+  .backdrop-blur-xl,
+  .backdrop-blur-sm,
+  [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: hsl(var(--background) / 0.98) !important;
+  }
+
+  /* Disable all continuous/heavy animations on mobile */
+  .animate-pulse,
+  .animate-pulse-slow,
+  .animate-float,
+  .animate-aurora,
+  .animate-shimmer,
+  .animate-subtle-pulse,
+  .animate-rise-slow,
+  [class*="animate-aurora"],
+  [class*="animate-float"],
+  [class*="animate-pulse"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Keep entry animations but make them faster */
+  .animate-fade-in,
+  .animate-in {
+    animation-duration: 0.2s !important;
+  }
+
+  /* Disable will-change on mobile (can cause memory issues) */
+  * {
+    will-change: auto !important;
+  }
+
+  /* Reduce shadow complexity */
+  .shadow-2xl {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  }
+
+  /* Disable mix-blend-mode (expensive) */
+  [class*="mix-blend-"] {
+    mix-blend-mode: normal !important;
+  }
+
+  /* GPU-accelerate scrolling */
+  html, body {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Reduce transition durations */
+  [class*="transition-all"],
+  [class*="duration-500"],
+  [class*="duration-700"],
+  [class*="duration-1000"] {
+    transition-duration: 150ms !important;
+  }
+}

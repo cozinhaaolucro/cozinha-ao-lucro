@@ -1,0 +1,908 @@
+import { useState, useEffect, useRef } from 'react';
+import { useOnboarding } from '@/contexts/OnboardingContext';
+import { OnboardingOverlay } from '@/components/onboarding/OnboardingOverlay';
+import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
+import { Plus, TrendingUp, Pencil, Download, Trash2, Copy, ChevronDown, ChevronUp, Eye, EyeOff, Phone, Search } from 'lucide-react';
+import { getProducts, deleteProduct, updateProduct, createProduct, getIngredients, importProductsBatch } from '@/lib/database';
+import { supabase } from '@/lib/supabase';
+import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
+import { PRESET_PRODUCTS } from '@/data/presets';
+import type { Product, Ingredient, ProductWithIngredients } from '@/types/database';
+import ProductBuilder from './ProductBuilder';
+
+import NewOrderDialog from '../orders/NewOrderDialog';
+import { useToast } from '@/hooks/use-toast';
+import { useProducts, useIngredients } from '@/hooks/useQueries';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Upload, Image as ImageIcon, FileSpreadsheet, FileText, Info, FileDown, Package, Circle, Box } from 'lucide-react';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+
+
+const OptimisticToggle = ({
+    isActive,
+    onToggle
+}: {
+    isActive: boolean;
+    onToggle: (newState: boolean) => void;
+}) => {
+    const [active, setActive] = useState(isActive);
+
+    useEffect(() => {
+        setActive(isActive);
+    }, [isActive]);
+
+    const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newState = e.target.checked;
+        setActive(newState);
+        onToggle(newState);
+    };
+
+    return (
+        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+            <label className="relative inline-flex items-center cursor-pointer scale-90">
+                <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={active}
+                    onChange={handleToggle}
+                />
+                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+        </div>
+    );
+};
+
+const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
+    // const [products, setProducts] = useState<ProductWithIngredients[]>([]); // Derived
+    // const [ingredients, setIngredients] = useState<Ingredient[]>([]); // Derived
+    const [editingProduct, setEditingProduct] = useState<ProductWithIngredients | null>(null);
+    const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+    const [showAllIngredients, setShowAllIngredients] = useState(false);
+    const [expandedProductIds, setExpandedProductIds] = useState<string[]>([]);
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+    const [productForOrder, setProductForOrder] = useState<string | null>(null);
+
+    const { isActive: isOnboardingActive, currentStep, nextStep, completeTour } = useOnboarding();
+    const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [page, setPage] = useState(1);
+    const [limit] = useState(18); // Multipie of 2 and 3 for grid
+
+    // React Query Hooks
+    const { data: productsData, isLoading: productsLoading, refetch: refetchProducts } = useProducts(page, limit);
+    const { data: ingredientsData, isLoading: ingredientsLoading, refetch: refetchIngredients } = useIngredients();
+
+    // Derived
+    const products = productsData?.products || [];
+    const totalCount = productsData?.count || 0;
+    const ingredients = ingredientsData?.ingredients || [];
+    const isLoading = productsLoading || ingredientsLoading;
+
+    // Auto-advance step when product is created (product count > 0)
+    useEffect(() => {
+        if (isOnboardingActive && currentStep === 'create-button' && products.length > 0) {
+            nextStep(); // To success-moment
+        }
+    }, [products.length, isOnboardingActive, currentStep, nextStep]);
+
+    // Helper to refresh everything
+    const loadProducts = () => {
+        refetchProducts();
+        refetchIngredients();
+    };
+
+    // Force refetch on mount to ensure fresh data after creation
+    useEffect(() => {
+        loadProducts();
+    }, []);
+
+    // Realtime synchronization for Products
+    useEffect(() => {
+        const channel = supabase
+            .channel('products_realtime_list')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+                refetchProducts();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ingredients' }, () => {
+                // Ingredients affect costs, so refresh
+                loadProducts();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [refetchProducts, refetchIngredients]);
+
+    // Remove manual loadProducts async function and effect
+    // const loadProducts = async () ...
+    // useEffect ...
+
+    // ... calculation helpers ...
+    const calculateTotalCost = (product: ProductWithIngredients) => {
+        return product.product_ingredients.reduce((total, pi) => {
+            if (!pi.ingredient) return total;
+            return total + ((pi.ingredient.cost_per_unit || 0) * pi.quantity);
+        }, 0);
+    };
+
+    const calculateMargin = (cost: number, price: number) => {
+        if (price === 0) return 0;
+        return ((price - cost) / price) * 100;
+    };
+
+    // Calculate how many units of a product can be produced with current stock
+    // Helper to convert quantity for display
+    const getDisplayQuantity = (qty: number, baseUnit: string, displayUnit?: string, packageSize?: number) => {
+        if (!displayUnit) return { value: qty, unit: baseUnit };
+
+        const base = baseUnit.toLowerCase();
+        const display = displayUnit.toLowerCase();
+
+        if (display === base) return { value: qty, unit: baseUnit };
+
+        if (display === 'pacote' && packageSize) {
+            return { value: qty / packageSize, unit: 'pacote(s)' };
+        }
+
+        const isKg = ['kg', 'quilo', 'kilograma'].includes(base);
+        const isG = ['g', 'grama'].includes(base);
+        const isL = ['l', 'litro'].includes(base);
+        const isMl = ['ml', 'mililitro'].includes(base);
+
+        const targetIsKg = ['kg', 'quilo', 'kilograma'].includes(display);
+        const targetIsG = ['g', 'grama'].includes(display);
+        const targetIsL = ['l', 'litro'].includes(display);
+        const targetIsMl = ['ml', 'mililitro'].includes(display);
+
+        if (isKg && targetIsG) return { value: qty * 1000, unit: 'g' };
+        if (isG && targetIsKg) return { value: qty / 1000, unit: 'kg' };
+        if (isL && targetIsMl) return { value: qty * 1000, unit: 'ml' };
+        if (isMl && targetIsL) return { value: qty / 1000, unit: 'l' };
+
+        return { value: qty, unit: displayUnit };
+    };
+
+    const calculateProducibleUnits = (product: ProductWithIngredients) => {
+        if (!product.product_ingredients.length) return Infinity;
+
+        let minUnits = Infinity;
+        for (const pi of product.product_ingredients) {
+            if (!pi.ingredient || !pi.quantity) continue;
+            const ingredient = ingredients.find(i => i.id === pi.ingredient.id);
+            if (!ingredient) continue;
+            const stock = ingredient.stock_quantity || 0;
+            const unitsFromThisIngredient = Math.floor(stock / pi.quantity);
+            minUnits = Math.min(minUnits, unitsFromThisIngredient);
+        }
+        return minUnits === Infinity ? 0 : minUnits;
+    };
+
+    // Bulk Actions
+    const toggleSelectAll = () => {
+        if (selectedProducts.length === products.length) {
+            setSelectedProducts([]);
+        } else {
+            setSelectedProducts(products.map(p => p.id));
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        if (selectedProducts.includes(id)) {
+            setSelectedProducts(selectedProducts.filter(pid => pid !== id));
+        } else {
+            setSelectedProducts([...selectedProducts, id]);
+        }
+    };
+
+    const handleDelete = async (id?: string) => {
+        const idsToDelete = id ? [id] : selectedProducts;
+
+        if (idsToDelete.length === 0) return;
+
+        if (!confirm(`Tem certeza que deseja excluir ${idsToDelete.length} produto(s)?`)) return;
+
+        let errorOccurred = false;
+        for (const pid of idsToDelete) {
+            const { error } = await deleteProduct(pid);
+            if (error) errorOccurred = true;
+        }
+
+        if (errorOccurred) {
+            toast({ title: 'Erro ao excluir alguns produtos', variant: 'destructive' });
+        } else {
+            toast({ title: 'Produtos excluídos com sucesso' });
+            setSelectedProducts([]);
+            loadProducts();
+        }
+    };
+
+    const handleDuplicateProduct = async (product: ProductWithIngredients) => {
+        const confirmDuplicate = confirm(`Deseja duplicar o produto "${product.name}"?`);
+        if (!confirmDuplicate) return;
+
+        // Prepare new product data - only include columns that exist in the database
+        const productData = {
+            name: `${product.name} (Cópia)`,
+            description: product.description,
+            selling_price: product.selling_price,
+            preparation_time_minutes: product.preparation_time_minutes,
+            image_url: product.image_url,
+            active: true,
+            selling_unit: product.selling_unit || 'unidade',
+            category: product.category || 'Geral'
+        };
+
+        const ingredientsPayload = product.product_ingredients
+            .filter(pi => pi.ingredient !== null)
+            .map(pi => ({
+                ingredient_id: pi.ingredient!.id,
+                quantity: pi.quantity
+            }));
+
+        const { error } = await createProduct(productData, ingredientsPayload);
+
+        if (!error) {
+            toast({ title: 'Produto duplicado com sucesso!' });
+            loadProducts();
+        } else {
+            console.error('Error duplicating product:', error);
+            toast({ title: 'Erro ao duplicar produto', description: error?.message, variant: 'destructive' });
+        }
+    };
+
+    const handleExport = (format: 'excel' | 'csv') => {
+        const dataToExport = products.map(p => {
+            const totalCost = calculateTotalCost(p);
+            const profit = (p.selling_price || 0) - totalCost;
+            const margin = p.selling_price ? calculateMargin(totalCost, p.selling_price) : 0;
+            return {
+                'ID': p.display_id ? String(p.display_id).padStart(3, '0') : '',
+                'Nome': p.name,
+                'Ingredientes': p.product_ingredients
+                    .filter(pi => pi.ingredient !== null)
+                    .map(pi => `${pi.ingredient!.name} (${pi.quantity}${pi.ingredient!.unit})`)
+                    .join(', '),
+                'Preço Venda': p.selling_price,
+                'Custo': Number(totalCost.toFixed(2)),
+                'Lucro': Number(profit.toFixed(2)),
+                'Margem (%)': Number(margin.toFixed(0))
+            };
+        });
+
+        if (format === 'excel') {
+            exportToExcel(dataToExport, 'produtos_cozinha_ao_lucro');
+        } else {
+            exportToCSV(dataToExport, 'produtos_cozinha_ao_lucro');
+        }
+    };
+
+
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            const data = await importFromExcel(file);
+            // Prepare Payload for Batch RPC
+            const batchPayload = [];
+
+            for (const row of data) {
+                const name = row['Nome'] || row['name'] || row['Name'];
+                if (!name) continue;
+
+                // Ingredients
+                const ingredientsPayload: any[] = [];
+                const ingredientsStr = row['Ingredientes'] || row['ingredients'] || '';
+
+                // Client-side parsing of ingredients string to clean JSON for RPC
+                if (ingredientsStr) {
+                    const parts = ingredientsStr.split(',').map((s: string) => s.trim());
+                    for (const part of parts) {
+                        try {
+                            const match = part.match(/^(.*)\s\(([\d\.]+)(.*)\)$/);
+                            if (match) {
+                                ingredientsPayload.push({
+                                    name: match[1].trim(),
+                                    quantity: parseFloat(match[2])
+                                });
+                            }
+                        } catch (e) { /* ignore */ }
+                    }
+                }
+
+                batchPayload.push({
+                    id: row['UUID'] || null, // If explicit UUID provided
+                    display_id: row['ID'] ? parseInt(row['ID']) : null, // Display ID for sync
+                    name: name,
+                    description: row['Descrição'] || row['description'] || '',
+                    selling_price: parseFloat(row['Preço Venda'] || row['selling_price'] || '0'),
+                    selling_unit: 'unidade',
+                    ingredients: ingredientsPayload
+                });
+            }
+
+            if (batchPayload.length > 0) {
+                const { data: result, error } = await importProductsBatch(batchPayload);
+
+                if (error) {
+                    console.error("Batch Import Error:", error);
+                    toast({ title: 'Erro na importação em lote', description: error.message, variant: 'destructive' });
+                } else {
+                    // @ts-ignore
+                    const count = result?.count || 0;
+                    // @ts-ignore
+                    const errors = result?.errors || [];
+
+                    toast({
+                        title: 'Importação Concluída',
+                        description: `${count} produtos processados. ${errors.length} erros.`,
+                        variant: errors.length > 0 ? 'destructive' : 'default'
+                    });
+
+                    if (errors.length > 0) {
+                        console.warn("Import Errors:", errors);
+                    }
+
+                    loadProducts();
+                }
+            } else {
+                toast({ title: 'Nenhum dado válido encontrado para importar.', variant: 'default' });
+            }
+
+        } catch (error) {
+            console.error("Import error", error);
+            toast({ title: 'Erro ao ler arquivo Excel', variant: 'destructive' });
+        }
+
+        // Reset input
+        e.target.value = '';
+    };
+
+    const [searchTerm, setSearchTerm] = useState("");
+
+    // Filter Logic
+    const filteredProducts = products.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+        <div className="space-y-4">
+            {/* Header Toolbar - Minimalist */}
+            <div className="flex items-center gap-4 w-full">
+                {/* Selection Trigger */}
+                <div
+                    className="flex items-center gap-2 cursor-pointer group/select select-none px-3 py-2 rounded-full hover:bg-muted/50 transition-colors shrink-0"
+                    onClick={() => setSelectionMode(!selectionMode)}
+                    onDoubleClick={(e) => {
+                        e.preventDefault();
+                        toggleSelectAll();
+                    }}
+                >
+                    <div className={cn(
+                        "w-4 h-4 rounded-full border flex items-center justify-center transition-colors",
+                        selectedProducts.length > 0 ? "border-primary bg-primary" : "border-muted-foreground/70 group-hover/select:border-primary"
+                    )}>
+                        {selectedProducts.length > 0 && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                    </div>
+                    <span className="text-base text-muted-foreground group-hover/select:text-primary transition-colors font-medium hidden sm:inline">
+                        {selectedProducts.length > 0 ? `${selectedProducts.length}` : 'Selecionar'}
+                    </span>
+                </div>
+
+                {/* Bulk Actions (Dynamic) */}
+                {selectedProducts.length > 0 && (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
+                        <Button variant="outline" size="sm" className="h-8 text-xs bg-background" onClick={() => {
+                            const productToDupe = products.find(p => p.id === selectedProducts[0]);
+                            if (productToDupe) handleDuplicateProduct(productToDupe);
+                            if (selectedProducts.length > 1) {
+                                const remaining = selectedProducts.slice(1);
+                                remaining.forEach(async id => {
+                                    const p = products.find(prod => prod.id === id);
+                                    if (p) await handleDuplicateProduct(p);
+                                });
+                            }
+                        }}>
+                            <Copy className="w-3 h-3 mr-1" />
+                            Duplicar
+                        </Button>
+                        <Button variant="destructive" size="sm" className="h-8 text-xs" onClick={() => handleDelete()}>
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Excluir
+                        </Button>
+                    </div>
+                )}
+
+                {/* Search */}
+                <div className="relative w-64">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar produtos..."
+                        className="pl-9 h-9 bg-transparent border-muted-foreground/30 focus:border-primary"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+
+                <div className="flex-1" />
+
+                {/* Right Actions */}
+                <div className="flex items-center gap-2">
+                    {/* Import/Export Group */}
+                    <div className="flex items-center text-muted-foreground">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-9 w-9 hover:text-foreground" title="Exportar">
+                                    <Download className="w-4 h-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleExport('excel')}>Excel (.xlsx)</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleExport('csv')}>CSV (.csv)</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+
+
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 hover:text-foreground"
+                            onClick={() => setShowAllIngredients(!showAllIngredients)}
+                            title={showAllIngredients ? "Ocultar detalhes" : "Mostrar detalhes"}
+                        >
+                            {showAllIngredients ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </Button>
+                    </div>
+
+                    <Button onClick={onNewProduct} className="gap-2 h-9 px-4 rounded-full font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm ml-2">
+                        <Plus className="h-4 w-4" />
+                        <span className="hidden sm:inline">Novo</span>
+                    </Button>
+                </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+                {filteredProducts.length === 0 ? (
+                    <Card className="col-span-full border-dashed">
+                        <CardContent className="p-12 text-center">
+                            <div className="flex flex-col items-center gap-2">
+                                <TrendingUp className="w-12 h-12 text-muted-foreground/20" />
+                                <h3 className="font-bold text-lg">Nenhum produto cadastrado</h3>
+                                <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                                    Crie seu primeiro produto para começar a calcular seus lucros e gerenciar suas vendas com precisão.
+                                </p>
+                                <Button
+                                    id="onboarding-new-product-empty"
+                                    className="mt-4 gap-2"
+                                    onClick={() => {
+                                        if (isOnboardingActive && currentStep === 'empty-product-list') nextStep();
+                                        onNewProduct();
+                                    }}
+                                >
+                                    <Plus className="w-4 h-4" /> Criar Meu Primeiro Produto
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    filteredProducts.map((product, idx) => {
+                        const totalCost = calculateTotalCost(product);
+                        const margin = product.selling_price ? calculateMargin(totalCost, product.selling_price) : 0;
+                        const profit = (product.selling_price || 0) - totalCost;
+
+                        return (
+                            <Card
+                                key={product.id}
+                                className={`transition-all duration-200 group cursor-pointer relative overflow-hidden border ${expandedProductIds.includes(product.id) ? 'border-primary ring-1 ring-primary/20 shadow-md' : 'hover:shadow-md hover:border-border/80'}`}
+                                onClick={() => setExpandedProductIds(prev => prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id])}
+                            >
+                                <CardHeader className="pb-1 p-4 sm:p-5">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-3 transition-all duration-200 ease-out">
+                                            {/* Selection Checkbox - Static on Left */}
+                                            <div
+                                                className={cn(
+                                                    "flex items-center justify-center transition-all duration-200",
+                                                    (selectedProducts.includes(product.id) || selectionMode) ? "w-6 opacity-100 mr-2" : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-100 group-hover:mr-2 overflow-hidden"
+                                                )}
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <Checkbox
+                                                    checked={selectedProducts.includes(product.id)}
+                                                    onCheckedChange={() => toggleSelect(product.id)}
+                                                    className="h-4 w-4 bg-background/80 backdrop-blur-sm border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                                />
+                                            </div>
+
+                                            {product.image_url ? (
+                                                <div className="w-12 h-12 rounded-md overflow-hidden bg-muted shadow-sm border border-gray-100">
+                                                    <img
+                                                        src={product.image_url}
+                                                        alt={product.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground font-medium border border-gray-100">
+                                                    Foto
+                                                </div>
+                                            )}
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <CardTitle className="text-lg line-clamp-1">{product.name}</CardTitle>
+                                                    <OptimisticToggle
+                                                        isActive={product.active !== false}
+                                                        onToggle={async (newActive) => {
+                                                            const { error } = await updateProduct(product.id, { active: newActive }, null);
+                                                            if (error) {
+                                                                toast({ title: 'Erro ao atualizar status', variant: 'destructive' });
+                                                                loadProducts(); // Revert/Reload
+                                                            } else {
+                                                                // Silent success or eventual consistency
+                                                                // loadProducts(); // Optional: can keep it to sync fully
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="flex gap-2 mt-1">
+                                                    <Badge className="text-white hover:bg-[#5F98A1]/80 transition-colors backdrop-blur-sm" style={{ backgroundColor: 'rgba(95, 152, 161, 0.8)' }}>
+                                                        {margin.toFixed(0)}% margem
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {/* Desktop: hover-only */}
+                                            <div className="hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => setEditingProduct(product)}
+                                                    title="Editar"
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="text-destructive hover:text-destructive/90"
+                                                    onClick={() => handleDelete(product.id)}
+                                                    title="Excluir"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                            {/* Mobile: always visible */}
+                                            <div className="flex md:hidden gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => setEditingProduct(product)}
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {product.description && (
+                                        <p className="text-sm text-muted-foreground mt-2">{product.description}</p>
+                                    )}
+                                </CardHeader>
+                                <CardContent className="space-y-1.5 pl-4 pr-3 pb-2">
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div className="flex items-center justify-between text-sm cursor-help hover:bg-muted/30 p-1 -mx-1 rounded transition-colors">
+                                                    <span className="text-muted-foreground flex items-center gap-1">
+                                                        Custo
+                                                    </span>
+                                                    <span className="font-medium">R$ {totalCost.toFixed(2)}</span>
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-[250px]">
+                                                <p className="font-semibold text-xs mb-2">Composição do Custo:</p>
+                                                <div className="space-y-1">
+                                                    {product.product_ingredients.map((pi, idx) => {
+                                                        if (!pi.ingredient) return null;
+                                                        const display = getDisplayQuantity(pi.quantity, pi.ingredient.unit, pi.display_unit, pi.ingredient.package_size);
+                                                        return (
+                                                            <div key={idx} className="flex justify-between text-[10px] gap-4">
+                                                                <span className="truncate">
+                                                                    {pi.ingredient.name}
+                                                                    <span className="text-muted-foreground ml-1">
+                                                                        ({display.value < 0.01 ? display.value.toExponential(1) : parseFloat(display.value.toFixed(3))} {display.unit})
+                                                                    </span>
+                                                                </span>
+                                                                <span className="font-mono text-[#2FBF71]">R$ {((pi.ingredient.cost_per_unit || 0) * pi.quantity).toFixed(2)}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    <div className="border-t mt-1 pt-1 flex justify-between text-[11px] font-bold">
+                                                        <span>Total</span>
+                                                        <span>R$ {totalCost.toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                            </TooltipContent>
+                                        </Tooltip>
+
+                                        <div className="flex items-center justify-between text-sm mt-1">
+                                            <span className="text-muted-foreground">Preço de Venda:</span>
+                                            <span className="font-bold text-primary">
+                                                R$ {(product.selling_price || 0).toFixed(2)}
+                                            </span>
+                                        </div>
+
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div className="flex items-center justify-between text-sm border-t pt-2 cursor-help hover:bg-muted/30 p-1 -mx-1 rounded transition-colors">
+                                                    <span className="text-muted-foreground flex items-center gap-1">
+                                                        <TrendingUp className="w-3 h-3" />
+                                                        Lucro:
+                                                    </span>
+                                                    <span
+                                                        id={idx === 0 ? "onboarding-profit-display" : undefined}
+                                                        className="font-bold"
+                                                        style={{ color: profit > 0 ? '#2FBF71' : '#C76E60' }}
+                                                    >
+                                                        R$ {profit.toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p className="text-xs">
+                                                    {profit > 0
+                                                        ? `Você ganha R$ ${profit.toFixed(2)} por unidade vendida.`
+                                                        : 'Atenção! Este produto está dando prejuízo.'}
+                                                </p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+
+
+
+                                    {(showAllIngredients || expandedProductIds.includes(product.id)) && product.product_ingredients.length > 0 && (
+                                        <div className="text-xs text-muted-foreground border-t pt-2 animate-in slide-in-from-top-2 fade-in duration-200">
+                                            <p className="font-medium mb-1.5 opacity-90">Ingredientes:</p>
+                                            <ul className="grid gap-1">
+                                                {product.product_ingredients.map((pi, idx) => {
+                                                    if (!pi.ingredient) return null;
+                                                    const display = getDisplayQuantity(pi.quantity, pi.ingredient.unit, pi.display_unit, pi.ingredient.package_size);
+
+                                                    // Icon Logic
+                                                    // Removed colored dots as per user request
+
+                                                    return (
+                                                        <li key={idx} className="flex items-center justify-between text-[11px]">
+                                                            <div className="flex items-center gap-1.5 overflow-hidden">
+                                                                <span className="truncate opacity-90">{pi.ingredient.name}</span>
+                                                            </div>
+                                                            <div className="bg-muted-foreground/10 px-1.5 py-0.5 rounded text-foreground font-medium whitespace-nowrap" style={{ backgroundColor: 'rgba(0,0,0,0.05)' }}>
+                                                                <span className="text-[10px] opacity-70" style={{ color: 'inherit' }}>
+                                                                    {display.value < 0.01 ? display.value.toExponential(1) : parseFloat(display.value.toFixed(3))} {display.unit}
+                                                                </span>
+                                                            </div>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {/* Producible Units Indicator */}
+                                    {(() => {
+                                        const producibleUnits = calculateProducibleUnits(product);
+                                        const hasIngredients = product.product_ingredients.length > 0;
+                                        if (!hasIngredients) return null;
+
+                                        // Build ingredient usage breakdown for tooltip
+                                        const ingredientBreakdown = product.product_ingredients
+                                            .filter(pi => pi.ingredient && pi.quantity)
+                                            .map(pi => {
+                                                const ingredient = ingredients.find(i => i.id === pi.ingredient!.id);
+                                                const stock = ingredient?.stock_quantity || 0;
+                                                const usagePerUnit = pi.quantity;
+                                                const totalUsage = producibleUnits > 0 ? usagePerUnit * producibleUnits : 0;
+                                                return {
+                                                    name: pi.ingredient!.name,
+                                                    usagePerUnit,
+                                                    totalUsage,
+                                                    stock,
+                                                    unit: pi.ingredient!.unit,
+                                                    displayUnit: pi.display_unit,
+                                                    ingredient: pi.ingredient!
+                                                };
+                                            });
+
+                                        const hasStock = producibleUnits > 0;
+
+                                        return (
+                                            (showAllIngredients || expandedProductIds.includes(product.id)) && (
+                                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-dashed border-border/40 animate-in slide-in-from-top-2 fade-in duration-200">
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Badge
+                                                                    variant="secondary"
+                                                                    className={`text-xs font-bold gap-1.5 cursor-help transition-all border ${hasStock
+                                                                        ? 'bg-[#2FBF71]/10 text-[#2FBF71] border-[#2FBF71]/20 hover:bg-[#2FBF71]/20'
+                                                                        : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                                                                        }`}
+                                                                >
+                                                                    <Package className="w-3 h-3" />
+                                                                    {hasStock
+                                                                        ? `${producibleUnits > 999 ? "999+" : producibleUnits} possíveis`
+                                                                        : "Adicione ingredientes"
+                                                                    }
+                                                                </Badge>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent className="max-w-[280px]">
+                                                                {hasStock ? (
+                                                                    <div className="space-y-2">
+                                                                        <p className="text-xs font-medium">
+                                                                            Para produzir {producibleUnits} unidade(s):
+                                                                        </p>
+                                                                        <div className="space-y-1">
+                                                                            {ingredientBreakdown.map((item, idx) => {
+                                                                                const display = getDisplayQuantity(item.totalUsage, item.unit, item.displayUnit, item.ingredient?.package_size);
+                                                                                return (
+                                                                                    <div key={idx} className="flex justify-between text-[10px] gap-4">
+                                                                                        <span className="truncate">{item.name}</span>
+                                                                                        <span className="font-mono whitespace-nowrap" style={{ color: '#2FBF71' }}>
+                                                                                            {parseFloat(display.value.toFixed(2))} {display.unit}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="space-y-2">
+                                                                        <p className="text-xs font-medium">
+                                                                            Estoque atual:
+                                                                        </p>
+                                                                        <div className="space-y-1">
+                                                                            {ingredientBreakdown.map((item, idx) => (
+                                                                                <div key={idx} className="flex justify-between text-[10px] gap-4">
+                                                                                    <span className="truncate">{item.name}</span>
+                                                                                    <span className="font-mono text-muted-foreground whitespace-nowrap">
+                                                                                        {item.stock.toFixed(1)} {item.unit}
+                                                                                    </span>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                        <p className="text-[10px] text-muted-foreground pt-1 border-t">
+                                                                            Adicione ingredientes ao estoque.
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+
+                                                    <Button
+                                                        size="sm"
+                                                        className="h-7 text-xs gap-1.5"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setProductForOrder(product.id);
+                                                            setOrderDialogOpen(true);
+                                                        }}
+                                                    >
+                                                        <Plus className="w-3 h-3" />
+                                                        Criar Pedido
+                                                    </Button>
+                                                </div>
+                                            )
+                                        );
+                                    })()}
+                                </CardContent>
+                            </Card>
+                        );
+                    })
+                )}
+            </div>
+
+            {/* Pagination Controls */}
+            {
+                totalCount > 0 && (
+                    <div className="flex items-center justify-between border-t pt-4 mt-4">
+                        <div className="text-sm text-muted-foreground">
+                            Mostrando {products.length} de {totalCount} produtos
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1 || isLoading}
+                            >
+                                <ChevronDown className="h-4 w-4 rotate-90 mr-1" />
+                                Anterior
+                            </Button>
+                            <div className="text-sm font-medium min-w-[3rem] text-center">
+                                Pág. {page}
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={products.length < limit || (page * limit) >= totalCount || isLoading}
+                            >
+                                Próximo
+                                <ChevronDown className="h-4 w-4 -rotate-90 ml-1" />
+                            </Button>
+                        </div>
+                    </div>
+                )
+            }
+
+
+
+            <ProductBuilder
+                open={!!editingProduct}
+                onOpenChange={(open) => !open && setEditingProduct(null)}
+                productToEdit={editingProduct || undefined}
+                onSuccess={() => {
+                    loadProducts();
+                    setEditingProduct(null);
+                }}
+            />
+
+
+
+            <NewOrderDialog
+                open={orderDialogOpen}
+                onOpenChange={(open) => {
+                    setOrderDialogOpen(open);
+                    if (!open) setProductForOrder(null);
+                }}
+                onSuccess={() => {
+                    setOrderDialogOpen(false);
+                    setProductForOrder(null);
+                    // Optional: You could navigate to orders or show a link
+                    toast({ title: "Pedido criado! Verifique na aba Pedidos." });
+                }}
+                initialProductId={productForOrder}
+            />
+            <OnboardingOverlay
+                stepName="empty-product-list"
+                targetId="onboarding-new-product-empty"
+                message="Vamos criar seu primeiro produto lucrativo."
+                position="bottom"
+            />
+            <OnboardingOverlay
+                stepName="success-moment"
+                targetId="onboarding-profit-display"
+                message="Parabéns! Veja o lucro previsto para cada venda."
+                position="left"
+                actionLabel="Concluir Tour"
+                onAction={completeTour}
+            />
+        </div >
+    );
+};
+
+export default ProductList;

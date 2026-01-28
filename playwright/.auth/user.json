@@ -1,0 +1,59 @@
+{
+  "cookies": [
+    {
+      "name": "_gcl_au",
+      "value": "1.1.1957024612.1769474838",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1777250838,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga",
+      "value": "GA1.1.1161026952.1769474839",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1804034838.514042,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "test_cookie",
+      "value": "CheckForPermission",
+      "domain": ".doubleclick.net",
+      "path": "/",
+      "expires": 1769475738.673698,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_ga_0S70GBWCT5",
+      "value": "GS2.1.s1769474838$o1$g1$t1769474841$j57$l0$h0",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1804034841.66054,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:8080",
+      "localStorage": [
+        {
+          "name": "_gcl_ls",
+          "value": "{\"schema\":\"gcl\",\"version\":1,\"gcl_ctr\":{\"value\":{\"value\":0,\"timeouts\":0,\"errors\":0,\"creationTimeMs\":1769474838173},\"expires\":1777250838173}}"
+        },
+        {
+          "name": "sb-zoxywcdukyqzqytekrry-auth-token",
+          "value": "{\"access_token\":\"eyJhbGciOiJIUzI1NiIsImtpZCI6IjZLWm9sanB4UkJSck9HOWkiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3pveHl3Y2R1a3lxenF5dGVrcnJ5LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJjYTMyMmI3OC0xOWJhLTRmZGItYWYyMS1lNzBiNzFiZjFkYmUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzY5NDc4NDQwLCJpYXQiOjE3Njk0NzQ4NDAsImVtYWlsIjoibWFyaWFkb2NlaXJhQGdtYWlsLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiYXZhdGFyX3VybCI6Imh0dHBzOi8vem94eXdjZHVreXF6cXl0ZWtycnkuc3VwYWJhc2UuY28vc3RvcmFnZS92MS9vYmplY3QvcHVibGljL2F2YXRhcnMvYXZhdGFycy9jYTMyMmI3OC0xOWJhLTRmZGItYWYyMS1lNzBiNzFiZjFkYmUucG5nP3Q9MTc2OTA1ODEyMTk3NyIsImVtYWlsIjoibWFyaWFkb2NlaXJhQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmdWxsX25hbWUiOiJNYXJpYSIsInBob25lIjoiNDE5OTk5OTk5OTkiLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImNhMzIyYjc4LTE5YmEtNGZkYi1hZjIxLWU3MGI3MWJmMWRiZSJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzY5NDc0ODQwfV0sInNlc3Npb25faWQiOiJmYWFiZWZmMS1kY2EwLTRhZGItOTdhNS0yYjUxYzIxZDEwZDkiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.oMNeN4e4TKkxuEZQPZB1P7jMVv79iPNRsUFMHEOXuHc\",\"token_type\":\"bearer\",\"expires_in\":3600,\"expires_at\":1769478440,\"refresh_token\":\"4hnwvsthwji4\",\"user\":{\"id\":\"ca322b78-19ba-4fdb-af21-e70b71bf1dbe\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"mariadoceira@gmail.com\",\"email_confirmed_at\":\"2026-01-15T05:13:07.532432Z\",\"phone\":\"\",\"confirmed_at\":\"2026-01-15T05:13:07.532432Z\",\"last_sign_in_at\":\"2026-01-27T00:47:20.448021731Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"avatar_url\":\"https://zoxywcdukyqzqytekrry.supabase.co/storage/v1/object/public/avatars/avatars/ca322b78-19ba-4fdb-af21-e70b71bf1dbe.png?t=1769058121977\",\"email\":\"mariadoceira@gmail.com\",\"email_verified\":true,\"full_name\":\"Maria\",\"phone\":\"41999999999\",\"phone_verified\":false,\"sub\":\"ca322b78-19ba-4fdb-af21-e70b71bf1dbe\"},\"identities\":[{\"identity_id\":\"9337a773-30a8-496b-8569-066e4bef9b51\",\"id\":\"ca322b78-19ba-4fdb-af21-e70b71bf1dbe\",\"user_id\":\"ca322b78-19ba-4fdb-af21-e70b71bf1dbe\",\"identity_data\":{\"email\":\"mariadoceira@gmail.com\",\"email_verified\":false,\"full_name\":\"Maria\",\"phone\":\"41999999999\",\"phone_verified\":false,\"sub\":\"ca322b78-19ba-4fdb-af21-e70b71bf1dbe\"},\"provider\":\"email\",\"last_sign_in_at\":\"2026-01-15T05:13:07.516181Z\",\"created_at\":\"2026-01-15T05:13:07.5169Z\",\"updated_at\":\"2026-01-15T05:13:07.5169Z\",\"email\":\"mariadoceira@gmail.com\"}],\"created_at\":\"2026-01-15T05:13:07.377211Z\",\"updated_at\":\"2026-01-27T00:47:20.453733Z\",\"is_anonymous\":false},\"weak_password\":null}"
+        }
+      ]
+    }
+  ]
+}
