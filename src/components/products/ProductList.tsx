@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Plus, TrendingUp, Pencil, Download, Trash2, Copy, ChevronDown, ChevronUp, Eye, EyeOff, Phone, Search } from 'lucide-react';
 import { getProducts, deleteProduct, updateProduct, createProduct, getIngredients, importProductsBatch } from '@/lib/database';
+import { supabase } from '@/lib/supabase';
 import { exportToExcel, exportToCSV, importFromExcel } from '@/lib/excel';
 import { PRESET_PRODUCTS } from '@/data/presets';
 import type { Product, Ingredient, ProductWithIngredients } from '@/types/database';
@@ -114,6 +115,24 @@ const ProductList = ({ onNewProduct }: { onNewProduct: () => void }) => {
     useEffect(() => {
         loadProducts();
     }, []);
+
+    // Realtime synchronization for Products
+    useEffect(() => {
+        const channel = supabase
+            .channel('products_realtime_list')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+                refetchProducts();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ingredients' }, () => {
+                // Ingredients affect costs, so refresh
+                loadProducts();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [refetchProducts, refetchIngredients]);
 
     // Remove manual loadProducts async function and effect
     // const loadProducts = async () ...

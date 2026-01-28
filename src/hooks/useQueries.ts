@@ -36,7 +36,7 @@ export function useKanbanOrders(dateRange?: { from?: Date, to?: Date }) {
                 return allOrders as OrderWithDetails[];
             }
         },
-        staleTime: 0, // Always fetch fresh data on mount/navigation
+        staleTime: 1000 * 60, // 1 minute - Relies on Realtime/Mutations for updates
     });
 }
 
@@ -88,7 +88,7 @@ export function useActiveOrders() {
             ];
             return allActive as OrderWithDetails[];
         },
-        staleTime: 1000 * 30, // 30 seconds for active orders (more frequent updates)
+        staleTime: 1000 * 60, // 1 minute
     });
 }
 

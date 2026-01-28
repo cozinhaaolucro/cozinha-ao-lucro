@@ -63,16 +63,54 @@ const BenefitsSection = () => {
                 <RevealOnScroll>
                     <div className="text-center mb-12 relative z-10">
                         <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground font-heading tracking-tight leading-tight">
-                            Por que este método <span className="text-primary italic">funciona para você?</span>
+                            Por que o Cozinha ao Lucro <span className="text-primary italic">funciona na prática?</span>
                         </h2>
                         <p className="text-xl text-muted-foreground font-light max-w-2xl mx-auto">
-                            Transformamos complexidade em um sistema simples e prático para o seu sucesso.
+                            Porque ele foi criado para quem cozinha de verdade — e precisa tomar decisões financeiras claras todos os dias.
                         </p>
                     </div>
                 </RevealOnScroll>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 px-4 md:px-8">
-                    {benefits.map((benefit, index) => (
+                    {[
+                        {
+                            icon: DollarSign,
+                            title: "Preço certo antes de vender",
+                            desc: "Saiba exatamente quanto custa cada produto antes de definir o preço. Nada de vender bem e descobrir depois que não sobrou lucro.",
+                            color: "text-emerald-500",
+                            bg: "bg-muted/10"
+                        }, {
+                            icon: Users,
+                            title: "Mais clientes, sem bagunça",
+                            desc: "Gerencie pedidos, prazos e produção sem perder o controle, mesmo com vários pedidos ao mesmo tempo.",
+                            color: "text-blue-500",
+                            bg: "bg-muted/10"
+                        }, {
+                            icon: Clock,
+                            title: "Menos improviso na rotina",
+                            desc: "Pedidos organizados por status, datas claras e visão do que está em produção, pronto ou entregue.",
+                            color: "text-amber-500",
+                            bg: "bg-muted/10"
+                        }, {
+                            icon: TrendingUp,
+                            title: "Crescer sem perder o controle",
+                            desc: "Acompanhe faturamento, custos e lucro conforme o volume aumenta — sem depender de planilhas.",
+                            color: "text-purple-500",
+                            bg: "bg-muted/10"
+                        }, {
+                            icon: Shield,
+                            title: "Segurança nas decisões",
+                            desc: "Entenda seus números e tome decisões com base em dados reais, não em sensação.",
+                            color: "text-slate-500",
+                            bg: "bg-muted/10"
+                        }, {
+                            icon: Award,
+                            title: "Liberdade financeira",
+                            desc: "Quando você sabe quanto ganha em cada venda, fica mais fácil crescer com tranquilidade.",
+                            color: "text-primary",
+                            bg: "bg-muted/10"
+                        }
+                    ].map((benefit, index) => (
                         <Tilt key={index} options={{ max: 5, scale: 1.01, speed: 1000, glare: true, "max-glare": 0.1 }} className="h-full">
                             <RevealOnScroll delay={index * 0.1} className="h-full">
                                 <Card className="bg-card/40 backdrop-blur-md border border-white/10 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 text-left group cursor-default h-full min-h-[200px] relative overflow-hidden flex flex-col rounded-2xl">

@@ -90,6 +90,20 @@ const Pedidos = () => {
         }
     }, [serverOrders]);
 
+    // Real-time synchronization
+    useEffect(() => {
+        const channel = supabase
+            .channel('orders_pedidos_channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+                refetchOrders();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [refetchOrders]);
+
     const onOptimisticUpdate = (orderId: string, newStatus: OrderStatus) => {
         setOrders(prev => prev.map(o =>
             o.id === orderId ? { ...o, status: newStatus } : o

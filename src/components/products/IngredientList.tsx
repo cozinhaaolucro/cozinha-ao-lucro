@@ -59,6 +59,24 @@ export default function IngredientList() {
     const demandMap = ingredientsData?.demandMap || {};
     const usageMap = ingredientsData?.usageMap || {};
 
+    // Realtime synchronization for Stock & Demand
+    useEffect(() => {
+        const channel = supabase
+            .channel('stock_realtime_updates')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ingredients' }, () => {
+                queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ingredients] });
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+                // Orders affect demand, so we must reload ingredients+demand
+                queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ingredients] });
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [queryClient]);
+
     const [searchTerm, setSearchTerm] = useState("");
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);

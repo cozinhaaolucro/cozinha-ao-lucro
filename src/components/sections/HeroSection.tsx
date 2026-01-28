@@ -31,11 +31,19 @@ const HeroSection = () => {
                 {/* Text Content */}
                 <div className="w-full max-w-[90vw] mx-auto space-y-6 mb-6 animate-fade-in order-1">
                     <h1 className="text-[1.65rem] sm:text-3xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground tracking-tight md:whitespace-nowrap">
-                        Transforme sua cozinha em<br className="md:hidden" /> um <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#2D7A70] to-primary animate-shimmer bg-[length:200%_auto]">Negócio Lucrativo</span>
+                        Pare de vender no escuro.<br className="hidden md:block" />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#2D7A70] to-primary animate-shimmer bg-[length:200%_auto]">
+                            Tenha clareza real do lucro
+                        </span><br className="hidden md:block" /> de cada pedido.
                     </h1>
 
-                    <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                        Controlando custos, precificando certo e eliminando desperdícios em tempo real.
+                    <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+                        Controle custos, precifique corretamente e acompanhe pedidos, estoque e clientes com base em fichas técnicas reais, não em achismos ou planilhas confusas.
+                    </p>
+
+                    {/* Apoio Visual */}
+                    <p className="text-sm font-medium text-primary/80 bg-primary/5 py-2 px-4 rounded-full inline-block border border-primary/10">
+                        Em poucos minutos, você cria um produto, cadastra a receita e vê exatamente quanto ele te dá de lucro.
                     </p>
                 </div>
 
@@ -80,27 +88,26 @@ const HeroSection = () => {
                             size="lg"
                             className="bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,45%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,40%,1)] text-white font-bold uppercase tracking-wide rounded-full text-sm px-8 py-3 sm:py-6 h-auto w-full sm:w-auto shadow-lg hover:scale-105 transition-all duration-300 flex flex-col items-center gap-1"
                         >
-                            <span className="text-center">Testar grátis por 7 dias</span>
-                            <span className="text-[8px] font-normal normal-case tracking-normal opacity-70 sm:hidden">Sem cartão de crédito • Cancele quando quiser</span>
+                            <span className="text-center">Ver meu lucro real</span>
                         </Button>
 
                         <Button
                             size="lg"
                             variant="outline"
-                            onClick={() => setIsLeadFormOpen(true)}
+                            onClick={() => navigate('/register')}
                             className="h-auto px-8 py-6 w-full sm:w-auto text-sm border-2 border-primary text-emerald-600 bg-primary/5 hover:bg-primary/10 hover:text-emerald-700 rounded-full font-bold transition-all"
                         >
-                            Ver como funciona
+                            Testar grátis por 7 dias
                         </Button>
                     </div>
 
                     {/* Trust Indicators - Smaller & Lower */}
                     <div className="hidden md:flex items-center justify-center gap-6 mt-12 text-xs text-muted-foreground/60 font-medium">
                         <div className="flex items-center gap-2">
-                            <CheckCircle className="w-3.5 h-3.5 text-primary/70" /> Sem cartão de crédito
+                            <CheckCircle className="w-3.5 h-3.5 text-primary/70" /> Sem cartão
                         </div>
                         <div className="flex items-center gap-2">
-                            <CheckCircle className="w-3.5 h-3.5 text-primary/70" /> Acesso completo por 7 dias
+                            <CheckCircle className="w-3.5 h-3.5 text-primary/70" /> Cancele quando quiser
                         </div>
                     </div>
                 </div>

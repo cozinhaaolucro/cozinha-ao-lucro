@@ -27,17 +27,25 @@ const AppShowcase = () => {
                                     O controle profissional que <span className="text-primary">sua cozinha merece</span>
                                 </h2>
                                 <p className="text-lg text-muted-foreground leading-relaxed">
-                                    Esqueça planilhas complexas e cadernos bagunçados. Centralize gestão, estoque e vendas em uma única plataforma inteligente.
+                                    Tudo o que você precisa para organizar sua produção e enxergar o lucro real — em um único sistema simples de usar.
                                 </p>
                             </div>
 
-                            <ul className="space-y-4">
-                                {['Lista de Compras Inteligente', 'Cardápio Digital Automático', 'Controle de Estoque em Tempo Real'].map((item, i) => (
-                                    <li key={i} className="flex items-center gap-3 text-foreground/90 font-medium">
-                                        <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                                            <Check className="w-4 h-4 text-primary" />
+                            <ul className="space-y-6">
+                                {[
+                                    { title: "Pedidos organizados por status", desc: "Visualize tudo em um quadro simples: pendente, em produção, pronto e entregue." },
+                                    { title: "Produtos com ficha técnica completa", desc: "Cada ingrediente, cada quantidade, cada custo — tudo calculado automaticamente." },
+                                    { title: "Estoque com baixa automática", desc: "Ingredientes são descontados conforme os pedidos são finalizados." },
+                                    { title: "Clientes com histórico e valor total gasto", desc: "Identifique seus melhores clientes e venda com mais estratégia." }
+                                ].map((item, i) => (
+                                    <li key={i} className="flex items-start gap-4">
+                                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-1">
+                                            <Check className="w-5 h-5 text-primary" />
                                         </div>
-                                        {item}
+                                        <div>
+                                            <h4 className="font-bold text-foreground text-lg">{item.title}</h4>
+                                            <p className="text-muted-foreground leading-relaxed text-base">{item.desc}</p>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
@@ -48,7 +56,7 @@ const AppShowcase = () => {
                                     size="lg"
                                     className="bg-gradient-to-r from-[hsla(186,35%,28%,1)] to-[hsla(187,29%,45%,1)] hover:from-[hsla(186,35%,20%,1)] hover:to-[hsla(187,29%,40%,1)] text-white font-bold text-lg px-8 py-6 h-auto rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 w-full sm:w-auto"
                                 >
-                                    Começar Agora
+                                    Começar agora
                                     <ArrowRight className="ml-2 w-5 h-5 inline-block" />
                                 </Button>
                                 <p className="text-xs text-muted-foreground mt-3 font-medium opacity-80 pl-4">

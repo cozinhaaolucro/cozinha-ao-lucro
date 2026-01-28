@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Phone, Plus, Search, MessageCircle, Filter, Pencil, Trash2, X, Mail, Download, Upload, Users, FileSpreadsheet, FileDown, FileText, ChevronDown } from 'lucide-react';
 import { getCustomers, deleteCustomer, createCustomer } from '@/lib/database';
+import { supabase } from '@/lib/supabase';
 import { exportToExcel, exportToCSV, importFromExcel, getValue } from '@/lib/excel';
 import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/types/database';
@@ -68,6 +69,20 @@ const Clientes = () => {
     // Remove manual loadCustomers and effect
     // const loadCustomers = ...
     // useEffect(() => { refetchCustomers() ... }, [...])
+
+    // Realtime synchronization for Customers
+    useEffect(() => {
+        const channel = supabase
+            .channel('customers_realtime_list')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => {
+                refetchCustomers();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [refetchCustomers]);
 
     const isInactive = (lastOrderDate: string | null) => {
         if (!lastOrderDate) return false;
