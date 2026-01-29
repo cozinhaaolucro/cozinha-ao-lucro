@@ -113,41 +113,47 @@ const AppShowcase = () => {
                             </div>
                         </div>
 
-                        {/* Desktop: Triple layout */}
-                        <div className="hidden md:block relative h-[550px] w-full">
+                        {/* Desktop: Mobile-Mirrored Layout (TopLeft, TopRight, BottomCenter) */}
+                        <div className="hidden md:block relative h-[650px] w-full mt-10">
                             {/* Abstract decorative blob behind */}
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-primary/10 to-secondary/10 blur-[60px] rounded-full pointer-events-none"></div>
 
-                            {/* Card 1: Lista Inteligente (Top Left) */}
-                            <div className="absolute top-0 left-[8%] z-20 w-[42%] shadow-2xl rounded-2xl animate-float" style={{ animationDuration: '6s' }}>
-                                <div className="bg-white/90 backdrop-blur-xl border border-white/40 p-1 rounded-2xl overflow-hidden">
-                                    <img
-                                        src="/images/mockups/shopping-list.png"
-                                        alt="Lista Inteligente"
-                                        className="w-full h-auto rounded-xl"
-                                    />
+                            {/* Card 1: Top Left (Back) */}
+                            <div className="absolute top-0 left-[5%] z-10 w-[42%] aspect-square shadow-2xl rounded-3xl">
+                                <div className="bg-gray-100 border border-white/20 p-2 rounded-3xl overflow-hidden w-full h-full">
+                                    <div className="w-full h-full bg-gray-200/50 rounded-2xl flex items-center justify-center">
+                                        <div className="text-center p-4">
+                                            <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-3"></div>
+                                            <div className="h-4 w-24 bg-gray-300 rounded mx-auto"></div>
+                                            <span className="text-xs text-gray-400 mt-2 block">Card 1 (Top Left)</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Card 2: Cardápio (Top Right) */}
-                            <div className="absolute top-4 right-[8%] z-30 w-[42%] shadow-2xl rounded-2xl animate-float" style={{ animationDuration: '7s', animationDelay: '0.5s' }}>
-                                <div className="bg-white/90 backdrop-blur-xl border border-white/40 p-1 rounded-2xl overflow-hidden">
-                                    <img
-                                        src="/images/mockups/cardapio-digital.png"
-                                        alt="Cardápio Digital"
-                                        className="w-full h-auto rounded-xl"
-                                    />
+                            {/* Card 2: Top Right (Front - Highest Z) */}
+                            <div className="absolute top-[8%] right-[5%] z-30 w-[38%] aspect-square shadow-2xl rounded-3xl">
+                                <div className="bg-gray-100 border border-white/20 p-2 rounded-3xl overflow-hidden w-full h-full">
+                                    <div className="w-full h-full bg-gray-200/50 rounded-2xl flex items-center justify-center">
+                                        <div className="text-center p-4">
+                                            <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-3"></div>
+                                            <div className="h-4 w-24 bg-gray-300 rounded mx-auto"></div>
+                                            <span className="text-xs text-gray-400 mt-2 block">Card 2 (Top Right)</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Card 3: Estoque (Bottom Center) */}
-                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-40 w-[50%] shadow-2xl rounded-2xl animate-float" style={{ animationDuration: '8s', animationDelay: '1s' }}>
-                                <div className="bg-white/90 backdrop-blur-xl border border-white/40 p-1 rounded-2xl overflow-hidden">
-                                    <img
-                                        src="/images/mockups/estoque.png"
-                                        alt="Controle de Estoque"
-                                        className="w-full h-auto rounded-xl"
-                                    />
+                            {/* Card 3: Bottom Center (Mid Z) */}
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 w-[48%] aspect-square shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] rounded-3xl">
+                                <div className="bg-white border border-white/40 p-2 rounded-3xl overflow-hidden w-full h-full">
+                                    <div className="w-full h-full bg-gray-50 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-100">
+                                        <div className="text-center p-4">
+                                            <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4"></div>
+                                            <div className="h-5 w-32 bg-gray-200 rounded mx-auto"></div>
+                                            <span className="text-xs text-gray-400 mt-2 block">Card 3 (Bottom Center)</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

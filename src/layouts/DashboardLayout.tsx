@@ -215,12 +215,12 @@ const DashboardLayout = () => {
     return (
         <SidebarProvider>
             <Sidebar collapsible="icon">
-                <SidebarHeader className="h-20 flex items-center justify-center p-0 border-b group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:border-none transition-[height] ease-linear">
+                <SidebarHeader className="h-14 flex items-center justify-center p-0 border-b group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:border-none transition-[height] ease-linear">
                     <div className="flex items-center justify-center w-full h-full group-data-[collapsible=icon]:hidden">
                         <img
                             src="/images/logo-horizontal-2026.png"
                             alt="Cozinha ao Lucro"
-                            className="h-[4.5rem] w-auto object-contain"
+                            className="h-[4.9rem] w-auto object-contain"
                         />
                     </div>
                     <div className="hidden items-center justify-center w-full h-full group-data-[collapsible=icon]:flex">
@@ -329,7 +329,7 @@ const DashboardLayout = () => {
             </Sidebar>
 
             <SidebarInset>
-                <header className="flex h-20 shrink-0 items-center justify-between gap-2 border-b px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 sticky top-0 bg-background z-10">
+                <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 sticky top-0 bg-background z-10">
                     <div className="flex items-center gap-2">
                         <div className="flex items-center gap-3 md:hidden">
                             <SidebarTrigger />
@@ -358,7 +358,7 @@ const DashboardLayout = () => {
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-4 pt-14 md:p-6 md:pt-20 pb-32 md:pb-32 relative">
+                <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-32 md:pb-32 relative">
                     {/* Loading State */}
                     {loading && (
                         <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">

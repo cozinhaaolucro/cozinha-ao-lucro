@@ -31,10 +31,10 @@ const HeroSection = () => {
                 {/* Text Content */}
                 <div className="w-full max-w-[90vw] mx-auto space-y-6 mb-6 animate-fade-in order-1">
                     <h1 className="text-[1.65rem] sm:text-3xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground tracking-tight md:whitespace-nowrap">
-                        Pare de vender no escuro.<br className="hidden md:block" />
+                        Transforme sua cozinha em um <br className="block md:hidden" />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#2D7A70] to-primary animate-shimmer bg-[length:200%_auto]">
-                            Tenha clareza real do lucro.
-                        </span><br className="hidden md:block" />
+                            Negócio Lucrativo
+                        </span>
                     </h1>
 
                     <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
