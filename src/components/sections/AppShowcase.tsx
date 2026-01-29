@@ -119,41 +119,35 @@ const AppShowcase = () => {
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-primary/10 to-secondary/10 blur-[60px] rounded-full pointer-events-none"></div>
 
                             {/* Card 1: Top Left (Back) */}
-                            <div className="absolute top-0 left-[5%] z-10 w-[42%] aspect-square shadow-2xl rounded-3xl">
-                                <div className="bg-gray-100 border border-white/20 p-2 rounded-3xl overflow-hidden w-full h-full">
-                                    <div className="w-full h-full bg-gray-200/50 rounded-2xl flex items-center justify-center">
-                                        <div className="text-center p-4">
-                                            <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-3"></div>
-                                            <div className="h-4 w-24 bg-gray-300 rounded mx-auto"></div>
-                                            <span className="text-xs text-gray-400 mt-2 block">Card 1 (Top Left)</span>
-                                        </div>
-                                    </div>
+                            <div className="absolute top-0 left-[5%] z-10 w-[42%] shadow-2xl rounded-3xl">
+                                <div className="bg-white border border-white/20 p-1 rounded-3xl overflow-hidden w-full h-full">
+                                    <img
+                                        src="/images/mockups/pedidos_showcase.jpg"
+                                        alt="Pedidos"
+                                        className="w-full h-auto rounded-2xl"
+                                    />
                                 </div>
                             </div>
 
                             {/* Card 2: Top Right (Front - Highest Z) */}
-                            <div className="absolute top-[8%] right-[5%] z-30 w-[38%] aspect-square shadow-2xl rounded-3xl">
-                                <div className="bg-gray-100 border border-white/20 p-2 rounded-3xl overflow-hidden w-full h-full">
-                                    <div className="w-full h-full bg-gray-200/50 rounded-2xl flex items-center justify-center">
-                                        <div className="text-center p-4">
-                                            <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-3"></div>
-                                            <div className="h-4 w-24 bg-gray-300 rounded mx-auto"></div>
-                                            <span className="text-xs text-gray-400 mt-2 block">Card 2 (Top Right)</span>
-                                        </div>
-                                    </div>
+                            <div className="absolute top-[8%] right-[5%] z-30 w-[38%] shadow-2xl rounded-3xl">
+                                <div className="bg-white border border-white/20 p-1 rounded-3xl overflow-hidden w-full h-full">
+                                    <img
+                                        src="/images/mockups/estoque_showcase.jpg"
+                                        alt="Estoque"
+                                        className="w-full h-auto rounded-2xl"
+                                    />
                                 </div>
                             </div>
 
                             {/* Card 3: Bottom Center (Mid Z) */}
-                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 w-[48%] aspect-square shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] rounded-3xl">
-                                <div className="bg-white border border-white/40 p-2 rounded-3xl overflow-hidden w-full h-full">
-                                    <div className="w-full h-full bg-gray-50 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-100">
-                                        <div className="text-center p-4">
-                                            <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4"></div>
-                                            <div className="h-5 w-32 bg-gray-200 rounded mx-auto"></div>
-                                            <span className="text-xs text-gray-400 mt-2 block">Card 3 (Bottom Center)</span>
-                                        </div>
-                                    </div>
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 w-[48%] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] rounded-3xl">
+                                <div className="bg-white border border-white/40 p-1 rounded-3xl overflow-hidden w-full h-full">
+                                    <img
+                                        src="/images/mockups/central_showcase.jpg"
+                                        alt="Card"
+                                        className="w-full h-auto rounded-2xl"
+                                    />
                                 </div>
                             </div>
                         </div>
