@@ -60,7 +60,7 @@ const HeroSection = () => {
                         <div className="pt-6 md:pt-10 h-full rounded-xl md:rounded-2xl overflow-hidden bg-background">
                             <video
                                 ref={desktopVideoRef}
-                                src="/videos/hero_desktop.mp4"
+                                src="/videos/primeiro_produto.mp4"
                                 autoPlay
                                 muted
                                 playsInline

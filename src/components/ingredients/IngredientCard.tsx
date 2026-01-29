@@ -151,7 +151,7 @@ export function IngredientCard({
                     <div className="flex flex-col w-full gap-1">
                         {/* Stock Display */}
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-muted-foreground font-medium w-12 shrink-0">Estoque:</span>
+                            <span className="text-[10px] text-muted-foreground font-medium w-16 shrink-0">Estoque:</span>
                             <div className="flex flex-col">
                                 {/* Primary: Base Unit */}
                                 <span className={cn(

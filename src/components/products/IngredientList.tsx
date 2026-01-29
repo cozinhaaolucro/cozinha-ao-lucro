@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from "react";
-import { Plus, Search, FileDown, Filter, Loader2, Package, Milk, Candy, Wheat, Sparkles, Square, Egg, Cloud, CupSoda, Circle, Box, Drumstick, Leaf, Carrot, Beef, Droplet, GlassWater, Cookie, Asterisk, Heart, Snowflake, Salad } from "lucide-react";
+import { Plus, Search, FileDown, Filter, Loader2, Package, Milk, Candy, Wheat, Sparkles, Square, Egg, Cloud, CupSoda, Circle, Box, Drumstick, Leaf, Carrot, Beef, Droplet, GlassWater, Cookie, Asterisk, Heart, Snowflake, Salad, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -149,6 +149,22 @@ export default function IngredientList() {
         }
     };
 
+    const handleBulkDelete = async () => {
+        if (!confirm(`Tem certeza que deseja excluir ${selectedIngredients.length} ingredientes?`)) return;
+
+        try {
+            // Delete all selected ingredients in parallel
+            await Promise.all(selectedIngredients.map(id => deleteIngredient(id)));
+
+            toast({ title: `${selectedIngredients.length} ingredientes removidos!` });
+            setSelectedIngredients([]); // Clear selection
+            loadIngredients(); // Refresh list
+        } catch (error) {
+            console.error("Erro ao excluir ingredientes:", error);
+            toast({ title: "Erro ao remover ingredientes", variant: "destructive" });
+        }
+    };
+
     // Export Logic
     const exportToExcel = () => {
         const ws = XLSX.utils.json_to_sheet(ingredients.map(i => ({
@@ -244,6 +260,19 @@ export default function IngredientList() {
                     <Button variant="ghost" size="icon" onClick={exportToExcel} title="Exportar Excel" className="h-9 w-9 text-muted-foreground hover:text-foreground">
                         <FileDown className="h-4 w-4" />
                     </Button>
+
+                    {selectedIngredients.length > 0 && (
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleBulkDelete}
+                            className="h-9 px-3 gap-2 animate-in fade-in"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="hidden sm:inline">Excluir ({selectedIngredients.length})</span>
+                        </Button>
+                    )}
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" className="gap-2 h-9 px-3 rounded-full font-medium">
