@@ -29,7 +29,7 @@ const HeroSection = () => {
 
             <div className="container-max mobile-container relative z-10 text-center flex flex-col items-center">
                 {/* Text Content */}
-                <div className="w-full max-w-[90vw] mx-auto space-y-6 mb-6 animate-fade-in order-1">
+                <div className="w-full mx-auto space-y-6 mb-6 animate-fade-in order-1">
                     <h1 className="text-[1.65rem] sm:text-3xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground tracking-tight md:whitespace-nowrap">
                         Transforme sua cozinha em um <br className="block md:hidden" />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#2D7A70] to-primary animate-shimmer bg-[length:200%_auto]">
@@ -47,7 +47,7 @@ const HeroSection = () => {
                 </div>
 
                 {/* VISUAL MOCKUP HERO - Optimized & Scaled Up by 20% */}
-                <div className="relative w-full max-w-[95%] lg:max-w-6xl mt-2 mb-4 group animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-forwards order-2">
+                <div className="relative w-[90vw] max-w-none mx-auto lg:w-full lg:max-w-6xl mt-2 mb-4 group animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-forwards order-2 px-0">
                     {/* Desktop Mockup Container */}
                     <div className="relative w-full rounded-xl md:rounded-2xl border-[3px] md:border-4 border-white/40 shadow-2xl bg-black/5 backdrop-blur-sm transform transition-all duration-700 hover:scale-[1.005] origin-bottom aspect-video">
                         {/* Mac Window Dots */}
@@ -76,7 +76,7 @@ const HeroSection = () => {
 
                     {/* Floating Elements / Decoration (Subtler) */}
                     <div className="absolute -top-12 -left-12 w-24 h-24 bg-financial/20 rounded-full blur-3xl animate-pulse pointer-events-none opacity-50"></div>
-                    <div className="absolute top-1/2 -right-20 w-32 h-32 bg-primary/20 rounded-full blur-3xl pointer-events-none opacity-50"></div>
+                    <div className="absolute top-1/2 -right-12 w-32 h-32 bg-primary/20 rounded-full blur-3xl pointer-events-none opacity-50"></div>
                 </div>
 
                 {/* Buttons Area */}

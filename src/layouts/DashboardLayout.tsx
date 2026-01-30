@@ -27,7 +27,8 @@ import {
     FileText,
     Layers,
     ArrowRight,
-    CreditCard // Added
+    CreditCard, // Added
+    LifeBuoy // Added
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -72,6 +73,7 @@ import NewOrderDialog from '@/components/orders/NewOrderDialog';
 import NewCustomerDialog from '@/components/customers/NewCustomerDialog';
 import ProductBuilder from '@/components/products/ProductBuilder';
 import ProductionStatusWidget from '@/components/production/ProductionStatusWidget'; // New Widget
+import { SupportDialog } from '@/components/support/SupportDialog';
 
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { OnboardingOverlay } from '@/components/onboarding/OnboardingOverlay';
@@ -93,6 +95,7 @@ const DashboardLayout = () => {
     const [isClientOpen, setIsClientOpen] = useState(false);
     const [isProductOpen, setIsProductOpen] = useState(false);
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+    const [isSupportOpen, setIsSupportOpen] = useState(false);
 
     // Global keyboard shortcut for Command Palette removed as per user request
 
@@ -310,6 +313,17 @@ const DashboardLayout = () => {
                                     </DropdownMenuContent>
                                 </DropdownMenu>
 
+                                {/* Support Button */}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-muted-foreground"
+                                    onClick={() => setIsSupportOpen(true)}
+                                    title="Ajuda e Suporte"
+                                >
+                                    <LifeBuoy className="h-4 w-4" />
+                                </Button>
+
                                 {/* Settings Button */}
                                 <Button
                                     variant="ghost"
@@ -320,6 +334,17 @@ const DashboardLayout = () => {
                                     <Link to="/app/settings">
                                         <Settings className="h-4 w-4" />
                                     </Link>
+                                </Button>
+
+                                {/* Logout Button */}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-muted-foreground"
+                                    onClick={handleSignOut}
+                                    title="Sair"
+                                >
+                                    <LogOut className="h-4 w-4" />
                                 </Button>
                             </div>
                         </SidebarMenuItem>
@@ -475,6 +500,11 @@ const DashboardLayout = () => {
                         setIsProductOpen(false);
                         if (location.pathname.includes('produtos')) window.location.reload();
                     }}
+                />
+
+                <SupportDialog
+                    open={isSupportOpen}
+                    onOpenChange={setIsSupportOpen}
                 />
 
                 <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>

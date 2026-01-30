@@ -139,32 +139,32 @@ export function IngredientForm({ initialData, onSave, onCancel }: IngredientForm
                 <div className="grid grid-cols-2 gap-4">
                     <div
                         className={cn(
-                            "cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-accent hover:border-accent-foreground/20",
+                            "group cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-muted/50 hover:border-primary/50",
                             mode === 'simple' ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-background"
                         )}
                         onClick={() => setMode('simple')}
                     >
                         <div className="flex items-center gap-2 mb-1">
-                            <Scale className={cn("w-5 h-5", mode === 'simple' ? "text-primary" : "text-muted-foreground")} />
-                            <span className={cn("font-semibold", mode === 'simple' ? "text-foreground" : "text-muted-foreground")}>Granel / Unidade</span>
+                            <Scale className={cn("w-5 h-5 transition-colors", mode === 'simple' ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
+                            <span className={cn("font-semibold transition-colors", mode === 'simple' ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>Granel / Unidade</span>
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
+                        <p className="text-xs text-muted-foreground leading-relaxed transition-colors group-hover:text-foreground/80">
                             Para itens pesados ou contados (kg, g, un). Ex: Frutas, Carnes.
                         </p>
                     </div>
 
                     <div
                         className={cn(
-                            "cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-accent hover:border-accent-foreground/20",
+                            "group cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-muted/50 hover:border-primary/50",
                             mode === 'package' ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-background"
                         )}
                         onClick={() => setMode('package')}
                     >
                         <div className="flex items-center gap-2 mb-1">
-                            <Package className={cn("w-5 h-5", mode === 'package' ? "text-primary" : "text-muted-foreground")} />
-                            <span className={cn("font-semibold", mode === 'package' ? "text-foreground" : "text-muted-foreground")}>Embalagem Fechada</span>
+                            <Package className={cn("w-5 h-5 transition-colors", mode === 'package' ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
+                            <span className={cn("font-semibold transition-colors", mode === 'package' ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>Embalagem Fechada</span>
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
+                        <p className="text-xs text-muted-foreground leading-relaxed transition-colors group-hover:text-foreground/80">
                             Para itens industriais (Lata, Caixa, Garrafa). O sistema calcula o custo base.
                         </p>
                     </div>

@@ -80,8 +80,8 @@ const AppShowcase = () => {
                             <div className="absolute top-0 left-0 w-[65%] shadow-xl rounded-2xl z-10">
                                 <div className="bg-white border border-gray-100 p-1 rounded-2xl overflow-hidden">
                                     <img
-                                        src="/images/mockups/shopping-list.png"
-                                        alt="Lista Inteligente"
+                                        src="/images/mockups/pedidos_showcase.jpg"
+                                        alt="Pedidos"
                                         loading="lazy"
                                         className="w-full h-auto rounded-xl"
                                     />
@@ -92,8 +92,8 @@ const AppShowcase = () => {
                             <div className="absolute top-[30px] right-0 w-[58%] shadow-xl rounded-2xl z-20">
                                 <div className="bg-white border border-gray-100 p-1 rounded-2xl overflow-hidden">
                                     <img
-                                        src="/images/mockups/cardapio-digital.png"
-                                        alt="Cardápio Digital"
+                                        src="/images/mockups/estoque_showcase.jpg"
+                                        alt="Estoque"
                                         loading="lazy"
                                         className="w-full h-auto rounded-xl"
                                     />
@@ -104,8 +104,8 @@ const AppShowcase = () => {
                             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[70%] shadow-2xl rounded-2xl z-30">
                                 <div className="bg-white border border-gray-100 p-1 rounded-2xl overflow-hidden">
                                     <img
-                                        src="/images/mockups/estoque.png"
-                                        alt="Controle de Estoque"
+                                        src="/images/mockups/central_showcase.jpg"
+                                        alt="Visão Geral"
                                         loading="lazy"
                                         className="w-full h-auto rounded-xl"
                                     />
