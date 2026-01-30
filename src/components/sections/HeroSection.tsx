@@ -47,9 +47,9 @@ const HeroSection = () => {
                 </div>
 
                 {/* VISUAL MOCKUP HERO - Optimized & Scaled Up by 20% */}
-                <div className="relative w-[90vw] max-w-none mx-auto lg:w-full lg:max-w-6xl mt-2 mb-4 group animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-forwards order-2 px-0">
+                <div className="relative w-[85vw] max-w-none mx-auto lg:w-full lg:max-w-4xl mt-2 mb-4 group animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-forwards order-2 px-0">
                     {/* Desktop Mockup Container */}
-                    <div className="relative w-full rounded-xl md:rounded-2xl border-[3px] md:border-4 border-white/40 shadow-2xl bg-black/5 backdrop-blur-sm transform transition-all duration-700 hover:scale-[1.005] origin-bottom aspect-video">
+                    <div className="relative w-full rounded-xl md:rounded-2xl border-[3px] md:border-4 border-white/40 shadow-2xl bg-black/5 backdrop-blur-sm transform transition-all duration-700 hover:scale-[1.005] origin-bottom">
                         {/* Mac Window Dots */}
                         <div className="absolute top-0 left-0 right-0 h-6 md:h-10 bg-muted/90 backdrop-blur border-b border-border/50 rounded-t-lg md:rounded-t-xl flex items-center px-3 md:px-4 gap-1.5 md:gap-2 z-20">
                             <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-red-400"></div>
@@ -57,16 +57,16 @@ const HeroSection = () => {
                             <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-green-400"></div>
                         </div>
 
-                        <div className="pt-6 md:pt-10 h-full rounded-xl md:rounded-2xl overflow-hidden bg-background">
+                        <div className="pt-6 md:pt-10 rounded-xl md:rounded-2xl overflow-hidden bg-background">
                             <video
                                 ref={desktopVideoRef}
-                                src="/videos/primeiro_produto.mp4"
+                                src="/videos/hero_primeiro_produto.mp4"
                                 autoPlay
                                 muted
                                 playsInline
                                 loop
                                 preload="auto"
-                                className="w-full h-full object-cover"
+                                className="w-full h-auto block"
                             />
                         </div>
 
